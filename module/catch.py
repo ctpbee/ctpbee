@@ -185,7 +185,7 @@ class MarketEngine():
     def subscribe(self, req):
         self.mdApi.subscribe(req)
 
-    def connect(self, userID="089131", password="350888", BrokeID="9999", mdAddress="tcp://180.168.146.187:10011"):
+    def connect(self, userID, password, BrokeID, mdAddress="tcp://180.168.146.187:10011"):
         self.mdApi.connect(userID, password, BrokeID, mdAddress)
 
     def get_login_status(self):
