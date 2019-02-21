@@ -1,17 +1,15 @@
 # coding:utf-8
 import json
 from vnpy.api.ctp import MdApi, defineDict
+
 from vnpy.trader.language.english.constant import *
 from vnpy.trader.vtFunction import getTempPath
 from .engine import Event
 from vnpy.trader.vtObject import *
 from vnpy.trader.gateway.ctpGateway.language.english import text
 from vnpy.trader.vtEvent import *
+
 from datetime import time
-
-import redis
-
-rd = redis.Redis(host='127.0.0.1', port=6379, decode_responses=True)
 
 DAY_START = time(8, 57)  # 日盘启动和停止时间
 DAY_END = time(15, 18)
@@ -75,7 +73,7 @@ statusMap[STATUS_CANCELLED] = defineDict["THOST_FTDC_OST_Canceled"]
 statusMapReverse = {v: k for k, v in statusMap.items()}
 
 # 全局字典, key:symbol, value:exchange
-symbolExchangeDict = {}
+symbolExchangeDict = {"AP903": "SHFE", "rb1905": "SHFE"}
 
 # 夜盘交易时间段分隔判断
 NIGHT_TRADING = datetime(1900, 1, 1, 20).time()
@@ -84,10 +82,10 @@ NIGHT_TRADING = datetime(1900, 1, 1, 20).time()
 class CtpMdApi(MdApi):
     """CTP行情API实现"""
 
-    # ----------------------------------------------------------------------
     def __init__(self, event_engine):
         """Constructor"""
         super(CtpMdApi, self).__init__()
+
         self.event_engine = event_engine
         # self.gateway = gateway  # gateway对象
         self.gatewayName = "CTP"  # gateway对象名称
@@ -104,31 +102,23 @@ class CtpMdApi(MdApi):
         self.brokerID = EMPTY_STRING  # 经纪商代码
         self.address = EMPTY_STRING  # 服务器地址
 
-    # ----------------------------------------------------------------------
     def onFrontConnected(self):
         """服务器连接"""
         self.connectionStatus = True
-
-        self.writeLog(text.DATA_SERVER_CONNECTED)
-
         self.login()
 
-    # ----------------------------------------------------------------------
     def onFrontDisconnected(self, n):
         """服务器断开"""
         self.connectionStatus = False
         self.loginStatus = False
         self.mdConnected = False
-
         self.writeLog(text.DATA_SERVER_DISCONNECTED)
 
-    # ----------------------------------------------------------------------
     def onHeartBeatWarning(self, n):
         """心跳报警"""
         # 因为API的心跳报警比较常被触发，且与API工作关系不大，因此选择忽略
         pass
 
-    # ----------------------------------------------------------------------
     def onRspError(self, error, n, last):
         """错误回报"""
         err = VtErrorData()
@@ -138,15 +128,12 @@ class CtpMdApi(MdApi):
         event = Event(err, EVENT_ERROR)
         self.event_engine.put(event)
 
-    # ----------------------------------------------------------------------
     def onRspUserLogin(self, data, error, n, last):
         """登陆回报"""
         # 如果登录成功，推送日志信息
         if error['ErrorID'] == 0:
             self.loginStatus = True
             self.mdConnected = True
-
-            self.writeLog(text.DATA_SERVER_LOGIN)
 
             # 重新订阅之前订阅的合约
             for subscribeReq in self.subscribedSymbols:
@@ -161,7 +148,6 @@ class CtpMdApi(MdApi):
             event = Event(err, EVENT_ERROR)
             self.event_engine.put(event)
 
-    # ----------------------------------------------------------------------
     def onRspUserLogout(self, data, error, n, last):
         """登出回报"""
         # 如果登出成功，推送日志信息
@@ -179,7 +165,6 @@ class CtpMdApi(MdApi):
             event = Event(err, EVENT_ERROR)
             self.event_engine.put(event)
 
-    # ----------------------------------------------------------------------
     def onRspSubMarketData(self, data, error, n, last):
         """订阅合约回报"""
         if 'ErrorID' in error and error['ErrorID']:
@@ -190,26 +175,21 @@ class CtpMdApi(MdApi):
             event = Event(err, EVENT_ERROR)
             self.event_engine.put(event)
 
-    # ----------------------------------------------------------------------
     def onRspUnSubMarketData(self, data, error, n, last):
         """退订合约回报"""
         # 同上
         pass
 
-        # ----------------------------------------------------------------------
-
     def onRtnDepthMarketData(self, data):
         """行情推送"""
         # 过滤尚未获取合约交易所时的行情推送
-        # print data
         symbol = data['InstrumentID']
-        if symbol not in symbolExchangeDict:
-            return
+        # if symbol not in symbolExchangeDict:
+        #     return
         # if int(data['ClosePrice']) > 100000000:
         #     """防止脏数据推送进来"""
         #     return
         # 判断当前处于的时间段
-
         # 创建对象
         tick = VtTickData()
         tick.gatewayName = self.gatewayName
@@ -267,28 +247,20 @@ class CtpMdApi(MdApi):
             tick.askPrice5 = data['AskPrice5']
             tick.askVolume5 = data['AskVolume5']
             tick.date = data['TradingDay']
-
         event = Event(tick, EVENT_TICK)
-        rd.set(str(tick.symbol), json.dumps(event.dict_.__dict__))
         self.event_engine.put(event)
 
-    # ----------------------------------------------------------------------
     def onRspSubForQuoteRsp(self, data, error, n, last):
         """订阅期权询价"""
         pass
 
-    # ----------------------------------------------------------------------
     def onRspUnSubForQuoteRsp(self, data, error, n, last):
         """退订期权询价"""
         pass
 
-        # ----------------------------------------------------------------------
-
     def onRtnForQuoteRsp(self, data):
         """期权询价推送"""
         pass
-
-        # ----------------------------------------------------------------------
 
     def connect(self, userID, password, brokerID, address):
         """初始化连接"""
@@ -296,35 +268,27 @@ class CtpMdApi(MdApi):
         self.password = password  # 密码
         self.brokerID = brokerID  # 经纪商代码
         self.address = address  # 服务器地址
-
         # 如果尚未建立服务器连接，则进行连接
         if not self.connectionStatus:
             # 创建C++环境中的API对象，这里传入的参数是需要用来保存.con文件的文件夹路径
             path = getTempPath(self.gatewayName + '_')
             self.createFtdcMdApi(path)
-
             # 注册服务器地址
             self.registerFront(self.address)
 
             # 初始化连接，成功会调用onFrontConnected
-            self.init()
-
+            resule = self.init()
         # 若已经连接但尚未登录，则进行登录
         else:
             if not self.loginStatus:
                 self.login()
 
-    # ----------------------------------------------------------------------
-    def subscribe(self, subscribeReq):
-        """订阅合约"""
-        # 这里的设计是，如果尚未登录就调用了订阅方法
-        # 则先保存订阅请求，登录完成后会自动订阅
-        if self.loginStatus:
-            self.subscribeMarketData(str(subscribeReq.symbol))
-            symbolExchangeDict[subscribeReq.symbol] = subscribeReq.exchange
-        self.subscribedSymbols.add(subscribeReq)
 
-        # ----------------------------------------------------------------------
+    def subscribe(self, symbol):
+        return self.subscribeMarketData(str(symbol))
+
+    def register(self, address):
+        a = self.registerFront(address)
 
     def login(self):
         """登录"""
@@ -337,13 +301,10 @@ class CtpMdApi(MdApi):
             self.reqID += 1
             self.reqUserLogin(req, self.reqID)
 
-            # ----------------------------------------------------------------------
-
     def close(self):
         """关闭"""
         self.exit()
 
-    # ----------------------------------------------------------------------
     def writeLog(self, content):
         """发出日志"""
         log = VtLogData()
