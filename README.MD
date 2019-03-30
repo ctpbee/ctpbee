@@ -7,7 +7,8 @@ git clone https://github.com/somewheve/ctp-market
 
 ## libraries
 
-- [vnpy][https://github.com/vnpy/vnpy]
+- [vnpy](https://github.com/vnpy/vnpy)
+
 - pymongo
 - blinker
 
