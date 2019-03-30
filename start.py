@@ -1,7 +1,9 @@
 # coding:utf-8
 from __future__ import print_function
 import warnings
+
 warnings.filterwarnings('ignore')
+
 import multiprocessing
 from datetime import datetime, time
 from time import sleep
@@ -12,7 +14,6 @@ from sys_signal import log_signal, stop_signal
 from md_api.mdApi import CtpMdApi
 from event_engine import event_engine
 from setting import CONNECT_INFO
-
 
 
 def get_all_contract():
@@ -60,63 +61,57 @@ def tick_start(req_list):
         sleep(1)
 
 
-
-# ----------------------------------- -----------------------------------
 def runChildProcess():
     """子进程运行函数"""
     contracts = get_all_contract()
     tick_start(contracts)
 
-runChildProcess()
+
+def runParentProcess():
+    """父进程运行函数"""
+    # 创建日志引擎
+    log_signal.send(log_message='启动行情记录守护父进程')
+    DAY_START = time(8, 57)  # 日盘启动和停止时间
+    DAY_END = time(15, 18)
+    NIGHT_START = time(20, 57)  # 夜盘启动和停止时间
+    NIGHT_END = time(2, 33)
+
+    p = None  # 子进程句柄
+
+    while True:
+        currentTime = datetime.now().time()
+        recording = False
+        # 判断当前处于的时间段
+        if ((currentTime >= DAY_START and currentTime <= DAY_END) or
+                (currentTime >= NIGHT_START) or
+                (currentTime <= NIGHT_END)):
+            recording = True
+
+        # 过滤周末时间段：周六全天，周五夜盘，周日日盘
+        if ((datetime.today().weekday() == 6) or
+                (datetime.today().weekday() == 5 and currentTime > NIGHT_END) or
+                (datetime.today().weekday() == 0 and currentTime < DAY_START)):
+            log_signal.send(log_message="时间不允许")
+            recording = False
+
+        # 记录时间则需要启动子进程
+        if recording and p is None:
+            log_signal.send(log_message='启动子进程')
+            p = multiprocessing.Process(target=runChildProcess)
+            p.start()
+            log_signal.send(log_message='子进程启动成功')
+
+        # 非记录时间则退出子进程
+        if not recording and p is not None:
+            log_signal.send(log_message='关闭子进程')
+            stop_signal.send(message="stop")
+            p.terminate()
+            p.join()
+            p = None
+            log_signal.send(log_message='子进程关闭成功')
+        sleep(5)
 
 
-
-# # ----------------------------------------------------------------------
-# def runParentProcess():
-#     """父进程运行函数"""
-#     # 创建日志引擎
-#     log_signal.send(log_message='启动行情记录守护父进程')
-#     DAY_START = time(8, 57)  # 日盘启动和停止时间
-#     DAY_END = time(15, 18)
-#     NIGHT_START = time(20, 57)  # 夜盘启动和停止时间
-#     NIGHT_END = time(2, 33)
-#
-#     p = None  # 子进程句柄
-#
-#     while True:
-#         currentTime = datetime.now().time()
-#         recording = False
-#         # 判断当前处于的时间段
-#         if ((currentTime >= DAY_START and currentTime <= DAY_END) or
-#                 (currentTime >= NIGHT_START) or
-#                 (currentTime <= NIGHT_END)):
-#             recording = True
-#
-#         # 过滤周末时间段：周六全天，周五夜盘，周日日盘
-#         if ((datetime.today().weekday() == 6) or
-#                 (datetime.today().weekday() == 5 and currentTime > NIGHT_END) or
-#                 (datetime.today().weekday() == 0 and currentTime < DAY_START)):
-#             log_signal.send(log_message="时间不允许")
-#             recording = False
-#
-#         # 记录时间则需要启动子进程
-#         if recording and p is None:
-#             log_signal.send(log_message='启动子进程')
-#             p = multiprocessing.Process(target=runChildProcess)
-#             p.start()
-#             log_signal.send(log_message='子进程启动成功')
-#
-#         # 非记录时间则退出子进程
-#         if not recording and p is not None:
-#             log_signal.send(log_message='关闭子进程')
-#             stop_signal.send(message="stop")
-#             p.terminate()
-#             p.join()
-#             p = None
-#             log_signal.send(log_message='子进程关闭成功')
-#         sleep(5)
-#
-#
-# if __name__ == '__main__':
-#     runChildProcess()
-    # runParentProcess()
+if __name__ == '__main__':
+    # runChildProcess()
+    runParentProcess()

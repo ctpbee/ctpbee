@@ -2,7 +2,7 @@
 from __future__ import absolute_import
 from datetime import datetime
 from uuid import uuid1
-import handle.bar_generator
+import handle
 from blinker import signal
 from vnpy.trader.vtEvent import EVENT_TICK
 from database import client
@@ -59,7 +59,7 @@ def on_tick(data):
     if bm:
         bm.updateTick(tick)
     if not bm:
-        bar[symbol] = handle.bar_generator.BarGenerator()
+        bar[symbol] = handle.BarGenerator()
     client[TICK_DB][tick.symbol].insert(tick.__dict__)
 
 
@@ -85,4 +85,4 @@ def log(sender, **kwargs):
 event_engine.register(EVENT_TICK, on_tick)
 event_engine.register(EVENT_BAR, on_bar)
 log_signal.connect(log)
-stop_signal.connect(handle.bar_generator.BarGenerator.generate)
+# stop_signal.connect(handle.BarGenerator.generate)
