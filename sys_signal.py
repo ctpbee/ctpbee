@@ -1,7 +1,6 @@
 # coding:utf-8
 from __future__ import absolute_import
 from datetime import datetime
-from functools import wraps
 from uuid import uuid1
 import handle.bar_generator
 from blinker import signal
@@ -13,6 +12,7 @@ from sys_constant import LOG_FORMAT, ERROR_FORMAT, \
 from sys_constant import LOG_LEVEL
 from setting import XMIN, TICK_DB, XMIN_MAP
 from sys_constant import EVENT_BAR
+from decorator import err_collector
 
 bar = {}
 stop_signal = signal("stop")
@@ -24,20 +24,15 @@ def get_local_time():
     return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 
-def err_collector(func):
-    @wraps(func)
-    def wrapper(data):
-        try:
-            func(data)
-        except Exception as e:
-            log_signal.send(log_message=e, log_level=ERROR_LEVEL)
-        return func
-
-    return wrapper
-
-
 @err_collector
 def on_bar(event):
+    """
+    bar handle function
+    event.dict_['db'] : bar type , 1 ,3,5,7... etc
+    event.dict_['bar'] : vtBar
+    :param event: bar event
+    :return: None
+    """
     data = event.dict_
     db = data['db']
     doc_name = XMIN_MAP.get(db)
@@ -48,17 +43,7 @@ def on_bar(event):
     client[doc_name][bar['symbol']].insert(bar)
 
 
-def log(sender, **kwargs):
-    if kwargs.get("log_level") is None:
-        level = LOG_LEVEL
-    if kwargs.get("log_level") is not None:
-        level = ERROR_LEVEL
-    log = (LOG_FORMAT if level == LOG_LEVEL else ERROR_FORMAT).format(get_local_time(), level, "SYSTEM",
-                                                                      kwargs['log_message'], chr(254))
-    print(log)
-
-
-# @err_collector
+@err_collector
 def on_tick(data):
     """solve tick data function in here"""
     tick = data.dict_
@@ -78,7 +63,25 @@ def on_tick(data):
     client[TICK_DB][tick.symbol].insert(tick.__dict__)
 
 
-# tick register function
+def log(sender, **kwargs):
+    """
+    log handle function
+    :param sender: ...
+    :param kwargs:  send parameter
+    :return: None
+    """
+    if kwargs.get("log_level") is None:
+        level = LOG_LEVEL
+    if kwargs.get("log_level") is not None:
+        level = ERROR_LEVEL
+    log = (LOG_FORMAT if level == LOG_LEVEL else ERROR_FORMAT).format(get_local_time(), level, "SYSTEM",
+                                                                      kwargs['log_message'], chr(254))
+    with open("debug.log", "a") as f:
+        f.write(log + "\n")
+    print(log)
+
+
+# register function
 event_engine.register(EVENT_TICK, on_tick)
 event_engine.register(EVENT_BAR, on_bar)
 log_signal.connect(log)

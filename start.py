@@ -1,18 +1,18 @@
 # coding:utf-8
 from __future__ import print_function
 import warnings
-
-import sys_constant
-from setting import CONNECT_INFO
-
 warnings.filterwarnings('ignore')
 import multiprocessing
 from datetime import datetime, time
 from time import sleep
+
+import sys_constant
 from trade_api.catch import MainEngine
 from sys_signal import log_signal, stop_signal
 from md_api.mdApi import CtpMdApi
 from event_engine import event_engine
+from setting import CONNECT_INFO
+
 
 
 def get_all_contract():
@@ -22,7 +22,7 @@ def get_all_contract():
     sleep(1)
     engine.qry_instrument()
     sleep(1)
-    log_signal.send(log_message="交易服务器连接状态:" + str(engine.get_login_status()))
+    log_signal.send(log_message=sys_constant.TD_CONNECTION_STATUS + str(engine.get_login_status()))
     while True:
         sleep(1)
         if len(engine.getAllContracts()) != 0:
@@ -30,7 +30,7 @@ def get_all_contract():
             break
         log_signal.send(log_message="等待数据返回", log_level=sys_constant.ERROR_LEVEL)
     contracts = engine.getAllContracts()
-    log_signal.send(log_message="关闭交易服务器连接")
+    log_signal.send(log_message=sys_constant.TD_CONNECTION_CLOSE)
     print("*" * 100)
     engine.close_connection()
     print("*" * 100)
@@ -44,16 +44,16 @@ def tick_start(req_list):
     tick.connect(userID=CONNECT_INFO['user_id'], password=CONNECT_INFO['password'], brokerID=CONNECT_INFO['broke_id'],
                  address=CONNECT_INFO['md_address'])
     sleep(2)
-    log_signal.send(log_message="准备订阅新的数据")
+    log_signal.send(log_message=sys_constant.MD_READY_SUBSCRIBE)
     if tick.connectionStatus:
         for r in req_list:
             tick.subscribe(r)
-        log_signal.send(log_message="成功订阅")
+        log_signal.send(log_message=sys_constant.MD_SUBSCTIBE_SUCCESS)
     elif not tick.connectionStatus:
-        log_signal.send(log_message="订阅失败", log_level=sys_constant.ERROR_LEVEL)
+        log_signal.send(log_message=sys_constant.MD_SUBSCTIBE_FAIL, log_level=sys_constant.ERROR_LEVEL)
         import sys
         sys.exit()
-    log_signal.send(log_message="启动成功")
+    log_signal.send(log_message=sys_constant.START_SUCCESS)
     sleep(10)
     stop_signal.send(message="stop")
     while True:
@@ -61,13 +61,16 @@ def tick_start(req_list):
 
 
 
-# ----------------------------------------------------------------------
+# ----------------------------------- -----------------------------------
 def runChildProcess():
     """子进程运行函数"""
     contracts = get_all_contract()
     tick_start(contracts)
 
 runChildProcess()
+
+
+
 # # ----------------------------------------------------------------------
 # def runParentProcess():
 #     """父进程运行函数"""

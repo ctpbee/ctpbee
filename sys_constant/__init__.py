@@ -26,3 +26,15 @@ TRADING_SERVER_LOGOUT = '交易服务器注销完成'
 SETTLEMENT_INFO_CONFIRMED = '结算信息确认'
 CONTRACT_DATA_RECEIVED = '收到合约数据'
 EVENT_BAR = "ebar"
+
+TD_LOGIN_FAIL = "交易服务器登录失败"
+TD_CONNECTION_CLOSE = "关闭交易服务器链接"
+TD_CONNECTION_STATUS = "交易服务器连接状态:"
+
+
+MD_LOGIN_FAIL = "行情服务器登录失败"
+MD_READY_SUBSCRIBE = "准备订阅新的数据"
+MD_SUBSCTIBE_SUCCESS = "成功订阅"
+MD_SUBSCTIBE_FAIL = "订阅失败"
+
+START_SUCCESS = "启动成功"
