@@ -37,6 +37,9 @@ XMIN ： k线配置, 【int, int, int...】
 
 
 
-
+## todo 
+- add orm 
+- add mongoengine
+- add redis_engine
 
 #### 好用记得点个star哦  QAQ
