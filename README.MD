@@ -44,3 +44,5 @@ XMIN ： k线配置, 【int, int, int...】
 - add redis_engine
 
 #### 好用记得点个star哦  QAQ
+
+> 如果有啥问题， 欢迎issue反馈。 or qq:723316072
