@@ -37,6 +37,7 @@ class BarGenerator(object):
 
         # 尚未创建对象
         if not self.bar:
+
             self.bar = VtBarData()
             newMinute = True
         # 新的一分钟
@@ -134,20 +135,21 @@ class BarGenerator(object):
     # ----------------------------------------------------------------------
     def generate(self, **kwargs):
         """手动强制立即完成K线合成"""
-        print "强制合成  -----"
         data = {
             "db": "1",
             "bar": self.bar
         }
-        event = Event(type_=EVENT_BAR, dict=data)
-        event_engine.put(event)
+        if self.bar is not None:
+            event = Event(type_=EVENT_BAR, dict=data)
+            event_engine.put(event)
         for x in XMIN:
             data = {
                 "db": x,
                 "bar": getattr(self, "min_{}_bar".format(x))
             }
-            event = Event(type_=EVENT_BAR, dict=data)
-            event_engine.put(event)
+            if data['bar'] is not None:
+                event = Event(type_=EVENT_BAR, dict=data)
+                event_engine.put(event)
         self.bar = None
         for x in XMIN:
             setattr(self, "min_{}_bar".format(x), None)

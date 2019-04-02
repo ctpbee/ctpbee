@@ -11,7 +11,7 @@ from sys_constant import LOG_FORMAT, ERROR_FORMAT, \
     ERROR_LEVEL
 from sys_constant import LOG_LEVEL
 from setting import XMIN, TICK_DB, XMIN_MAP
-from sys_constant import EVENT_BAR
+from sys_constant import EVENT_BAR,EVENT_STOP
 from decorator import err_collector
 
 bar = {}
@@ -33,6 +33,7 @@ def on_bar(event):
     :param event: bar event
     :return: None
     """
+
     data = event.dict_
     db = data['db']
     doc_name = XMIN_MAP.get(db)
@@ -76,13 +77,20 @@ def log(sender, **kwargs):
         level = ERROR_LEVEL
     log = (LOG_FORMAT if level == LOG_LEVEL else ERROR_FORMAT).format(get_local_time(), level, "SYSTEM",
                                                                       kwargs['log_message'], chr(254))
-    with open("debug.log", "a") as f:
-        f.write(log + "\n")
+    if level == ERROR_LEVEL:
+        with open("debug.log", "a") as f:
+            f.write(log + "\n")
     print(log)
+
+def stop(event):
+    if event.dict_['signal']:
+        for x in bar.values():
+            x.generate()
+
 
 
 # register function
 event_engine.register(EVENT_TICK, on_tick)
 event_engine.register(EVENT_BAR, on_bar)
+event_engine.register(EVENT_STOP, stop)
 log_signal.connect(log)
-# stop_signal.connect(handle.BarGenerator.generate)

@@ -10,11 +10,18 @@ from time import sleep
 
 import sys_constant
 from trade_api.catch import MainEngine
-from sys_signal import log_signal, stop_signal
+from sys_signal import log_signal
+from sys_constant import EVENT_STOP
 from md_api.mdApi import CtpMdApi
+from event_engine.engine import Event
 from event_engine import event_engine
 from setting import CONNECT_INFO
 
+
+def stop_signal():
+    log_signal.send(log_message=sys_constant.EXIT_INFO)
+    stop_event = Event(type_=EVENT_STOP, dict={"signal": True})
+    event_engine.put(stop_event)
 
 def get_all_contract():
     engine = MainEngine()
@@ -55,8 +62,7 @@ def tick_start(req_list):
         import sys
         sys.exit()
     log_signal.send(log_message=sys_constant.START_SUCCESS)
-    sleep(10)
-    stop_signal.send(message="stop")
+
     while True:
         sleep(1)
 
@@ -103,8 +109,8 @@ def runParentProcess():
 
         # 非记录时间则退出子进程
         if not recording and p is not None:
-            log_signal.send(log_message='关闭子进程')
-            stop_signal.send(message="stop")
+            #　"""执行最后请求"""
+            stop_signal()
             p.terminate()
             p.join()
             p = None
@@ -113,5 +119,5 @@ def runParentProcess():
 
 
 if __name__ == '__main__':
-    # runChildProcess()
-    runParentProcess()
+    runChildProcess()
+    # runParentProcess()
