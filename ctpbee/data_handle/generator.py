@@ -1,31 +1,28 @@
 # encoding: UTF-8
-
-
-from setting import XMIN
-from vnpy.trader.vtObject import VtBarData
+from ctpbee.api.custom_var import BarData
 from ctpbee.event_engine import Event
-from ctpbee.event_engine import event_engine
+from ctpbee.event_engine import controller
+from ctpbee.api.custom_var import EVENT_BAR
+from ctpbee.context import current_app
 
-########################################################################
-from sys_constant import EVENT_BAR
 
-
-class BarGenerator(object):
+class DataGenerator(object):
     """
-    K线合成器，支持：
+    数据合成器，支持：
     1. 基于Tick合成1分钟K线
     2. 基于1分钟K线合成X分钟K线（X可以是2、3、5、10、15、30	）
+    3. 分时图数据支持
     """
 
-    # ----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
         self.bar = None  # 1分钟K线对象
         self.lastTick = None  # 上一TICK缓存对象
         self._generator()
+        self.XMIN = current_app().config.get("XMIN")
 
     def _generator(self):
-        for x in XMIN:
+        for x in self.XMIN:
             setattr(self, "min_{}".format(x), x)
             setattr(self, "min_{}_bar".format(x), None)
 
@@ -37,7 +34,7 @@ class BarGenerator(object):
         # 尚未创建对象
         if not self.bar:
 
-            self.bar = VtBarData()
+            self.bar = BarData()
             newMinute = True
         # 新的一分钟
         elif self.bar.datetime.minute != tick.datetime.minute:
@@ -53,12 +50,12 @@ class BarGenerator(object):
                 "db": "1",
                 "bar": self.bar
             }
-            event = Event(type_=EVENT_BAR, dict=data)
-            event_engine.put(event)
-            for x in XMIN:
+            event = Event(type=EVENT_BAR, data=data)
+            controller.put(event)
+            for x in self.XMIN:
                 self.updateBar(x, getattr(self, "min_{}_bar".format(x)), self.bar)
             # 创建新的K线对象
-            self.bar = VtBarData()
+            self.bar = BarData()
             newMinute = True
 
         # 初始化新一分钟的K线数据
@@ -93,7 +90,7 @@ class BarGenerator(object):
         """x分钟K线更新"""
         # 尚未创建对象
         if not xmin_bar:
-            xmin_bar = VtBarData()
+            xmin_bar = BarData()
 
             xmin_bar.vtSymbol = bar.vtSymbol
             xmin_bar.symbol = bar.symbol
@@ -126,7 +123,7 @@ class BarGenerator(object):
                 "bar": xmin_bar
             }
             event = Event(type_=EVENT_BAR, dict=data)
-            event_engine.put(event)
+            controller.put(event)
 
             # 清空老K线缓存对象
             xmin_bar = None
@@ -139,16 +136,16 @@ class BarGenerator(object):
             "bar": self.bar
         }
         if self.bar is not None:
-            event = Event(type_=EVENT_BAR, dict=data)
-            event_engine.put(event)
-        for x in XMIN:
+            event = Event(type=EVENT_BAR, data=data)
+            controller.put(event)
+        for x in self.XMIN:
             data = {
                 "db": x,
                 "bar": getattr(self, "min_{}_bar".format(x))
             }
             if data['bar'] is not None:
-                event = Event(type_=EVENT_BAR, dict=data)
-                event_engine.put(event)
+                event = Event(type=EVENT_BAR, data=data)
+                controller.put(event)
         self.bar = None
-        for x in XMIN:
+        for x in self.XMIN:
             setattr(self, "min_{}_bar".format(x), None)

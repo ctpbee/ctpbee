@@ -5,6 +5,7 @@ from ctpbee.context.proxy import proxy
 from ctpbee.exceptions import ContextError
 from ctpbee.func import DataResolve
 
+
 class Recorder(object):
     """
     copy from vnpy oms_engine
@@ -109,6 +110,12 @@ class Recorder(object):
         """"""
         contract = event.data
         self.contracts[contract.vt_symbol] = contract
+
+    def get_bar(self, vt_symbol):
+        return self.bar.get(vt_symbol, None)
+
+    def get_all_bar(self):
+        return self.bar
 
     def get_tick(self, vt_symbol):
         """

@@ -5,7 +5,6 @@ from .custom_var import (EVENT_TRADE, EVENT_ERROR, EVENT_ACCOUNT, EVENT_CONTRACT
 
 class BeeTdApi(TdApi):
     """"""
-
     def __init__(self):
         """Constructor"""
         super(BeeTdApi, self).__init__()
