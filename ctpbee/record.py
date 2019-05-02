@@ -1,7 +1,7 @@
 from ctpbee.api.custom_var import *
 # from data_handle.handle import BarGenerator
 from ctpbee.event_engine import controller, Event
-from ctpbee.context.proxy import proxy
+from ctpbee.context import current_app
 from ctpbee.exceptions import ContextError
 from ctpbee.func import DataResolve
 
@@ -48,12 +48,11 @@ class Recorder(object):
 
     def process_error_event(self, event: Event):
         self.errors[self.get_local_time()] = event.data
+        print(self.get_local_time() + ": ", event.data)
 
     def process_log_event(self, event: Event):
         self.logs[self.get_local_time()] = event.data
-        if len(proxy) == 0:
-            raise ContextError(message="不存在访问内容， 请确保登录", args=("不存在访问内容， 请确保登录",))
-        if list(proxy.app)[0].config.get("LOG_OUTPUT"):
+        if current_app().config.get("LOG_OUTPUT"):
             print(self.get_local_time() + ": ", event.data)
 
     def process_bar_event(self, event: Event):

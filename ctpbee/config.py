@@ -6,6 +6,7 @@ use for refrence from flask config
 import os
 import types
 import errno
+from collections import OrderedDict
 
 from werkzeug.utils import import_string
 from flask._compat import string_types, iteritems
@@ -45,7 +46,7 @@ class Config(dict):
                 exec(compile(config_file.read(), filename, 'exec'), d.__dict__)
         except IOError as e:
             if silent and e.errno in (
-                errno.ENOENT, errno.EISDIR, errno.ENOTDIR
+                    errno.ENOENT, errno.EISDIR, errno.ENOTDIR
             ):
                 return False
             e.strerror = 'Unable to load configuration file (%s)' % e.strerror
@@ -58,7 +59,7 @@ class Config(dict):
             obj = import_string(obj)
         for key in dir(obj):
             if key.isupper():
-                self[key] = getattr(obj, key)
+                self._setitem(key, getattr(obj, key))
 
     def from_json(self, filename, silent=False):
         filename = os.path.join(self.root_path, filename)
@@ -93,6 +94,7 @@ class Config(dict):
             for (key, value) in mapping:
                 if key.isupper():
                     self[key] = value
+                    self._setitem(key, value)
         return True
 
     def get_namespace(self, namespace, lowercase=True, trim_namespace=True):
@@ -108,6 +110,14 @@ class Config(dict):
                 key = key.lower()
             rv[key] = v
         return rv
+
+    def _setitem(self, key, value):
+        self[key] = value
+        if key == "XMIN":
+            if not isinstance(value, list):
+                raise Exception("XIMN对应的输入值有问题 ")
+            self["XMIN_DATABASE_NAME"] = ["min_" + str(x) for x in self['XMIN']]
+            self["XMIN_MAP"] = OrderedDict(zip(self['XMIN'], self['XMIN_DATABASE_NAME']))
 
     def __repr__(self):
         return '<%s %s>' % (self.__class__.__name__, dict.__repr__(self))

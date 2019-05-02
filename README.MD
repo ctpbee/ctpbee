@@ -1,26 +1,26 @@
 # ctpbee
 
-bee bee .... there is an industrious created ~~
+bee bee .... there is an industrious bee created ~~
 
-## download 
+## Download 
 
 
 ```
 git clone https://github.com/somewheve/ctp-market
 ```
 
-## libraries
+## Libraries
 
 - [vnpy](https://github.com/vnpy/vnpy)
 
 - pymongo
 
-## install 
+## Install 
 ```bash
-python3 setup install
+python3  setup.py install
 ```
 
-## start 
+## quick start 
 ```python
 
 from ctpbee import CtpBee
@@ -29,12 +29,12 @@ app.start()
 
 ```
 
-## 配置文件 
-> for more information , please see the wiki
+## More 
+> for more information , please see the [wiki](https://github.com/vnpy/vnpy)
 
 
-## todo 
-- add orm 
+## Todo 
+- add peewee support
 - add mongoengine
 
 #### 好用记得点个star哦  QAQ

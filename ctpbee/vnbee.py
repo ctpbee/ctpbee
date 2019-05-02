@@ -1,6 +1,11 @@
 import os
+import sys
+from time import sleep
 
-from ctpbee.exceptions import ConfigError
+from flask.helpers import locked_cached_property, find_package
+from werkzeug.datastructures import ImmutableDict
+
+from ctpbee.exceptions import ConfigError, TraderError
 from ctpbee.record import Recorder
 from ctpbee.context import proxy
 from ctpbee.api import BeeMdApi, BeeTdApi
@@ -8,29 +13,65 @@ from ctpbee.config import Config
 from ctpbee.event_engine import controller
 
 
-class CtpBee:
+class CtpBee(object):
+    default_config = ImmutableDict(
+        dict(LOG_OUTPUT=True, TD_FUNC=False, MD_FUNC=True, TICK_DB="tick_me", XMIN=[], ALL_SUBSCRIBE=False))
+    config_class = Config
     recorder = Recorder()
-    config = Config(os.path.abspath(os.path.dirname(__file__)))
+    root_path = None
     __active = False
     market = None
     trader = None
+    import_name = None
 
-    def __init__(self, name):
-        self.name = name
-        self.config.from_pyfile("base_setting.py")
+    def __init__(self, import_name, instance_relative_config=True, instance_path=None):
+        self.import_name = import_name
+
+        if instance_path is None:
+            instance_path = self.auto_find_instance_path()
+        elif not os.path.isabs(instance_path):
+            raise ValueError(
+                'If an instance path is provided it must be absolute.'
+                ' A relative path was given instead.'
+            )
+        self.instance_path = instance_path
+        self.config = self.make_config(instance_relative_config)
         proxy.push(self)
+
+    def make_config(self, instance_relative=True):
+        root_path = self.root_path
+        if instance_relative:
+            root_path = self.instance_path
+        defaults = dict(self.default_config)
+        return self.config_class(root_path, defaults)
+
+    def auto_find_instance_path(self):
+        prefix, package_path = find_package(self.import_name)
+        if prefix is None:
+            return os.path.join(package_path)
+        return os.path.join(prefix, 'var', self.name + '-instance')
 
     def _check_info(self):
         self.__active = True
         if "CONNECT_INFO" in self.config.keys():
             info = self.config.get("CONNECT_INFO")
         else:
-            raise ConfigError(message="行情没有相应的登录信息", args=("没有发现行情登录信息",))
-        self.market = BeeMdApi()
-        self.market.connect(info)
+            raise ConfigError(message="没有相应的登录信息", args=("没有发现登录信息",))
         if self.config.get("TD_FUNC"):
             self.trader = BeeTdApi()
             self.trader.connect(info)
+            sleep(1)
+        self.market = BeeMdApi()
+        self.market.connect(info)
+
+    @locked_cached_property
+    def name(self):
+        if self.import_name == '__main__':
+            fn = getattr(sys.modules['__main__'], '__file__', None)
+            if fn is None:
+                return '__main__'
+            return os.path.splitext(os.path.basename(fn))[0]
+        return self.import_name
 
     def start(self, log_output=True):
         self.config["LOG_OUTPUT"] = log_output

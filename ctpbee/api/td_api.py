@@ -5,6 +5,7 @@ from .custom_var import (EVENT_TRADE, EVENT_ERROR, EVENT_ACCOUNT, EVENT_CONTRACT
 
 class BeeTdApi(TdApi):
     """"""
+
     def __init__(self):
         """Constructor"""
         super(BeeTdApi, self).__init__()
@@ -293,8 +294,6 @@ class BeeTdApi(TdApi):
         self.brokerid = info.get("brokerid")
         self.auth_code = info.get("auth_code")
         self.product_info = info.get("product_info")
-
-
         if not self.connect_status:
             path = get_folder_path(self.gateway_name.lower())
             self.createFtdcTraderApi(str(path) + "\\Td")
