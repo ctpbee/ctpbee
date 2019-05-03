@@ -34,13 +34,13 @@ app.start()
 
 ```
 ## Documention
-for readme in chinese see [中文](https://github.com/somewheve/ctpbee/README_CN.MD)
+for readme in chinese see [中文](https://github.com/somewheve/ctpbee/blob/master/README_CN.MD)
 
 document is developed .... 
 
 
 ## More 
-> for more information , please see the [wiki](https://github.com/vnpy/vnpy)
+> for more information , please see the [wiki](https://github.com/somewheve/ctpbee/wiki)
 or  read the [examples](https://github.com/somewheve/ctpbee/exmple/app.py)
 
 
