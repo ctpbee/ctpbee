@@ -1,9 +1,10 @@
+from ctpbee.data_handle import DataGenerator
+
 from ctpbee.api.custom_var import *
 # from data_handle.handle import BarGenerator
 from ctpbee.event_engine import controller, Event
 from ctpbee.context import current_app
 from ctpbee.exceptions import ContextError
-from ctpbee.func import DataResolve
 
 
 class Recorder(object):
@@ -57,13 +58,12 @@ class Recorder(object):
 
     def process_bar_event(self, event: Event):
         bar = event.data
-        DataResolve.process_bar(bar=bar)
+        if current_app().extensions.get("data_pointer", None) is not None:
+            current_app().extensions['data_pointer'].data_solve(event)
 
     def process_tick_event(self, event: Event):
         """"""
         tick = event.data
-        DataResolve.process_tick(tick)
-
         self.ticks[tick.vt_symbol] = tick
         symbol = tick.symbol
         # 生成datetime对象
@@ -72,12 +72,13 @@ class Recorder(object):
                 tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y%m%d %H:%M:%S.%f')
             else:
                 tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y%m%d %H:%M:%S')
-
         bm = self.bar.get(symbol, None)
-        # if bm:
-        #     bm.updateTick(tick)
-        # if not bm:
-        #     self.bar[symbol] = BarGenerator()
+        if bm:
+            bm.updateTick(tick)
+        if not bm:
+            self.bar[symbol] = DataGenerator()
+        if current_app().extensions.get("data_pointer", None) is not None:
+            current_app().extensions['data_pointer'].data_solve(event)
 
     def process_order_event(self, event: Event):
         """"""

@@ -2,6 +2,7 @@
 function used to cancle order, sender, qry_position and qry_account
 
 """
+from abc import ABC
 from ctpbee.context import proxy, current_app
 from ctpbee.api.custom_var import OrderRequest, CancelRequest
 from ctpbee.exceptions import TraderError, ContextError
@@ -36,26 +37,19 @@ def query_func(type):
         app.trader.query_account()
 
 
-class DataResolve(object):
-    def __init__(self):
+class DataSolve(object):
+    def __init__(self, app=None):
+            app.extensions['data_pointer'] = self
+
+    def data_solve(self, data):
+        """基础数据处理方法"""
         pass
 
-    @classmethod
-    def process_tick(self, tick):
-        func = getattr(self, "on_tick")
-        func(tick)
-
-    @classmethod
-    def process_bar(self, bar):
-        func = getattr(self, "on_tick")
-        func(bar)
-
-    @classmethod
-    def on_tick(self, tick):
-        """用户收到tick的处理"""
-        pass
-
-    @classmethod
     def on_bar(self, bar):
-        """用户收到bar的处理"""
         pass
+
+    def on_tick(self, tick):
+        pass
+
+    def init_app(self, app):
+        app['data_pointer'] = self

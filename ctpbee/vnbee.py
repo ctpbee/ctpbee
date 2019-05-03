@@ -2,15 +2,16 @@ import os
 import sys
 from time import sleep
 
-from flask.helpers import locked_cached_property, find_package
 from werkzeug.datastructures import ImmutableDict
 
-from ctpbee.exceptions import ConfigError, TraderError
+from ctpbee.helpers import locked_cached_property, find_package
+from ctpbee.exceptions import ConfigError
 from ctpbee.record import Recorder
 from ctpbee.context import proxy
 from ctpbee.api import BeeMdApi, BeeTdApi
 from ctpbee.config import Config
 from ctpbee.event_engine import controller
+from ctpbee.func import DataSolve
 
 
 class CtpBee(object):
@@ -23,10 +24,11 @@ class CtpBee(object):
     market = None
     trader = None
     import_name = None
+    extensions = {}
 
     def __init__(self, import_name, instance_relative_config=True, instance_path=None):
+        """this will be developed in the next version"""
         self.import_name = import_name
-
         if instance_path is None:
             instance_path = self.auto_find_instance_path()
         elif not os.path.isabs(instance_path):

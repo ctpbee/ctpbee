@@ -1,7 +1,6 @@
 from ctpbee.exceptions import ContextError
 from ctpbee.context.proxy import proxy
 
-
 def current_app():
     """
 
