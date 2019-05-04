@@ -18,10 +18,11 @@ class Event:
     object which contains the real data.
     """
 
-    def __init__(self, type: str, data: Any = None):
+    def __init__(self, type: str, data: Any = None, interval=None):
         """"""
         self.type = type
         self.data = data
+        self.interval = None
 
 
 # Defines handler function to be used in event engine.

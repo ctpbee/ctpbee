@@ -7,13 +7,6 @@ _missing = object()
 
 
 class locked_cached_property(object):
-    """A decorator that converts a function into a lazy property.  The
-    function wrapped is called the first time to retrieve the result
-    and then that calculated result is used the next time you access
-    the value.  Works like the one in Werkzeug but has a lock for
-    thread safety.
-    """
-
     def __init__(self, func, name=None, doc=None):
         self.__name__ = name or func.__name__
         self.__module__ = func.__module__
@@ -81,11 +74,6 @@ def find_package(import_name):
 
 
 def _matching_loader_thinks_module_is_package(loader, mod_name):
-    """Given the loader that loaded a module and the module this function
-    attempts to figure out if the given module is actually a package.
-    """
-    # If the loader can tell us if something is a package, we can
-    # directly ask the loader.
     if hasattr(loader, 'is_package'):
         return loader.is_package(mod_name)
     # importlib's namespace loaders do not have this functionality but

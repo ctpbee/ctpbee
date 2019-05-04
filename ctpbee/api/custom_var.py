@@ -19,6 +19,8 @@ EVENT_POSITION = "position"
 EVENT_TRADE = "trade"
 EVENT_ORDER = "order"
 EVENT_ACCOUNT = "account"
+EVENT_SHARED = "shared"
+
 
 
 @dataclass
@@ -90,7 +92,6 @@ class BarData(BaseData):
     """
     Candlestick bar data of a certain trading period.
     """
-
     symbol: str
     exchange: Exchange
     datetime: datetime
@@ -113,7 +114,6 @@ class OrderData(BaseData):
     Order data contains information for tracking lastest status
     of a specific order.
     """
-
     symbol: str
     exchange: Exchange
     orderid: str

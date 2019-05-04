@@ -1,7 +1,7 @@
-from ctpbee.data_handle import DataGenerator
+from ctpbee.data_handle import generator
 
 from ctpbee.api.custom_var import *
-# from data_handle.handle import BarGenerator
+# from data_handle.handle import
 from ctpbee.event_engine import controller, Event
 from ctpbee.context import current_app
 from ctpbee.exceptions import ContextError
@@ -24,6 +24,7 @@ class Recorder(object):
         self.contracts = {}
         self.logs = {}
         self.errors = {}
+        self.shared = {}
 
         self.active_orders = {}
         self.controller = controller
@@ -36,7 +37,7 @@ class Recorder(object):
         return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     def register_event(self):
-        """"""
+        """bind process function"""
         self.controller.register(EVENT_TICK, self.process_tick_event)
         self.controller.register(EVENT_ORDER, self.process_order_event)
         self.controller.register(EVENT_TRADE, self.process_trade_event)
@@ -46,6 +47,12 @@ class Recorder(object):
         self.controller.register(EVENT_BAR, self.process_bar_event)
         self.controller.register(EVENT_LOG, self.process_log_event)
         self.controller.register(EVENT_ERROR, self.process_error_event)
+        self.controller.register(EVENT_SHARED, self.process_shared_event)
+
+    def process_shared_event(self, event):
+        self.shared[event.data.vt_symbol] = event.data
+        if current_app().extensions.get("data_pointer", None) is not None:
+            current_app().extensions['data_pointer'].data_solve(event)
 
     def process_error_event(self, event: Event):
         self.errors[self.get_local_time()] = event.data
@@ -57,7 +64,7 @@ class Recorder(object):
             print(self.get_local_time() + ": ", event.data)
 
     def process_bar_event(self, event: Event):
-        bar = event.data
+        self.bar[event.data.vt_symbol] = event.data
         if current_app().extensions.get("data_pointer", None) is not None:
             current_app().extensions['data_pointer'].data_solve(event)
 
@@ -76,7 +83,7 @@ class Recorder(object):
         if bm:
             bm.updateTick(tick)
         if not bm:
-            self.bar[symbol] = DataGenerator()
+            self.bar[symbol] = generator()
         if current_app().extensions.get("data_pointer", None) is not None:
             current_app().extensions['data_pointer'].data_solve(event)
 
@@ -110,6 +117,12 @@ class Recorder(object):
         """"""
         contract = event.data
         self.contracts[contract.vt_symbol] = contract
+
+    def get_shared(self, symbol):
+        return self.shared.get(symbol, None)
+
+    def get_all_shared(self):
+        return self.shared
 
     def get_bar(self, vt_symbol):
         return self.bar.get(vt_symbol, None)

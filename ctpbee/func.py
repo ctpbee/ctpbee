@@ -2,10 +2,9 @@
 function used to cancle order, sender, qry_position and qry_account
 
 """
-from abc import ABC
 from ctpbee.context import proxy, current_app
 from ctpbee.api.custom_var import OrderRequest, CancelRequest
-from ctpbee.exceptions import TraderError, ContextError
+from ctpbee.exceptions import TraderError
 
 
 def send_order(order_req: OrderRequest):
@@ -39,9 +38,9 @@ def query_func(type):
 
 class DataSolve(object):
     def __init__(self, app=None):
-            app.extensions['data_pointer'] = self
+        app.extensions['data_pointer'] = self
 
-    def data_solve(self, data):
+    def data_solve(self, event):
         """基础数据处理方法"""
         pass
 

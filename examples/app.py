@@ -16,10 +16,10 @@ info = {
 }
 app.config.from_mapping(info)
 
-
 class Check(DataSolve):
-    def data_solve(self, data):
+    def data_solve(self, event):
         pass
+
 
 pointer = Check(app)
 app.start()

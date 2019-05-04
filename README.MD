@@ -41,7 +41,7 @@ document is developed ....
 
 ## More 
 > for more information , please see the [wiki](https://github.com/somewheve/ctpbee/wiki)
-or  read the [examples](https://github.com/somewheve/ctpbee/exmple/app.py)
+or  read the [examples](https://github.com/somewheve/ctpbee/blob/master/examples/app.py)
 
 
 ## Todo 

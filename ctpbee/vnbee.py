@@ -11,7 +11,6 @@ from ctpbee.context import proxy
 from ctpbee.api import BeeMdApi, BeeTdApi
 from ctpbee.config import Config
 from ctpbee.event_engine import controller
-from ctpbee.func import DataSolve
 
 
 class CtpBee(object):
