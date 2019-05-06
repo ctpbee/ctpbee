@@ -22,7 +22,10 @@ class Event:
         """"""
         self.type = type
         self.data = data
-        self.interval = None
+        self.interval = interval
+
+    def __str__(self):
+        return "Event(type={}, interval={})".format(self.type, self.interval)
 
 
 # Defines handler function to be used in event engine.
@@ -140,4 +143,3 @@ class EventEngine:
         """
         if handler in self._general_handlers:
             self._general_handlers.remove(handler)
-

@@ -81,7 +81,7 @@ class Recorder(object):
                 tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y%m%d %H:%M:%S')
         bm = self.bar.get(symbol, None)
         if bm:
-            bm.updateTick(tick)
+            bm.update_tick(tick)
         if not bm:
             self.bar[symbol] = generator()
         if current_app().extensions.get("data_pointer", None) is not None:

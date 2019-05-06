@@ -25,7 +25,7 @@ class CtpBee(object):
     import_name = None
     extensions = {}
 
-    def __init__(self, import_name, instance_relative_config=True, instance_path=None):
+    def __init__(self, import_name, instance_path=None):
         """this will be developed in the next version"""
         self.import_name = import_name
         if instance_path is None:
@@ -36,7 +36,7 @@ class CtpBee(object):
                 ' A relative path was given instead.'
             )
         self.instance_path = instance_path
-        self.config = self.make_config(instance_relative_config)
+        self.config = self.make_config()
         proxy.push(self)
 
     def make_config(self, instance_relative=True):

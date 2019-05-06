@@ -38,10 +38,11 @@ class DataGenerator:
             self.bar.datetime = self.bar.datetime.replace(
                 second=0, microsecond=0
             )
-            event = Event(type=EVENT_BAR, data=self.bar)
+            event = Event(type=EVENT_BAR, data=self.bar, interval=1)
+            print(event)
             controller.put(event)
             for x in self.XMIN:
-                self.updateBar(x, getattr(self, "min_{}_bar".format(x)), self.bar)
+                self.update_bar(x, getattr(self, "min_{}_bar".format(x)), self.bar)
             new_minute = True
         if new_minute:
             self.bar = BarData(
@@ -66,7 +67,7 @@ class DataGenerator:
 
         self.last_tick = tick
 
-    def updateBar(self, xmin, xmin_bar: BarData, bar: BarData):
+    def update_bar(self, xmin, xmin_bar: BarData, bar: BarData):
         """
         Update 1 minute bar into generator
         """

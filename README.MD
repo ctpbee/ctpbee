@@ -4,7 +4,7 @@ bee bee .... there is an industrious bee created ~~
 
 ctpbee provide a tiny core, you can extent the function by programming
 
-## Download 
+## Download the code 
 
 ```
 git clone https://github.com/somewheve/ctpbee
@@ -12,18 +12,22 @@ git clone https://github.com/somewheve/ctpbee
 
 ## Libraries
 
-- [vnpy](https://github.com/vnpy/vnpy)
+- [vnpy](https://github.com/vnpy/vnpy) version>=2
 
 ## Install 
 ```bash
-python3 setup.py install
+git clone https://github.com/somewheve/ctpbee & cd ctpbee-master & python3 setup.py install
+
+or 
+
+pip3 install ctpbee 
 ```
 
 ## Function
-- k-line data support
-- time-shared data bus
-- trade support
-- market support
+1. k-line data support
+2. time-shared data support
+3. trade support
+4. market support
 
 ## Quick start 
 ```python
@@ -31,12 +35,11 @@ python3 setup.py install
 from ctpbee import CtpBee
 app = CtpBee(__name__)
 app.start()
-
 ```
 ## Documention
-for readme in chinese see [中文](https://github.com/somewheve/ctpbee/blob/master/README_CN.MD)
+for README in chinese please see [戳我戳我](https://github.com/somewheve/ctpbee/blob/master/README_CN.MD)
 
-document is developed .... 
+document is developing.... 
 
 
 ## More 

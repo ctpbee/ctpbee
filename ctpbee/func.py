@@ -4,6 +4,8 @@ function used to cancle order, sender, qry_position and qry_account
 """
 from ctpbee.context import proxy, current_app
 from ctpbee.api.custom_var import OrderRequest, CancelRequest
+from ctpbee.event_engine import Event
+from ctpbee.api.custom_var import EVENT_TICK, EVENT_BAR
 from ctpbee.exceptions import TraderError
 
 
@@ -38,17 +40,24 @@ def query_func(type):
 
 class DataSolve(object):
     def __init__(self, app=None):
-        app.extensions['data_pointer'] = self
+        if app is not None:
+            app.extensions['data_pointer'] = self
+            self.app = app
 
-    def data_solve(self, event):
+    def data_solve(self, event: Event):
         """基础数据处理方法"""
-        pass
+        if event.type == EVENT_TICK:
+            self.on_tick(tick=event.data)
+        if event.type == EVENT_BAR:
+            self.on_bar(bar=event.data, interval=event.interval)
 
-    def on_bar(self, bar):
+    def on_bar(self, bar, interval):
         pass
 
     def on_tick(self, tick):
+        print(tick)
         pass
 
     def init_app(self, app):
-        app['data_pointer'] = self
+        app.extensions['data_pointer'] = self
+        self.app = app
