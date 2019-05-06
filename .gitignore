@@ -3,8 +3,17 @@
 *.so
 *.egg
 *.egg-info
+.pytest_cache
 dist
 build
 
 # pycharm
 *.idea
+
+# ctp
+temp
+
+# txt
+*.txt
+
+

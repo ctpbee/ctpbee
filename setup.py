@@ -6,7 +6,7 @@ install_requires = [
     "vnpy>2", "flask"
 ]
 setup(name='ctpbee',
-      version='0.1',
+      version='0.11',
       author='somewheve',
       author_email='somewheve@gmail.com',
       description="easy ctp trade and market support",

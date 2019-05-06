@@ -36,8 +36,9 @@ class UserDefine(DataSolve):
     two ways are provided  on_tick and on_bar.
     if you want to send_order . just from ctpbee import send_order
     """
+
     def on_tick(self, tick):
-        pass
+        print(tick)
 
     def on_bar(self, bar, interval):
         pass
