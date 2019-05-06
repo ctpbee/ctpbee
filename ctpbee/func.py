@@ -39,10 +39,6 @@ def query_func(type):
 
 
 class DataSolve(object):
-    def __init__(self, app=None):
-        if app is not None:
-            app.extensions['data_pointer'] = self
-            self.app = app
 
     def data_solve(self, event: Event):
         """基础数据处理方法"""
@@ -55,9 +51,9 @@ class DataSolve(object):
         pass
 
     def on_tick(self, tick):
-        print(tick)
         pass
 
-    def init_app(self, app):
-        app.extensions['data_pointer'] = self
-        self.app = app
+    def __init_subclass__(cls, **kwargs):
+        """get the way of child and copy it to parent"""
+        setattr(DataSolve, "on_tick", cls.on_tick)
+        setattr(DataSolve, "on_bar", cls.on_bar)
