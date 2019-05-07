@@ -27,11 +27,21 @@ python3 setup.py install
 
 ## 快速开始 
 ```python
-
 from ctpbee import CtpBee
 app = CtpBee(__name__)
+info = {
+    "CONNECT_INFO": {
+        "userid": "",
+        "password": "",
+        "brokerid": "9999",
+        "md_address": "tcp://180.168.146.187:10011",
+        "td_address": "tcp://180.168.146.187:10000",
+        "product_info": "",
+        "auth_code": "",
+    }
+}
+app.config.from_mapping(info)
 app.start()
-
 ```
 
 ## 更多 
