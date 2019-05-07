@@ -3,10 +3,10 @@ from setuptools import find_packages
 
 pkgs = find_packages()
 install_requires = [
-    "vnpy>2", "flask"
+       "flask"
 ]
 setup(name='ctpbee',
-      version='0.11',
+      version='0.12',
       author='somewheve',
       author_email='somewheve@gmail.com',
       description="easy ctp trade and market support",

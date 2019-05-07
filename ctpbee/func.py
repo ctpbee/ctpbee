@@ -54,6 +54,12 @@ class DataSolve(object):
         pass
 
     def __init_subclass__(cls, **kwargs):
-        """get the way of child and copy it to parent"""
-        setattr(DataSolve, "on_tick", cls.on_tick)
-        setattr(DataSolve, "on_bar", cls.on_bar)
+        """get all the  attribute of child class and copy it to parent"""
+        for key in dir(cls):
+            try:
+                setattr(DataSolve, key, getattr(cls, key))
+            except AttributeError:
+                pass
+            except TypeError:
+                pass
+

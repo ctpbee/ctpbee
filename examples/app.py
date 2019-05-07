@@ -1,6 +1,6 @@
 from ctpbee import CtpBee
 from ctpbee import DataSolve
-from ctpbee import subscribe
+from ctpbee import subscribe ,send_order
 
 app = CtpBee(__name__)
 info = {
@@ -26,8 +26,11 @@ app.config.from_mapping(info)
 # start this app
 app.start()
 
-# subscribe symbol
 subscribe("AP910")
+# for i in app.recorder.get_all_contracts():
+#     print(i)
+# # subscribe symbol
+#     subscribe(i.symbol)
 
 
 class UserDefine(DataSolve):
