@@ -53,6 +53,7 @@ class TickData(BaseData):
     limit_up: float = 0
     limit_down: float = 0
     open_interest:int = 0
+    average_price: float = 0
 
     open_price: float = 0
     high_price: float = 0
@@ -321,3 +322,14 @@ class CancelRequest:
     def __post_init__(self):
         """"""
         self.vt_symbol = f"{self.symbol}.{self.exchange.value}"
+
+
+@dataclass
+class SharedData:
+    vt_symbol:str
+    datatime:datetime
+
+    open_interest:int = 0
+    volume: float = 0
+    last_price: float = 0
+    average_price:float = 0

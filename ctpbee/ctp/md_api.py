@@ -96,6 +96,7 @@ class BeeMdApi(MdApi):
             ask_price_1=data["AskPrice1"],
             bid_volume_1=data["BidVolume1"],
             ask_volume_1=data["AskVolume1"],
+            average_price=data['AveragePrice'],
             gateway_name=self.gateway_name
         )
         on_event(type=EVENT_TICK, data=tick)

@@ -1,11 +1,12 @@
 # encoding: UTF-8
 from collections import Callable
 
-from ctpbee.ctp.custom_var import BarData, TickData
+from ctpbee.ctp.custom_var import BarData, TickData, SharedData
 from ctpbee.event_engine import Event
 from ctpbee.event_engine import controller
 from ctpbee.ctp.custom_var import EVENT_BAR, EVENT_SHARED
 from ctpbee.context import current_app
+
 class DataGenerator:
     """
     For:
@@ -18,16 +19,20 @@ class DataGenerator:
         """Constructor"""
         self.bar = None
         self.last_tick = None
-
+        self.vt_symbol = None
         self.last_price = None
         self.pre_close = None
         self.volume = None
+        self.last_volume = None
         self.open_interest = None
-        self.avr_price = None
+        self.average_price = None
+
+        self.denominator = 0
+        self.molecule = 0
 
         self.XMIN = current_app().config.get("XMIN")
         self._generator()
-
+        self.rd = None
 
     def _generator(self):
         for x in self.XMIN:
@@ -36,10 +41,23 @@ class DataGenerator:
 
     def update_tick(self, tick: TickData):
         """
-        Update new tick data into generator.
+        Update new tick data into generator and new_shared time data.
         """
         new_minute = False
+        self.last_price = tick.last_price
+        self.open_interest = tick.open_interest
+        self.volume = tick.volume
+        self.molecule = self.molecule + tick.last_price * tick.volume
+        self.denominator = self.denominator + tick.volume
+        try:
+            self.average_price = self.molecule / self.denominator
+        except ZeroDivisionError:
+            self.average_price = tick.last_price
 
+        if self.last_volume is None:
+            self.last_volume = tick.volume
+        if self.vt_symbol is None:
+            self.vt_symbol = tick.vt_symbol
         if not self.bar:
             new_minute = True
         elif self.bar.datetime.minute != tick.datetime.minute:
@@ -47,12 +65,16 @@ class DataGenerator:
                 second=0, microsecond=0
             )
             event = Event(type=EVENT_BAR, data=self.bar, interval=1)
-            print(event)
             controller.put(event)
-            for x in self.XMIN:
-                self.update_bar(x, getattr(self, "min_{}_bar".format(x)), self.bar)
+            [self.update_bar(x, getattr(self, "min_{}_bar".format(x)), self.bar) for x in self.XMIN]
             new_minute = True
         if new_minute:
+            shared = SharedData(last_price=round(self.last_price, 2), datatime=tick.datetime, vt_symbol=self.vt_symbol,
+                                open_interest=self.open_interest, average_price=round(self.average_price, 2),
+                                volume=self.volume - self.last_volume)
+            self.last_volume = tick.volume
+            event = Event(type=EVENT_SHARED, data=shared)
+            controller.put(event)
             self.bar = BarData(
                 symbol=tick.symbol,
                 exchange=tick.exchange,
@@ -72,7 +94,6 @@ class DataGenerator:
         if self.last_tick:
             volume_change = tick.volume - self.last_tick.volume
             self.bar.volume += max(volume_change, 0)
-
         self.last_tick = tick
 
     def update_bar(self, xmin, xmin_bar: BarData, bar: BarData):
@@ -97,7 +118,6 @@ class DataGenerator:
 
         xmin_bar.close_price = bar.close_price
         xmin_bar.volume += int(bar.volume)
-
         if not (bar.datetime.minute + 1) % xmin:
             xmin_bar.datetime = xmin_bar.datetime.replace(
                 second=0, microsecond=0
@@ -115,5 +135,4 @@ class DataGenerator:
                 event = Event(type=EVENT_BAR, data=getattr(self, "min_{}_bar".format(x)), interval=x)
                 controller.put(event)
         self.bar = None
-        for x in self.XMIN:
-            setattr(self, "min_{}_bar".format(x), None)
+        [setattr(self, "min_{}_bar".format(x), None) for x in self.XMIN]

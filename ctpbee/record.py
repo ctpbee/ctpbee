@@ -50,7 +50,10 @@ class Recorder(object):
         self.controller.register(EVENT_SHARED, self.process_shared_event)
 
     def process_shared_event(self, event):
-        self.shared[event.data.vt_symbol] = event.data
+        if self.shared.get(event.data.vt_symbol, None) is not None:
+            self.shared[event.data.vt_symbol].append(event.data)
+        else:
+            self.shared[event.data.vt_symbol] = []
         if current_app().extensions.get("data_pointer", None) is not None:
             current_app().extensions['data_pointer'].data_solve(event)
 

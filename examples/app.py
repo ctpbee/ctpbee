@@ -27,7 +27,7 @@ app.config.from_mapping(info)
 # start this app
 app.start()
 
-subscribe("AP910")
+subscribe("ag1912")
 # for i in app.recorder.get_all_contracts():
 #     print(i)
 # # subscribe symbol
@@ -46,10 +46,13 @@ class UserDefine(DataSolve):
     """
 
     def on_tick(self, tick):
-        print(tick)
+        pass
 
     def on_bar(self, bar, interval):
         pass
+
+    def on_shared(self, shared):
+        print(shared)
 
 # 访问当前所有的数据对象
 # recorder = current_app().recorder

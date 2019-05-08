@@ -85,7 +85,7 @@ def _matching_loader_thinks_module_is_package(loader, mod_name):
     # Otherwise we need to fail with an error that explains what went
     # wrong.
     raise AttributeError(
-        ('%s.is_package() method is missing but is required by Flask of '
+        ('%s.is_package() method is missing but is required by CtpBee of '
          'PEP 302 import hooks.  If you do not use import hooks and '
          'you encounter this error please file a bug against Flask.') %
         loader.__class__.__name__)

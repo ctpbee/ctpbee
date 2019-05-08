@@ -170,7 +170,6 @@ class BeeTdApi(TdApi):
         if last:
             for position in self.positions.values():
                 on_event(type=EVENT_POSITION, data=position)
-
             self.positions.clear()
 
     def onRspQryTradingAccount(self, data: dict, error: dict, reqid: int, last: bool):

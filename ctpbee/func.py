@@ -3,7 +3,7 @@ function used to cancle order, sender, qry_position and qry_account
 
 """
 from ctpbee.context import proxy, current_app
-from ctpbee.ctp.custom_var import OrderRequest, CancelRequest, EVENT_TRADE
+from ctpbee.ctp.custom_var import OrderRequest, CancelRequest, EVENT_TRADE, EVENT_SHARED
 from ctpbee.event_engine import Event
 from ctpbee.ctp.custom_var import EVENT_TICK, EVENT_BAR
 from ctpbee.exceptions import TraderError
@@ -39,7 +39,6 @@ def query_func(type):
 
 
 class DataSolve(object):
-
     def data_solve(self, event: Event):
         """基础数据处理方法"""
         if event.type == EVENT_TICK:
@@ -48,6 +47,11 @@ class DataSolve(object):
             self.on_bar(bar=event.data, interval=event.interval)
         if event.type == EVENT_TRADE:
             self.on_trade(event.data)
+        if event.type == EVENT_SHARED:
+            self.on_shared(event.data)
+
+    def on_shared(self, shared):
+        pass
 
     def on_bar(self, bar, interval):
         pass
