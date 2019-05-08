@@ -1,25 +1,33 @@
 # encoding: UTF-8
 from collections import Callable
 
-from ctpbee.api.custom_var import BarData, TickData
+from ctpbee.ctp.custom_var import BarData, TickData
 from ctpbee.event_engine import Event
 from ctpbee.event_engine import controller
-from ctpbee.api.custom_var import EVENT_BAR, EVENT_SHARED
+from ctpbee.ctp.custom_var import EVENT_BAR, EVENT_SHARED
 from ctpbee.context import current_app
 class DataGenerator:
     """
     For:
     1. generating 1 minute bar data from tick data
     2. generateing x minute bar data from 1 minute data
-    3,
+    3, generate shared time data
     """
 
     def __init__(self):
         """Constructor"""
         self.bar = None
         self.last_tick = None
+
+        self.last_price = None
+        self.pre_close = None
+        self.volume = None
+        self.open_interest = None
+        self.avr_price = None
+
         self.XMIN = current_app().config.get("XMIN")
         self._generator()
+
 
     def _generator(self):
         for x in self.XMIN:

@@ -1,8 +1,9 @@
 from ctpbee import CtpBee
 from ctpbee import DataSolve
 from ctpbee import subscribe ,send_order
-
+from ctpbee import current_app
 app = CtpBee(__name__)
+
 info = {
     "CONNECT_INFO": {
         "userid": "142164",
@@ -41,7 +42,7 @@ class UserDefine(DataSolve):
 
     if you want to send_order . just from ctpbee import send_order
 
-    just inherit it  and will automatic process data
+    just inherit DataSolve class and will automatic process data
     """
 
     def on_tick(self, tick):

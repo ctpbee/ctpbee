@@ -3,9 +3,9 @@ function used to cancle order, sender, qry_position and qry_account
 
 """
 from ctpbee.context import proxy, current_app
-from ctpbee.api.custom_var import OrderRequest, CancelRequest
+from ctpbee.ctp.custom_var import OrderRequest, CancelRequest
 from ctpbee.event_engine import Event
-from ctpbee.api.custom_var import EVENT_TICK, EVENT_BAR
+from ctpbee.ctp.custom_var import EVENT_TICK, EVENT_BAR
 from ctpbee.exceptions import TraderError
 
 
@@ -13,14 +13,14 @@ def send_order(order_req: OrderRequest):
     app = current_app()
     if not app.config.get("TD_FUNC"):
         raise TraderError(message="交易功能未开启", args=("交易功能未开启",))
-    app.trader.send_order(order_req)
+    return app.trader.send_order(order_req)
 
 
 def cancle_order(cancle_req: CancelRequest):
     app = current_app()
     if not app.config.get("TD_FUNC"):
         raise TraderError(message="交易功能未开启", args=("交易功能未开启",))
-    app.trader.cancle_order(cancle_req)
+    app.trader.cancel_order(cancle_req)
 
 
 def subscribe(symbol):

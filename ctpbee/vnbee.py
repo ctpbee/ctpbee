@@ -8,7 +8,7 @@ from ctpbee.helpers import locked_cached_property, find_package
 from ctpbee.exceptions import ConfigError
 from ctpbee.record import Recorder
 from ctpbee.context import proxy
-from ctpbee.api import BeeMdApi, BeeTdApi
+from ctpbee.ctp import BeeMdApi, BeeTdApi
 from ctpbee.config import Config
 from ctpbee.func import DataSolve
 from ctpbee.event_engine import controller

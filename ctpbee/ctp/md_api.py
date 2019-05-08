@@ -87,6 +87,7 @@ class BeeMdApi(MdApi):
             last_price=data["LastPrice"],
             limit_up=data["UpperLimitPrice"],
             limit_down=data["LowerLimitPrice"],
+            open_interest=data['OpenInterest'],
             open_price=data["OpenPrice"],
             high_price=data["HighestPrice"],
             low_price=data["LowestPrice"],
