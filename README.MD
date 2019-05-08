@@ -18,7 +18,7 @@ git clone https://github.com/somewheve/ctpbee
 ```bash
 git clone https://github.com/somewheve/ctpbee & cd ctpbee-master & python3 setup.py install
 
-or 
+or   
 
 pip3 install ctpbee 
 ```

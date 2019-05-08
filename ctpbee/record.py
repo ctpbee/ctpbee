@@ -102,6 +102,8 @@ class Recorder(object):
         """"""
         trade = event.data
         self.trades[trade.vt_tradeid] = trade
+        if current_app().extensions.get("data_pointer", None) is not None:
+            current_app().extensions['data_pointer'].data_solve(event)
 
     def process_position_event(self, event: Event):
         """"""
