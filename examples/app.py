@@ -46,6 +46,7 @@ class UserDefine(DataSolve):
     """
 
     def on_tick(self, tick):
+        print(tick)
         pass
 
     def on_bar(self, bar, interval):

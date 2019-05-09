@@ -5,6 +5,7 @@ Basic data structure used for general trading function in VN Trader.
 from dataclasses import dataclass
 from datetime import datetime
 from logging import INFO
+from typing import Any
 
 from vnpy.trader.constant import Direction, Exchange, Interval, Offset, Status, Product, OptionType, OrderType
 
@@ -21,8 +22,6 @@ EVENT_ORDER = "order"
 EVENT_ACCOUNT = "account"
 EVENT_SHARED = "shared"
 
-
-
 @dataclass
 class BaseData:
     """
@@ -31,6 +30,8 @@ class BaseData:
     """
 
     gateway_name: str
+    iterable_count = 0
+
 
 
 @dataclass
@@ -43,7 +44,7 @@ class TickData(BaseData):
     """
 
     symbol: str
-    exchange: Exchange
+    exchange: Any
     datetime: datetime
 
     name: str = ""
@@ -52,7 +53,7 @@ class TickData(BaseData):
     last_volume: float = 0
     limit_up: float = 0
     limit_down: float = 0
-    open_interest:int = 0
+    open_interest: int = 0
     average_price: float = 0
 
     open_price: float = 0
@@ -326,10 +327,10 @@ class CancelRequest:
 
 @dataclass
 class SharedData:
-    vt_symbol:str
-    datatime:datetime
+    vt_symbol: str
+    datatime: datetime
 
-    open_interest:int = 0
+    open_interest: int = 0
     volume: float = 0
     last_price: float = 0
-    average_price:float = 0
+    average_price: float = 0

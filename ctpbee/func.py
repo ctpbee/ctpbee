@@ -39,6 +39,7 @@ def query_func(type):
 
 
 class DataSolve(object):
+
     def data_solve(self, event: Event):
         """基础数据处理方法"""
         if event.type == EVENT_TICK:
@@ -57,6 +58,7 @@ class DataSolve(object):
         pass
 
     def on_tick(self, tick):
+        print(tick)
         pass
 
     def on_trade(self, trade):
@@ -71,4 +73,5 @@ class DataSolve(object):
                 pass
             except TypeError:
                 pass
+        DataSolve.__init__(DataSolve)
 
