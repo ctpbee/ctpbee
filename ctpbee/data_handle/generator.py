@@ -1,10 +1,10 @@
 # encoding: UTF-8
 from collections import Callable
 
-from ctpbee.ctp.custom_var import BarData, TickData, SharedData
+from ctpbee.ctp.constant import BarData, TickData, SharedData
 from ctpbee.event_engine import Event
 from ctpbee.event_engine import controller
-from ctpbee.ctp.custom_var import EVENT_BAR, EVENT_SHARED
+from ctpbee.ctp.constant import EVENT_BAR, EVENT_SHARED
 from ctpbee.context import current_app
 
 class DataGenerator:

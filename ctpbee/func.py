@@ -3,9 +3,9 @@ function used to cancle order, sender, qry_position and qry_account
 
 """
 from ctpbee.context import proxy, current_app
-from ctpbee.ctp.custom_var import OrderRequest, CancelRequest, EVENT_TRADE, EVENT_SHARED
+from ctpbee.ctp.constant import OrderRequest, CancelRequest, EVENT_TRADE, EVENT_SHARED
 from ctpbee.event_engine import Event
-from ctpbee.ctp.custom_var import EVENT_TICK, EVENT_BAR
+from ctpbee.ctp.constant import EVENT_TICK, EVENT_BAR
 from ctpbee.exceptions import TraderError
 
 

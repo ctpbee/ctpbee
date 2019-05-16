@@ -1,6 +1,6 @@
 from .lib import *
-from .custom_var import (EVENT_TRADE, EVENT_ERROR, EVENT_ACCOUNT, EVENT_CONTRACT, EVENT_LOG,
-                         EVENT_POSITION, EVENT_ORDER)
+from .constant import (EVENT_TRADE, EVENT_ERROR, EVENT_ACCOUNT, EVENT_CONTRACT, EVENT_LOG,
+                       EVENT_POSITION, EVENT_ORDER)
 
 
 class BeeTdApi(TdApi):

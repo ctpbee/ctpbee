@@ -1,5 +1,5 @@
 from datetime import datetime
-from vnpy.api.ctp import (
+from ctpbee.api.ctp import (
     MdApi,
     TdApi,
     THOST_FTDC_OAS_Submitted,
@@ -48,7 +48,7 @@ from vnpy.trader.event import EVENT_TIMER
 
 from ctpbee.event_engine import controller, Event
 
-from .custom_var import (
+from .constant import (
     TickData,
     OrderData,
     TradeData,

@@ -45,12 +45,6 @@ app.start()
 subscribe("ag1912")
 
 
-# for i in app.recorder.get_all_contracts():
-#     print(i)
-# # subscribe symbol
-#     subscribe(i.symbol)
-
-
 class DataRecorder(DataSolve):
     def __init__(self):
         self.pointer = MongoClient()

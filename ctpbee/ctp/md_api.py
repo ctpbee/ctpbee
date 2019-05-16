@@ -1,7 +1,7 @@
 from .lib import *
-from .custom_var import (EVENT_BAR, EVENT_TICK, EVENT_TRADE, EVENT_ERROR, EVENT_ACCOUNT, EVENT_CONTRACT, EVENT_LOG,
-                         EVENT_POSITION, EVENT_ORDER)
-from .custom_var import *
+from .constant import (EVENT_BAR, EVENT_TICK, EVENT_TRADE, EVENT_ERROR, EVENT_ACCOUNT, EVENT_CONTRACT, EVENT_LOG,
+                       EVENT_POSITION, EVENT_ORDER)
+from .constant import *
 
 
 class BeeMdApi(MdApi):

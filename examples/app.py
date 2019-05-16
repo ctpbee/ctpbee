@@ -1,7 +1,8 @@
 from ctpbee import CtpBee
 from ctpbee import DataSolve
-from ctpbee import subscribe ,send_order
+from ctpbee import subscribe, send_order
 from ctpbee import current_app
+
 app = CtpBee(__name__)
 
 info = {
@@ -17,21 +18,12 @@ info = {
     "TD_FUNC": True,
     "XMIN": [3]
 }
-# loading config from mapping or you can load it
-# from pyfile by app.config.from_pyfile()
-# from object by app.config.from_object()
-# from json by app.config.from_json()
-
 app.config.from_mapping(info)
 
-# start this app
 app.start()
 
 subscribe("ag1912")
-# for i in app.recorder.get_all_contracts():
-#     print(i)
-# # subscribe symbol
-#     subscribe(i.symbol)
+
 
 
 class UserDefine(DataSolve):
@@ -54,6 +46,3 @@ class UserDefine(DataSolve):
 
     def on_shared(self, shared):
         print(shared)
-
-# 访问当前所有的数据对象
-# recorder = current_app().recorder

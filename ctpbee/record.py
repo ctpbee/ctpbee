@@ -1,6 +1,6 @@
 from ctpbee.data_handle import generator
 
-from ctpbee.ctp.custom_var import *
+from ctpbee.ctp.constant import *
 # from data_handle.handle import
 from ctpbee.event_engine import controller, Event
 from ctpbee.context import current_app
