@@ -50,7 +50,7 @@ app.start()
 ## Documention
 for README in chinese please see [戳我戳我](https://github.com/somewheve/ctpbee/blob/master/README_CN.MD)
 
-document is developing.... 
+document is developing....  just waiting for it.
 
 
 ## More 
@@ -59,9 +59,10 @@ or  read the [examples](https://github.com/somewheve/ctpbee/blob/master/examples
 
 
 ## Todo 
-to fix the root path and optimize code 
+- To fix the root path and optimize code 
+- Exmaple created
+ 
 
+## End
+If this is helpful for you, click the star to support me. QAQ
 
-#### if this is helpful for you, click the star to support me. QAQ
-
-> if you have any question,  welcome feedback by issue or qq number:723316072
