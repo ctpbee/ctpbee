@@ -53,6 +53,14 @@ class Config(dict):
         return True
 
     def from_object(self, obj):
+        """从实例中导入配置 , 最佳体验为可将配置写在一个dataclass中
+        for example:
+        class Ext:
+            TD_FUNC:True
+            MD_FUNC:True
+        ext = Ext()
+        app.config.from_object(ext)
+        """
         if isinstance(obj, string_types):
             obj = import_string(obj)
         for key in dir(obj):
@@ -60,6 +68,10 @@ class Config(dict):
                 self[key] = getattr(obj, key)
 
     def from_json(self, filename, silent=False):
+        """从json文件中导入文件配置
+        for example:
+        app.config.from_json(json_file_path) -- > absolute path or relative path
+        """
         filename = os.path.join(self.root_path, filename)
         try:
             with open(filename) as json_file:
@@ -72,9 +84,10 @@ class Config(dict):
         return self.from_mapping(obj)
 
     def from_mapping(self, *mapping, **kwargs):
-        """Updates the config like :meth:`update` ignoring items with non-upper
-        keys.
-        .. versionadded:: 0.11
+        """
+        从mapping映射中导入配置
+        config = {"TD_FUNC":True}
+        app.config.from_mapping(config)
         """
         mappings = []
         if len(mapping) == 1:
@@ -94,6 +107,7 @@ class Config(dict):
         return True
 
     def get_namespace(self, namespace, lowercase=True, trim_namespace=True):
+        """获取命名空间"""
         rv = {}
         for k, v in iteritems(self):
             if not k.startswith(namespace):

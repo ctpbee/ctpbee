@@ -1,4 +1,3 @@
-
 # you should know  all the libraries should be extral installed  if use the examples
 
 from ctpbee import CtpBee
@@ -22,11 +21,8 @@ info = {
     "XMIN": [3]
 }
 app.config.from_mapping(info)
-
 app.start()
-
 subscribe("ag1912")
-
 
 
 class UserDefine(DataSolve):
@@ -45,6 +41,7 @@ class UserDefine(DataSolve):
         pass
 
     def on_bar(self, bar, interval):
+        print(bar)
         pass
 
     def on_shared(self, shared):

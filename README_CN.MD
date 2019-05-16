@@ -10,9 +10,10 @@ ctpbee 提供了一个微小的核心，不会做过多控制流程的事。 你
 git clone https://github.com/somewheve/ctpbee
 ```
 
-## 依赖
+## 起源
 
-- [vnpy](https://github.com/vnpy/vnpy)
+- 衍生自[vnpy](https://github.com/vnpy/vnpy) 
+
 
 ## 安装 
 ```bash
@@ -49,9 +50,9 @@ app.start()
 
 
 ## 等待完成 
-to fix the root path and optimize code 
+- to fix the root path and optimize code 
+- Example created
 
+## 最后一句 
+如果这个能帮助到你， 请点击star来支持我噢. QAQ
 
-#### 如果这个能帮助到你， 请点击star来支持我噢. QAQ
-
-> 如果你有任何使用问题，请通过提交issue 或者 qq number:723316072 来联系我。

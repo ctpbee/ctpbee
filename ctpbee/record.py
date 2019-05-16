@@ -100,6 +100,8 @@ class Recorder(object):
         # Otherwise, pop inactive order from in dict
         elif order.vt_orderid in self.active_orders:
             self.active_orders.pop(order.vt_orderid)
+        if current_app().extensions.get("data_pointer", None) is not None:
+            current_app().extensions['data_pointer'].data_solve(event)
 
     def process_trade_event(self, event: Event):
         """"""

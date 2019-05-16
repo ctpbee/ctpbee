@@ -2,12 +2,13 @@
 this is an example program which used to record tick data
 database:pymongo / redis
 
-:keyword 补录数据  ---> will be developed in marker_recorder
+:keyword 补录数据  ---> will be developed in marrd -> developing at https://github.com/somewheve/marrd
 关于补录数据的一点想法:
 能不能构建多个类似的程序运行在不同的服务， 然后将数据提交到 同时提交到web服务器，
 web服务器经过校验之后（出错数据， 缺失数据进行修正和补录）写入到内存（or redis）中，负责提供每天的数据。
 这样每天的数据应该基本不会出错，然后外部程序每天访问这个web服务器提供的数据接口，
 将数据维护到自己本地
+
 """
 from json import dumps
 from pymongo import MongoClient
@@ -32,16 +33,9 @@ info = {
     "TD_FUNC": True,
     "XMIN": [3]
 }
-# loading config from mapping or you can load it
-# from pyfile by app.config.from_pyfile()
-# from object by app.config.from_object()
-# from json by app.config.from_json()
 
 app.config.from_mapping(info)
-
-# start this app
 app.start()
-
 subscribe("ag1912")
 
 
@@ -72,6 +66,3 @@ class DataRecorder(DataSolve):
             temp["datatime"] = str(temp["datatime"])
             self.shared_data[shared.vt_symbol].append(temp)
         self.rd.set(shared.vt_symbol, dumps(self.shared_data))
-
-# 访问当前所有的数据对象
-# recorder = current_app().recorder

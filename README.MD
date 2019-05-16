@@ -10,13 +10,13 @@ ctpbee provide a tiny core, you can extent the function by programming
 git clone https://github.com/somewheve/ctpbee
 ```
 
-## Libraries
+## Origin
 
-- [vnpy](https://github.com/vnpy/vnpy) version>=2
+- Derived from [vnpy](https://github.com/vnpy/vnpy) 
 
 ## Install 
 ```bash
-git clone https://github.com/somewheve/ctpbee & cd ctpbee-master & python3 setup.py install
+git clone https://github.com/somewheve/ctpbee & cd ctpbee & python3 setup.py install
 
 or   
 
