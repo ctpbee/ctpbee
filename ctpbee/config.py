@@ -56,8 +56,8 @@ class Config(dict):
         """从实例中导入配置 , 最佳体验为可将配置写在一个dataclass中
         for example:
         class Ext:
-            TD_FUNC:True
-            MD_FUNC:True
+            TD_FUNC = True
+            MD_FUNC = True
         ext = Ext()
         app.config.from_object(ext)
         """

@@ -2,7 +2,7 @@
 
 bee bee .... there is an industrious bee created ~~
 
-ctpbee provide a tiny core, you can extent the function by programming
+ctpbee just provide a tiny core, you can extent the function by programming
 
 ## Download the code 
 

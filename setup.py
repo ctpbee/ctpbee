@@ -1,16 +1,5 @@
-from distutils.core import setup
-from setuptools import find_packages
-
-import ast
 import platform
-import re
 from setuptools import Extension, find_packages, setup
-
-with open("ctpbee/__init__.py", "rb") as f:
-    version_line = re.search(
-        r"__version__\s+=\s+(.*)", f.read().decode("utf-8")
-    ).group(1)
-    version = str(ast.literal_eval(version_line))
 
 if platform.uname().system == "Windows":
     compiler_flags = [
@@ -27,6 +16,8 @@ else:
     ]
     extra_link_args = ["-lstdc++"]
 
+
+# the vnctpmd and vnctptd come from the vnpy
 vnctpmd = Extension(
     "ctpbee.api.ctp.vnctpmd",
     [
@@ -70,13 +61,6 @@ elif platform.system() == "Darwin":
 else:
     ext_modules = [vnctptd, vnctpmd]
 
-
-def is_psycopg2_exists():
-    try:
-        import psycopg2  # noqa
-        return True
-    except ImportError:
-        return False
 
 
 pkgs = find_packages()
