@@ -1,26 +1,23 @@
 from json import dumps
-from pymongo import MongoClient
-from redis import Redis
 from ctpbee import DataSolve
-
+from orm import BarPointer, TickPointer
 
 class DataRecorder(DataSolve):
     def __init__(self):
-        self.pointer = MongoClient()
-        self.rd = Redis()
-        self.tick_database_name = "tick"
-        self.bar_base_name = "bar"
+        self.tick_pointer = TickPointer()
+        self.bar_pointer = BarPointer()
         self.shared_data = {}
 
     def on_tick(self, tick):
         """tick process function"""
         tick.exchange = tick.exchange.value
-        self.pointer[self.tick_database_name][tick.symbol].insert_one(tick.__dict__)
+        self.tick_pointer.insert(key=tick.symbol, data=tick.__dict__)
 
     def on_bar(self, bar, interval):
         """bar process function"""
         bar.exchange = bar.exchange.value
-        self.pointer[f"{self.tick_database_name}_{interval}"][bar.symbol].insert_one(bar.__dict__)
+        bar.interval = interval
+        self.bar_pointer.insert(key=bar.symbol, data=bar.__dict__)
 
     def on_shared(self, shared):
         """process shared function"""
@@ -30,4 +27,4 @@ class DataRecorder(DataSolve):
             temp = shared.__dict__
             temp["datatime"] = str(temp["datatime"])
             self.shared_data[shared.vt_symbol].append(temp)
-        self.rd.set(shared.vt_symbol, dumps(self.shared_data))
+        # self.rd.set(shared.vt_symbol, dumps(self.shared_data))

@@ -11,12 +11,8 @@ web服务器经过校验之后（出错数据， 缺失数据进行修正和补�
 
 """
 from json import dumps
-from pymongo import MongoClient
-from redis import Redis
-from recorder import DataRecorder
 
 from ctpbee import CtpBee
-from ctpbee import DataSolve
 from ctpbee import subscribe
 
 app = CtpBee(__name__)
@@ -31,9 +27,14 @@ info = {
         "auth_code": "",
     },
     "TD_FUNC": True,
-    "XMIN": [3]
+    "XMIN": [3],
+    "TICK_DATABASE_TYPE": 'mysql',
+    "BAR_DATABASE_TYPE": 'mysql',
+    'SUBSCRIBED_SYMBOL':['AP910']
 }
 app.config.from_mapping(info)
+from process_tr import DataRecorder
 app.start()
 for contracts in app.recorder.get_all_contracts():
     subscribe(contracts.symbol)
+

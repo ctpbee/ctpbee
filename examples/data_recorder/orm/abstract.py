@@ -11,7 +11,9 @@ class DataPointerAbstract(ABC):
     def __init__(self):
         pass
 
-    def insert(self, **kwargs):
+    def insert_one(self, **kwargs):
+        raise NotImplemented
+    def insert_many(self, **kwargs):
         raise NotImplemented
 
     def read(self, **kwargs):
