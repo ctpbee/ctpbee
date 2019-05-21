@@ -66,7 +66,7 @@ else:
 pkgs = find_packages()
 install_requires = ['flask']
 setup(name='ctpbee',
-      version='0.12',
+      version='0.13',
       author='somewheve',
       author_email='somewheve@gmail.com',
       description="easy ctp trade and market support",
