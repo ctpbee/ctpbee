@@ -23,8 +23,9 @@ info = {
         "brokerid": "9999",
         "md_address": "tcp://180.168.146.187:10031",
         "td_address": "tcp://180.168.146.187:10030",
-        "product_info": "",
+        "product_info": "ctpbee",
         "auth_code": "",
+        'appid':"5056613036"
     },
     "TD_FUNC": True,
     "XMIN": [3],

@@ -23,7 +23,7 @@ class BeeTdApi(TdApi):
         self.password = ""
         self.brokerid = 0
         self.auth_code = ""
-        self.product_info = ""
+        self.appid = ""
 
         self.frontid = 0
         self.sessionid = 0
@@ -52,10 +52,10 @@ class BeeTdApi(TdApi):
         """"""
         if not error['ErrorID']:
             self.authStatus = True
-            on_event(type=EVENT_LOG, data="交易授权验证成功")
+            on_event(type=EVENT_LOG, data="交易服务器验证成功")
             self.login()
         else:
-            error['detail'] = "交易授权验证失败"
+            error['detail'] = "交易服务器验证失败"
             on_event(type=EVENT_ERROR, data=error)
 
     def onRspUserLogin(self, data: dict, error: dict, reqid: int, last: bool):
@@ -292,18 +292,17 @@ class BeeTdApi(TdApi):
         self.password = info.get("password")
         self.brokerid = info.get("brokerid")
         self.auth_code = info.get("auth_code")
-        self.product_info = info.get("product_info")
+        appid =  info.get("appid")
         if not self.connect_status:
             path = get_folder_path(self.gateway_name.lower())
             self.createFtdcTraderApi(str(path) + "\\Td")
-
             self.subscribePrivateTopic(0)
             self.subscribePublicTopic(0)
-
             self.registerFront(info.get("td_address"))
             self.init()
         else:
             self.authenticate()
+
 
     def authenticate(self):
         """
@@ -313,9 +312,8 @@ class BeeTdApi(TdApi):
             "UserID": self.userid,
             "BrokerID": self.brokerid,
             "AuthCode": self.auth_code,
-            "UserProductInfo": self.product_info
+            "AppID": self.appid
         }
-
         self.reqid += 1
         self.reqAuthenticate(req, self.reqid)
 
@@ -330,7 +328,7 @@ class BeeTdApi(TdApi):
             "UserID": self.userid,
             "Password": self.password,
             "BrokerID": self.brokerid,
-            "UserProductInfo": self.product_info
+            "AppID":self.appid
         }
 
         self.reqid += 1

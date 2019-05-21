@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 from ctpbee.api.ctp import (
     MdApi,
     TdApi,
@@ -33,7 +34,7 @@ from ctpbee.api.ctp import (
     THOST_FTDC_VC_CV,
     THOST_FTDC_AF_Delete
 )
-from vnpy.trader.constant import (
+from ctpbee.ctp.constant import (
     Direction,
     Offset,
     Exchange,
@@ -42,9 +43,40 @@ from vnpy.trader.constant import (
     Status,
     OptionType
 )
-from vnpy.trader.gateway import BaseGateway
-from vnpy.trader.utility import get_folder_path
-from vnpy.trader.event import EVENT_TIMER
+
+def _get_trader_dir(temp_name: str):
+    """
+    Get path where trader is running in.
+    """
+    cwd = Path.cwd()
+    temp_path = cwd.joinpath(temp_name)
+
+    # If .vntrader folder exists in current working directory,
+    # then use it as trader running path.
+    if temp_path.exists():
+        return cwd, temp_path
+
+    # Otherwise use home path of system.
+    home_path = Path.home()
+    temp_path = home_path.joinpath(temp_name)
+
+    if not temp_path.exists():
+        temp_path.mkdir()
+
+    return home_path, temp_path
+
+
+def get_folder_path(folder_name: str):
+    """
+    Get path for temp folder with folder name.
+    """
+    TRADER_DIR, TEMP_DIR = _get_trader_dir(".ctpbee")
+    folder_path = TEMP_DIR.joinpath(folder_name)
+    if not folder_path.exists():
+        folder_path.mkdir()
+    return folder_path
+
+from ctpbee.event_engine.engine import EVENT_TIMER
 
 from ctpbee.event_engine import controller, Event
 
