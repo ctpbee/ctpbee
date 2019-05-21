@@ -15,15 +15,22 @@ from ctpbee.event_engine import controller
 
 
 class CtpBee(object):
+    """默认的设置"""
     default_config = ImmutableDict(
         dict(LOG_OUTPUT=True, TD_FUNC=False, MD_FUNC=True, TICK_DB="tick_me", XMIN=[], ALL_SUBSCRIBE=False))
     config_class = Config
+
+    # 数据记录载体
     recorder = Recorder()
-    root_path = None
+
     __active = False
+
+    #  交易api与行情api
     market = None
     trader = None
     import_name = None
+
+    # 插件系统
     extensions = {}
 
     def __init__(self, import_name, instance_path=None):
@@ -40,12 +47,10 @@ class CtpBee(object):
         self.config = self.make_config()
         proxy.push(self)
 
-    def make_config(self, instance_relative=True):
-        root_path = self.root_path
-        if instance_relative:
-            root_path = self.instance_path
+    def make_config(self):
+        """ 生成class类"""
         defaults = dict(self.default_config)
-        return self.config_class(root_path, defaults)
+        return self.config_class(self.instance_path, defaults)
 
     def auto_find_instance_path(self):
         prefix, package_path = find_package(self.import_name)
@@ -53,7 +58,7 @@ class CtpBee(object):
             return os.path.join(package_path)
         return os.path.join(prefix, 'var', self.name + '-instance')
 
-    def _check_info(self):
+    def _load_ext(self):
         self.__active = True
         if "CONNECT_INFO" in self.config.keys():
             info = self.config.get("CONNECT_INFO")
@@ -80,4 +85,4 @@ class CtpBee(object):
         self.extensions['data_pointer'] = DataSolve()
         self.config["LOG_OUTPUT"] = log_output
         controller.start()
-        self._check_info()
+        self._load_ext()

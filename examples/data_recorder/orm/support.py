@@ -11,6 +11,7 @@ type_map = {
     'mysql': MySQLDatabase,
     'postgresql': PostgresqlDatabase
 }
+
 tick_type = current_app().config.get('TICK_DATABASE_TYPE')
 bar_type = current_app().config.get('BAR_DATABASE_TYPE')
 
@@ -92,7 +93,7 @@ def generate_data_class():
         'ask_volume_3': FloatField(),
         'ask_volume_4': FloatField(),
         'ask_volume_5': FloatField(),
-        'to':set_attr
+        'to': set_attr
     }
     bfield = {
         'symbol': CharField(),
@@ -105,14 +106,10 @@ def generate_data_class():
         'low_price': FloatField(),
         'pre_price': FloatField(),
         'interval': IntegerField(),
-        'to':set_attr
+        'to': set_attr
     }
 
     for symbol in subsribed_symbols:
         orm_map[f"t{symbol}"] = type(symbol, (TickDatabaseBase,), tfield)
         orm_map[f"b{symbol}"] = type(symbol, (BarDatabaseBase,), bfield)
     return orm_map
-
-
-d = generate_data_class()
-print(d)
