@@ -52,6 +52,7 @@ app.start()
 ## 等待完成 
 - to fix the root path and optimize code 
 - Example created
+- Add local position 
 
 ## 最后一句 
 如果这个能帮助到你， 请点击star来支持我噢. QAQ

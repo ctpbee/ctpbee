@@ -10,6 +10,7 @@ ctpbee just provide a tiny core, you can extent the function by programming
 git clone https://github.com/somewheve/ctpbee
 ```
 
+
 ## Origin
 
 - Derived from [vnpy](https://github.com/vnpy/vnpy) 
@@ -59,9 +60,9 @@ or  read the [examples](https://github.com/somewheve/ctpbee/blob/master/examples
 
 
 ## Todo 
-- To fix the root path and optimize code 
-- Exmaple created
- 
+- To optimize code 
+- Example created
+- Add local position 
 
 ## End
 If this is helpful for you, click the star to support me. QAQ
