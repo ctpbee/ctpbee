@@ -16,4 +16,5 @@ temp
 # txt
 *.txt
 
-
+# virturalenv
+venv
