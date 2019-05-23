@@ -2,34 +2,31 @@
 
 bee bee .... there is an industrious bee created ~~
 
-ctpbee just provide a tiny core, you can extent the function by programming
+ctpbee 提供了一个微小的核心，不会做过多控制流程的事, 也就是说耦合很低很低， 你可以通过这个核心来构建值得的工具， 当然这需要你的编程功力。 你所需要关心的是如何编程来处理行情和交易信息即可。
 
-## Download the code 
+## 下载 
 
 ```
 git clone https://github.com/somewheve/ctpbee
 ```
 
-## Origin
+## 起源
 
-- Derived from [vnpy](https://github.com/vnpy/vnpy) 
+- 衍生自[vnpy](https://github.com/vnpy/vnpy) 
 
-## Install 
+
+## 安装 
 ```bash
-git clone https://github.com/somewheve/ctpbee & cd ctpbee & python3 setup.py install
-
-or   
-
-pip3 install ctpbee 
+python3 setup.py install
 ```
 
-## Function
-1. k-line data support
-2. time-shared data support
-3. trade support
-4. market support
+## 功能
+1. k线数据支持
+2. 分时图数据支持
+3. 交易支持
+4. 行情支持 --> 需要自己编写相应的数据库写入代码。
 
-## Quick start 
+## 快速开始 
 ```python
 from ctpbee import CtpBee
 app = CtpBee(__name__)
@@ -40,29 +37,22 @@ info = {
         "brokerid": "9999",
         "md_address": "tcp://180.168.146.187:10011",
         "td_address": "tcp://180.168.146.187:10000",
-        "product_info": "",
+        "appid": "",
         "auth_code": "",
     }
 }
 app.config.from_mapping(info)
 app.start()
 ```
-## Documention
-for README in chinese please see [戳我戳我](https://github.com/somewheve/ctpbee/blob/master/README_CN.MD)
 
-document is developing....  just waiting for it.
-
-
-## More 
-> for more information , please see the [wiki](https://github.com/somewheve/ctpbee/wiki)
-or  read the [examples](https://github.com/somewheve/ctpbee/blob/master/examples/app.py)
+## 更多 
+> 如果想获得更多信息 , 请参见 [wiki](https://github.com/vnpy/vnpy) 或者阅读[examples](https://github.com/somewheve/ctpbee/exmple/app.py)
 
 
-## Todo 
-- To fix the root path and optimize code 
-- Exmaple created
- 
+## 等待完成 
+- to fix the root path and optimize code 
+- Example created
 
-## End
-If this is helpful for you, click the star to support me. QAQ
+## 最后一句 
+如果这个能帮助到你， 请点击star来支持我噢. QAQ
 
