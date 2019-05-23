@@ -29,28 +29,16 @@ def find_package(import_name):
     root_mod_name = import_name.split('.')[0]
     loader = pkgutil.get_loader(root_mod_name)
     if loader is None or import_name == '__main__':
-        # import name is not found, or interactive/main module
         package_path = os.getcwd()
     else:
-        # For .egg, zipimporter does not have get_filename until Python 2.7.
         if hasattr(loader, 'get_filename'):
             filename = loader.get_filename(root_mod_name)
         elif hasattr(loader, 'archive'):
-            # zipimporter's loader.archive points to the .egg or .zip
-            # archive filename is dropped in call to dirname below.
             filename = loader.archive
         else:
-            # At least one loader is missing both get_filename and archive:
-            # Google App Engine's HardenedModulesHook
-            #
-            # Fall back to imports.
             __import__(import_name)
             filename = sys.modules[import_name].__file__
         package_path = os.path.abspath(os.path.dirname(filename))
-
-        # In case the root module is a package we need to chop of the
-        # rightmost part.  This needs to go through a helper function
-        # because of python 3.3 namespace packages.
         if _matching_loader_thinks_module_is_package(
                 loader, root_mod_name):
             package_path = os.path.dirname(package_path)
@@ -64,7 +52,6 @@ def find_package(import_name):
         # Windows like installations
         if folder.lower() == 'lib':
             base_dir = parent
-        # UNIX like installations
         elif os.path.basename(parent).lower() == 'lib':
             base_dir = os.path.dirname(parent)
         else:
