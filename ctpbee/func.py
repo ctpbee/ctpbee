@@ -4,6 +4,8 @@ function used to cancle order, sender, qry_position and qry_account
 """
 from typing import Text
 
+from functools import lru_cache
+
 from ctpbee.context import current_app
 from ctpbee.ctp.constant import OrderRequest, CancelRequest, EVENT_TRADE, EVENT_SHARED, EVENT_ORDER
 from ctpbee.event_engine import Event

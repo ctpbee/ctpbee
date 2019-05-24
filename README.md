@@ -46,7 +46,7 @@ app.start()
 ```
 
 ## 更多 
-> 如果想获得更多信息 , 请参见 [wiki](https://github.com/vnpy/vnpy) 或者阅读[examples](https://github.com/somewheve/ctpbee/exmple/app.py)
+> 如果想获得更多信息 , 请参见 [wiki](https://github.com/somewheve/ctpbee/wiki) 或者阅读下面的代码[examples](https://github.com/somewheve/ctpbee/tree/master/examples
 
 
 ## 等待完成 
