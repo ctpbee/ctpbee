@@ -15,6 +15,8 @@ from json import dumps
 from ctpbee import CtpBee
 from ctpbee import subscribe
 
+from process_tr import DataRecorder
+
 app = CtpBee(__name__)
 info = {
     "CONNECT_INFO": {
@@ -34,7 +36,7 @@ info = {
     'SUBSCRIBED_SYMBOL':['AP910']
 }
 app.config.from_mapping(info)
-from process_tr import DataRecorder
+ext = DataRecorder("recorder", app)
 app.start()
 for contracts in app.recorder.get_all_contracts():
     subscribe(contracts.symbol)

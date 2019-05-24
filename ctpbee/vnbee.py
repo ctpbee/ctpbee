@@ -11,7 +11,6 @@ from ctpbee.record import Recorder
 from ctpbee.context import proxy
 from ctpbee.ctp import BeeMdApi, BeeTdApi
 from ctpbee.config import Config
-from ctpbee.func import DataSolve
 from ctpbee.event_engine import controller
 
 
@@ -83,7 +82,6 @@ class CtpBee(object):
 
     def start(self, log_output=True):
         """init data process extension and start engine to process data."""
-        self.extensions['data_pointer'] = DataSolve()
         self.config["LOG_OUTPUT"] = log_output
         controller.start()
         self._load_ext()

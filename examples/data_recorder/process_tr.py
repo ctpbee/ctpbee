@@ -1,9 +1,9 @@
 from json import dumps
-from ctpbee import DataSolve
+from ctpbee import ExtAbstract
 from orm import BarPointer, TickPointer
 
 
-class DataRecorder(DataSolve):
+class DataRecorder(ExtAbstract):
     def __init__(self):
         self.tick_pointer = TickPointer()
         self.bar_pointer = BarPointer()

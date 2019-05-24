@@ -1,7 +1,6 @@
 import platform
 from setuptools import Extension, setup, find_packages
 
-
 if platform.uname().system == "Windows":
     compiler_flags = [
         "/MP", "/std:c++17",  # standard
@@ -25,7 +24,7 @@ vnctpmd = Extension(
     include_dirs=[
         "ctpbee/api/ctp/include",
         "ctpbee/api/ctp/vnctp",
-                  ],
+    ],
     language="c++",
     define_macros=[],
     undef_macros=[],
@@ -44,7 +43,7 @@ vnctptd = Extension(
     include_dirs=[
         "ctpbee/api/ctp/include",
         "ctpbee/api/ctp/vnctp",
-                  ],
+    ],
     define_macros=[],
     undef_macros=[],
     library_dirs=["ctpbee/api/ctp/libs",
@@ -66,11 +65,8 @@ elif platform.system() == "Darwin":
 else:
     ext_modules = [vnctptd, vnctpmd]
 
-pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.ctp', 'ctpbee.event_engine']
-
-print(pkgs)
-
-
+pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.ctp',
+        'ctpbee.event_engine']
 install_requires = ['flask']
 setup(
     name='ctpbee',
@@ -83,13 +79,13 @@ setup(
     packages=pkgs,
     install_requires=install_requires,
     platforms=["Windows", "Linux", "Mac OS-X"],
-    package_dir = {'ctpbee': 'ctpbee'},
-    package_data={'ctpbee': ['api/ctp/*',]},
+    package_dir={'ctpbee': 'ctpbee'},
+    package_data={'ctpbee': ['api/ctp/*', ]},
     ext_modules=ext_modules,
-    classifiers = [
+    classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.7',
-            ]
-      )
+    ]
+)

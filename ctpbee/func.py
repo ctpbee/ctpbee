@@ -3,11 +3,9 @@ function used to cancle order, sender, qry_position and qry_account
 
 """
 from typing import Text
-
-from functools import lru_cache
-
 from ctpbee.context import current_app
-from ctpbee.ctp.constant import OrderRequest, CancelRequest, EVENT_TRADE, EVENT_SHARED, EVENT_ORDER
+from ctpbee.ctp.constant import OrderRequest, CancelRequest, EVENT_TRADE, EVENT_SHARED, EVENT_ORDER, OrderData, \
+    TradeData, PositionData, AccountData, TickData, SharedData, BarData, EVENT_POSITION
 from ctpbee.event_engine import Event
 from ctpbee.ctp.constant import EVENT_TICK, EVENT_BAR
 from ctpbee.exceptions import TraderError
@@ -46,11 +44,39 @@ def query_func(type: Text) -> None:
         app.trader.query_account()
 
 
-class DataSolve(object):
-    """核心数据处理类，继承此类，根据你的需求编写重写处理函数， ctpbee会自动将你的处理函数用到刀刃上"""
+class ExtAbstract(object):
+    """
+        如果你要开发插件需要继承此抽象demo
+        usage:
+        ## coding:
+            class Processor(ApiAbstract):
+                ...
 
-    def data_solve(self, event: Event) -> None:
+            data_processor = Processor("data_processor", app)
+                        or
+            data_processor = Processor("data_processor")
+            data_processor.init_app(app)
+    """
+
+    def __init__(self, name, app=None):
+        self.extension_name = name
+        self.app = None
+
+    def init_app(self, app):
+        self.app = app
+
+    def __repr__(self):
+        return f"Api --> {self.extension_name}"
+
+    def __str__(self):
+        return self.extension_name
+
+    def kick(self, event: Event) -> None:
         """基础数据处理方法"""
+        if self.app is None:
+            raise ValueError("App instance not loading!")
+        ## to-do
+        ## 抽象代码
         if event.type == EVENT_TICK:
             self.on_tick(tick=event.data)
         if event.type == EVENT_BAR:
@@ -61,29 +87,23 @@ class DataSolve(object):
             self.on_shared(event.data)
         if event.type == EVENT_ORDER:
             self.on_order(event.data)
+        if event.type == EVENT_POSITION:
+            self.on_position(event.data)
 
-    def on_order(self, order):
-        pass
+    def on_order(self, order: OrderData) -> None:
+        raise NotImplemented
 
-    def on_shared(self, shared):
-        pass
+    def on_shared(self, shared: SharedData) -> None:
+        raise NotImplemented
 
-    def on_bar(self, bar, interval):
-        pass
+    def on_bar(self, bar: BarData, interval: int) -> None:
+        raise NotImplemented
 
-    def on_tick(self, tick):
-        pass
+    def on_tick(self, tick: TickData) -> None:
+        raise NotImplemented
 
-    def on_trade(self, trade):
-        pass
+    def on_trade(self, trade: TradeData) -> None:
+        raise NotImplemented
 
-    def __init_subclass__(cls, **kwargs):
-        """get all the  attribute of child class and copy it to parent class"""
-        for key in dir(cls):
-            try:
-                setattr(DataSolve, key, getattr(cls, key))
-            except AttributeError:
-                pass
-            except TypeError:
-                pass
-        DataSolve.__init__(DataSolve)
+    def on_position(self, position: PositionData) -> None:
+        raise NotImplemented
