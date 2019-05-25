@@ -71,25 +71,6 @@ class ExtAbstract(object):
     def __str__(self):
         return self.extension_name
 
-    def kick(self, event: Event) -> None:
-        """基础数据处理方法"""
-        if self.app is None:
-            raise ValueError("App instance not loading!")
-        ## to-do
-        ## 抽象代码
-        if event.type == EVENT_TICK:
-            self.on_tick(tick=event.data)
-        if event.type == EVENT_BAR:
-            self.on_bar(bar=event.data, interval=event.interval)
-        if event.type == EVENT_TRADE:
-            self.on_trade(event.data)
-        if event.type == EVENT_SHARED:
-            self.on_shared(event.data)
-        if event.type == EVENT_ORDER:
-            self.on_order(event.data)
-        if event.type == EVENT_POSITION:
-            self.on_position(event.data)
-
     def on_order(self, order: OrderData) -> None:
         raise NotImplemented
 
@@ -107,3 +88,17 @@ class ExtAbstract(object):
 
     def on_position(self, position: PositionData) -> None:
         raise NotImplemented
+
+    def __call__(self, event):
+        if event.type == EVENT_TICK:
+            self.on_tick(tick=event.data)
+        if event.type == EVENT_BAR:
+            self.on_bar(bar=event.data, interval=event.interval)
+        if event.type == EVENT_TRADE:
+            self.on_trade(event.data)
+        if event.type == EVENT_SHARED:
+            self.on_shared(event.data)
+        if event.type == EVENT_ORDER:
+            self.on_order(event.data)
+        if event.type == EVENT_POSITION:
+            self.on_position(event.data)
