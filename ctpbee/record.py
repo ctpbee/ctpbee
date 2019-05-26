@@ -1,7 +1,6 @@
 from ctpbee.data_handle import generator
 
 from ctpbee.ctp.constant import *
-# from data_handle.handle import
 from ctpbee.event_engine import controller, Event
 from ctpbee.context import current_app
 from ctpbee.exceptions import ContextError
@@ -9,8 +8,7 @@ from ctpbee.exceptions import ContextError
 
 class Recorder(object):
     """
-    copy from vnpy oms_engine
-    Provides order management system function for VN Trader.
+    data center
     """
 
     def __init__(self):
@@ -25,10 +23,8 @@ class Recorder(object):
         self.logs = {}
         self.errors = {}
         self.shared = {}
-
         self.active_orders = {}
         self.controller = controller
-
         self.register_event()
 
     @staticmethod

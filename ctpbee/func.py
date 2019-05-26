@@ -60,45 +60,44 @@ class ExtAbstract(object):
 
     def __init__(self, name, app=None):
         self.extension_name = name
-        self.app = None
+        self.app = app
+
+        self.map = {
+            EVENT_TICK: self.on_tick,
+            EVENT_BAR: self.on_bar,
+            EVENT_ORDER: self.on_order,
+            EVENT_SHARED: self.on_shared,
+            EVENT_TRADE: self.on_trade,
+            EVENT_POSITION: self.on_position,
+        }
+
+    def on_order(self, order: OrderData, **kwargs) -> None:
+        raise NotImplemented
+
+    def on_shared(self, shared: SharedData, **kwargs) -> None:
+        raise NotImplemented
+
+    def on_bar(self, bar: BarData, interval: int, **kwargs) -> None:
+        raise NotImplemented
+
+    def on_tick(self, tick: TickData, **kwargs) -> None:
+        raise NotImplemented
+
+    def on_trade(self, trade: TradeData, **kwargs) -> None:
+        raise NotImplemented
+
+    def on_position(self, position: PositionData, **kwargs) -> None:
+        raise NotImplemented
+
+    def __call__(self, event):
+        self.map[event.type](event.data)
 
     def init_app(self, app):
-        self.app = app
+        if app:
+            self.app = app
 
     def __repr__(self):
         return f"Api --> {self.extension_name}"
 
     def __str__(self):
         return self.extension_name
-
-    def on_order(self, order: OrderData) -> None:
-        raise NotImplemented
-
-    def on_shared(self, shared: SharedData) -> None:
-        raise NotImplemented
-
-    def on_bar(self, bar: BarData, interval: int) -> None:
-        raise NotImplemented
-
-    def on_tick(self, tick: TickData) -> None:
-        raise NotImplemented
-
-    def on_trade(self, trade: TradeData) -> None:
-        raise NotImplemented
-
-    def on_position(self, position: PositionData) -> None:
-        raise NotImplemented
-
-    def __call__(self, event):
-        if event.type == EVENT_TICK:
-            self.on_tick(tick=event.data)
-        if event.type == EVENT_BAR:
-            self.on_bar(bar=event.data, interval=event.interval)
-        if event.type == EVENT_TRADE:
-            self.on_trade(event.data)
-        if event.type == EVENT_SHARED:
-            self.on_shared(event.data)
-        if event.type == EVENT_ORDER:
-            self.on_order(event.data)
-        if event.type == EVENT_POSITION:
-            self.on_position(event.data)

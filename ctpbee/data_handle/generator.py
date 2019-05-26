@@ -64,7 +64,8 @@ class DataGenerator:
             self.bar.datetime = self.bar.datetime.replace(
                 second=0, microsecond=0
             )
-            event = Event(type=EVENT_BAR, data=self.bar, interval=1)
+            self.bar.interval = 1
+            event = Event(type=EVENT_BAR, data=self.bar)
             controller.put(event)
             [self.update_bar(x, getattr(self, "min_{}_bar".format(x)), self.bar) for x in self.XMIN]
             new_minute = True
@@ -122,17 +123,21 @@ class DataGenerator:
             xmin_bar.datetime = xmin_bar.datetime.replace(
                 second=0, microsecond=0
             )
-            event = Event(type=EVENT_BAR, data=xmin_bar, interval=xmin)
+            xmin_bar.interval = xmin
+            event = Event(type=EVENT_BAR, data=xmin_bar)
             controller.put(event)
             xmin_bar = None
 
     def generate(self):
         if self.bar is not None:
-            event = Event(type=EVENT_BAR, data=self.bar, interval=1)
+            self.bar.interval = 1
+            event = Event(type=EVENT_BAR, data=self.bar)
             controller.put(event)
         for x in self.XMIN:
             if self.bar is not None:
-                event = Event(type=EVENT_BAR, data=getattr(self, "min_{}_bar".format(x)), interval=x)
+                bar = getattr(self, "min_{}_bar".format(x))
+                bar.interval = x
+                event = Event(type=EVENT_BAR, data=bar)
                 controller.put(event)
         self.bar = None
         [setattr(self, "min_{}_bar".format(x), None) for x in self.XMIN]
