@@ -1,5 +1,5 @@
 import platform
-from setuptools import Extension, setup, find_packages
+from setuptools import Extension, setup
 
 if platform.uname().system == "Windows":
     compiler_flags = [
