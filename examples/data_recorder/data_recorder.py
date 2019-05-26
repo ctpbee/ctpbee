@@ -17,7 +17,7 @@ from json import dumps
 from ctpbee import CtpBee
 from ctpbee import subscribe
 
-from process_tr import DataRecorder
+
 
 app = CtpBee(__name__)
 info = {
@@ -25,10 +25,9 @@ info = {
         "userid": "142164",
         "password": "040501",
         "brokerid": "9999",
-        "md_address": "tcp://180.168.146.187:10031",
-        "td_address": "tcp://180.168.146.187:10030",
-        "product_info": "ctpbee",
-        "auth_code": "",
+        "md_address": "tcp://180.168.146.187:13040",
+        "td_address": "tcp://180.168.146.187:13030",
+        "auth_code": "0000000000000000",
         'appid':"5056613036"
     },
     "TD_FUNC": True,
@@ -37,7 +36,9 @@ info = {
     "BAR_DATABASE_TYPE": 'mysql',
     'SUBSCRIBED_SYMBOL':['AP910']
 }
+
 app.config.from_mapping(info)
+from process_tr import DataRecorder
 ext = DataRecorder("recorder", app)
 app.start()
 for contracts in app.recorder.get_all_contracts():

@@ -4,7 +4,8 @@ from orm import BarPointer, TickPointer
 
 
 class DataRecorder(ExtAbstract):
-    def __init__(self):
+    def __init__(self, name, app=None):
+        super.__init__(name, app)
         self.tick_pointer = TickPointer()
         self.bar_pointer = BarPointer()
         self.shared_data = {}

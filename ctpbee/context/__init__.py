@@ -1,5 +1,5 @@
-from .current_app import current_app,proxy
+from .proxy import current_app,_app_context_ctx
 
 __all__ = [
-    current_app, proxy
+    current_app, _app_context_ctx
 ]

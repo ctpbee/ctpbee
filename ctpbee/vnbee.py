@@ -8,7 +8,7 @@ from werkzeug.datastructures import ImmutableDict
 from ctpbee.helpers import locked_cached_property, find_package
 from ctpbee.exceptions import ConfigError
 from ctpbee.record import Recorder
-from ctpbee.context import proxy
+from ctpbee.context import _app_context_ctx
 from ctpbee.ctp import BeeMdApi, BeeTdApi
 from ctpbee.config import Config
 from ctpbee.event_engine import controller
@@ -19,16 +19,15 @@ class CtpBee(object):
     default_config = ImmutableDict(
         dict(LOG_OUTPUT=True, TD_FUNC=False, MD_FUNC=True, TICK_DB="tick_me", XMIN=[], ALL_SUBSCRIBE=False))
     config_class = Config
-
+    import_name = None
     # 数据记录载体
     recorder = Recorder()
 
     __active = False
 
-    #  交易api与行情api
+    # 交易api与行情api
     market = None
     trader = None
-    import_name = None
 
     # 插件系统
     extensions = {}
@@ -45,7 +44,7 @@ class CtpBee(object):
             )
         self.instance_path = instance_path
         self.config = self.make_config()
-        proxy.push(self)
+        _app_context_ctx.push(self)
 
     def make_config(self):
         """ 生成class类"""
@@ -59,6 +58,7 @@ class CtpBee(object):
         return os.path.join(prefix, 'var', self.name + '-instance')
 
     def _load_ext(self):
+        """根据当前配置文件下的信息载入行情api和交易api,记住这个api的选项是可选的"""
         self.__active = True
         if "CONNECT_INFO" in self.config.keys():
             info = self.config.get("CONNECT_INFO")

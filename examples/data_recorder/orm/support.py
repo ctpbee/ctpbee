@@ -11,27 +11,26 @@ type_map = {
     'mysql': MySQLDatabase,
     'postgresql': PostgresqlDatabase
 }
-
-tick_type = current_app().config.get('TICK_DATABASE_TYPE')
-bar_type = current_app().config.get('BAR_DATABASE_TYPE')
+tick_type = current_app.config.get('TICK_DATABASE_TYPE')
+bar_type = current_app.config.get('BAR_DATABASE_TYPE')
 
 if tick_type is None or bar_type is None:
     raise ConfigError(args=("配置信息异常， 请检查TICK_DATABASE_TYPE和BAR_DATABASE_TYPE有没有被设置",))
 
 tick_pointer = type_map[tick_type](
-    current_app().config.get('TICK_DATABASE_NAME'),
-    user=current_app().config.get('TICK_DATABASE_USER'),
-    password=current_app().config.get('TICK_DATABASE_PWD'),
-    host=current_app().config.get('TICK_DATABASE_HOST'),
-    port=current_app().config.get('TICK_DATABASE_PORT')
+    current_app.config.get('TICK_DATABASE_NAME'),
+    user=current_app.config.get('TICK_DATABASE_USER'),
+    password=current_app.config.get('TICK_DATABASE_PWD'),
+    host=current_app.config.get('TICK_DATABASE_HOST'),
+    port=current_app.config.get('TICK_DATABASE_PORT')
 )
 
 bar_pointer = type_map[tick_type](
-    database=current_app().config.get('BAR_DATABASE_NAME'),
-    user=current_app().config.get('BAR_DATABASE_USER'),
-    password=current_app().config.get('BAR_DATABASE_PWD'),
-    host=current_app().config.get('BAR_DATABASE_HOST'),
-    port=current_app().config.get('BAR_DATABASE_PORT')
+    database=current_app.config.get('BAR_DATABASE_NAME'),
+    user=current_app.config.get('BAR_DATABASE_USER'),
+    password=current_app.config.get('BAR_DATABASE_PWD'),
+    host=current_app.config.get('BAR_DATABASE_HOST'),
+    port=current_app.config.get('BAR_DATABASE_PORT')
 )
 
 
@@ -53,7 +52,7 @@ def set_attr(self, data: Dict):
 def generate_data_class():
     """generate orm class map"""
     orm_map = {}
-    subsribed_symbols = current_app().config.get('SUBSCRIBED_SYMBOL')
+    subsribed_symbols = current_app.config.get('SUBSCRIBED_SYMBOL')
     '''generate tick map and bar map'''
 
     tfield = {

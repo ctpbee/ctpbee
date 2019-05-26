@@ -13,7 +13,7 @@ from ctpbee.exceptions import TraderError
 
 def send_order(order_req: OrderRequest):
     """发单"""
-    app = current_app()
+    app = current_app
     if not app.config.get("TD_FUNC"):
         raise TraderError(message="交易功能未开启", args=("交易功能未开启",))
     return app.trader.send_order(order_req)
@@ -21,7 +21,7 @@ def send_order(order_req: OrderRequest):
 
 def cancle_order(cancle_req: CancelRequest):
     """撤单"""
-    app = current_app()
+    app = current_app
     if not app.config.get("TD_FUNC"):
         raise TraderError(message="交易功能未开启", args=("交易功能未开启",))
     app.trader.cancel_order(cancle_req)
@@ -29,13 +29,13 @@ def cancle_order(cancle_req: CancelRequest):
 
 def subscribe(symbol: Text) -> None:
     """订阅"""
-    app = current_app()
+    app = current_app
     app.market.subscribe(symbol)
 
 
 def query_func(type: Text) -> None:
     """查询持仓 or 账户"""
-    app = current_app()
+    app = current_app
     if not app.config.get("TD_FUNC"):
         raise TraderError(message="交易功能未开启", args=("交易功能未开启",))
     if type == "position":
@@ -58,18 +58,19 @@ class ExtAbstract(object):
             data_processor.init_app(app)
     """
 
+    def __new__(cls, *args, **kwargs):
+        cls.map = {
+            EVENT_TICK: cls.on_tick,
+            EVENT_BAR: cls.on_bar,
+            EVENT_ORDER: cls.on_order,
+            EVENT_SHARED: cls.on_shared,
+            EVENT_TRADE: cls.on_trade,
+            EVENT_POSITION: cls.on_position,
+        }
+
     def __init__(self, name, app=None):
         self.extension_name = name
         self.app = app
-
-        self.map = {
-            EVENT_TICK: self.on_tick,
-            EVENT_BAR: self.on_bar,
-            EVENT_ORDER: self.on_order,
-            EVENT_SHARED: self.on_shared,
-            EVENT_TRADE: self.on_trade,
-            EVENT_POSITION: self.on_position,
-        }
 
     def on_order(self, order: OrderData, **kwargs) -> None:
         raise NotImplemented

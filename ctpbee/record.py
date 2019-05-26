@@ -3,7 +3,6 @@ from ctpbee.data_handle import generator
 from ctpbee.ctp.constant import *
 from ctpbee.event_engine import controller, Event
 from ctpbee.context import current_app
-from ctpbee.exceptions import ContextError
 
 
 class Recorder(object):
@@ -51,7 +50,7 @@ class Recorder(object):
         else:
             self.shared[event.data.vt_symbol] = []
 
-        for key, value in current_app().extensions.items():
+        for key, value in current_app.extensions.items():
             value(event)
 
     def process_error_event(self, event: Event):
@@ -60,12 +59,12 @@ class Recorder(object):
 
     def process_log_event(self, event: Event):
         self.logs[self.get_local_time()] = event.data
-        if current_app().config.get("LOG_OUTPUT"):
+        if current_app.config.get("LOG_OUTPUT"):
             print(self.get_local_time() + ": ", event.data)
 
     def process_bar_event(self, event: Event):
         self.bar[event.data.vt_symbol] = event.data
-        for key, value in current_app().extensions.items():
+        for key, value in current_app.extensions.items():
             value(event)
 
     def process_tick_event(self, event: Event):
@@ -84,7 +83,7 @@ class Recorder(object):
             bm.update_tick(tick)
         if not bm:
             self.bar[symbol] = generator()
-        for key, value in current_app().extensions.items():
+        for key, value in current_app.extensions.items():
             value(event)
 
     def process_order_event(self, event: Event):
@@ -97,21 +96,21 @@ class Recorder(object):
         # Otherwise, pop inactive order from in dict
         elif order.vt_orderid in self.active_orders:
             self.active_orders.pop(order.vt_orderid)
-        for key, value in current_app().extensions.items():
+        for key, value in current_app.extensions.items():
             value(event)
 
     def process_trade_event(self, event: Event):
         """"""
         trade = event.data
         self.trades[trade.vt_tradeid] = trade
-        for key, value in current_app().extensions.items():
+        for key, value in current_app.extensions.items():
             value(event)
 
     def process_position_event(self, event: Event):
         """"""
         position = event.data
         self.positions[position.vt_positionid] = position
-        for key, value in current_app().extensions.items():
+        for key, value in current_app.extensions.items():
             value(event)
 
     def process_account_event(self, event: Event):

@@ -30,7 +30,7 @@ class DataGenerator:
         self.denominator = 0
         self.molecule = 0
 
-        self.XMIN = current_app().config.get("XMIN")
+        self.XMIN = current_app.config.get("XMIN")
         self._generator()
         self.rd = None
 
