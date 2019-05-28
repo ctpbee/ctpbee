@@ -2,6 +2,7 @@
 import os
 import sys
 from time import sleep
+from typing import Text
 
 from werkzeug.datastructures import ImmutableDict
 
@@ -32,8 +33,9 @@ class CtpBee(object):
     # 插件系统
     extensions = {}
 
-    def __init__(self, import_name, instance_path=None):
+    def __init__(self, name: Text, import_name, instance_path=None):
         """this will be developed in the next version"""
+        self.name = name
         self.import_name = import_name
         if instance_path is None:
             instance_path = self.auto_find_instance_path()
@@ -44,7 +46,7 @@ class CtpBee(object):
             )
         self.instance_path = instance_path
         self.config = self.make_config()
-        _app_context_ctx.push(self)
+        _app_context_ctx.push(self.name, self)
 
     def make_config(self):
         """ 生成class类"""

@@ -3,24 +3,17 @@ An introduction to function usage
 """
 # you should know  all the libraries should be extral installed  if use the examples
 
-from ctpbee import CtpBee
+from ctpbee import CtpBee, switch_app, current_app
 from ctpbee import ExtAbstract
 from ctpbee import subscribe, send_order
 from ctpbee.ctp.constant import OrderData, TickData
 
 
 class PrintIt(ExtAbstract):
-
-    def on_order(self, order: OrderData, **kwargs) -> None:
-        print()
-
-    def on_tick(self, tick: TickData, **kwargs) -> None:
-        print(tick)
+    pass
 
 
-ext = PrintIt("print")
-
-app = CtpBee(__name__)
+app = CtpBee("wanghuang", __name__)
 
 info = {
     "CONNECT_INFO": {
@@ -36,6 +29,3 @@ info = {
     "XMIN": [3]
 }
 app.config.from_mapping(info)
-ext.init_app(app)
-app.start()
-subscribe("ag1912")

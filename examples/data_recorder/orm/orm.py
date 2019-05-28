@@ -24,7 +24,10 @@ class TickPointer(DataPointerAbstract):
         if cls is None:
             raise AttributeError('orm map is None, please check your config')
         single = cls().to(kwargs.get('data'))
-        single.save()
+        try:
+            single.save()
+        except Exception as e:
+            return False
         return True
 
     def insert_many(self, **kwargs: Mapping) -> bool:

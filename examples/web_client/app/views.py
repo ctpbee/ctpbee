@@ -16,6 +16,7 @@ def login():
     return render_template("trade_login.html")
 
 
+
 @trade.route("/send_order", methods=['GET', "POST"])
 def send_order():
     """下单"""
@@ -25,16 +26,24 @@ def send_order():
 
 @trade.route("/cancle_order", methods=['GET', "POST"])
 def cancle_order():
-    """下单"""
+    """撤单"""
     from ctpbee import cancle_order
     pass
 
 
 @trade.route("/close_position", methods=['GET', "POST"])
 def close_position():
-    """下单"""
+    """平仓"""
     from ctpbee import send_order
     info = request.values
     pass
+
+
+@trade.route("/query",methods=['POST', 'GET'])
+def query():
+    """查询"""
+    pass
+
+
 
 
