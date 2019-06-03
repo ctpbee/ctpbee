@@ -84,6 +84,7 @@ class CtpBee(object):
 
     def start(self, log_output=True):
         """init data process extension and start engine to process data."""
+
         self.config["LOG_OUTPUT"] = log_output
         controller.start()
         self._load_ext()

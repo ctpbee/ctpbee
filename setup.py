@@ -12,7 +12,7 @@ else:
     compiler_flags = [
         "-std=c++17",  # standard
         "-O3",  # Optimization
-        "-Wno-delete-incomplete", "-Wno-sign-compare",
+        "-Wno-delete-incomplete", "-Wno-sign-compare","-pthread"
     ]
     extra_link_args = ["-lstdc++"]
 

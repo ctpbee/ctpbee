@@ -49,7 +49,6 @@ class Recorder(object):
             self.shared[event.data.vt_symbol].append(event.data)
         else:
             self.shared[event.data.vt_symbol] = []
-
         for key, value in current_app.extensions.items():
             value(event)
 
@@ -64,6 +63,7 @@ class Recorder(object):
 
     def process_bar_event(self, event: Event):
         self.bar[event.data.vt_symbol] = event.data
+
         for key, value in current_app.extensions.items():
             value(event)
 

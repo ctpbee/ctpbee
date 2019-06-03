@@ -14,7 +14,7 @@ class PrintIt(ExtAbstract):
 
 
 app = CtpBee("wanghuang", __name__)
-
+print(current_app)
 info = {
     "CONNECT_INFO": {
         "userid": "142164",
@@ -29,5 +29,6 @@ info = {
     "XMIN": [3]
 }
 app.config.from_mapping(info)
-
 app.start()
+
+
