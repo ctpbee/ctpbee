@@ -1,7 +1,7 @@
 from ctpbee.data_handle import generator
 
 from ctpbee.ctp.constant import *
-from ctpbee.event_engine import controller, Event
+from ctpbee.event_engine import rpo, Event
 from ctpbee.context import current_app
 
 
@@ -23,7 +23,6 @@ class Recorder(object):
         self.errors = {}
         self.shared = {}
         self.active_orders = {}
-        self.controller = controller
         self.register_event()
 
     @staticmethod
@@ -33,16 +32,16 @@ class Recorder(object):
 
     def register_event(self):
         """bind process function"""
-        self.controller.register(EVENT_TICK, self.process_tick_event)
-        self.controller.register(EVENT_ORDER, self.process_order_event)
-        self.controller.register(EVENT_TRADE, self.process_trade_event)
-        self.controller.register(EVENT_POSITION, self.process_position_event)
-        self.controller.register(EVENT_ACCOUNT, self.process_account_event)
-        self.controller.register(EVENT_CONTRACT, self.process_contract_event)
-        self.controller.register(EVENT_BAR, self.process_bar_event)
-        self.controller.register(EVENT_LOG, self.process_log_event)
-        self.controller.register(EVENT_ERROR, self.process_error_event)
-        self.controller.register(EVENT_SHARED, self.process_shared_event)
+        rpo.register(EVENT_TICK, self.process_tick_event)
+        rpo.register(EVENT_ORDER, self.process_order_event)
+        rpo.register(EVENT_TRADE, self.process_trade_event)
+        rpo.register(EVENT_POSITION, self.process_position_event)
+        rpo.register(EVENT_ACCOUNT, self.process_account_event)
+        rpo.register(EVENT_CONTRACT, self.process_contract_event)
+        rpo.register(EVENT_BAR, self.process_bar_event)
+        rpo.register(EVENT_LOG, self.process_log_event)
+        rpo.register(EVENT_ERROR, self.process_error_event)
+        rpo.register(EVENT_SHARED, self.process_shared_event)
 
     def process_shared_event(self, event):
         if self.shared.get(event.data.vt_symbol, None) is not None:

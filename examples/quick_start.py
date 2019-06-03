@@ -10,25 +10,30 @@ from ctpbee.ctp.constant import OrderData, TickData
 
 
 class PrintIt(ExtAbstract):
-    pass
+
+    def on_tick(self, tick: TickData) -> None:
+        """tick process function"""
+        symbol = tick.symbol
+        tick.datetime = str(tick.datetime)
+        tick.exchange = tick.exchange.value
+        print(tick)
 
 
 app = CtpBee("wanghuang", __name__)
-print(current_app)
 info = {
     "CONNECT_INFO": {
-        "userid": "142164",
-        "password": "040501",
-        "brokerid": "9999",
-        "md_address": "tcp://180.168.146.187:10031",
-        "td_address": "tcp://180.168.146.187:10030",
-        "appid": "",
+        "userid": "8000007459",
+        "password": "su198951",
+        "brokerid": "8899",
+        "md_address": "tcp://116.228.171.152:31214",
+        "td_address": "tcp://116.228.171.152:50214",
+        "product_info": "",
         "auth_code": "",
     },
     "TD_FUNC": True,
-    "XMIN": [3]
 }
 app.config.from_mapping(info)
+ex = PrintIt("bee", app)
 app.start()
-
-
+for x in app.recorder.get_all_contracts():
+    subscribe(x.symbol)

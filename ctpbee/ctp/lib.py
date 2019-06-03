@@ -79,7 +79,7 @@ def get_folder_path(folder_name: str):
 
 from ctpbee.event_engine.engine import EVENT_TIMER
 
-from ctpbee.event_engine import controller, Event
+from ctpbee.event_engine import rpo, Event
 
 from .constant import (
     TickData,
@@ -151,4 +151,4 @@ symbol_size_map = {}
 
 def on_event(type, data):
     event = Event(type=type, data=data)
-    controller.put(event)
+    rpo.put(event)
