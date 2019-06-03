@@ -1,6 +1,6 @@
 # Python:
 *.py[c]
-*.so
+# *.so
 *.egg
 *.egg-info
 .pytest_cache
