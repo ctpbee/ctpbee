@@ -117,8 +117,9 @@ def _switch_app():
     return _app_context_ctx.switch
 
 
-# 当前栈顶的app变量.
+
 def _find_app():
+    # 返回栈顶的app变量.
     top = _app_context_ctx.top
     if top is None:
         raise ContextError("无app变量")

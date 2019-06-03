@@ -29,3 +29,5 @@ info = {
     "XMIN": [3]
 }
 app.config.from_mapping(info)
+
+app.start()

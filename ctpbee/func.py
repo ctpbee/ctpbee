@@ -46,6 +46,10 @@ def query_func(type: Text) -> None:
 
 class ExtAbstract(object):
     """
+    数据模块
+    交易模块
+    监视模块
+    策略模块
         如果你要开发插件需要继承此抽象demo
         usage:
         ## coding:
@@ -69,6 +73,11 @@ class ExtAbstract(object):
         }
 
     def __init__(self, name, app=None):
+        """
+        init function
+        :param name: extension name , development
+        :param app: CtpBee instance
+        """
         self.extension_name = name
         self.app = app
 
@@ -90,12 +99,12 @@ class ExtAbstract(object):
     def on_position(self, position: PositionData, **kwargs) -> None:
         raise NotImplemented
 
-    def __call__(self, event):
-        self.map[event.type](event.data)
-
     def init_app(self, app):
         if app:
             self.app = app
+
+    def __call__(self, event: Event):
+        self.map[event.type](event.data)
 
     def __repr__(self):
         return f"Api --> {self.extension_name}"
