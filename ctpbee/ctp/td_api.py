@@ -292,7 +292,7 @@ class BeeTdApi(TdApi):
         self.password = info.get("password")
         self.brokerid = info.get("brokerid")
         self.auth_code = info.get("auth_code")
-        appid =  info.get("appid")
+        appid = info.get("appid")
         if not self.connect_status:
             path = get_folder_path(self.gateway_name.lower())
             self.createFtdcTraderApi(str(path) + "\\Td")
@@ -302,7 +302,6 @@ class BeeTdApi(TdApi):
             self.init()
         else:
             self.authenticate()
-
 
     def authenticate(self):
         """
@@ -328,7 +327,7 @@ class BeeTdApi(TdApi):
             "UserID": self.userid,
             "Password": self.password,
             "BrokerID": self.brokerid,
-            "AppID":self.appid
+            "AppID": self.appid
         }
 
         self.reqid += 1

@@ -1,9 +1,14 @@
-# ctpbee
-
+# ctpbee 
 bee bee .... there is an industrious bee created ~~
 
 ctpbee 提供了一个微小的核心，不会做过多控制流程的事, 也就是说耦合很低很低， 你可以通过这个核心来构建值得信赖的工具， 
 当然这需要你的编程功力。 你所需要关心的是如何编程来处理行情和交易信息即可。
+
+>  使用旧版接口
+# 开始之前 
+```bash
+sudo locale-gen zh_CN.GB18030
+```
 
 ## 代码下载 
 
@@ -35,7 +40,7 @@ pip3 install ctpbee
 ## 快速开始 
 ```python
 from ctpbee import CtpBee
-app = CtpBee(__name__)
+app = CtpBee("hello", __name__)
 info = {
     "CONNECT_INFO": {
         "userid": "",
