@@ -7,9 +7,6 @@ from datetime import datetime
 from logging import INFO
 from typing import Any
 
-"""
-General constant string used in VN Trader.
-"""
 
 from enum import Enum
 
