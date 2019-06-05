@@ -2,7 +2,8 @@ from .lib import *
 from .constant import (EVENT_BAR, EVENT_TICK, EVENT_TRADE, EVENT_ERROR, EVENT_ACCOUNT, EVENT_CONTRACT, EVENT_LOG,
                        EVENT_POSITION, EVENT_ORDER)
 from .constant import *
-
+from datetime import date
+from datetime import datetime
 
 class BeeMdApi(MdApi):
     """"""
@@ -77,11 +78,14 @@ class BeeMdApi(MdApi):
             return
 
         timestamp = f"{data['ActionDay']} {data['UpdateTime']}.{int(data['UpdateMillisec'] / 100)}"
-
+        try:
+            datetimed = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S.%f")
+        except ValueError as e:
+            datetimed = datetime.strptime(str(date.today()) + " " + timestamp, "%Y-%m-%d %H:%M:%S.%f")
         tick = TickData(
             symbol=symbol,
             exchange=exchange,
-            datetime=datetime.strptime(timestamp, "%Y%m%d %H:%M:%S.%f"),
+            datetime=datetimed,
             name=symbol_name_map[symbol],
             volume=data["Volume"],
             last_price=data["LastPrice"],
@@ -97,6 +101,7 @@ class BeeMdApi(MdApi):
             bid_volume_1=data["BidVolume1"],
             ask_volume_1=data["AskVolume1"],
             average_price=data['AveragePrice'],
+            preSettlementPrice=data['PreSettlementPrice'],
             gateway_name=self.gateway_name
         )
         on_event(type=EVENT_TICK, data=tick)

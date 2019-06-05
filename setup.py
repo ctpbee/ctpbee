@@ -12,7 +12,7 @@ else:
     compiler_flags = [
         "-std=c++17",  # standard
         "-O3",  # Optimization
-        "-Wno-delete-incomplete", "-Wno-sign-compare",
+        "-Wno-delete-incomplete", "-Wno-sign-compare","-pthread"
     ]
     extra_link_args = ["-lstdc++"]
 
@@ -25,7 +25,7 @@ vnctpmd = Extension(
         "ctpbee/api/ctp/include",
         "ctpbee/api/ctp/vnctp",
     ],
-    language="c++",
+    language="cpp",
     define_macros=[],
     undef_macros=[],
     library_dirs=["ctpbee/api/ctp/libs", "ctpbee/api/ctp"],
@@ -49,12 +49,12 @@ vnctptd = Extension(
     library_dirs=["ctpbee/api/ctp/libs",
                   "ctpbee/api/ctp",
                   ],
-    libraries=["thostmduserapi_se", "thosttraderapi_se", ],
+    libraries=["thostmduserapi_se", "thosttraderapi_se"],
     extra_compile_args=compiler_flags,
     extra_link_args=extra_link_args,
     runtime_library_dirs=["$ORIGIN"],
     depends=[],
-    language="c++",
+    language="cpp",
 )
 
 if platform.system() == "Windows":
@@ -89,3 +89,6 @@ setup(
         'Programming Language :: Python :: 3.7',
     ]
 )
+
+
+

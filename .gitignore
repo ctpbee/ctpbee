@@ -1,11 +1,17 @@
 # Python:
 *.py[c]
-*.so
+# *.so
 *.egg
 *.egg-info
 .pytest_cache
 dist
 build
+
+
+# vnctptd and vnctpmd
+vnctpmd.cpython-37m-x86_64-linux-gnu.so
+vnctptd.cpython-37m-x86_64-linux-gnu.so
+
 
 # pycharm
 *.idea

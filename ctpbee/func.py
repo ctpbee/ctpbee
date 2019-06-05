@@ -46,6 +46,10 @@ def query_func(type: Text) -> None:
 
 class ExtAbstract(object):
     """
+    数据模块
+    交易模块
+    监视模块
+    策略模块
         如果你要开发插件需要继承此抽象demo
         usage:
         ## coding:
@@ -58,8 +62,50 @@ class ExtAbstract(object):
             data_processor.init_app(app)
     """
 
-    def __new__(cls, *args, **kwargs):
-        cls.map = {
+    def __init__(self, name, app=None):
+        """
+        init function
+        :param name: extension name , development
+        :param app: CtpBee instance
+        """
+        print(23)
+        print(self)
+        self.extension_name = name
+        self.app = app
+        if self.app is not None:
+            self.init_app(self.app)
+
+    def on_order(self, order: OrderData) -> None:
+        raise NotImplemented
+
+    def on_shared(self, shared: SharedData) -> None:
+        raise NotImplemented
+
+    def on_bar(self, bar: BarData) -> None:
+        raise NotImplemented
+
+    def on_tick(self, tick: TickData) -> None:
+        raise NotImplemented
+
+    def on_trade(self, trade: TradeData) -> None:
+        raise NotImplemented
+
+    def on_position(self, position: PositionData) -> None:
+        raise NotImplemented
+
+    def init_app(self, app):
+        if app is not None:
+            self.app = app
+            self.app.extensions[self.extension_name] = self
+
+    def __call__(self, event: Event):
+        from functools import partial
+        func = self.map[event.type]
+        func(self, event.data)
+
+    def __init_subclass__(cls, **kwargs):
+        setattr(cls, "__call__", getattr(ExtAbstract, "__call__"))
+        map = {
             EVENT_TICK: cls.on_tick,
             EVENT_BAR: cls.on_bar,
             EVENT_ORDER: cls.on_order,
@@ -68,37 +114,14 @@ class ExtAbstract(object):
             EVENT_POSITION: cls.on_position,
         }
 
-    def __init__(self, name, app=None):
-        self.extension_name = name
-        self.app = app
+        parmeter = {
+            EVENT_POSITION: "position",
+            EVENT_TRADE: "trade",
+            EVENT_BAR: "bar",
+            EVENT_TICK: "tick",
+            EVENT_ORDER: "order",
+            EVENT_SHARED: "shared"
+        }
 
-    def on_order(self, order: OrderData, **kwargs) -> None:
-        raise NotImplemented
-
-    def on_shared(self, shared: SharedData, **kwargs) -> None:
-        raise NotImplemented
-
-    def on_bar(self, bar: BarData, interval: int, **kwargs) -> None:
-        raise NotImplemented
-
-    def on_tick(self, tick: TickData, **kwargs) -> None:
-        raise NotImplemented
-
-    def on_trade(self, trade: TradeData, **kwargs) -> None:
-        raise NotImplemented
-
-    def on_position(self, position: PositionData, **kwargs) -> None:
-        raise NotImplemented
-
-    def __call__(self, event):
-        self.map[event.type](event.data)
-
-    def init_app(self, app):
-        if app:
-            self.app = app
-
-    def __repr__(self):
-        return f"Api --> {self.extension_name}"
-
-    def __str__(self):
-        return self.extension_name
+        setattr(cls, "map", map)
+        setattr(cls, "parmeter", parmeter)

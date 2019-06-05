@@ -4,6 +4,13 @@ bee bee .... there is an industrious bee created ~~
 
 ctpbee just provide a tiny core, you can extent the function by programming
 
+
+>  Using Old Interface
+# Before you start
+```bash
+sudo locale-gen zh_CN.GB18030
+```
+
 ## Download the code 
 
 ```
@@ -33,7 +40,7 @@ pip3 install ctpbee
 ## Quick start 
 ```python
 from ctpbee import CtpBee
-app = CtpBee(__name__)
+app = CtpBee("hello", __name__)
 info = {
     "CONNECT_INFO": {
         "userid": "",

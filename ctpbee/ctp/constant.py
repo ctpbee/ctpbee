@@ -7,9 +7,6 @@ from datetime import datetime
 from logging import INFO
 from typing import Any
 
-"""
-General constant string used in VN Trader.
-"""
 
 from enum import Enum
 
@@ -178,7 +175,7 @@ class TickData(BaseData):
     limit_down: float = 0
     open_interest: int = 0
     average_price: float = 0
-
+    preSettlementPrice:float = 0
     open_price: float = 0
     high_price: float = 0
     low_price: float = 0

@@ -12,7 +12,7 @@ from ctpbee.record import Recorder
 from ctpbee.context import _app_context_ctx
 from ctpbee.ctp import BeeMdApi, BeeTdApi
 from ctpbee.config import Config
-from ctpbee.event_engine import controller
+from ctpbee.event_engine import rpo
 
 
 class CtpBee(object):
@@ -84,6 +84,7 @@ class CtpBee(object):
 
     def start(self, log_output=True):
         """init data process extension and start engine to process data."""
+
         self.config["LOG_OUTPUT"] = log_output
-        controller.start()
+        rpo.start()
         self._load_ext()
