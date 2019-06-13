@@ -68,8 +68,6 @@ class ExtAbstract(object):
         :param name: extension name , development
         :param app: CtpBee instance
         """
-        print(23)
-        print(self)
         self.extension_name = name
         self.app = app
         if self.app is not None:

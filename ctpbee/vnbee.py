@@ -22,8 +22,6 @@ class CtpBee(object):
     config_class = Config
     import_name = None
     # 数据记录载体
-    recorder = Recorder()
-
     __active = False
 
     # 交易api与行情api
@@ -31,6 +29,7 @@ class CtpBee(object):
     trader = None
 
     # 插件系统
+    # 等共享内存块出来了 是否可以尝试在外部进行
     extensions = {}
 
     def __init__(self, name: Text, import_name, instance_path=None):
@@ -44,6 +43,7 @@ class CtpBee(object):
                 'If an instance path is provided it must be absolute.'
                 ' A relative path was given instead.'
             )
+        self.recorder = Recorder(self)
         self.instance_path = instance_path
         self.config = self.make_config()
         _app_context_ctx.push(self.name, self)
@@ -69,7 +69,7 @@ class CtpBee(object):
         if self.config.get("TD_FUNC"):
             self.trader = BeeTdApi()
             self.trader.connect(info)
-            sleep(1)
+            sleep(0.5)
         self.market = BeeMdApi()
         self.market.connect(info)
 

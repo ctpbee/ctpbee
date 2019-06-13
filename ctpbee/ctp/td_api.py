@@ -1,3 +1,24 @@
+"""
+Notice : 神兽保佑 ，测试一次通过
+//      
+//      ┏┛ ┻━━━━━┛ ┻┓
+//      ┃　　　　　　 ┃
+//      ┃　　　━　　　┃
+//      ┃　┳┛　  ┗┳　┃
+//      ┃　　　　　　 ┃
+//      ┃　　　┻　　　┃
+//      ┃　　　　　　 ┃
+//      ┗━┓　　　┏━━━┛
+//        ┃　　　┃   Author: somewheve
+//        ┃　　　┃   Datetime: 2019/6/13 下午7:54  ---> 无知即是罪恶
+//        ┃　　　┗━━━━━━━━━┓
+//        ┃　　　　　　　    ┣┓
+//        ┃　　　　         ┏┛
+//        ┗━┓ ┓ ┏━━━┳ ┓ ┏━┛
+//          ┃ ┫ ┫   ┃ ┫ ┫
+//          ┗━┻━┛   ┗━┻━┛
+//
+"""
 from .lib import *
 from .constant import (EVENT_TRADE, EVENT_ERROR, EVENT_ACCOUNT, EVENT_CONTRACT, EVENT_LOG,
                        EVENT_POSITION, EVENT_ORDER)
@@ -9,6 +30,7 @@ class BeeTdApi(TdApi):
     def __init__(self):
         """Constructor"""
         super(BeeTdApi, self).__init__()
+
         self.gateway_name = "ctp"
 
         self.reqid = 0
@@ -37,6 +59,7 @@ class BeeTdApi(TdApi):
         """"""
         self.connect_status = True
         on_event(type=EVENT_LOG, data="交易连接成功")
+
         if self.auth_code:
             self.authenticate()
         else:
@@ -97,13 +120,11 @@ class BeeTdApi(TdApi):
             status=Status.REJECTED,
             gateway_name=self.gateway_name
         )
-
         on_event(type=EVENT_ORDER, data=order)
         error['detail'] = "交易委托失败"
         on_event(type=EVENT_ERROR, data=error)
 
     def onRspOrderAction(self, data: dict, error: dict, reqid: int, last: bool):
-
         """"""
         error['detail'] = "交易撤单失败"
         on_event(type=EVENT_ERROR, data=error)
@@ -170,6 +191,7 @@ class BeeTdApi(TdApi):
         if last:
             for position in self.positions.values():
                 on_event(type=EVENT_POSITION, data=position)
+
             self.positions.clear()
 
     def onRspQryTradingAccount(self, data: dict, error: dict, reqid: int, last: bool):
@@ -214,7 +236,7 @@ class BeeTdApi(TdApi):
             symbol_size_map[contract.symbol] = contract.size
 
         if last:
-            on_event(type=EVENT_LOG, data="合约信息查询成功")
+            on_event(EVENT_LOG, data="合约信息查询成功")
 
             for data in self.order_data:
                 self.onRtnOrder(data)
@@ -287,12 +309,11 @@ class BeeTdApi(TdApi):
         """
         Start connection to server.
         """
-
         self.userid = info.get("userid")
         self.password = info.get("password")
         self.brokerid = info.get("brokerid")
         self.auth_code = info.get("auth_code")
-        appid = info.get("appid")
+        self.appid = info.get("appid")
         if not self.connect_status:
             path = get_folder_path(self.gateway_name.lower())
             self.createFtdcTraderApi(str(path) + "\\Td")
@@ -305,7 +326,7 @@ class BeeTdApi(TdApi):
 
     def authenticate(self):
         """
-        Authenticate with auth_code and product_info.
+        Authenticate with auth_code and appid.
         """
         req = {
             "UserID": self.userid,
@@ -313,6 +334,7 @@ class BeeTdApi(TdApi):
             "AuthCode": self.auth_code,
             "AppID": self.appid
         }
+
         self.reqid += 1
         self.reqAuthenticate(req, self.reqid)
 

@@ -12,7 +12,7 @@ else:
     compiler_flags = [
         "-std=c++17",  # standard
         "-O3",  # Optimization
-        "-Wno-delete-incomplete", "-Wno-sign-compare","-pthread"
+        "-Wno-delete-incomplete", "-Wno-sign-compare", "-pthread"
     ]
     extra_link_args = ["-lstdc++"]
 
@@ -57,20 +57,62 @@ vnctptd = Extension(
     language="cpp",
 )
 
+vnctpmd_se = Extension(
+    "ctpbee.api.ctp.vnctpmd_se",
+    [
+        "ctpbee/api/ctp/vnctp/vnctpmd/vnctpmd.cpp",
+    ],
+    include_dirs=[
+        "ctpbee/api/ctp/include",
+        "ctpbee/api/ctp/vnctp",
+    ],
+    language="cpp",
+    define_macros=[],
+    undef_macros=[],
+    library_dirs=["ctpbee/api/ctp/libs", "ctpbee/api/ctp"],
+    libraries=["thosttraderapi_se_app", "thostmduserapi_se_app", ],
+    extra_compile_args=compiler_flags,
+    extra_link_args=extra_link_args,
+    depends=[],
+    runtime_library_dirs=["$ORIGIN"],
+)
+
+vnctptd_se = Extension(
+    "ctpbee.api.ctp.vnctptd_se",
+    [
+        "ctpbee/api/ctp/vnctp/vnctptd/vnctptd.cpp",
+    ],
+    include_dirs=[
+        "ctpbee/api/ctp/include",
+        "ctpbee/api/ctp/vnctp",
+    ],
+    define_macros=[],
+    undef_macros=[],
+    library_dirs=["ctpbee/api/ctp/libs",
+                  "ctpbee/api/ctp",
+                  ],
+    libraries=["thosttraderapi_se_app", "thostmduserapi_se_app"],
+    extra_compile_args=compiler_flags,
+    extra_link_args=extra_link_args,
+    runtime_library_dirs=["$ORIGIN"],
+    depends=[],
+    language="cpp",
+)
+
 if platform.system() == "Windows":
     # use pre-built pyd for windows ( support python 3.7 only )
     ext_modules = []
 elif platform.system() == "Darwin":
     ext_modules = []
 else:
-    ext_modules = [vnctptd, vnctpmd]
+    ext_modules = [vnctptd, vnctpmd, vnctptd_se, vnctpmd_se]
 
 pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.ctp',
         'ctpbee.event_engine']
 install_requires = ['flask']
 setup(
     name='ctpbee',
-    version='0.15',
+    version='0.16',
     description="easy ctp trade and market support",
     author='somewheve',
     author_email='somewheve@gmail.com',
@@ -89,6 +131,3 @@ setup(
         'Programming Language :: Python :: 3.7',
     ]
 )
-
-
-
