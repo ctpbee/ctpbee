@@ -77,13 +77,7 @@ def go():
     app = CtpBee("last", __name__)
     info = {
         "CONNECT_INFO": {
-            "userid": "8000007459",
-            "password": "su198951",
-            "brokerid": "8899",
-            "md_address": "tcp://116.228.171.152:31213",
-            "td_address": "tcp://116.228.171.152:31205",
-            "appid": "client_jlb_3.0.0",
-            "auth_code": "TMGC1IKOL7ZRHE7X",
+
 
         },
         "TD_FUNC": True,
