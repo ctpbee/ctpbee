@@ -39,20 +39,22 @@ pip3 install ctpbee
 ## 快速开始 
 ```python
 from ctpbee import CtpBee
-app = CtpBee("hello", __name__)
+app = CtpBee("ctpbee", __name__) 
 info = {
     "CONNECT_INFO": {
         "userid": "",
         "password": "",
-        "brokerid": "9999",
-        "md_address": "tcp://180.168.146.187:10011",
-        "td_address": "tcp://180.168.146.187:10000",
+        "brokerid": "",
+        "md_address": "",
+        "td_address": "",
         "appid": "",
         "auth_code": "",
-    }
+    },
+    "TD_FUNC": True,  # 开启交易功能
 }
-app.config.from_mapping(info)
-app.start()
+app.config.from_mapping(info)  # 载入信息
+app.start()  
+
 ```
 
 ## 更多 

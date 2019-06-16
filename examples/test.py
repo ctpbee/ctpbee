@@ -1,3 +1,25 @@
+"""
+Notice : 神兽保佑 ，测试一次通过
+//      
+//      ┏┛ ┻━━━━━┛ ┻┓
+//      ┃　　　　　　 ┃
+//      ┃　　　━　　　┃
+//      ┃　┳┛　  ┗┳　┃
+//      ┃　　　　　　 ┃
+//      ┃　　　┻　　　┃
+//      ┃　　　　　　 ┃
+//      ┗━┓　　　┏━━━┛
+//        ┃　　　┃   Author: somewheve
+//        ┃　　　┃   Datetime: 2019/6/16 下午1:20  ---> 无知即是罪恶
+//        ┃　　　┗━━━━━━━━━┓
+//        ┃　　　　　　　    ┣┓
+//        ┃　　　　         ┏┛
+//        ┗━┓ ┓ ┏━━━┳ ┓ ┏━┛
+//          ┃ ┫ ┫   ┃ ┫ ┫
+//          ┗━┻━┛   ┗━┻━┛
+//
+"""
+
 # coding:utf-8
 """
 this is an example program which used to record tick data
@@ -77,19 +99,20 @@ def go():
     app = CtpBee("last", __name__)
     info = {
         "CONNECT_INFO": {
-            "userid": "",
-            "password": "",
-            "brokerid": "",
-            "md_address": "",
-            "td_address": "",
-            "appid": "",
-            "auth_code": "",
+            "userid": "8000007459",
+            "password": "su198951",
+            "brokerid": "8899",
+            "md_address": "tcp://116.228.171.152:31213",
+            "td_address": "tcp://116.228.171.152:31205",
+            "appid": "client_jlb_3.0.0",
+            "auth_code": "TMGC1IKOL7ZRHE7X",
         },
         "TD_FUNC": True,
     }
     app.config.from_mapping(info)
     data_recorder = DataRecorder("data_recorder", app)
     app.start()
+    sleep(1)
     for contract in app.recorder.get_all_contracts():
         subscribe(contract.symbol)
 
