@@ -6,7 +6,7 @@ from typing import Text, AnyStr
 
 from werkzeug.datastructures import ImmutableDict
 
-from ctpbee.func import ExtAbstract
+from ctpbee.func import ExtAbstract, send_monitor, cancle_monitor
 from ctpbee.helpers import locked_cached_property, find_package, check
 from ctpbee.exceptions import ConfigError
 from ctpbee.record import Recorder, OrderRequest, CancelRequest
@@ -93,6 +93,7 @@ class CtpBee(object):
         """发单"""
         if self.trader is None:
             raise ValueError("当前账户交易api未登录")
+        send_monitor.send(order_req)
         return self.trader.send_order(order_req)
 
     @check(type="trader")
@@ -100,6 +101,7 @@ class CtpBee(object):
         """撤单"""
         if self.trader is None:
             raise ValueError("当前账户交易api未登录")
+        cancle_monitor.send(cancle_req)
         self.trader.cancel_order(cancle_req)
 
     @check(type="market")

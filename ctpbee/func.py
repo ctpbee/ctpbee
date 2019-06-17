@@ -4,6 +4,9 @@
 
 """
 from typing import Text
+
+from blinker import signal
+
 from ctpbee.context import current_app
 from ctpbee.ctp.constant import OrderRequest, CancelRequest, EVENT_TRADE, EVENT_SHARED, EVENT_ORDER, OrderData, \
     TradeData, PositionData, AccountData, TickData, SharedData, BarData, EVENT_POSITION
@@ -11,12 +14,16 @@ from ctpbee.event_engine import Event
 from ctpbee.ctp.constant import EVENT_TICK, EVENT_BAR
 from ctpbee.exceptions import TraderError
 
+send_monitor = signal("send_order")
+cancle_monitor = signal("cancle_cancle")
+
 
 def send_order(order_req: OrderRequest):
     """发单"""
     app = current_app
     if not app.config.get("TD_FUNC"):
         raise TraderError(message="交易功能未开启", args=("交易功能未开启",))
+    send_monitor.send(order_req)
     return app.trader.send_order(order_req)
 
 
@@ -25,6 +32,7 @@ def cancle_order(cancle_req: CancelRequest):
     app = current_app
     if not app.config.get("TD_FUNC"):
         raise TraderError(message="交易功能未开启", args=("交易功能未开启",))
+    cancle_monitor.send(cancle_req)
     app.trader.cancel_order(cancle_req)
 
 
@@ -122,13 +130,3 @@ class ExtAbstract(object):
 
         setattr(cls, "map", map)
         setattr(cls, "parmeter", parmeter)
-
-
-class AlexMonitor:
-    """
-    监视器
-    so cool
-    """
-
-    def __call__(self, *args, **kwargs):
-        pass

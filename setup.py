@@ -109,7 +109,7 @@ else:
 
 pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.ctp',
         'ctpbee.event_engine']
-install_requires = ['flask']
+install_requires = ['flask', "blinker"]
 setup(
     name='ctpbee',
     version='0.16',
