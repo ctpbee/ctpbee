@@ -6,6 +6,7 @@ from typing import Text, AnyStr
 
 from werkzeug.datastructures import ImmutableDict
 
+from ctpbee.func import ExtAbstract
 from ctpbee.helpers import locked_cached_property, find_package, check
 from ctpbee.exceptions import ConfigError
 from ctpbee.record import Recorder, OrderRequest, CancelRequest
@@ -16,7 +17,7 @@ from ctpbee.event_engine import rpo
 
 
 class CtpBee(object):
-    """默认的设置"""
+    """ 默认配置 """
     default_config = ImmutableDict(
         dict(LOG_OUTPUT=True, TD_FUNC=False, MD_FUNC=True, TICK_DB="tick_me", XMIN=[], ALL_SUBSCRIBE=False))
     config_class = Config
@@ -27,13 +28,12 @@ class CtpBee(object):
     # 交易api与行情api
     market = None
     trader = None
-
     # 插件系统
-    # 等共享内存块出来了 是否可以尝试在外部进行
+    # todo :等共享内存块出来了 是否可以尝试在外部进行
     extensions = {}
 
     def __init__(self, name: Text, import_name, instance_path=None):
-        """this will be developed in the next version"""
+        """ 初始化 """
         self.name = name
         self.import_name = import_name
         if instance_path is None:
@@ -83,38 +83,61 @@ class CtpBee(object):
         return self.import_name
 
     def start(self, log_output=True):
-        """init data process extension and start engine to process data."""
-
+        """开始"""
         self.config["LOG_OUTPUT"] = log_output
         rpo.start()
         self._load_ext()
 
     @check(type="trader")
     def send_order(self, order_req: OrderRequest) -> AnyStr:
+        """发单"""
         if self.trader is None:
             raise ValueError("当前账户交易api未登录")
         return self.trader.send_order(order_req)
 
     @check(type="trader")
     def cancle_order(self, cancle_req: CancelRequest):
+        """撤单"""
         if self.trader is None:
             raise ValueError("当前账户交易api未登录")
         self.trader.cancel_order(cancle_req)
 
     @check(type="market")
     def subscribe(self, symbol: AnyStr):
+        """订阅行情"""
         if self.market is None:
             raise ValueError("当前账户行情api未连接")
         self.market.subscribe(symbol)
 
     @check(type="trader")
     def query_position(self):
+        """查询持仓"""
         if self.trader is None:
             raise ValueError("当前账户交易api未登录")
         self.trader.query_position()
 
     @check(type="trader")
     def query_account(self):
+        """查询账户"""
         if self.trader is None:
             raise ValueError("当前账户交易api未登录")
         self.trader.query_account()
+
+    def remove_extension(self, extension_name: Text) -> None:
+        """移除插件"""
+        if extension_name in self.extensions:
+            del self.extensions[extension_name]
+
+    def add_extensison(self, extension: ExtAbstract):
+        """添加插件"""
+        if extension.extension_name in self.extensions:
+            return
+        self.extensions[extension.extension_name] = extension
+
+    def __del__(self):
+        """释放账户 安全退出"""
+        if self.market is not None:
+            self.market.close()
+        if self.trader is not None:
+            self.trader.close()
+        self.market, self.trader = None, None
