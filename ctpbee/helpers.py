@@ -1,3 +1,5 @@
+""" 工具函数 """
+
 import pkgutil
 import os
 import sys
@@ -99,3 +101,6 @@ def check(type: AnyStr):
         return wrapper
 
     return midlle
+
+
+

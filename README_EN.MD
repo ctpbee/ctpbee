@@ -32,10 +32,12 @@ pip3 install ctpbee
 ```
 
 ## Function
+
 1. k-line data support
 2. time-shared data support
 3. trade support
 4. market support
+5. monitor
 
 ## Quick start 
 ```python

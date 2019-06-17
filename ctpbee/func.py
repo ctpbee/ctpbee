@@ -1,5 +1,6 @@
 """
-function used to cancle order, sender, qry_position and qry_account
+
+面向用户的函数
 
 """
 from typing import Text
@@ -47,10 +48,8 @@ def query_func(type: Text) -> None:
 class ExtAbstract(object):
     """
     数据模块
-    交易模块
-    监视模块
     策略模块
-        如果你要开发插件需要继承此抽象demo
+        如果你要开发上述插件需要继承此抽象demo
         usage:
         ## coding:
             class Processor(ApiAbstract):
@@ -123,3 +122,13 @@ class ExtAbstract(object):
 
         setattr(cls, "map", map)
         setattr(cls, "parmeter", parmeter)
+
+
+class AlexMonitor:
+    """
+    监视器
+    so cool
+    """
+
+    def __call__(self, *args, **kwargs):
+        pass

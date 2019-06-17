@@ -1,5 +1,4 @@
 from ctpbee.data_handle import generator
-
 from ctpbee.ctp.constant import *
 from ctpbee.event_engine import rpo, Event
 

@@ -62,6 +62,7 @@ app.start()
 
 
 ## 等待完成 
+- 监视器
 - 优化代码
 - 创建实例 --> 包括一个 web client 和一个data_recorder
 - 维护本地持仓
