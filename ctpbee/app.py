@@ -2,13 +2,13 @@
 import os
 import sys
 from time import sleep
-from typing import Text
+from typing import Text, AnyStr
 
 from werkzeug.datastructures import ImmutableDict
 
-from ctpbee.helpers import locked_cached_property, find_package
+from ctpbee.helpers import locked_cached_property, find_package, check
 from ctpbee.exceptions import ConfigError
-from ctpbee.record import Recorder
+from ctpbee.record import Recorder, OrderRequest, CancelRequest
 from ctpbee.context import _app_context_ctx
 from ctpbee.ctp import BeeMdApi, BeeTdApi
 from ctpbee.config import Config
@@ -76,7 +76,7 @@ class CtpBee(object):
     @locked_cached_property
     def name(self):
         if self.import_name == '__main__':
-            fn = getattr(sys.modubbles['__main__'], '__file__', None)
+            fn = getattr(sys.modules['__main__'], '__file__', None)
             if fn is None:
                 return '__main__'
             return os.path.splitext(os.path.basename(fn))[0]
@@ -88,3 +88,33 @@ class CtpBee(object):
         self.config["LOG_OUTPUT"] = log_output
         rpo.start()
         self._load_ext()
+
+    @check(type="trader")
+    def send_order(self, order_req: OrderRequest) -> AnyStr:
+        if self.trader is None:
+            raise ValueError("当前账户交易api未登录")
+        return self.trader.send_order(order_req)
+
+    @check(type="trader")
+    def cancle_order(self, cancle_req: CancelRequest):
+        if self.trader is None:
+            raise ValueError("当前账户交易api未登录")
+        self.trader.cancel_order(cancle_req)
+
+    @check(type="market")
+    def subscribe(self, symbol: AnyStr):
+        if self.market is None:
+            raise ValueError("当前账户行情api未连接")
+        self.market.subscribe(symbol)
+
+    @check(type="trader")
+    def query_position(self):
+        if self.trader is None:
+            raise ValueError("当前账户交易api未登录")
+        self.trader.query_position()
+
+    @check(type="trader")
+    def query_account(self):
+        if self.trader is None:
+            raise ValueError("当前账户交易api未登录")
+        self.trader.query_account()

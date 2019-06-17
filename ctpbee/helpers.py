@@ -1,7 +1,9 @@
 import pkgutil
 import os
 import sys
+from functools import wraps
 from threading import RLock
+from typing import List, AnyStr
 
 _missing = object()
 
@@ -76,3 +78,24 @@ def _matching_loader_thinks_module_is_package(loader, mod_name):
          'PEP 302 import hooks.  If you do not use import hooks and '
          'you encounter this error please file a bug against Flask.') %
         loader.__class__.__name__)
+
+
+def check(type: AnyStr):
+    """ check the api before you make action"""
+
+    def midlle(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if type == "market":
+                if args[0].market is None:
+                    raise ValueError("当前账户行情api未连接")
+            elif type == "trader":
+                if args[0].market is None:
+                    raise ValueError("当前账户交易api未连接")
+            else:
+                raise ValueError("非法字符串")
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return midlle
