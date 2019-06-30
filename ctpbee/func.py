@@ -158,3 +158,24 @@ class ApplyTransmission:
 
     def query_account(self):
         pass
+
+
+class Helper():
+    """ 工具函数 帮助你快速构建发单请求 """
+
+    @staticmethod
+    def generate_order_req_from_tick(**kwargs):
+        """ 根据tick生成req """
+        pass
+
+    @staticmethod
+    def generate_order_req_from_bar(**kwargs):
+        pass
+
+    @staticmethod
+    def generate_req(**kwargs):
+        """ 手动构造发单请求 """
+        pass
+
+
+helper = Helper()
