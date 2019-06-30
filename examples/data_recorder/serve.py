@@ -115,8 +115,6 @@ class DataRecorder(ExtAbstract):
                 # self.rd.set(vt, dumps([]))
             print("恢复数据")
             self.recover = True
-        with open("tem.txt", "a") as f:
-            f.write(shared.vt_symbol + "\n")
         if not auth_time(shared.datatime.time()):
             """过滤非法"""
             return
