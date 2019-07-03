@@ -91,38 +91,29 @@ class CtpBee(object):
     @check(type="trader")
     def send_order(self, order_req: OrderRequest) -> AnyStr:
         """发单"""
-        if self.trader is None:
-            raise ValueError("当前账户交易api未登录")
         send_monitor.send(order_req)
         return self.trader.send_order(order_req)
 
     @check(type="trader")
     def cancle_order(self, cancle_req: CancelRequest):
         """撤单"""
-        if self.trader is None:
-            raise ValueError("当前账户交易api未登录")
         cancle_monitor.send(cancle_req)
         self.trader.cancel_order(cancle_req)
 
     @check(type="market")
     def subscribe(self, symbol: AnyStr):
         """订阅行情"""
-        if self.market is None:
-            raise ValueError("当前账户行情api未连接")
         self.market.subscribe(symbol)
 
     @check(type="trader")
     def query_position(self):
         """查询持仓"""
-        if self.trader is None:
-            raise ValueError("当前账户交易api未登录")
+
         self.trader.query_position()
 
     @check(type="trader")
     def query_account(self):
         """查询账户"""
-        if self.trader is None:
-            raise ValueError("当前账户交易api未登录")
         self.trader.query_account()
 
     def remove_extension(self, extension_name: Text) -> None:
@@ -143,3 +134,4 @@ class CtpBee(object):
         if self.trader is not None:
             self.trader.close()
         self.market, self.trader = None, None
+

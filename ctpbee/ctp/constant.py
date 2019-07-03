@@ -7,7 +7,6 @@ from datetime import datetime
 from logging import INFO
 from typing import Any
 
-
 from enum import Enum
 
 
@@ -153,6 +152,10 @@ class BaseData:
     gateway_name: str
     iterable_count = 0
 
+    def serialize(self, **kwargs):
+        for key, value in kwargs.values():
+            setattr(self, key, value)
+
 
 @dataclass
 class TickData(BaseData):
@@ -175,7 +178,7 @@ class TickData(BaseData):
     limit_down: float = 0
     open_interest: int = 0
     average_price: float = 0
-    preSettlementPrice:float = 0
+    preSettlementPrice: float = 0
     open_price: float = 0
     high_price: float = 0
     low_price: float = 0

@@ -82,6 +82,7 @@ class BeeMdApi(MdApi):
             datetimed = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S.%f")
         except ValueError as e:
             datetimed = datetime.strptime(str(date.today()) + " " + timestamp, "%Y-%m-%d %H:%M:%S.%f")
+
         tick = TickData(
             symbol=symbol,
             exchange=exchange,
@@ -104,6 +105,7 @@ class BeeMdApi(MdApi):
             preSettlementPrice=data['PreSettlementPrice'],
             gateway_name=self.gateway_name
         )
+        print(tick)
         on_event(type=EVENT_TICK, data=tick)
 
     def connect(self, info: dict):

@@ -1,4 +1,3 @@
-from threading import get_ident, Lock
 from typing import Text
 from ctpbee.exceptions import ContextError
 from werkzeug.local import LocalProxy

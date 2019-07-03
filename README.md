@@ -6,7 +6,7 @@ ctpbee 提供了一个微小的核心，不会做过多控制流程的事, 也�
 
 # 开始之前 
 ```bash
-sudo locale-gen zh_CN.GB18030
+sudo locale-gen zh_CN.GB18030  # for linux 
 ```
 
 ## 代码下载 

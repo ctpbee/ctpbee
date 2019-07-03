@@ -99,7 +99,6 @@ def check(type: AnyStr):
             return func(*args, **kwargs)
 
         return wrapper
-
     return midlle
 
 

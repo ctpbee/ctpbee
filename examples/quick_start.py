@@ -61,6 +61,7 @@ class DataRecorder(ExtAbstract):
     def on_tick(self, tick):
         """tick process function"""
         symbol = tick.symbol
+        print(tick)
         # print(tick)
 
     def on_bar(self, bar):
@@ -75,22 +76,37 @@ class DataRecorder(ExtAbstract):
 
 def go():
     app = CtpBee("last", __name__)
+    # info = {
+    #     "CONNECT_INFO": {
+    #         "userid": "089131",
+    #         "password": "350888",
+    #         "brokerid": "9999",
+    #         "md_address": "tcp://180.168.146.187:10011",
+    #         "td_address": "tcp://180.168.146.187:10001",
+    #         "appid": "simnow_client_test",
+    #         "auth_code": "0000000000000000",
+    #     },
+    #     "TD_FUNC": True,
+    # }
     info = {
         "CONNECT_INFO": {
-            "userid": "",
-            "password": "",
-            "brokerid": "",
-            "md_address": "",
-            "td_address": "",
-            "appid": "",
-            "auth_code": "",
+            "userid": "089131",
+            "password": "350888",
+            "brokerid": "9999",
+            "md_address": "tcp://218.202.237.33:10012",
+            "td_address": "tcp://218.202.237.33:10002",
+            "appid": "simnow_client_test",
+            "auth_code": "0000000000000000",
         },
         "TD_FUNC": True,
     }
+
+
     app.config.from_mapping(info)
     data_recorder = DataRecorder("data_recorder", app)
     app.start()
     for contract in app.recorder.get_all_contracts():
+        print(contract)
         subscribe(contract.symbol)
 
 

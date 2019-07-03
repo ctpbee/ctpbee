@@ -11,8 +11,9 @@ from ctpbee.context import current_app
 from ctpbee.ctp.constant import OrderRequest, CancelRequest, EVENT_TRADE, EVENT_SHARED, EVENT_ORDER, OrderData, \
     TradeData, PositionData, AccountData, TickData, SharedData, BarData, EVENT_POSITION
 from ctpbee.event_engine import Event
-from ctpbee.ctp.constant import EVENT_TICK, EVENT_BAR
+from ctpbee.ctp.constant import EVENT_TICK, EVENT_BAR, OrderRequest, CancelRequest
 from ctpbee.exceptions import TraderError
+
 
 send_monitor = signal("send_order")
 cancle_monitor = signal("cancle_cancle")
@@ -173,9 +174,10 @@ class Helper():
         pass
 
     @staticmethod
-    def generate_req(**kwargs):
+    def generate_order_req(**kwargs):
         """ 手动构造发单请求 """
-        pass
+        # req = OrderRequest()
+
 
 
 helper = Helper()
