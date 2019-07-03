@@ -17,7 +17,17 @@ from ctpbee.event_engine import rpo
 
 
 class CtpBee(object):
-    """ 默认配置 """
+    """
+    ctpbee 来自我对于做项目的痛点需求，旨在开发出一套具有完整api的交易微框架 ,
+    你可以看到很多借鉴自flask的设计 , 毕竟本人实在热爱flask ....
+    ctpbee提供完整的支持 ，一个CtpBee对象可以登录一个账户 ，
+    当你登录多个账户时， 可以通过current_app, 以及switch_app还有 get_app提供完整的支持,
+    每个账户对象都拥有单独的发单接口 ,在你实现策略的地方 可以通过上述api实现发单支持
+    当然ctpbee提供了ExtAbstract 抽象插件 ，继承此插件即可快速载入支持.
+    总而言之,希望能够极大的简化目前的开发流程 !
+    """
+
+    # 默认配置
     default_config = ImmutableDict(
         dict(LOG_OUTPUT=True, TD_FUNC=False, MD_FUNC=True, TICK_DB="tick_me", XMIN=[], ALL_SUBSCRIBE=False))
     config_class = Config
@@ -134,4 +144,3 @@ class CtpBee(object):
         if self.trader is not None:
             self.trader.close()
         self.market, self.trader = None, None
-

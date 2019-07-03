@@ -1,12 +1,13 @@
 # ctpbee 
 bee bee .... there is an industrious bee created ~~
 
-ctpbee 提供了一个微小的核心，不会做过多控制流程的事, 也就是说耦合很低很低， 你可以通过这个核心来构建值得信赖的工具， 
+ctpbee 提供了一个微小的ctp核心，不会做过多控制流程的事, 也就是说耦合很低很低， 你可以通过这个核心来构建值得信赖的工具， 
 当然这需要你的编程功力。 你所需要关心的是如何编程来处理行情和交易信息即可。
 
 # 开始之前 
 ```bash
-sudo locale-gen zh_CN.GB18030  # for linux 
+# just for linux 
+sudo locale-gen zh_CN.GB18030  
 ```
 
 ## 代码下载 
@@ -17,7 +18,7 @@ git clone https://github.com/somewheve/ctpbee
 
 ## 起源
 
-- 衍生自[vnpy](https://github.com/vnpy/vnpy) 
+- 衍生自 [vnpy](https://github.com/vnpy/vnpy) 和 [flask](https://github.com/pallets/flask)  
 
 
 ## 安装 
@@ -50,9 +51,9 @@ info = {
         "appid": "",
         "auth_code": "",
     },
-    "TD_FUNC": True,  # 开启交易功能
+    "TD_FUNC": True,  # 开启交易功能 
 }
-app.config.from_mapping(info)  # 载入信息
+app.config.from_mapping(info)  # 从dict中载入信息 对于更多配置载入方式, 请参阅文档或者阅读代码
 app.start()  
 
 ```
@@ -65,16 +66,19 @@ app.start()
 - 优化代码
 - 创建实例 --> 包括一个 web client
 - 维护本地持仓
-- 快速发单
+- 快速发单 
 
 
 - 定个目标  暑假放假之前一定要 完成 0.2   也就是上个目标  拒绝怠惰 ！！！ 
 
+## Api支持 
+
+请参阅文档（待上线）
+
 
 ## 最后一句 
 如果这个能帮助到你， 请点击star来支持我噢. QAQ
-
-ctpbee 是专做ctp的交易插件,当前主要由我一人开发维护,如果你对这个项目感兴趣, 欢迎加群一起讨论和或者贡献代码哦 群号(: 756319143)
+如果你希望贡献代码, 欢迎加群一起讨论和或者提交PR   QQ群号(: 756319143)
 
 
 
