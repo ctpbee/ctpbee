@@ -149,6 +149,3 @@ symbol_name_map = {}
 symbol_size_map = {}
 
 
-def on_event(type, data):
-    event = Event(type=type, data=data)
-    rpo.put(event)

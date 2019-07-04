@@ -5,17 +5,18 @@ from .constant import *
 from datetime import date
 from datetime import datetime
 
+
 class BeeMdApi(MdApi):
     """"""
 
-    def __init__(self):
+    def __init__(self, event_engine):
         """Constructor"""
         super(BeeMdApi, self).__init__()
 
         self.gateway_name = "ctp"
 
         self.reqid = 0
-
+        self.event_engine = event_engine
         self.connect_status = False
         self.login_status = False
         self.subscribed = set()
@@ -24,12 +25,16 @@ class BeeMdApi(MdApi):
         self.password = ""
         self.brokerid = 0
 
+    def on_event(self, type, data):
+        event = Event(type=type, data=data)
+        self.event_engine.put(event)
+
     def onFrontConnected(self):
         """
         Callback when front server is connected.
         """
         self.connect_status = True
-        on_event(type=EVENT_LOG, data="行情服务器连接成功")
+        self.on_event(type=EVENT_LOG, data="行情服务器连接成功")
         self.login()
 
     def onFrontDisconnected(self, reason: int):
@@ -38,7 +43,7 @@ class BeeMdApi(MdApi):
         """
         self.connect_status = False
         self.login_status = False
-        on_event(type=EVENT_LOG, data=f"行情连接断开，原因{reason}")
+        self.on_event(type=EVENT_LOG, data=f"行情连接断开，原因{reason}")
 
     def onRspUserLogin(self, data: dict, error: dict, reqid: int, last: bool):
         """
@@ -46,27 +51,27 @@ class BeeMdApi(MdApi):
         """
         if not error["ErrorID"]:
             self.login_status = True
-            on_event(type=EVENT_LOG, data="行情服务器登录成功")
+            self.on_event(type=EVENT_LOG, data="行情服务器登录成功")
 
             for symbol in self.subscribed:
                 self.subscribeMarketData(symbol)
         else:
             error["detail"] = "行情登录失败"
-            on_event(type=EVENT_ERROR, data=error)
+            self.on_event(type=EVENT_ERROR, data=error)
 
     def onRspError(self, error: dict, reqid: int, last: bool):
         """
         Callback when error occured.
         """
         error['detail'] = "行情接口报错"
-        on_event(type=EVENT_ERROR, data=error)
+        self.on_event(type=EVENT_ERROR, data=error)
 
     def onRspSubMarketData(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
         if not error or not error["ErrorID"]:
             return
         error['detail'] = "行情订阅失败"
-        on_event(type=EVENT_ERROR, data=error)
+        self.on_event(type=EVENT_ERROR, data=error)
 
     def onRtnDepthMarketData(self, data: dict):
         """
@@ -105,7 +110,7 @@ class BeeMdApi(MdApi):
             preSettlementPrice=data['PreSettlementPrice'],
             gateway_name=self.gateway_name
         )
-        on_event(type=EVENT_TICK, data=tick)
+        self.on_event(type=EVENT_TICK, data=tick)
 
     def connect(self, info: dict):
         """

@@ -1,6 +1,6 @@
 from ctpbee.data_handle import generator
 from ctpbee.ctp.constant import *
-from ctpbee.event_engine import rpo, Event
+from ctpbee.event_engine import  Event
 
 
 class Recorder(object):
@@ -8,7 +8,7 @@ class Recorder(object):
     data center
     """
 
-    def __init__(self, app):
+    def __init__(self, app, event_engine):
         """"""
         self.bar = {}
         self.ticks = {}
@@ -21,8 +21,10 @@ class Recorder(object):
         self.errors = {}
         self.shared = {}
         self.active_orders = {}
+        self.event_engine = event_engine
         self.register_event()
         self.app = app
+
 
     @staticmethod
     def get_local_time():
@@ -31,16 +33,16 @@ class Recorder(object):
 
     def register_event(self):
         """bind process function"""
-        rpo.register(EVENT_TICK, self.process_tick_event)
-        rpo.register(EVENT_ORDER, self.process_order_event)
-        rpo.register(EVENT_TRADE, self.process_trade_event)
-        rpo.register(EVENT_POSITION, self.process_position_event)
-        rpo.register(EVENT_ACCOUNT, self.process_account_event)
-        rpo.register(EVENT_CONTRACT, self.process_contract_event)
-        rpo.register(EVENT_BAR, self.process_bar_event)
-        rpo.register(EVENT_LOG, self.process_log_event)
-        rpo.register(EVENT_ERROR, self.process_error_event)
-        rpo.register(EVENT_SHARED, self.process_shared_event)
+        self.event_engine.register(EVENT_TICK, self.process_tick_event)
+        self.event_engine.register(EVENT_ORDER, self.process_order_event)
+        self.event_engine.register(EVENT_TRADE, self.process_trade_event)
+        self.event_engine.register(EVENT_POSITION, self.process_position_event)
+        self.event_engine.register(EVENT_ACCOUNT, self.process_account_event)
+        self.event_engine.register(EVENT_CONTRACT, self.process_contract_event)
+        self.event_engine.register(EVENT_BAR, self.process_bar_event)
+        self.event_engine.register(EVENT_LOG, self.process_log_event)
+        self.event_engine.register(EVENT_ERROR, self.process_error_event)
+        self.event_engine.register(EVENT_SHARED, self.process_shared_event)
 
     def process_shared_event(self, event):
         if self.shared.get(event.data.vt_symbol, None) is not None:
@@ -115,6 +117,8 @@ class Recorder(object):
         """"""
         account = event.data
         self.accounts[account.vt_accountid] = account
+        for key, value in self.app.extensions.items():
+            value(event)
 
     def process_contract_event(self, event: Event):
         """"""

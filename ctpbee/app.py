@@ -13,7 +13,7 @@ from ctpbee.record import Recorder, OrderRequest, CancelRequest
 from ctpbee.context import _app_context_ctx
 from ctpbee.ctp import BeeMdApi, BeeTdApi
 from ctpbee.config import Config
-from ctpbee.event_engine import rpo
+from ctpbee.event_engine import rpo, EventEngine
 
 
 class CtpBee(object):
@@ -38,6 +38,7 @@ class CtpBee(object):
     # 交易api与行情api
     market = None
     trader = None
+
     # 插件系统
     # todo :等共享内存块出来了 是否可以尝试在外部进行
     extensions = {}
@@ -46,6 +47,7 @@ class CtpBee(object):
         """ 初始化 """
         self.name = name
         self.import_name = import_name
+        self.event_engine = EventEngine()
         if instance_path is None:
             instance_path = self.auto_find_instance_path()
         elif not os.path.isabs(instance_path):
@@ -53,7 +55,7 @@ class CtpBee(object):
                 'If an instance path is provided it must be absolute.'
                 ' A relative path was given instead.'
             )
-        self.recorder = Recorder(self)
+        self.recorder = Recorder(self, self.event_engine)
         self.instance_path = instance_path
         self.config = self.make_config()
         _app_context_ctx.push(self.name, self)
@@ -77,11 +79,12 @@ class CtpBee(object):
         else:
             raise ConfigError(message="没有相应的登录信息", args=("没有发现登录信息",))
         if self.config.get("TD_FUNC"):
-            self.trader = BeeTdApi()
+            self.trader = BeeTdApi(self.event_engine)
             self.trader.connect(info)
             sleep(0.5)
-        self.market = BeeMdApi()
+        self.market = BeeMdApi(self.event_engine)
         self.market.connect(info)
+
 
     @locked_cached_property
     def name(self):
@@ -94,8 +97,9 @@ class CtpBee(object):
 
     def start(self, log_output=True):
         """开始"""
+        if not self.event_engine._active:
+            self.event_engine.start()
         self.config["LOG_OUTPUT"] = log_output
-        rpo.start()
         self._load_ext()
 
     @check(type="trader")

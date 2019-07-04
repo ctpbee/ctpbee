@@ -27,10 +27,10 @@ from .constant import (EVENT_TRADE, EVENT_ERROR, EVENT_ACCOUNT, EVENT_CONTRACT, 
 class BeeTdApi(TdApi):
     """"""
 
-    def __init__(self):
+    def __init__(self, event_engine):
         """Constructor"""
         super(BeeTdApi, self).__init__()
-
+        self.event_engine = event_engine
         self.gateway_name = "ctp"
 
         self.reqid = 0
@@ -55,10 +55,16 @@ class BeeTdApi(TdApi):
         self.positions = {}
         self.sysid_orderid_map = {}
 
+
+
+    def on_event(self, type, data):
+        event = Event(type=type, data=data)
+        self.event_engine.put(event)
+
     def onFrontConnected(self):
         """"""
         self.connect_status = True
-        on_event(type=EVENT_LOG, data="交易连接成功")
+        self.on_event(type=EVENT_LOG, data="交易连接成功")
 
         if self.auth_code:
             self.authenticate()
@@ -69,17 +75,17 @@ class BeeTdApi(TdApi):
         """"""
         self.connect_status = False
         self.login_status = False
-        on_event(type=EVENT_LOG, data=f"交易连接断开，原因{reason}")
+        self.on_event(type=EVENT_LOG, data=f"交易连接断开，原因{reason}")
 
     def onRspAuthenticate(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
         if not error['ErrorID']:
             self.authStatus = True
-            on_event(type=EVENT_LOG, data="交易服务器验证成功")
+            self.on_event(type=EVENT_LOG, data="交易服务器验证成功")
             self.login()
         else:
             error['detail'] = "交易服务器验证失败"
-            on_event(type=EVENT_ERROR, data=error)
+            self.on_event(type=EVENT_ERROR, data=error)
 
     def onRspUserLogin(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
@@ -87,7 +93,7 @@ class BeeTdApi(TdApi):
             self.frontid = data["FrontID"]
             self.sessionid = data["SessionID"]
             self.login_status = True
-            on_event(type=EVENT_LOG, data="交易登录成功")
+            self.on_event(type=EVENT_LOG, data="交易登录成功")
 
             # Confirm settlement
             req = {
@@ -99,7 +105,7 @@ class BeeTdApi(TdApi):
         else:
             self.login_failed = True
             error['detail'] = "交易登录失败"
-            on_event(type=EVENT_ERROR, data=error)
+            self.on_event(type=EVENT_ERROR, data=error)
 
     def onRspOrderInsert(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
@@ -120,14 +126,14 @@ class BeeTdApi(TdApi):
             status=Status.REJECTED,
             gateway_name=self.gateway_name
         )
-        on_event(type=EVENT_ORDER, data=order)
+        self.on_event(type=EVENT_ORDER, data=order)
         error['detail'] = "交易委托失败"
-        on_event(type=EVENT_ERROR, data=error)
+        self.on_event(type=EVENT_ERROR, data=error)
 
     def onRspOrderAction(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
         error['detail'] = "交易撤单失败"
-        on_event(type=EVENT_ERROR, data=error)
+        self.on_event(type=EVENT_ERROR, data=error)
 
     def onRspQueryMaxOrderVolume(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
@@ -137,7 +143,7 @@ class BeeTdApi(TdApi):
         """
         Callback of settlment info confimation.
         """
-        on_event(type=EVENT_LOG, data="结算信息确认成功")
+        self.on_event(type=EVENT_LOG, data="结算信息确认成功")
 
         self.reqid += 1
         self.reqQryInstrument({}, self.reqid)
@@ -190,7 +196,7 @@ class BeeTdApi(TdApi):
 
         if last:
             for position in self.positions.values():
-                on_event(type=EVENT_POSITION, data=position)
+                self.on_event(type=EVENT_POSITION, data=position)
 
             self.positions.clear()
 
@@ -204,7 +210,7 @@ class BeeTdApi(TdApi):
         )
         account.available = data["Available"]
 
-        on_event(type=EVENT_ACCOUNT, data=account)
+        self.on_event(type=EVENT_ACCOUNT, data=account)
 
     def onRspQryInstrument(self, data: dict, error: dict, reqid: int, last: bool):
         """
@@ -229,14 +235,14 @@ class BeeTdApi(TdApi):
                 contract.option_strike = data["StrikePrice"],
                 contract.option_expiry = datetime.strptime(data["ExpireDate"], "%Y%m%d"),
 
-            on_event(type=EVENT_CONTRACT, data=contract)
+            self.on_event(type=EVENT_CONTRACT, data=contract)
 
             symbol_exchange_map[contract.symbol] = contract.exchange
             symbol_name_map[contract.symbol] = contract.name
             symbol_size_map[contract.symbol] = contract.size
 
         if last:
-            on_event(EVENT_LOG, data="合约信息查询成功")
+            self.on_event(EVENT_LOG, data="合约信息查询成功")
 
             for data in self.order_data:
                 self.onRtnOrder(data)
@@ -275,7 +281,7 @@ class BeeTdApi(TdApi):
             time=data["InsertTime"],
             gateway_name=self.gateway_name
         )
-        on_event(type=EVENT_ORDER, data=order)
+        self.on_event(type=EVENT_ORDER, data=order)
 
         self.sysid_orderid_map[data["OrderSysID"]] = orderid
 
@@ -303,7 +309,7 @@ class BeeTdApi(TdApi):
             time=data["TradeTime"],
             gateway_name=self.gateway_name
         )
-        on_event(type=EVENT_TRADE, data=trade)
+        self.on_event(type=EVENT_TRADE, data=trade)
 
     def connect(self, info: dict):
         """
@@ -392,10 +398,11 @@ class BeeTdApi(TdApi):
 
         self.reqid += 1
         self.reqOrderInsert(ctp_req, self.reqid)
+        print(ctp_req)
 
         orderid = f"{self.frontid}_{self.sessionid}_{self.order_ref}"
         order = req.create_order_data(orderid, self.gateway_name)
-        on_event(type=EVENT_ORDER, data=order)
+        self.on_event(type=EVENT_ORDER, data=order)
 
         return order.vt_orderid
 
@@ -432,7 +439,6 @@ class BeeTdApi(TdApi):
         """
         if not symbol_exchange_map:
             return
-
         req = {
             "BrokerID": self.brokerid,
             "InvestorID": self.userid

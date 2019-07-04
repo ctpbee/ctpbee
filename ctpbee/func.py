@@ -9,11 +9,10 @@ from blinker import signal
 
 from ctpbee.context import current_app
 from ctpbee.ctp.constant import OrderRequest, CancelRequest, EVENT_TRADE, EVENT_SHARED, EVENT_ORDER, OrderData, \
-    TradeData, PositionData, AccountData, TickData, SharedData, BarData, EVENT_POSITION
+    TradeData, PositionData, AccountData, TickData, SharedData, BarData, EVENT_POSITION, EVENT_ACCOUNT
 from ctpbee.event_engine import Event
 from ctpbee.ctp.constant import EVENT_TICK, EVENT_BAR, OrderRequest, CancelRequest
 from ctpbee.exceptions import TraderError
-
 
 send_monitor = signal("send_order")
 cancle_monitor = signal("cancle_cancle")
@@ -99,6 +98,9 @@ class ExtAbstract(object):
     def on_position(self, position: PositionData) -> None:
         raise NotImplemented
 
+    def on_account(self, account: AccountData) -> None:
+        raise NotImplemented
+
     def init_app(self, app):
         if app is not None:
             self.app = app
@@ -118,6 +120,7 @@ class ExtAbstract(object):
             EVENT_SHARED: cls.on_shared,
             EVENT_TRADE: cls.on_trade,
             EVENT_POSITION: cls.on_position,
+            EVENT_ACCOUNT: cls.on_account,
         }
 
         parmeter = {
@@ -126,7 +129,8 @@ class ExtAbstract(object):
             EVENT_BAR: "bar",
             EVENT_TICK: "tick",
             EVENT_ORDER: "order",
-            EVENT_SHARED: "shared"
+            EVENT_SHARED: "shared",
+            EVENT_ACCOUNT: "account"
         }
 
         setattr(cls, "map", map)
@@ -177,7 +181,6 @@ class Helper():
     def generate_order_req(**kwargs):
         """ 手动构造发单请求 """
         # req = OrderRequest()
-
 
 
 helper = Helper()

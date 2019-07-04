@@ -21,8 +21,8 @@ from time import sleep
 from ctpbee import ExtAbstract, current_app
 from ctpbee import CtpBee
 from ctpbee import subscribe
-from ctpbee.context.proxy import get_app
-from ctpbee.ctp.constant import OrderRequest, OrderType, Offset, Direction
+from ctpbee.context.proxy import get_app, switch_app
+from ctpbee.ctp.constant import OrderRequest, OrderType, Offset, Direction, PositionData, AccountData
 from ctpbee import send_order
 
 
@@ -44,12 +44,14 @@ def auth_time(timed):
 
 co = True
 
+
 class DataRecorder(ExtAbstract):
     def __init__(self, name, app=None):
         super().__init__(name, app)
         self.tick_database_name = "tick"
         self.bar_base_name = "bar"
         self.shared_data = {}
+
         self.created = False
         self.recover = False
         self.move = []
@@ -65,31 +67,23 @@ class DataRecorder(ExtAbstract):
     def on_order(self, order):
         pass
 
+    def on_position(self, position: PositionData) -> None:
+        # print(position)
+        pass
+
+    def on_account(self, account: AccountData) -> None:
+        # print(account)
+        pass
+
     def on_tick(self, tick):
         """tick process function"""
-        symbol = tick.symbol
-        # print(tick)
-        # print(tick)
-
-        if self.is_send:
-            # 构建一个 orderreq
-            req = OrderRequest(price=tick.last_price, direction=Direction.LONG, exchange=tick.exchange, volume=2,
-                               offset=Offset.OPEN, type=OrderType.MARKET, symbol=tick.symbol)
-            # current_app.send_order(req)
-            print("发单 info", req.__dict__)
-            p = send_order(order_req=req)
-            print("发单返回的order_id: ", p)
-            sleep(1)
-            c = current_app.recorder.get_order(p.replace("ctp.", ""))
-            print(c)
-            # pprint(current_app.recorder.get_all_orders())
-
-            self.is_send = False
+        pass
 
     def on_bar(self, bar):
         """bar process function"""
         bar.exchange = bar.exchange.value
         interval = bar.interval
+
 
     def on_shared(self, shared):
         """process shared function"""
@@ -105,8 +99,8 @@ def go():
     #         "userid": "089131",
     #         "password": "350888",
     #         "brokerid": "9999",
-    #         "md_address": "tcp://180.168.146.187:10011",
-    #         "td_address": "tcp://180.168.146.187:10001",
+    #         "md_address": "tcp://180.168.146.187:10101",
+    #         "td_address": "tcp://180.168.146.187:10111",
     #         "appid": "simnow_client_test",
     #         "auth_code": "0000000000000000",
     #     },
@@ -117,21 +111,21 @@ def go():
             "userid": "089131",
             "password": "350888",
             "brokerid": "9999",
-            "md_address": "tcp://218.202.237.33:10012",
-            "td_address": "tcp://218.202.237.33:10002",
+            "md_address": "tcp://218.202.237.33:10112",
+            "td_address": "tcp://218.202.237.33:10102",
             "appid": "simnow_client_test",
             "auth_code": "0000000000000000",
         },
         "TD_FUNC": True,
     }
-
     app.config.from_mapping(info)
     data_recorder = DataRecorder("data_recorder", app)
-    app.start()
+    app.start(log_output=True)
     sleep(1)
     for contract in app.recorder.get_all_contracts():
         if contract.symbol == "ag1912":
             subscribe(contract.symbol)
+
 
 
 if __name__ == '__main__':

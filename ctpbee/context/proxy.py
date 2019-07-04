@@ -28,9 +28,8 @@ class LocalStack(object):
 
     def switch(self, name: Text):
         if name in self._simple.keys():
-            rv = getattr(self._local, "stack", None)
-            index = rv.index(self._simple.get(name))
-            rv[index], rv[-1] = rv[-1], rv[index]
+            index = self._local.index(self._simple.get(name))
+            self._local[index], self._local[-1] = self._local[-1], self._local[index]
             return True
         return False
 
@@ -59,10 +58,6 @@ class LocalStack(object):
 _app_context_ctx = LocalStack()
 
 
-def _switch_app():
-    """将指定app的变量切换到栈顶 方便current_app进行访问"""
-    return _app_context_ctx.switch
-
 
 def _find_app():
     # 返回栈顶的app变量.
@@ -78,6 +73,6 @@ def _get_app(name):
 
 
 current_app = LocalProxy(_find_app)
-switch_app = LocalProxy(_switch_app)
+switch_app = _app_context_ctx.switch
 
 get_app = _app_context_ctx.get_app
