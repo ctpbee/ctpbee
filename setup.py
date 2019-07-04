@@ -100,8 +100,7 @@ vnctptd_se = Extension(
 )
 
 if platform.system() == "Windows":
-    # use pre-built pyd for windows ( support python 3.7 only )
-    ext_modules = [vnctptd, vnctpmd, vnctptd_se, vnctpmd_se]
+    # use pre-built pyd for windows ( support python 3.7 only )搞it
 elif platform.system() == "Darwin":
     ext_modules = []
 else:
