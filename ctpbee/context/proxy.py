@@ -17,6 +17,9 @@ class LocalStack(object):
 
         return LocalProxy(_lookup)
 
+    def get_app(self, name):
+        return self._simple.get(name, None)
+
     def push(self, name, obj):
         """Pushes a new item to the stack"""
         self._local.append(obj)
@@ -69,5 +72,12 @@ def _find_app():
     return top
 
 
+def _get_app(name):
+    """ 根据CtpBee的名字找到CtpBee 对象 """
+    return _app_context_ctx.get_app(name)
+
+
 current_app = LocalProxy(_find_app)
 switch_app = LocalProxy(_switch_app)
+
+get_app = _app_context_ctx.get_app

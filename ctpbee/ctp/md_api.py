@@ -105,7 +105,6 @@ class BeeMdApi(MdApi):
             preSettlementPrice=data['PreSettlementPrice'],
             gateway_name=self.gateway_name
         )
-        print(tick)
         on_event(type=EVENT_TICK, data=tick)
 
     def connect(self, info: dict):
