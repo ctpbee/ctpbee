@@ -77,13 +77,13 @@ class DataRecorder(ExtAbstract):
 
     def on_tick(self, tick):
         """tick process function"""
+        print(tick)
         pass
 
     def on_bar(self, bar):
         """bar process function"""
         bar.exchange = bar.exchange.value
         interval = bar.interval
-
 
     def on_shared(self, shared):
         """process shared function"""
@@ -117,15 +117,16 @@ def go():
             "auth_code": "0000000000000000",
         },
         "TD_FUNC": True,
+        "MD_FUNC": False
+
     }
     app.config.from_mapping(info)
     data_recorder = DataRecorder("data_recorder", app)
     app.start(log_output=True)
     sleep(1)
-    for contract in app.recorder.get_all_contracts():
-        if contract.symbol == "ag1912":
-            subscribe(contract.symbol)
-
+    # for contract in app.recorder.get_all_contracts():
+    #     if contract.symbol == "ag1912":
+    #         subscribe(contract.symbol)
 
 
 if __name__ == '__main__':

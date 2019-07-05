@@ -82,8 +82,9 @@ class CtpBee(object):
             self.trader = BeeTdApi(self.event_engine)
             self.trader.connect(info)
             sleep(0.5)
-        self.market = BeeMdApi(self.event_engine)
-        self.market.connect(info)
+        if self.config.get("MD_FUNC"):
+            self.market = BeeMdApi(self.event_engine)
+            self.market.connect(info)
 
 
     @locked_cached_property

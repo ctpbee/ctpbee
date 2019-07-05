@@ -1,12 +1,13 @@
 from typing import Text
 from ctpbee.exceptions import ContextError
 from werkzeug.local import LocalProxy
-
+from threading import Lock
 
 class LocalStack(object):
     def __init__(self):
         self._local = list()
         self._simple = dict()
+        self.lock = Lock()
 
     def __call__(self):
         def _lookup():
@@ -18,20 +19,24 @@ class LocalStack(object):
         return LocalProxy(_lookup)
 
     def get_app(self, name):
-        return self._simple.get(name, None)
+        with self.lock:
+            return self._simple.get(name, None)
 
     def push(self, name, obj):
+
         """Pushes a new item to the stack"""
-        self._local.append(obj)
-        self._simple[name] = obj
+        with self.lock:
+            self._local.append(obj)
+            self._simple[name] = obj
         return self._local
 
     def switch(self, name: Text):
-        if name in self._simple.keys():
-            index = self._local.index(self._simple.get(name))
-            self._local[index], self._local[-1] = self._local[-1], self._local[index]
-            return True
-        return False
+        with self.lock:
+            if name in self._simple.keys():
+                index = self._local.index(self._simple.get(name))
+                self._local[index], self._local[-1] = self._local[-1], self._local[index]
+                return True
+            return False
 
     def pop(self):
         """Removes the topmost item from the stack, will return the
@@ -49,10 +54,11 @@ class LocalStack(object):
         """The topmost item on the stack.  If the stack is empty,
         `None` is returned.
         """
-        try:
-            return self._local[-1]
-        except (AttributeError, IndexError):
-            return None
+        with self.lock:
+            try:
+                return self._local[-1]
+            except (AttributeError, IndexError):
+                return None
 
 
 _app_context_ctx = LocalStack()
