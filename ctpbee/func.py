@@ -6,40 +6,49 @@
 from typing import Text
 from datetime import time
 
-from blinker import signal
-
+from ctpbee import get_app
 from ctpbee.context import current_app
-from ctpbee.ctp.constant import OrderRequest, CancelRequest, EVENT_TRADE, EVENT_SHARED, EVENT_ORDER, OrderData, \
-    TradeData, PositionData, AccountData, TickData, SharedData, BarData, EVENT_POSITION, EVENT_ACCOUNT
+from ctpbee.ctp.constant import \
+    (OrderRequest, CancelRequest, EVENT_TRADE, EVENT_SHARED, EVENT_ORDER,
+     OrderData, TradeData, PositionData, AccountData, TickData, SharedData,
+     BarData, EVENT_POSITION, EVENT_ACCOUNT, EVENT_TICK, EVENT_BAR)
 from ctpbee.event_engine import Event
-from ctpbee.ctp.constant import EVENT_TICK, EVENT_BAR, OrderRequest, CancelRequest
-from ctpbee.exceptions import TraderError
-
-send_monitor = signal("send_order")
-cancle_monitor = signal("cancle_cancle")
+from ctpbee.exceptions import TraderError, MarketError
+from ctpbee.signals import send_monitor, cancle_monitor
 
 
-def send_order(order_req: OrderRequest):
-    """发单"""
-    app = current_app
+def send_order(order_req: OrderRequest, account_name: str = "current_app"):
+    """ 发单 """
+    if account_name == "current_app":
+        app = current_app
+    else:
+        app = get_app(account_name)
     if not app.config.get("TD_FUNC"):
         raise TraderError(message="交易功能未开启", args=("交易功能未开启",))
     send_monitor.send(order_req)
     return app.trader.send_order(order_req)
 
 
-def cancle_order(cancle_req: CancelRequest):
-    """撤单"""
-    app = current_app
+def cancle_order(cancle_req: CancelRequest, account_name: str = "current_app"):
+    """ 撤单 """
+    if account_name == "current_app":
+        app = current_app
+    else:
+        app = get_app(account_name)
     if not app.config.get("TD_FUNC"):
         raise TraderError(message="交易功能未开启", args=("交易功能未开启",))
     cancle_monitor.send(cancle_req)
     app.trader.cancel_order(cancle_req)
 
 
-def subscribe(symbol: Text) -> None:
+def subscribe(symbol: Text, account_name: str = "current_app") -> None:
     """订阅"""
-    app = current_app
+    if account_name == "current_app":
+        app = current_app
+    else:
+        app = get_app(account_name)
+    if app.config.get("MD_FUNC"):
+        raise MarketError(message="行情功能未开启, 无法进行订阅")
     app.market.subscribe(symbol)
 
 
@@ -204,4 +213,3 @@ def auth_time(data_time: time):
     if data_time <= NIGHT_END:
         return True
     return False
-

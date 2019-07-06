@@ -1,4 +1,6 @@
 import ctpbee.helpers as helpers
+
+
 class BaseException(Exception):
     def __init__(self, *args):
         self.args = args
@@ -32,8 +34,14 @@ class TraderError(BaseException):
         self.code = code
 
 
-class ImportStringError(ImportError):
+class MarketError(BaseException):
+    def __init__(self, code=105, message='行情异常', args=('行情异常',)):
+        self.args = args
+        self.message = message
+        self.code = code
 
+
+class ImportStringError(ImportError):
     """Provides information about a failed :func:`import_string` attempt."""
 
     #: String in dotted notation that failed to be imported.
