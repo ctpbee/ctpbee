@@ -73,7 +73,7 @@ app.start()
 ```
 
 ## 更多 
-> 如果想获得更多信息 , 请参见 [wiki](https://github.com/somewheve/ctpbee/wiki) 或者阅读下面的代码[examples](https://github.com/somewheve/ctpbee/tree/master/examples)
+> 如果想获得更多信息 , 请参见 [wiki](https://github.com/somewheve/ctpbee/wiki) 或者阅读下面的代码[examples 即将删除](https://github.com/somewheve/ctpbee/tree/master/examples) 或者按照上述命令自行编译文档(待完善)
 
 
 ## 等待完成 
