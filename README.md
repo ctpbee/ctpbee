@@ -30,6 +30,18 @@ git clone https://github.com/somewheve/ctpbee && cd ctpbee && python3 setup.py i
 pip3 install ctpbee
 ```
 
+## 文档
+本地生成:
+
+    1. git clone https://github.com/somewheve/ctpbee 
+    2. pip3 install sphinx
+    3. cd ./ctpbee/docs && make html
+    4. 你可以在docs/sources下面看到index.html, 浏览器打开即可
+    
+在线:
+    即将推出
+    
+    
 ## 功能
 1. k线数据支持
 2. 分时图数据支持

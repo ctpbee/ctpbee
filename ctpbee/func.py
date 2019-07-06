@@ -189,7 +189,7 @@ class Helper():
 
     @staticmethod
     def generate_order_req(**kwargs):
-        """ 手动构造发单请求 """
+        """ 手动构造发单请求"""
         # req = OrderRequest()
 
 
@@ -202,6 +202,8 @@ def auth_time(data_time: time):
     for example:
         data_time = tick.datetime.time()
     """
+    if not isinstance(data_time, time):
+        raise TypeError("参数类型错误, 期望为datatime.time}")
     DAY_START = time(9, 0)  # 日盘启动和停止时间
     DAY_END = time(15, 0)
     NIGHT_START = time(21, 0)  # 夜盘启动和停止时间
