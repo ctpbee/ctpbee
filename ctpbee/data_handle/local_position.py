@@ -27,6 +27,12 @@ Notice : 神兽保佑 ，测试一次通过
 class LocalPosition:
 
     def __init__(self):
+        # self.
+
+
+
+
+
         pass
 
     def lead_tick(self):

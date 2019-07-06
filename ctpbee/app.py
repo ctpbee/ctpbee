@@ -29,7 +29,7 @@ class CtpBee(object):
 
     # 默认配置
     default_config = ImmutableDict(
-        dict(LOG_OUTPUT=True, TD_FUNC=False, MD_FUNC=True, TICK_DB="tick_me", XMIN=[], ALL_SUBSCRIBE=False))
+        dict(LOG_OUTPUT=True, TD_FUNC=False, MD_FUNC=True, XMIN=[], ALL_SUBSCRIBE=False, SHARE_MD=False))
     config_class = Config
     import_name = None
     # 数据记录载体
@@ -86,7 +86,6 @@ class CtpBee(object):
             self.market = BeeMdApi(self.event_engine)
             self.market.connect(info)
 
-
     @locked_cached_property
     def name(self):
         if self.import_name == '__main__':
@@ -98,10 +97,15 @@ class CtpBee(object):
 
     def start(self, log_output=True):
         """开始"""
-        if not self.event_engine._active:
+        if not self.event_engine.status:
             self.event_engine.start()
         self.config["LOG_OUTPUT"] = log_output
         self._load_ext()
+
+    def stop(self):
+        """ 停止运行 """
+        if self.event_engine.status:
+            self.event_engine.stop()
 
     @check(type="trader")
     def send_order(self, order_req: OrderRequest) -> AnyStr:
@@ -149,3 +153,5 @@ class CtpBee(object):
         if self.trader is not None:
             self.trader.close()
         self.market, self.trader = None, None
+
+        del self.event_engine

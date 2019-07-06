@@ -26,37 +26,9 @@ from ctpbee.ctp.constant import OrderRequest, OrderType, Offset, Direction, Posi
 from ctpbee import send_order
 
 
-def auth_time(timed):
-    from datetime import time
-    DAY_START = time(9, 0)  # 日盘启动和停止时间
-    DAY_END = time(15, 0)
-    NIGHT_START = time(21, 0)  # 夜盘启动和停止时间
-    NIGHT_END = time(2, 30)
-
-    if timed <= DAY_END and timed >= DAY_START:
-        return True
-    if timed >= NIGHT_START:
-        return True
-    if timed <= NIGHT_END:
-        return True
-    return False
-
-
-co = True
-
-
 class DataRecorder(ExtAbstract):
     def __init__(self, name, app=None):
         super().__init__(name, app)
-        self.tick_database_name = "tick"
-        self.bar_base_name = "bar"
-        self.shared_data = {}
-
-        self.created = False
-        self.recover = False
-        self.move = []
-        self.mimi = set()
-        self.is_send = True
 
     def on_trade(self, trade):
         pass
@@ -118,7 +90,6 @@ def go():
         },
         "TD_FUNC": True,
         "MD_FUNC": False
-
     }
     app.config.from_mapping(info)
     data_recorder = DataRecorder("data_recorder", app)

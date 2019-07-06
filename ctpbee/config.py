@@ -9,6 +9,7 @@ import errno
 from werkzeug.utils import import_string
 from flask._compat import string_types, iteritems
 from flask import json
+from werkzeug.local import Local
 
 
 class ConfigAttribute(object):

@@ -1,9 +1,10 @@
 """
 
-面向用户的函数
+面向用户的函数 ,提供极其便捷的体验
 
 """
 from typing import Text
+from datetime import time
 
 from blinker import signal
 
@@ -184,3 +185,23 @@ class Helper():
 
 
 helper = Helper()
+
+
+def auth_time(data_time: time):
+    """
+    校验时间tick或者bar的时间合不合法
+    for example:
+        data_time = tick.datetime.time()
+    """
+    DAY_START = time(9, 0)  # 日盘启动和停止时间
+    DAY_END = time(15, 0)
+    NIGHT_START = time(21, 0)  # 夜盘启动和停止时间
+    NIGHT_END = time(2, 30)
+    if data_time <= DAY_END and data_time >= DAY_START:
+        return True
+    if data_time >= NIGHT_START:
+        return True
+    if data_time <= NIGHT_END:
+        return True
+    return False
+

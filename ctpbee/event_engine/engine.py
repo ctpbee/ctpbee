@@ -52,6 +52,11 @@ class EventEngine:
         self._handlers = defaultdict(list)
         self._general_handlers = []
 
+    @property
+    def status(self):
+        """ 状态 """
+        return self._active
+
     def _run(self):
         """
         Get event from queue and then process it.
@@ -142,3 +147,7 @@ class EventEngine:
         """
         if handler in self._general_handlers:
             self._general_handlers.remove(handler)
+
+    def __del__(self):
+        if self._active:
+            self.stop()
