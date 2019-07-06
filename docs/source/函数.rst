@@ -1,0 +1,115 @@
+.. currentmodule:: ctpbee
+
+.. _函数:
+
+函数
+======================
+
+
+交易函数
+-----------
+发单函数::
+
+    def send_order(order_req: OrderRequest, account_name: str = "current_app") -> str:
+        """
+            调用CtpBee对象进行发单, 当不指定account_name时候,默认调用current_app进行下单
+            param: order_req  OrderRequest 发单请求
+            param: account_name 字符串  CtpBee的第一个参数
+        """
+        ...
+
+撤单函数::
+
+    def cancle_order(cancle_req: CancelRequest, account_name: str = "current_app") -> None:
+        """
+            撤单, 当不指定account_name时候,默认调用current_app进行撤单
+            param: cancle_req  OrderRequest 撤单请求
+            param: account_name 字符串  CtpBee的第一个参数
+        """
+        ...
+
+当前对象::
+
+    def current_app() -> CtpBee:
+        """
+            返回栈顶的CtpBee对象
+        """
+        ...
+
+切换对象::
+
+    def switch_app(name:Text) -> None:
+        """
+            将名字为name的CtpBee的对象切换到栈顶
+            param  : name 字符串 Ctpbee的第一个参数
+            return : None
+        """
+        ...
+
+获得对象::
+
+    def get_app(name: Text) -> CtpBee:
+        """
+            用途: 根据app的名字查找CtpBee对象
+            param  : name 字符串 CtpBee的第一个参数
+            return : CtpBee对象/None
+        """
+        ...
+
+查询持仓::
+
+    def query_position(name: Text="current_app"):
+        """
+            调用Ctpbee对象进行查询持仓操作
+            name 为CtpBee的第一个参数,默认为CtpBee
+        """
+        ...
+
+查询账户::
+
+    def query_account(name: Text="current_app"):
+        """
+           调用Ctpbee对象进行查询账户操作
+           name 为CtpBee的第一个参数
+        """
+
+行情函数
+-----------
+订阅行情::
+
+    def subscribe(symbol):
+        """
+            param  : symbol 字符串 订阅的代码
+            return : None
+        """
+        通过symbol进行订阅函数
+
+
+
+
+校验数据是否合法::
+
+    def auth_time(data_time: time) -> bool:
+        """
+            校验时间tick或者bar的时间合不合法
+            for example:
+                data_time = tick.datetime.time()
+        """
+        if not isinstance(data_time, time):
+            raise TypeError("参数类型错误, 期望为datatime.time}")
+        DAY_START = time(9, 0)  # 日盘启动和停止时间
+        DAY_END = time(15, 0)
+        NIGHT_START = time(21, 0)  # 夜盘启动和停止时间
+        NIGHT_END = time(2, 30)
+        if data_time <= DAY_END and data_time >= DAY_START:
+            return True
+        if data_time >= NIGHT_START:
+            return True
+        if data_time <= NIGHT_END:
+            return True
+        return False
+
+CtpBee
+-------
+CtpBee 核心对象中同时也存在上述 方法,然后不同的是无需指定 传入第二个参数,直接传入发单撤单请求调用即可
+对此不再多说。

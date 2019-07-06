@@ -1,0 +1,108 @@
+.. _配置文件:
+
+配置文件
+======================
+
+
+
+
+配置参数
+------------
+
+
+
+
+CONNECT_INFO
+
+.. note::
+
+    类型: 字典
+
+    用途: 账户详细参数
+
+    默认: 无
+
+LOG_OUTPUT
+
+.. note::
+    类型: 布尔值
+
+    用途: 是否输出调试信息
+
+    默认: True
+
+    你可以在app.start中设置log_output=True覆盖设置
+
+
+MD_FUNC
+
+.. note::
+
+    类型: 布尔值
+
+    用途: 是否开启行情
+
+    默认: True
+
+TD_FUNC
+
+.. note::
+
+    类型: 布尔值
+
+    用途: 是否开启交易功能
+
+    默认: False
+
+
+配置类 -> Config
+-----------------
+
+
+通过json载入配置::
+
+    json_file 示例 : location： 同级别目录, 命名: config.json
+    json_file 内容:
+    {
+        "MD_FUNC":true
+    }
+    app.config.from_json("config.json") # json可为绝对地址或者相对地址
+
+通过对象载入配置::
+
+    class Info:
+        MD_FUNC = True
+        TD_FUNC = False
+
+    obj = Info()
+    app.config.from_object(obj)
+
+通过映射载入配置(dict)::
+
+    # dict example
+    dict = {"MD_INFO": True}
+
+    app.config.from_mapping(dict_info) # 从字典中载入地址
+
+
+通过python file 载入配置::
+
+    # pyfile 示例 location： 同级别目录, filename : config.py
+    file content:
+
+    MD_FUNC = True
+    info = {
+        "CONNECT_INFO": {
+            "userid": "",
+            "password": "",
+            "brokerid": "",
+            "md_address": "",
+            "td_address": "",
+            "appid": "",
+            "auth_code": "",
+        },
+        "TD_FUNC": True,  # 开启交易功能
+    }
+    app.config.from_pyfile('config.py')
+
+

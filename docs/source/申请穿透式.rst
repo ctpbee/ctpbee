@@ -1,0 +1,17 @@
+.. currentmodule:: ctpbee
+
+.. _申请穿透式:
+
+申请穿透式
+======================
+
+获取计算机相关信息::
+
+    # is developing
+
+coding::
+
+    # is developing
+
+
+# All code will be published in version 0.19 just wait for it
