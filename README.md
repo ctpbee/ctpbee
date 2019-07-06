@@ -36,7 +36,7 @@ pip3 install ctpbee
     1. git clone https://github.com/somewheve/ctpbee 
     2. pip3 install sphinx
     3. cd ./ctpbee/docs && make html
-    4. 你可以在docs/sources下面看到index.html, 浏览器打开即可
+    4. 你可以在docs/build/html 下面看到index.html, 浏览器打开即可
     
 在线:
     即将推出
