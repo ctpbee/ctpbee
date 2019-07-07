@@ -25,3 +25,6 @@ send_monitor = signal("send_order")
 
 # 撤单监视器
 cancle_monitor = signal("cancle_cancle")
+
+# tick发送信号
+tick_sender = signal("tick_signal")

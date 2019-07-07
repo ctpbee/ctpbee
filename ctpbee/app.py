@@ -133,6 +133,14 @@ class CtpBee(object):
         self.trader.query_position()
 
     @check(type="trader")
+    def transfer(self, desti, count):
+        pass
+
+    @check(type="trader")
+    def query_bank(self):
+        pass
+
+    @check(type="trader")
     def query_account(self):
         """查询账户"""
         self.trader.query_account()

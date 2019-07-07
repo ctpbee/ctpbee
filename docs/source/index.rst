@@ -4,12 +4,13 @@
 bee bee .... there is an industrious bee created ~~
 ctpbee 提供了一个可供使用的微小的ctp核心, 你可以通过这个核心来构建值得信赖的工具， 当然这需要你的编程功力。 你所需要关心的是如何编程来处理行情和交易信息即可。
 
-灵感来源
-    `vnpy <http://vnpy.com/>`_  和 `flask <http://flask.pocoo.org/>`_ 感谢开源
+用户导航
+=================================
+
 
 .. toctree::
     :maxdepth: 2
-    :caption: 用户导航
+    :caption: 目录
 
     快速开始
     教程/首页
@@ -22,6 +23,8 @@ ctpbee 提供了一个可供使用的微小的ctp核心, 你可以通过这个�
 
 
 
+
+
 API支持
 ------------------
 如果你正在寻找特殊函数,类或者类函数的相关信息, 这部分的文档对你可能有用
@@ -30,6 +33,12 @@ API支持
     :maxdepth: 2
 
     API支持
+
+
+
+灵感来源
+-------------------
+    `vnpy <http://vnpy.com/>`_  和 `flask <http://flask.pocoo.org/>`_ 感谢开源
 
 
 

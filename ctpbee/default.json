@@ -1,0 +1,16 @@
+{
+  "order_req":
+  {
+    "price":
+    {
+      "type": "float",
+      "default": null
+    },
+    "volume":
+    {
+      "type": "int",
+      "default": 0
+    }
+  }
+}
+
