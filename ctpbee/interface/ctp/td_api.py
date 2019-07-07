@@ -20,9 +20,8 @@ Notice : 神兽保佑 ，测试一次通过
 //
 """
 from .lib import *
-from .constant import (EVENT_TRADE, EVENT_ERROR, EVENT_ACCOUNT, EVENT_CONTRACT, EVENT_LOG,
-                       EVENT_POSITION, EVENT_ORDER)
-
+from .constant import *
+from ctpbee.event_engine import Event
 
 class BeeTdApi(TdApi):
     """"""

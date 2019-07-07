@@ -68,7 +68,7 @@ info = {
     "TD_FUNC": True,  # 开启交易功能 
 }
 app.config.from_mapping(info)  # 从dict中载入信息 对于更多配置载入方式, 请参阅文档或者阅读代码
-app.start()  
+app.start() 
 
 ```
 

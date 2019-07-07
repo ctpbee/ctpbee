@@ -1,4 +1,3 @@
-from datetime import datetime
 from pathlib import Path
 
 from ctpbee.api.ctp import (
@@ -25,17 +24,9 @@ from ctpbee.api.ctp import (
     THOST_FTDC_PC_Options,
     THOST_FTDC_PC_Combination,
     THOST_FTDC_CP_CallOptions,
-    THOST_FTDC_CP_PutOptions,
-    THOST_FTDC_HF_Speculation,
-    THOST_FTDC_CC_Immediately,
-    THOST_FTDC_FCC_NotForceClose,
-    THOST_FTDC_TC_GFD,
-    THOST_FTDC_VC_AV,
-    THOST_FTDC_TC_IOC,
-    THOST_FTDC_VC_CV,
-    THOST_FTDC_AF_Delete
+    THOST_FTDC_CP_PutOptions
 )
-from ctpbee.ctp.constant import (
+from ctpbee.interface.ctp.constant import (
     Direction,
     Offset,
     Exchange,
@@ -77,21 +68,6 @@ def get_folder_path(folder_name: str):
         folder_path.mkdir()
     return folder_path
 
-from ctpbee.event_engine.engine import EVENT_TIMER
-
-from ctpbee.event_engine import rpo, Event
-
-from .constant import (
-    TickData,
-    OrderData,
-    TradeData,
-    PositionData,
-    AccountData,
-    ContractData,
-    OrderRequest,
-    CancelRequest,
-    SubscribeRequest,
-)
 
 STATUS_CTP2VT = {
     THOST_FTDC_OAS_Submitted: Status.SUBMITTING,

@@ -6,9 +6,9 @@
 from typing import Text
 from datetime import time
 
-from ctpbee import get_app
+from ctpbee.context import get_app
 from ctpbee.context import current_app
-from ctpbee.ctp.constant import \
+from ctpbee.interface.ctp.constant import \
     (OrderRequest, CancelRequest, EVENT_TRADE, EVENT_SHARED, EVENT_ORDER,
      OrderData, TradeData, PositionData, AccountData, TickData, SharedData,
      BarData, EVENT_POSITION, EVENT_ACCOUNT, EVENT_TICK, EVENT_BAR)
@@ -117,7 +117,6 @@ class ExtAbstract(object):
             self.app.extensions[self.extension_name] = self
 
     def __call__(self, event: Event):
-        from functools import partial
         func = self.map[event.type]
         func(self, event.data)
 

@@ -10,20 +10,11 @@
 # 这样每天的数据应该基本不会出错，然后外部程序每天访问这个web服务器提供的数据接口，
 # 将数据维护到自己本地
 # """
-import multiprocessing
-from pprint import pprint
-from string import digits
-import json
-from json import dumps
-from datetime import time, datetime
 from time import sleep
 
-from ctpbee import ExtAbstract, current_app
+from ctpbee import ExtAbstract
 from ctpbee import CtpBee
-from ctpbee import subscribe
-from ctpbee.context.proxy import get_app, switch_app
-from ctpbee.ctp.constant import OrderRequest, OrderType, Offset, Direction, PositionData, AccountData
-from ctpbee import send_order
+from ctpbee.interface.ctp.constant import PositionData, AccountData
 
 
 class DataRecorder(ExtAbstract):
@@ -89,7 +80,7 @@ def go():
             "auth_code": "0000000000000000",
         },
         "TD_FUNC": True,
-        "MD_FUNC": False
+        "MD_FUNC": True
     }
     app.config.from_mapping(info)
     data_recorder = DataRecorder("data_recorder", app)

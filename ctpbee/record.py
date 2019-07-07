@@ -1,6 +1,7 @@
 from ctpbee.data_handle import generator
-from ctpbee.ctp.constant import *
 from ctpbee.event_engine import  Event
+from ctpbee.interface.ctp.constant import EVENT_TICK, EVENT_ORDER, EVENT_TRADE, EVENT_POSITION, EVENT_ACCOUNT, \
+    EVENT_CONTRACT, EVENT_BAR, EVENT_LOG, EVENT_ERROR, EVENT_SHARED
 
 
 class Recorder(object):
