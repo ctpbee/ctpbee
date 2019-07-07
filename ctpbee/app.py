@@ -79,13 +79,14 @@ class CtpBee(object):
             info = self.config.get("CONNECT_INFO")
         else:
             raise ConfigError(message="没有相应的登录信息", args=("没有发现登录信息",))
+        if self.config.get("MD_FUNC"):
+            self.market = BeeMdApi(self.event_engine)
+            self.market.connect(info)
+
         if self.config.get("TD_FUNC"):
             self.trader = BeeTdApi(self.event_engine)
             self.trader.connect(info)
             sleep(0.5)
-        if self.config.get("MD_FUNC"):
-            self.market = BeeMdApi(self.event_engine)
-            self.market.connect(info)
 
     @locked_cached_property
     def name(self):

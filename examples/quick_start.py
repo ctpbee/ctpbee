@@ -1,15 +1,15 @@
-# # coding:utf-8
-# """
-# this is an example program which used to record tick data
-# database:pymongo / redis
-#
-# :keyword 补录数据  ---> will be developed in marrd https://github.com/somewheve/marrd
-# 关于补录数据的一点想法:
-# 能不能构建多个类似的程序运行在不同的服务， 然后将数据提交到 同时提交到web服务器，
-# web服务器经过校验之后（出错数据， 缺失数据进行修正和补录）写入到内存（or redis）中，负责提供每天的数据。
-# 这样每天的数据应该基本不会出错，然后外部程序每天访问这个web服务器提供的数据接口，
-# 将数据维护到自己本地
-# """
+# # # coding:utf-8
+# # """
+# # this is an example program which used to record tick data
+# # database:pymongo / redis
+# #
+# # :keyword 补录数据  ---> will be developed in marrd https://github.com/somewheve/marrd
+# # 关于补录数据的一点想法:
+# # 能不能构建多个类似的程序运行在不同的服务， 然后将数据提交到 同时提交到web服务器，
+# # web服务器经过校验之后（出错数据， 缺失数据进行修正和补录）写入到内存（or redis）中，负责提供每天的数据。
+# # 这样每天的数据应该基本不会出错，然后外部程序每天访问这个web服务器提供的数据接口，
+# # 将数据维护到自己本地
+# # """
 from time import sleep
 
 from ctpbee import ExtAbstract
@@ -93,5 +93,4 @@ def go():
 
 if __name__ == '__main__':
     go()
-
 

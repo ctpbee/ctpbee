@@ -107,7 +107,7 @@ elif platform.system() == "Darwin":
 else:
     ext_modules = [vnctptd, vnctpmd, vnctptd_se, vnctpmd_se]
 
-pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.ctp',
+pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.interface','ctpbee.interface.ctp',
         'ctpbee.event_engine']
 install_requires = ['flask', "blinker", "dataclasses"]
 setup(
