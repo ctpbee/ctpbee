@@ -386,7 +386,7 @@ class BeeTdApi(TdApi):
             "TimeCondition": THOST_FTDC_TC_GFD,
             "VolumeCondition": THOST_FTDC_VC_AV,
             "MinVolume": 1,
-            "ExchangeID":req.exchange
+            "ExchangeID":req.exchange.value
         }
 
         if req.type == OrderType.FAK:
@@ -422,7 +422,7 @@ class BeeTdApi(TdApi):
             "ActionFlag": THOST_FTDC_AF_Delete,
             "BrokerID": self.brokerid,
             "InvestorID": self.userid,
-            "ExchangeID":req.exchange
+            "ExchangeID":req.exchange.value
         }
 
         self.reqid += 1
