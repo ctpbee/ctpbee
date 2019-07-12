@@ -12,7 +12,7 @@ from ctpbee.exceptions import ConfigError
 from ctpbee.record import Recorder
 from ctpbee.context import _app_context_ctx
 from ctpbee.interface.ctp import BeeMdApi, BeeTdApi
-
+from ctpbee.interface import Interface
 from ctpbee.config import Config
 from ctpbee.event_engine import EventEngine
 
@@ -30,7 +30,7 @@ class CtpBee(object):
 
     # 默认配置
     default_config = ImmutableDict(
-        dict(LOG_OUTPUT=True, TD_FUNC=False, MD_FUNC=True, XMIN=[], ALL_SUBSCRIBE=False, SHARE_MD=False))
+        dict(LOG_OUTPUT=True, TD_FUNC=False,INTERFACE="ctp", MD_FUNC=True, XMIN=[], ALL_SUBSCRIBE=False, SHARE_MD=False))
     config_class = Config
     import_name = None
     # 数据记录载体
@@ -59,7 +59,9 @@ class CtpBee(object):
         self.recorder = Recorder(self, self.event_engine)
         self.instance_path = instance_path
         self.config = self.make_config()
+        self.interface = Interface()
         _app_context_ctx.push(self.name, self)
+
 
     def make_config(self):
         """ 生成class类"""
@@ -79,12 +81,15 @@ class CtpBee(object):
             info = self.config.get("CONNECT_INFO")
         else:
             raise ConfigError(message="没有相应的登录信息", args=("没有发现登录信息",))
+        MdApi, TdApi = self.interface.get_interface(self)
         if self.config.get("MD_FUNC"):
-            self.market = BeeMdApi(self.event_engine)
+
+
+            self.market = MdApi(self.event_engine)
             self.market.connect(info)
 
         if self.config.get("TD_FUNC"):
-            self.trader = BeeTdApi(self.event_engine)
+            self.trader = TdApi(self.event_engine)
             self.trader.connect(info)
             sleep(0.5)
 

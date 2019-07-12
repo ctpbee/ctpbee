@@ -19,3 +19,14 @@ Notice : 神兽保佑 ，测试一次通过
 //          ┗━┻━┛   ┗━┻━┛
 //
 """
+from .ctp import BeeTdApi, BeeMdApi
+
+
+class Interface:
+    api_map = {
+        "ctp": (BeeMdApi, BeeTdApi)
+    }
+
+    @classmethod
+    def get_interface(self, app):
+        return self.api_map.get(app.config.get("INTERFACE"), None)

@@ -1,4 +1,3 @@
-from .engine import EventEngine,Event
+from .engine import EventEngine, Event
 
-rpo = EventEngine()
-__all__ = [rpo, Event]
+__all__ = [EventEngine, Event]

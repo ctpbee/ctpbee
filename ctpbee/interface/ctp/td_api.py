@@ -19,8 +19,8 @@ Notice : 神兽保佑 ，测试一次通过
 //          ┗━┻━┛   ┗━┻━┛
 //
 """
-from .lib import *
-from .constant import *
+from ctpbee.interface.ctp.lib import *
+from ctpbee.interface.ctp.constant import *
 from ctpbee.event_engine import Event
 
 class BeeTdApi(TdApi):
@@ -85,6 +85,8 @@ class BeeTdApi(TdApi):
         else:
             error['detail'] = "交易服务器验证失败"
             self.on_event(type=EVENT_ERROR, data=error)
+
+
 
     def onRspUserLogin(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
@@ -383,7 +385,8 @@ class BeeTdApi(TdApi):
             "IsAutoSuspend": 0,
             "TimeCondition": THOST_FTDC_TC_GFD,
             "VolumeCondition": THOST_FTDC_VC_AV,
-            "MinVolume": 1
+            "MinVolume": 1,
+            "ExchangeID":req.exchange
         }
 
         if req.type == OrderType.FAK:
@@ -410,7 +413,6 @@ class BeeTdApi(TdApi):
         Cancel existing order.
         """
         frontid, sessionid, order_ref = req.orderid.split("_")
-
         ctp_req = {
             "InstrumentID": req.symbol,
             "Exchange": req.exchange,
@@ -419,7 +421,8 @@ class BeeTdApi(TdApi):
             "SessionID": int(sessionid),
             "ActionFlag": THOST_FTDC_AF_Delete,
             "BrokerID": self.brokerid,
-            "InvestorID": self.userid
+            "InvestorID": self.userid,
+            "ExchangeID":req.exchange
         }
 
         self.reqid += 1

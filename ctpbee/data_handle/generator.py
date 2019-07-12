@@ -1,9 +1,9 @@
 # encoding: UTF-8
 
-from ctpbee.interface.ctp.constant import BarData, TickData, SharedData,  EVENT_BAR, EVENT_SHARED
+from ctpbee.interface.ctp.constant import BarData, TickData, SharedData, EVENT_BAR, EVENT_SHARED
 from ctpbee.event_engine import Event
-from ctpbee.event_engine import rpo
 from ctpbee.context import current_app
+
 
 class DataGenerator:
     """
@@ -13,8 +13,9 @@ class DataGenerator:
     3, generate shared time data
     """
 
-    def __init__(self):
+    def __init__(self, et_engine):
         """Constructor"""
+        self.rpo = et_engine
         self.bar = None
         self.last_tick = None
         self.vt_symbol = None
@@ -64,7 +65,7 @@ class DataGenerator:
             )
             self.bar.interval = 1
             event = Event(type=EVENT_BAR, data=self.bar)
-            rpo.put(event)
+            self.rpo.put(event)
             [self.update_bar(x, getattr(self, "min_{}_bar".format(x)), self.bar) for x in self.XMIN]
             new_minute = True
         if new_minute:
@@ -73,7 +74,7 @@ class DataGenerator:
                                 volume=self.volume - self.last_volume)
             self.last_volume = tick.volume
             event = Event(type=EVENT_SHARED, data=shared)
-            rpo.put(event)
+            self.rpo.put(event)
             self.bar = BarData(
                 symbol=tick.symbol,
                 exchange=tick.exchange,
@@ -123,19 +124,22 @@ class DataGenerator:
             )
             xmin_bar.interval = xmin
             event = Event(type=EVENT_BAR, data=xmin_bar)
-            rpo.put(event)
+            self.rpo.put(event)
             xmin_bar = None
 
     def generate(self):
         if self.bar is not None:
             self.bar.interval = 1
             event = Event(type=EVENT_BAR, data=self.bar)
-            rpo.put(event)
+            self.rpo.put(event)
         for x in self.XMIN:
             if self.bar is not None:
                 bar = getattr(self, "min_{}_bar".format(x))
                 bar.interval = x
                 event = Event(type=EVENT_BAR, data=bar)
-                rpo.put(event)
+                self.rpo.put(event)
         self.bar = None
         [setattr(self, "min_{}_bar".format(x), None) for x in self.XMIN]
+
+    def __del__(self):
+        self.generate()

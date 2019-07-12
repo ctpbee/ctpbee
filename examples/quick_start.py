@@ -11,8 +11,7 @@
 # # 将数据维护到自己本地
 # # """
 from time import sleep
-
-from ctpbee import ExtAbstract
+from ctpbee import ExtAbstract, subscribe
 from ctpbee import CtpBee
 from ctpbee.interface.ctp.constant import PositionData, AccountData
 
@@ -40,13 +39,13 @@ class DataRecorder(ExtAbstract):
 
     def on_tick(self, tick):
         """tick process function"""
-        print(tick)
         pass
 
     def on_bar(self, bar):
         """bar process function"""
         bar.exchange = bar.exchange.value
         interval = bar.interval
+        print(bar)
 
     def on_shared(self, shared):
         """process shared function"""
@@ -56,19 +55,6 @@ class DataRecorder(ExtAbstract):
 
 def go():
     app = CtpBee("last", __name__)
-    # info = {
-    #     "CONNECT_INFO"
-    #     : {
-    #         "userid": "089131",
-    #         "password": "350888",
-    #         "brokerid": "9999",
-    #         "md_address": "tcp://180.168.146.187:10101",
-    #         "td_address": "tcp://180.168.146.187:10111",
-    #         "appid": "simnow_client_test",
-    #         "auth_code": "0000000000000000",
-    #     },
-    #     "TD_FUNC": True,
-    # }
     info = {
         "CONNECT_INFO": {
             "userid": "089131",
@@ -79,18 +65,17 @@ def go():
             "appid": "simnow_client_test",
             "auth_code": "0000000000000000",
         },
+        "INTERFACE": "ctp",
         "TD_FUNC": True,
         "MD_FUNC": True
     }
     app.config.from_mapping(info)
     data_recorder = DataRecorder("data_recorder", app)
-    app.start(log_output=True)
+    app.start()
     sleep(1)
-    # for contract in app.recorder.get_all_contracts():
-    #     if contract.symbol == "ag1912":
-    #         subscribe(contract.symbol)
+    for contract in app.recorder.get_all_contracts():
+        subscribe(contract.symbol)
 
 
 if __name__ == '__main__':
     go()
-

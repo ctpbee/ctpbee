@@ -47,7 +47,7 @@ def subscribe(symbol: Text, account_name: str = "current_app") -> None:
         app = current_app
     else:
         app = get_app(account_name)
-    if app.config.get("MD_FUNC"):
+    if not app.config.get("MD_FUNC"):
         raise MarketError(message="行情功能未开启, 无法进行订阅")
     app.market.subscribe(symbol)
 
