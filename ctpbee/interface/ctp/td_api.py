@@ -400,8 +400,6 @@ class BeeTdApi(TdApi):
 
         self.reqid += 1
         self.reqOrderInsert(ctp_req, self.reqid)
-        print(ctp_req)
-
         orderid = f"{self.frontid}_{self.sessionid}_{self.order_ref}"
         order = req.create_order_data(orderid, self.gateway_name)
         self.on_event(type=EVENT_ORDER, data=order)
@@ -415,7 +413,6 @@ class BeeTdApi(TdApi):
         frontid, sessionid, order_ref = req.orderid.split("_")
         ctp_req = {
             "InstrumentID": req.symbol,
-            "Exchange": req.exchange,
             "OrderRef": order_ref,
             "FrontID": int(frontid),
             "SessionID": int(sessionid),
