@@ -19,9 +19,12 @@ Notice : 神兽保佑 ，测试一次通过
 //          ┗━┻━┛   ┗━┻━┛
 //
 """
-from ctpbee.interface.ctp.lib import *
-from ctpbee.interface.ctp.constant import *
+from collections import defaultdict
+
 from ctpbee.event_engine import Event
+from ctpbee.interface.ctp.constant import *
+from ctpbee.interface.ctp.lib import *
+
 
 class BeeTdApi(TdApi):
     """"""
@@ -53,8 +56,7 @@ class BeeTdApi(TdApi):
         self.trade_data = []
         self.positions = {}
         self.sysid_orderid_map = {}
-
-
+        self.open_cost_dict = defaultdict(dict)
 
     def on_event(self, type, data):
         event = Event(type=type, data=data)
@@ -85,8 +87,6 @@ class BeeTdApi(TdApi):
         else:
             error['detail'] = "交易服务器验证失败"
             self.on_event(type=EVENT_ERROR, data=error)
-
-
 
     def onRspUserLogin(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
@@ -183,6 +183,11 @@ class BeeTdApi(TdApi):
         # Update new position volume
         position.volume += data["Position"]
         position.pnl += data["PositionProfit"]
+
+        if position.direction == Direction.LONG:
+            self.open_cost_dict[position.symbol]["long"] = data['OpenCost']
+        elif position.direction == Direction.SHORT:
+            self.open_cost_dict[position.symbol]["short"] = data['OpenCost']
 
         # Calculate average position price
         if position.volume and size:
@@ -386,7 +391,7 @@ class BeeTdApi(TdApi):
             "TimeCondition": THOST_FTDC_TC_GFD,
             "VolumeCondition": THOST_FTDC_VC_AV,
             "MinVolume": 1,
-            "ExchangeID":req.exchange.value
+            "ExchangeID": req.exchange.value
         }
 
         if req.type == OrderType.FAK:
@@ -419,7 +424,7 @@ class BeeTdApi(TdApi):
             "ActionFlag": THOST_FTDC_AF_Delete,
             "BrokerID": self.brokerid,
             "InvestorID": self.userid,
-            "ExchangeID":req.exchange.value
+            "ExchangeID": req.exchange.value
         }
 
         self.reqid += 1
@@ -430,7 +435,7 @@ class BeeTdApi(TdApi):
         Query account balance data.
         """
         self.reqid += 1
-        self.reqQryTradingAccount({}, self.reqid)
+        return self.reqQryTradingAccount({}, self.reqid)
 
     def query_position(self):
         """
@@ -444,7 +449,7 @@ class BeeTdApi(TdApi):
         }
 
         self.reqid += 1
-        self.reqQryInvestorPosition(req, self.reqid)
+        return self.reqQryInvestorPosition(req, self.reqid)
 
     def close(self):
         """"""

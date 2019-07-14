@@ -129,13 +129,12 @@ class CtpBee(object):
     @check(type="market")
     def subscribe(self, symbol: AnyStr):
         """订阅行情"""
-        self.market.subscribe(symbol)
+        return self.market.subscribe(symbol)
 
     @check(type="trader")
     def query_position(self):
         """查询持仓"""
-
-        self.trader.query_position()
+        return self.trader.query_position()
 
     @check(type="trader")
     def transfer(self, desti, count):
@@ -148,7 +147,7 @@ class CtpBee(object):
     @check(type="trader")
     def query_account(self):
         """查询账户"""
-        self.trader.query_account()
+        return self.trader.query_account()
 
     def remove_extension(self, extension_name: Text) -> None:
         """移除插件"""

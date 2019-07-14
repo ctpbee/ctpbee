@@ -18,7 +18,7 @@ class DataGenerator:
         self.rpo = et_engine
         self.bar = None
         self.last_tick = None
-        self.vt_symbol = None
+        self.local_symbol = None
         self.last_price = None
         self.pre_close = None
         self.volume = None
@@ -55,8 +55,8 @@ class DataGenerator:
 
         if self.last_volume is None:
             self.last_volume = tick.volume
-        if self.vt_symbol is None:
-            self.vt_symbol = tick.vt_symbol
+        if self.local_symbol is None:
+            self.local_symbol = tick.local_symbol
         if not self.bar:
             new_minute = True
         elif self.bar.datetime.minute != tick.datetime.minute:
@@ -69,7 +69,7 @@ class DataGenerator:
             [self.update_bar(x, getattr(self, "min_{}_bar".format(x)), self.bar) for x in self.XMIN]
             new_minute = True
         if new_minute:
-            shared = SharedData(last_price=round(self.last_price, 2), datatime=tick.datetime, vt_symbol=self.vt_symbol,
+            shared = SharedData(last_price=round(self.last_price, 2), datatime=tick.datetime, local_symbol=self.local_symbol,
                                 open_interest=self.open_interest, average_price=round(self.average_price, 2),
                                 volume=self.volume - self.last_volume)
             self.last_volume = tick.volume

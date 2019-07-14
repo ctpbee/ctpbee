@@ -3,17 +3,17 @@
 面向用户的函数 ,提供极其便捷的体验
 
 """
-from typing import Text
 from datetime import time
+from typing import Text
 
-from ctpbee.context import get_app
 from ctpbee.context import current_app
+from ctpbee.context import get_app
+from ctpbee.event_engine import Event
+from ctpbee.exceptions import TraderError, MarketError
 from ctpbee.interface.ctp.constant import \
     (OrderRequest, CancelRequest, EVENT_TRADE, EVENT_SHARED, EVENT_ORDER,
      OrderData, TradeData, PositionData, AccountData, TickData, SharedData,
-     BarData, EVENT_POSITION, EVENT_ACCOUNT, EVENT_TICK, EVENT_BAR)
-from ctpbee.event_engine import Event
-from ctpbee.exceptions import TraderError, MarketError
+     BarData, EVENT_POSITION, EVENT_ACCOUNT, EVENT_TICK, EVENT_BAR, EVENT_CONTRACT, ContractData)
 from ctpbee.signals import send_monitor, cancle_monitor
 
 
@@ -111,6 +111,9 @@ class ExtAbstract(object):
     def on_account(self, account: AccountData) -> None:
         raise NotImplemented
 
+    def on_contract(self, contract: ContractData):
+        raise NotImplemented
+
     def init_app(self, app):
         if app is not None:
             self.app = app
@@ -130,16 +133,18 @@ class ExtAbstract(object):
             EVENT_TRADE: cls.on_trade,
             EVENT_POSITION: cls.on_position,
             EVENT_ACCOUNT: cls.on_account,
-        }
+            EVENT_CONTRACT: cls.on_contract,
 
+        }
         parmeter = {
-            EVENT_POSITION: "position",
-            EVENT_TRADE: "trade",
-            EVENT_BAR: "bar",
-            EVENT_TICK: "tick",
-            EVENT_ORDER: "order",
-            EVENT_SHARED: "shared",
-            EVENT_ACCOUNT: "account"
+            EVENT_POSITION: EVENT_POSITION,
+            EVENT_TRADE: EVENT_TRADE,
+            EVENT_BAR: EVENT_BAR,
+            EVENT_TICK: EVENT_TICK,
+            EVENT_ORDER: EVENT_ORDER,
+            EVENT_SHARED: EVENT_SHARED,
+            EVENT_ACCOUNT: EVENT_ACCOUNT,
+            EVENT_CONTRACT: EVENT_CONTRACT
         }
 
         setattr(cls, "map", map)

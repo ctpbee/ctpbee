@@ -210,7 +210,7 @@ class TickData(BaseData):
 
     def __post_init__(self):
         """"""
-        self.vt_symbol = f"{self.symbol}.{self.exchange.value}"
+        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
 @dataclass
@@ -231,7 +231,7 @@ class BarData(BaseData):
 
     def __post_init__(self):
         """"""
-        self.vt_symbol = f"{self.symbol}.{self.exchange.value}"
+        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
 @dataclass
@@ -255,8 +255,8 @@ class OrderData(BaseData):
 
     def __post_init__(self):
         """"""
-        self.vt_symbol = f"{self.symbol}.{self.exchange.value}"
-        self.vt_orderid = f"{self.gateway_name}.{self.orderid}"
+        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        self.local_order_id = f"{self.gateway_name}.{self.orderid}"
 
     def is_active(self):
         """
@@ -297,9 +297,9 @@ class TradeData(BaseData):
 
     def __post_init__(self):
         """"""
-        self.vt_symbol = f"{self.symbol}.{self.exchange.value}"
-        self.vt_orderid = f"{self.gateway_name}.{self.orderid}"
-        self.vt_tradeid = f"{self.gateway_name}.{self.tradeid}"
+        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        self.local_order_id = f"{self.gateway_name}.{self.orderid}"
+        self.local_trade_id = f"{self.gateway_name}.{self.tradeid}"
 
 
 @dataclass
@@ -320,8 +320,8 @@ class PositionData(BaseData):
 
     def __post_init__(self):
         """"""
-        self.vt_symbol = f"{self.symbol}.{self.exchange.value}"
-        self.vt_positionid = f"{self.vt_symbol}.{self.direction}"
+        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        self.local_position_id = f"{self.local_symbol}.{self.direction}"
 
 
 @dataclass
@@ -339,7 +339,7 @@ class AccountData(BaseData):
     def __post_init__(self):
         """"""
         self.available = self.balance - self.frozen
-        self.vt_accountid = f"{self.gateway_name}.{self.accountid}"
+        self.local_account_id = f"{self.gateway_name}.{self.accountid}"
 
 
 @dataclass
@@ -374,13 +374,13 @@ class ContractData(BaseData):
     net_position: bool = False  # whether gateway uses net position volume
 
     option_strike: float = 0
-    option_underlying: str = ""  # vt_symbol of underlying contract
+    option_underlying: str = ""
     option_type: OptionType = None
     option_expiry: datetime = None
 
     def __post_init__(self):
         """"""
-        self.vt_symbol = f"{self.symbol}.{self.exchange.value}"
+        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
 @dataclass
@@ -394,7 +394,7 @@ class SubscribeRequest:
 
     def __post_init__(self):
         """"""
-        self.vt_symbol = f"{self.symbol}.{self.exchange.value}"
+        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
 @dataclass
@@ -413,7 +413,7 @@ class OrderRequest:
 
     def __post_init__(self):
         """"""
-        self.vt_symbol = f"{self.symbol}.{self.exchange.value}"
+        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
     def create_order_data(self, orderid: str, gateway_name: str):
         """
@@ -445,12 +445,12 @@ class CancelRequest:
 
     def __post_init__(self):
         """"""
-        self.vt_symbol = f"{self.symbol}.{self.exchange.value}"
+        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
 @dataclass
 class SharedData:
-    vt_symbol: str
+    local_symbol: str
     datatime: datetime
 
     open_interest: int = 0

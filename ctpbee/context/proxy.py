@@ -3,6 +3,7 @@ from ctpbee.exceptions import ContextError
 from werkzeug.local import LocalProxy
 from threading import Lock
 
+
 class LocalStack(object):
     def __init__(self):
         self._local = list()
