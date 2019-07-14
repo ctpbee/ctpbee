@@ -10,12 +10,6 @@ ctpbee 提供了一个可供使用的微小的ctp核心, 你可以通过这个�
 sudo locale-gen zh_CN.GB18030  
 ```
 
-## 代码下载 
-
-```
-git clone https://github.com/somewheve/ctpbee
-```
-
 ## 起源
 
 - 衍生自 [vnpy](https://github.com/vnpy/vnpy) 和 [flask](https://github.com/pallets/flask)  
@@ -43,6 +37,7 @@ pip3 install ctpbee
     
     
 ## 功能
+
 1. k线数据支持
 2. 分时图数据支持
 3. 交易支持
@@ -72,10 +67,6 @@ app.start()
 
 ```
 
-## 更多 
-> 如果想获得更多信息 , 请参见 [wiki](https://github.com/somewheve/ctpbee/wiki) 或者阅读下面的代码[examples 即将删除](https://github.com/somewheve/ctpbee/tree/master/examples) 或者按照上述命令自行编译文档(待完善)
-
-
 ## 等待完成 
 - 优化代码
 - 创建实例 --> 包括一个 web client --> 即将以ctpbee_client发布
@@ -83,7 +74,6 @@ app.start()
 - 申请穿透式
 - 快速下单助手
 - 策略层对接CTA  --> 即将以ctpbee_cta发布
-- 单账户 多个策略 ？
 - 跟单信号 
 - 回测系统搭建 
 - 多路行情对比
@@ -91,16 +81,12 @@ app.start()
 
 - 再立个flag, 暑假结束之前一定推出1.0正式版！
 
-## Api支持 
-
-请参阅文档（待上线）
-
 
 ## 发展计划
 ctpbee主要面对开发者, 希望能得到各位大佬的支持. 后续不再开发examples.策略以及指标等工具都以ctpbee_** 形式发布. ctpbee只提供最小的内核. 本人崇尚开源, 无论你是交易者还是程序员, 只要你有新的想法以及对开源感兴趣, 欢迎基于ctpbee 开发出新的可用工具. 我会维护一个工具列表, 指引用户前往使用. 
 
 ## 最后一句 
-如果这个能帮助到你, 请点击star来支持我噢. ^_^
+如果这个能帮助到你, 请点击star来支持我噢. ^_^  
 
 如果你希望贡献代码, 欢迎加群一起讨论和或者提交PR  QQ群号(: 756319143) 
 
