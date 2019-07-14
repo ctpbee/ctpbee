@@ -1,7 +1,7 @@
 # ctpbee 
 bee bee .... there is an industrious bee created ~~
 
-ctpbee 提供了一个可供使用的微小的ctp核心, 你可以通过这个核心来构建值得信赖的工具， 
+ctpbee 提供了一个可供使用的微框架, 你可以通过这个微小的核心来构建值得信赖的工具， 
 当然这需要你的编程功力。 你所需要关心的是如何编程来处理行情和交易信息即可。
 
 ## 开始之前 
@@ -70,13 +70,13 @@ app.start()
 ## 等待完成 
 - 优化代码
 - 创建实例 --> 包括一个 web client --> 即将以ctpbee_client发布
-- 维护本地持仓
-- 申请穿透式
+- 申请穿透式 
 - 快速下单助手
-- 策略层对接CTA  --> 即将以ctpbee_cta发布
+- 策略层对接CTA  --> 即将以[ctpbee_cta](https://github.com/somewheve/ctpbee_cta) 
 - 跟单信号 
 - 回测系统搭建 
 - 多路行情对比
+- 风控层建立
 
 
 - 再立个flag, 暑假结束之前一定推出1.0正式版！
