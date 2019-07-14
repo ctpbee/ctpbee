@@ -19,7 +19,7 @@ Notice : 神兽保佑 ，测试一次通过
 //          ┗━┻━┛   ┗━┻━┛
 //
 """
-from .ctp import BeeTdApi, BeeMdApi
+from ctpbee.interface.ctp import BeeTdApi, BeeMdApi
 
 
 class Interface:

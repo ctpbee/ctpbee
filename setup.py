@@ -108,7 +108,7 @@ else:
     ext_modules = [vnctptd, vnctpmd, vnctptd_se, vnctpmd_se]
 
 pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.interface',
-        'ctpbee.event_engine']
+        'ctpbee.event_engine', 'ctpbee.interface.ctp']
 install_requires = ['flask', "blinker", "dataclasses"]
 setup(
     name='ctpbee',
