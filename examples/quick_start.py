@@ -59,7 +59,6 @@ class DataRecorder(ExtAbstract):
         pass
 
 
-
 def go():
     app = CtpBee("last", __name__)
 

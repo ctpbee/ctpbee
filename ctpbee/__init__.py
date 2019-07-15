@@ -1,4 +1,4 @@
-__version__ = '0.18'
+__version__ = '0.19'
 __status__ = 'dev'
 from ctpbee.app import CtpBee
 from ctpbee.context import current_app, switch_app, get_app
