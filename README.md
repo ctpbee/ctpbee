@@ -9,7 +9,6 @@ ctpbee 提供了一个可供使用的微框架, 你可以通过这个微小的�
 # just for linux 
 sudo locale-gen zh_CN.GB18030  
 ```
-
 ## 起源
 
 - 衍生自 [vnpy](https://github.com/vnpy/vnpy) 和 [flask](https://github.com/pallets/flask)  
@@ -46,8 +45,6 @@ pip3 install ctpbee
 6. 多账户支持
 7. 支持申请穿透式接口
 
- 
-
 ## 快速开始 
 ```python
 from ctpbee import CtpBee
@@ -68,7 +65,6 @@ info = {
 }
 app.config.from_mapping(info)  # 从dict中载入信息 对于更多配置载入方式, 请参阅文档或者阅读代码
 app.start() 
-
 ```
 
 ## 等待完成 
@@ -81,7 +77,6 @@ app.start()
 - 多路行情对比
 - 风控层建立
 
-
 - 再立个flag, 暑假结束之前一定推出1.0正式版！
 
 
@@ -92,6 +87,6 @@ ctpbee主要面对开发者, 希望能得到各位大佬的支持. 后续不再�
 ## 最后一句 
 如果这个能帮助到你, 请点击star来支持我噢. ^_^  
 
-如果你希望贡献代码, 欢迎加群一起讨论和或者提交PR  QQ群号(: 756319143) 
+如果你希望贡献代码, 欢迎加群一起讨论和或者提交PR  QQ群号(: 756319143) \
 
 最后一句 ----> 祝各位大佬都能赚钱 ！

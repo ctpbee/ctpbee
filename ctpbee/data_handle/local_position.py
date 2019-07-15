@@ -24,7 +24,7 @@ Notice : 神兽保佑 ，测试一次通过
 
 from copy import copy
 
-from ctpbee.interface.ctp.constant import PositionData, Offset, Direction, OrderRequest, OrderData, \
+from ctpbee.constant import PositionData, Offset, Direction, OrderRequest, OrderData, \
     Exchange, TickData
 
 

@@ -3,7 +3,7 @@ from time import sleep
 from ctpbee import CtpBee
 from ctpbee import ExtAbstract
 from ctpbee import helper
-from ctpbee.interface.ctp.constant import PositionData, AccountData, OrderType, Offset, Direction
+from ctpbee.constant import PositionData, AccountData, OrderType, Offset, Direction
 
 
 class DataRecorder(ExtAbstract):

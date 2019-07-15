@@ -1,6 +1,6 @@
 # encoding: UTF-8
 
-from ctpbee.interface.ctp.constant import BarData, TickData, SharedData, EVENT_BAR, EVENT_SHARED
+from ctpbee.constant import BarData, TickData, SharedData, EVENT_BAR, EVENT_SHARED
 from ctpbee.event_engine import Event
 from ctpbee.context import current_app
 

@@ -1,5 +1,3 @@
-.. currentmodule:: ctpbee
-
 .. _函数:
 
 函数
@@ -109,7 +107,18 @@
             return True
         return False
 
-CtpBee
--------
-CtpBee 核心对象中同时也存在上述 方法,然后不同的是无需指定 传入第二个参数,直接传入发单撤单请求调用即可
-对此不再多说。
+
+
+
+快捷下单助手
+helper.generate_order_req_by_var::
+
+    函数签名: symbol: str, exchange: Exchange, direction: Direction, offset: Offset, type: OrderType, volume, price
+    函数返回: OrderRequest
+    函数用途: 通过传入常量来构建OrderRequest
+
+generate_order_req_by_str::
+
+    函数签名: symbol: str, exchange: Exchange, direction: Direction, offset: Offset, type: OrderType, volume, price
+    函数返回: OrderRequest
+    函数用途: 通过传入字符串来构建OrderRequest, 可以大小写(除symbol,volume, price外)

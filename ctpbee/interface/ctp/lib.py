@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from ctpbee.api.ctp import *
-from ctpbee.interface.ctp.constant import (
+from ctpbee.constant import (
     Direction,
     Offset,
     Exchange,

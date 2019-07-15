@@ -13,7 +13,7 @@ from ctpbee.exceptions import ConfigError
 from ctpbee.func import ExtAbstract, send_monitor, cancle_monitor
 from ctpbee.helpers import locked_cached_property, find_package, check
 from ctpbee.interface import Interface
-from ctpbee.interface.ctp.constant import OrderRequest, CancelRequest
+from ctpbee.constant import OrderRequest, CancelRequest
 from ctpbee.record import Recorder
 
 

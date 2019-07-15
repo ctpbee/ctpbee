@@ -22,12 +22,10 @@ Notice : 神兽保佑 ，测试一次通过
 
 # 回测模块
 
-from functools import wraps, update_wrapper
+from functools import wraps
 from threading import Thread
-from typing import Tuple
 
-from ctpbee.func import ExtAbstract
-from ctpbee.interface.ctp.constant import EVENT_TICK, TickData, BarData, AccountData
+from ctpbee.constant import EVENT_TICK, TickData, BarData, AccountData
 from ctpbee.event_engine import Event
 from ctpbee.signals import tick_sender
 

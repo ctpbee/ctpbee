@@ -22,7 +22,7 @@ Notice : 神兽保佑 ，测试一次通过
 from collections import defaultdict
 
 from ctpbee.event_engine import Event
-from ctpbee.interface.ctp.constant import *
+from ctpbee.constant import *
 from ctpbee.interface.ctp.lib import *
 
 
@@ -120,7 +120,7 @@ class BeeTdApi(TdApi):
         order = OrderData(
             symbol=symbol,
             exchange=exchange,
-            orderid=orderid,
+            order_id=orderid,
             direction=DIRECTION_CTP2VT[data["Direction"]],
             offset=OFFSET_CTP2VT[data["CombOffsetFlag"]],
             price=data["LimitPrice"],
@@ -463,7 +463,7 @@ class BeeTdApi(TdApi):
             self.exit()
 
 
-class BeeTaApiApp(TdApiApp):
+class BeeTdApiApp(TdApiApp):
     """ 申请穿透式网关 """
 
     def __init__(self, event_engine):
@@ -551,7 +551,7 @@ class BeeTaApiApp(TdApiApp):
         order = OrderData(
             symbol=symbol,
             exchange=exchange,
-            orderid=orderid,
+            order_id=orderid,
             direction=DIRECTION_CTP2VT[data["Direction"]],
             offset=OFFSET_CTP2VT[data["CombOffsetFlag"]],
             price=data["LimitPrice"],

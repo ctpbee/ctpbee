@@ -19,13 +19,13 @@ Notice : 神兽保佑 ，测试一次通过
 //          ┗━┻━┛   ┗━┻━┛
 //
 """
-from ctpbee.interface.ctp import BeeTdApi, BeeMdApi, BeeTaApiApp
+from ctpbee.interface.ctp import BeeTdApi, BeeMdApi, BeeTdApiApp
 
 
 class Interface:
     api_map = {
         "ctp": (BeeMdApi, BeeTdApi),
-        "ctp_se": (BeeMdApi, BeeTaApiApp)
+        "ctp_se": (BeeMdApi, BeeTdApiApp)
     }
 
     @classmethod
