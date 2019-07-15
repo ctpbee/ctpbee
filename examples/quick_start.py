@@ -46,14 +46,12 @@ class DataRecorder(ExtAbstract):
         interval = bar.interval
 
         req = helper.generate_order_req_by_var(symbol=bar.symbol, exchange=bar.exchange, type=OrderType.LIMIT, volume=2,
-                                               direction=Direction.LONG,offset=Offset.OPEN, price=bar.open_price)
+                                               direction=Direction.LONG, offset=Offset.OPEN, price=bar.open_price)
 
         # req = helper.generate_order_req_by_str(symbol=bar.symbol, exchange="shfe", type="limit", volume=2,
         #                                        price=bar.open_price,direction="long"
         #                                        ,offset="open")
         self.app.send_order(req)
-
-        print(bar)
 
     def on_shared(self, shared):
         """process shared function"""
@@ -68,6 +66,7 @@ class DataRecorder(ExtAbstract):
 
 def go():
     app = CtpBee("last", __name__)
+
     info = {
         "CONNECT_INFO": {
             "userid": "089131",
@@ -90,24 +89,16 @@ def go():
     """ 载入配置信息 """
     app.config.from_mapping(info)
 
-    """ 载入用户层 """
-    # data_recorder = DataRecorder("data_recorder", app)
+    """ 
+        载入用户层定义层 你可以编写多个继承ExtAbstract ,然后实例化它, 记得传入app, 当然你可以通过app.remove_extension("data_recorder")
+        data_recorder 就是下面传入的插件名字
+    
+    """
+    data_recorder = DataRecorder("data_recorder", app)
 
     """ 启动 """
     app.start()
     sleep(1)
-
-    for con in app.recorder.get_all_contracts():
-        # print(app.subscribe(con.symbol))
-        pass
-    app.subscribe("MA002")
-    # print(app.recorder.get_all_contracts())
-    app.query_position()
-    sleep(2)
-    while True:
-        sleep(1)
-        print(app.recorder.get_all_positions())
-        app.query_position()
 
 
 if __name__ == '__main__':
