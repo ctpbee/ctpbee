@@ -13,7 +13,8 @@ from ctpbee.exceptions import TraderError, MarketError
 from ctpbee.interface.ctp.constant import \
     (OrderRequest, CancelRequest, EVENT_TRADE, EVENT_SHARED, EVENT_ORDER,
      OrderData, TradeData, PositionData, AccountData, TickData, SharedData,
-     BarData, EVENT_POSITION, EVENT_ACCOUNT, EVENT_TICK, EVENT_BAR, EVENT_CONTRACT, ContractData)
+     BarData, EVENT_POSITION, EVENT_ACCOUNT, EVENT_TICK, EVENT_BAR, EVENT_CONTRACT, ContractData, Direction, Exchange,
+     Offset, OrderType)
 from ctpbee.signals import send_monitor, cancle_monitor
 
 
@@ -153,20 +154,49 @@ class ExtAbstract(object):
 
 class Helper():
     """ 工具函数 帮助你快速构建发单请求 """
+    direction_map = {
+        "long": Direction.LONG,
+        "short": Direction.SHORT,
+    }
+    exchange_map = {
+        "SHFE": Exchange.SHFE,
+        "INE": Exchange.INE,
+        "CZCE": Exchange.CZCE,
+        "CFFEX": Exchange.CFFEX,
+        "DCE": Exchange.DCE,
+    }
 
-    @staticmethod
-    def generate_order_req_from_tick(**kwargs):
-        """ 根据tick生成req """
-        pass
+    offset_map = {
+        "CLOSE": Offset.CLOSE,
+        "OPEN": Offset.OPEN,
+        "CLOSETODAY": Offset.CLOSETODAY,
+        "CLOSEYESTERDAY": Offset.CLOSEYESTERDAY
+    }
 
-    @staticmethod
-    def generate_order_req_from_bar(**kwargs):
-        pass
+    price_type_map = {
+        "MARKET": OrderType.MARKET,
+        "STOP": OrderType.STOP,
+        "FAK": OrderType.FAK,
+        "LIMIT": OrderType.LIMIT,
+        "FOK": OrderType.FOK
+    }
 
-    @staticmethod
-    def generate_order_req(**kwargs):
+    @classmethod
+    def generate_order_req_by_str(cls, symbol: str, exchange: str, direction: str, offset: str, type: str, volume,
+                                  price):
         """ 手动构造发单请求"""
-        # req = OrderRequest()
+
+        return OrderRequest(exchange=cls.exchange_map.get(exchange.upper()), symbol=symbol,
+                            direction=cls.direction_map.get(direction.upper()),
+                            offset=cls.offset_map.get(offset.upper()), type=cls.price_type_map.get(type.upper()),
+                            volume=volume, price=price)
+
+    @classmethod
+    def generate_order_req_by_var(cls, symbol: str, exchange: Exchange, direction: Direction, offset: Offset,
+                                  type: OrderType, volume,
+                                  price):
+        return OrderRequest(symbol=symbol, exchange=exchange, direction=direction, offset=offset, type=type,
+                            volume=volume, price=price)
 
 
 helper = Helper()

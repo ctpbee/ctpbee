@@ -2,7 +2,8 @@ from time import sleep
 
 from ctpbee import CtpBee
 from ctpbee import ExtAbstract
-from ctpbee.interface.ctp.constant import PositionData, AccountData
+from ctpbee import helper
+from ctpbee.interface.ctp.constant import PositionData, AccountData, OrderType, Offset
 
 
 class DataRecorder(ExtAbstract):
@@ -44,6 +45,15 @@ class DataRecorder(ExtAbstract):
         """bar process function"""
         bar.exchange = bar.exchange.value
         interval = bar.interval
+
+        req = helper.generate_order_req_by_var(symbol=bar.symbol, exchange=bar.exchange, type=OrderType.LIMIT, volume=2,
+                                               offset=Offset.OPEN, price=bar.open_price)
+
+        req = helper.generate_order_req_by_str(symbol=bar.symbol, exchange="shfe", type="limit", volume=2,
+                                               price=bar.open_price,
+                                               offset="open")
+        self.app.send_order(req)
+
         print(bar)
 
     def on_shared(self, shared):
@@ -64,13 +74,12 @@ def go():
             "userid": "089131",
             "password": "350888",
             "brokerid": "9999",
+            "md_address": "tcp://180.168.146.187:10131",
+            "td_address": "tcp://180.168.146.187:10130",
+            # "md_address": "tcp://218.202.237.33:10112",
+            # "td_address": "tcp://218.202.237.33:10102",
 
-            # "md_address": "tcp://180.168.146.187:10131",
-            # "td_address": "tcp://180.168.146.187:10130",
-            "md_address": "tcp://218.202.237.33:10112",
-            "td_address": "tcp://218.202.237.33:10102",
-
-            "product_info":"",
+            "product_info": "",
             "appid": "simnow_client_test",
             "auth_code": "0000000000000000",
         },

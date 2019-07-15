@@ -1,21 +1,21 @@
 // vnctpmd.cpp : 定义 DLL 应用程序的导出函数。
 //
 
-#include "vnctpmd.h"
+#include "vnctpmdApp.h"
 
 
 ///-------------------------------------------------------------------------------------
 ///C++的回调函数将数据保存到队列中
 ///-------------------------------------------------------------------------------------
 
-void MdApi::OnFrontConnected()
+void MdApiApp::OnFrontConnected()
 {
 	Task task = Task();
 	task.task_name = ONFRONTCONNECTED;
 	this->task_queue.push(task);
 };
 
-void MdApi::OnFrontDisconnected(int nReason)
+void MdApiApp::OnFrontDisconnected(int nReason)
 {
 	Task task = Task();
 	task.task_name = ONFRONTDISCONNECTED;
@@ -23,7 +23,7 @@ void MdApi::OnFrontDisconnected(int nReason)
 	this->task_queue.push(task);
 };
 
-void MdApi::OnHeartBeatWarning(int nTimeLapse)
+void MdApiApp::OnHeartBeatWarning(int nTimeLapse)
 {
 	Task task = Task();
 	task.task_name = ONHEARTBEATWARNING;
@@ -31,7 +31,7 @@ void MdApi::OnHeartBeatWarning(int nTimeLapse)
 	this->task_queue.push(task);
 };
 
-void MdApi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+void MdApiApp::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 	Task task = Task();
 	task.task_name = ONRSPUSERLOGIN;
@@ -52,7 +52,7 @@ void MdApi::OnRspUserLogin(CThostFtdcRspUserLoginField *pRspUserLogin, CThostFtd
 	this->task_queue.push(task);
 };
 
-void MdApi::OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+void MdApiApp::OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 	Task task = Task();
 	task.task_name = ONRSPUSERLOGOUT;
@@ -73,7 +73,7 @@ void MdApi::OnRspUserLogout(CThostFtdcUserLogoutField *pUserLogout, CThostFtdcRs
 	this->task_queue.push(task);
 };
 
-void MdApi::OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+void MdApiApp::OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 	Task task = Task();
 	task.task_name = ONRSPERROR;
@@ -88,7 +88,7 @@ void MdApi::OnRspError(CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bI
 	this->task_queue.push(task);
 };
 
-void MdApi::OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+void MdApiApp::OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 	Task task = Task();
 	task.task_name = ONRSPSUBMARKETDATA;
@@ -109,7 +109,7 @@ void MdApi::OnRspSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstr
 	this->task_queue.push(task);
 };
 
-void MdApi::OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+void MdApiApp::OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 	Task task = Task();
 	task.task_name = ONRSPUNSUBMARKETDATA;
@@ -130,7 +130,7 @@ void MdApi::OnRspUnSubMarketData(CThostFtdcSpecificInstrumentField *pSpecificIns
 	this->task_queue.push(task);
 };
 
-void MdApi::OnRspSubForQuoteRsp(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+void MdApiApp::OnRspSubForQuoteRsp(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 	Task task = Task();
 	task.task_name = ONRSPSUBFORQUOTERSP;
@@ -151,7 +151,7 @@ void MdApi::OnRspSubForQuoteRsp(CThostFtdcSpecificInstrumentField *pSpecificInst
 	this->task_queue.push(task);
 };
 
-void MdApi::OnRspUnSubForQuoteRsp(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
+void MdApiApp::OnRspUnSubForQuoteRsp(CThostFtdcSpecificInstrumentField *pSpecificInstrument, CThostFtdcRspInfoField *pRspInfo, int nRequestID, bool bIsLast)
 {
 	Task task = Task();
 	task.task_name = ONRSPUNSUBFORQUOTERSP;
@@ -172,7 +172,7 @@ void MdApi::OnRspUnSubForQuoteRsp(CThostFtdcSpecificInstrumentField *pSpecificIn
 	this->task_queue.push(task);
 };
 
-void MdApi::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData)
+void MdApiApp::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketData)
 {
 	Task task = Task();
 	task.task_name = ONRTNDEPTHMARKETDATA;
@@ -185,7 +185,7 @@ void MdApi::OnRtnDepthMarketData(CThostFtdcDepthMarketDataField *pDepthMarketDat
 	this->task_queue.push(task);
 };
 
-void MdApi::OnRtnForQuoteRsp(CThostFtdcForQuoteRspField *pForQuoteRsp)
+void MdApiApp::OnRtnForQuoteRsp(CThostFtdcForQuoteRspField *pForQuoteRsp)
 {
 	Task task = Task();
 	task.task_name = ONRTNFORQUOTERSP;
@@ -204,7 +204,7 @@ void MdApi::OnRtnForQuoteRsp(CThostFtdcForQuoteRspField *pForQuoteRsp)
 ///工作线程从队列中取出数据，转化为python对象后，进行推送
 ///-------------------------------------------------------------------------------------
 
-void MdApi::processTask()
+void MdApiApp::processTask()
 {
     try
     {
@@ -293,25 +293,25 @@ void MdApi::processTask()
     }
 };
 
-void MdApi::processFrontConnected(Task *task)
+void MdApiApp::processFrontConnected(Task *task)
 {
 	gil_scoped_acquire acquire;
 	this->onFrontConnected();
 };
 
-void MdApi::processFrontDisconnected(Task *task)
+void MdApiApp::processFrontDisconnected(Task *task)
 {
 	gil_scoped_acquire acquire;
 	this->onFrontDisconnected(task->task_id);
 };
 
-void MdApi::processHeartBeatWarning(Task *task)
+void MdApiApp::processHeartBeatWarning(Task *task)
 {
 	gil_scoped_acquire acquire;
 	this->onHeartBeatWarning(task->task_id);
 };
 
-void MdApi::processRspUserLogin(Task *task)
+void MdApiApp::processRspUserLogin(Task *task)
 {
 	gil_scoped_acquire acquire;
 	dict data;
@@ -344,7 +344,7 @@ void MdApi::processRspUserLogin(Task *task)
 	this->onRspUserLogin(data, error, task->task_id, task->task_last);
 };
 
-void MdApi::processRspUserLogout(Task *task)
+void MdApiApp::processRspUserLogout(Task *task)
 {
 	gil_scoped_acquire acquire;
 	dict data;
@@ -366,7 +366,7 @@ void MdApi::processRspUserLogout(Task *task)
 	this->onRspUserLogout(data, error, task->task_id, task->task_last);
 };
 
-void MdApi::processRspError(Task *task)
+void MdApiApp::processRspError(Task *task)
 {
 	gil_scoped_acquire acquire;
 	dict error;
@@ -380,7 +380,7 @@ void MdApi::processRspError(Task *task)
 	this->onRspError(error, task->task_id, task->task_last);
 };
 
-void MdApi::processRspSubMarketData(Task *task)
+void MdApiApp::processRspSubMarketData(Task *task)
 {
 	gil_scoped_acquire acquire;
 	dict data;
@@ -401,7 +401,7 @@ void MdApi::processRspSubMarketData(Task *task)
 	this->onRspSubMarketData(data, error, task->task_id, task->task_last);
 };
 
-void MdApi::processRspUnSubMarketData(Task *task)
+void MdApiApp::processRspUnSubMarketData(Task *task)
 {
 	gil_scoped_acquire acquire;
 	dict data;
@@ -422,7 +422,7 @@ void MdApi::processRspUnSubMarketData(Task *task)
 	this->onRspUnSubMarketData(data, error, task->task_id, task->task_last);
 };
 
-void MdApi::processRspSubForQuoteRsp(Task *task)
+void MdApiApp::processRspSubForQuoteRsp(Task *task)
 {
 	gil_scoped_acquire acquire;
 	dict data;
@@ -443,7 +443,7 @@ void MdApi::processRspSubForQuoteRsp(Task *task)
 	this->onRspSubForQuoteRsp(data, error, task->task_id, task->task_last);
 };
 
-void MdApi::processRspUnSubForQuoteRsp(Task *task)
+void MdApiApp::processRspUnSubForQuoteRsp(Task *task)
 {
 	gil_scoped_acquire acquire;
 	dict data;
@@ -464,7 +464,7 @@ void MdApi::processRspUnSubForQuoteRsp(Task *task)
 	this->onRspUnSubForQuoteRsp(data, error, task->task_id, task->task_last);
 };
 
-void MdApi::processRtnDepthMarketData(Task *task)
+void MdApiApp::processRtnDepthMarketData(Task *task)
 {
 	gil_scoped_acquire acquire;
 	dict data;
@@ -520,7 +520,7 @@ void MdApi::processRtnDepthMarketData(Task *task)
 	this->onRtnDepthMarketData(data);
 };
 
-void MdApi::processRtnForQuoteRsp(Task *task)
+void MdApiApp::processRtnForQuoteRsp(Task *task)
 {
 	gil_scoped_acquire acquire;
 	dict data;
@@ -542,32 +542,32 @@ void MdApi::processRtnForQuoteRsp(Task *task)
 ///主动函数
 ///-------------------------------------------------------------------------------------
 
-void MdApi::createFtdcMdApi(string pszFlowPath)
+void MdApiApp::createFtdcMdApi(string pszFlowPath)
 {
 	this->api = CThostFtdcMdApi::CreateFtdcMdApi(pszFlowPath.c_str());
 	this->api->RegisterSpi(this);
 };
 
-void MdApi::release()
+void MdApiApp::release()
 {
 	this->api->Release();
 };
 
-void MdApi::init()
+void MdApiApp::init()
 {
 	this->active = true;
-	this->task_thread = thread(&MdApi::processTask, this);
+	this->task_thread = thread(&MdApiApp::processTask, this);
 
 	this->api->Init();
 };
 
-int MdApi::join()
+int MdApiApp::join()
 {
 	int i = this->api->Join();
 	return i;
 };
 
-int MdApi::exit()
+int MdApiApp::exit()
 {
 	this->active = false;
     this->task_queue.terminate();
@@ -579,18 +579,18 @@ int MdApi::exit()
 	return 1;
 };
 
-string MdApi::getTradingDay()
+string MdApiApp::getTradingDay()
 {
 	string day = this->api->GetTradingDay();
 	return day;
 };
 
-void MdApi::registerFront(string pszFrontAddress)
+void MdApiApp::registerFront(string pszFrontAddress)
 {
 	this->api->RegisterFront((char*)pszFrontAddress.c_str());
 };
 
-int MdApi::subscribeMarketData(string instrumentID)
+int MdApiApp::subscribeMarketData(string instrumentID)
 {
 	char* buffer = (char*) instrumentID.c_str();
 	char* myreq[1] = { buffer };
@@ -598,7 +598,7 @@ int MdApi::subscribeMarketData(string instrumentID)
 	return i;
 };
 
-int MdApi::unSubscribeMarketData(string instrumentID)
+int MdApiApp::unSubscribeMarketData(string instrumentID)
 {
 	char* buffer = (char*)instrumentID.c_str();
 	char* myreq[1] = { buffer };;
@@ -606,7 +606,7 @@ int MdApi::unSubscribeMarketData(string instrumentID)
 	return i;
 };
 
-int MdApi::subscribeForQuoteRsp(string instrumentID)
+int MdApiApp::subscribeForQuoteRsp(string instrumentID)
 {
 	char* buffer = (char*)instrumentID.c_str();
 	char* myreq[1] = { buffer };
@@ -614,7 +614,7 @@ int MdApi::subscribeForQuoteRsp(string instrumentID)
 	return i;
 };
 
-int MdApi::unSubscribeForQuoteRsp(string instrumentID)
+int MdApiApp::unSubscribeForQuoteRsp(string instrumentID)
 {
 	char* buffer = (char*)instrumentID.c_str();
 	char* myreq[1] = { buffer };;
@@ -622,7 +622,7 @@ int MdApi::unSubscribeForQuoteRsp(string instrumentID)
 	return i;
 };
 
-int MdApi::reqUserLogin(const dict &req, int reqid)
+int MdApiApp::reqUserLogin(const dict &req, int reqid)
 {
 	CThostFtdcReqUserLoginField myreq = CThostFtdcReqUserLoginField();
 	memset(&myreq, 0, sizeof(myreq));
@@ -641,7 +641,7 @@ int MdApi::reqUserLogin(const dict &req, int reqid)
 	return i;
 };
 
-int MdApi::reqUserLogout(const dict &req, int reqid)
+int MdApiApp::reqUserLogout(const dict &req, int reqid)
 {
 	CThostFtdcUserLogoutField myreq = CThostFtdcUserLogoutField();
 	memset(&myreq, 0, sizeof(myreq));
@@ -656,16 +656,16 @@ int MdApi::reqUserLogout(const dict &req, int reqid)
 ///Boost.Python封装
 ///-------------------------------------------------------------------------------------
 
-class PyMdApi: public MdApi
+class PyMdApiApp: public MdApiApp
 {
 public:
-	using MdApi::MdApi;
+	using MdApiApp::MdApiApp;
 
 	void onFrontConnected() override
 	{
 		try
 		{
-			PYBIND11_OVERLOAD(void, MdApi, onFrontConnected);
+			PYBIND11_OVERLOAD(void, MdApiApp, onFrontConnected);
 		}
 		catch (const error_already_set &e)
 		{
@@ -677,7 +677,7 @@ public:
 	{
 		try
 		{
-			PYBIND11_OVERLOAD(void, MdApi, onFrontDisconnected, reqid);
+			PYBIND11_OVERLOAD(void, MdApiApp, onFrontDisconnected, reqid);
 		}
 		catch (const error_already_set &e)
 		{
@@ -689,7 +689,7 @@ public:
 	{
 		try
 		{
-			PYBIND11_OVERLOAD(void, MdApi, onHeartBeatWarning, reqid);
+			PYBIND11_OVERLOAD(void, MdApiApp, onHeartBeatWarning, reqid);
 		}
 		catch (const error_already_set &e)
 		{
@@ -701,7 +701,7 @@ public:
 	{
 		try
 		{
-			PYBIND11_OVERLOAD(void, MdApi, onRspUserLogin, data, error, reqid, last);
+			PYBIND11_OVERLOAD(void, MdApiApp, onRspUserLogin, data, error, reqid, last);
 		}
 		catch (const error_already_set &e)
 		{
@@ -713,7 +713,7 @@ public:
 	{
 		try
 		{
-			PYBIND11_OVERLOAD(void, MdApi, onRspUserLogout, data, error, reqid, last);
+			PYBIND11_OVERLOAD(void, MdApiApp, onRspUserLogout, data, error, reqid, last);
 		}
 		catch (const error_already_set &e)
 		{
@@ -725,7 +725,7 @@ public:
 	{
 		try
 		{
-			PYBIND11_OVERLOAD(void, MdApi, onRspError, error, reqid, last);
+			PYBIND11_OVERLOAD(void, MdApiApp, onRspError, error, reqid, last);
 		}
 		catch (const error_already_set &e)
 		{
@@ -737,7 +737,7 @@ public:
 	{
 		try
 		{
-			PYBIND11_OVERLOAD(void, MdApi, onRspSubMarketData, data, error, reqid, last);
+			PYBIND11_OVERLOAD(void, MdApiApp, onRspSubMarketData, data, error, reqid, last);
 		}
 		catch (const error_already_set &e)
 		{
@@ -749,7 +749,7 @@ public:
 	{
 		try
 		{
-			PYBIND11_OVERLOAD(void, MdApi, onRspUnSubMarketData, data, error, reqid, last);
+			PYBIND11_OVERLOAD(void, MdApiApp, onRspUnSubMarketData, data, error, reqid, last);
 		}
 		catch (const error_already_set &e)
 		{
@@ -761,7 +761,7 @@ public:
 	{
 		try
 		{
-			PYBIND11_OVERLOAD(void, MdApi, onRspSubForQuoteRsp, data, error, reqid, last);
+			PYBIND11_OVERLOAD(void, MdApiApp, onRspSubForQuoteRsp, data, error, reqid, last);
 		}
 		catch (const error_already_set &e)
 		{
@@ -773,7 +773,7 @@ public:
 	{
 		try
 		{
-			PYBIND11_OVERLOAD(void, MdApi, onRspUnSubForQuoteRsp, data, error, reqid, last);
+			PYBIND11_OVERLOAD(void, MdApiApp, onRspUnSubForQuoteRsp, data, error, reqid, last);
 		}
 		catch (const error_already_set &e)
 		{
@@ -785,7 +785,7 @@ public:
 	{
 		try
 		{
-			PYBIND11_OVERLOAD(void, MdApi, onRtnDepthMarketData, data);
+			PYBIND11_OVERLOAD(void, MdApiApp, onRtnDepthMarketData, data);
 		}
 		catch (const error_already_set &e)
 		{
@@ -797,7 +797,7 @@ public:
 	{
 		try
 		{
-			PYBIND11_OVERLOAD(void, MdApi, onRtnForQuoteRsp, data);
+			PYBIND11_OVERLOAD(void, MdApiApp, onRtnForQuoteRsp, data);
 		}
 		catch (const error_already_set &e)
 		{
@@ -807,36 +807,36 @@ public:
 };
 
 
-PYBIND11_MODULE(vnctpmd, m)
+PYBIND11_MODULE(vnctpmd_se, m)
 {
-	class_<MdApi, PyMdApi> mdapi(m, "MdApi");
-	mdapi
+	class_<MdApiApp, PyMdApiApp> MdApiApp(m, "MdApiApp");
+	MdApiApp
 		.def(init<>())
-		.def("createFtdcMdApi", &MdApi::createFtdcMdApi)
-		.def("release", &MdApi::release)
-		.def("init", &MdApi::init)
-		.def("join", &MdApi::join)
-		.def("exit", &MdApi::exit)
-		.def("getTradingDay", &MdApi::getTradingDay)
-		.def("registerFront", &MdApi::registerFront)
-		.def("subscribeMarketData", &MdApi::subscribeMarketData)
-		.def("unSubscribeMarketData", &MdApi::unSubscribeMarketData)
-		.def("subscribeForQuoteRsp", &MdApi::subscribeForQuoteRsp)
-		.def("unSubscribeForQuoteRsp", &MdApi::unSubscribeForQuoteRsp)
-		.def("reqUserLogin", &MdApi::reqUserLogin)
-		.def("reqUserLogout", &MdApi::reqUserLogout)
+		.def("createFtdcMdApi", &MdApiApp::createFtdcMdApi)
+		.def("release", &MdApiApp::release)
+		.def("init", &MdApiApp::init)
+		.def("join", &MdApiApp::join)
+		.def("exit", &MdApiApp::exit)
+		.def("getTradingDay", &MdApiApp::getTradingDay)
+		.def("registerFront", &MdApiApp::registerFront)
+		.def("subscribeMarketData", &MdApiApp::subscribeMarketData)
+		.def("unSubscribeMarketData", &MdApiApp::unSubscribeMarketData)
+		.def("subscribeForQuoteRsp", &MdApiApp::subscribeForQuoteRsp)
+		.def("unSubscribeForQuoteRsp", &MdApiApp::unSubscribeForQuoteRsp)
+		.def("reqUserLogin", &MdApiApp::reqUserLogin)
+		.def("reqUserLogout", &MdApiApp::reqUserLogout)
 
-		.def("onFrontConnected", &MdApi::onFrontConnected)
-		.def("onFrontDisconnected", &MdApi::onFrontDisconnected)
-		.def("onHeartBeatWarning", &MdApi::onHeartBeatWarning)
-		.def("onRspUserLogin", &MdApi::onRspUserLogin)
-		.def("onRspUserLogout", &MdApi::onRspUserLogout)
-		.def("onRspError", &MdApi::onRspError)
-		.def("onRspSubMarketData", &MdApi::onRspSubMarketData)
-		.def("onRspUnSubMarketData", &MdApi::onRspUnSubMarketData)
-		.def("onRspSubForQuoteRsp", &MdApi::onRspSubForQuoteRsp)
-		.def("onRspUnSubForQuoteRsp", &MdApi::onRspUnSubForQuoteRsp)
-		.def("onRtnDepthMarketData", &MdApi::onRtnDepthMarketData)
-		.def("onRtnForQuoteRsp", &MdApi::onRtnForQuoteRsp)
+		.def("onFrontConnected", &MdApiApp::onFrontConnected)
+		.def("onFrontDisconnected", &MdApiApp::onFrontDisconnected)
+		.def("onHeartBeatWarning", &MdApiApp::onHeartBeatWarning)
+		.def("onRspUserLogin", &MdApiApp::onRspUserLogin)
+		.def("onRspUserLogout", &MdApiApp::onRspUserLogout)
+		.def("onRspError", &MdApiApp::onRspError)
+		.def("onRspSubMarketData", &MdApiApp::onRspSubMarketData)
+		.def("onRspUnSubMarketData", &MdApiApp::onRspUnSubMarketData)
+		.def("onRspSubForQuoteRsp", &MdApiApp::onRspSubForQuoteRsp)
+		.def("onRspUnSubForQuoteRsp", &MdApiApp::onRspUnSubForQuoteRsp)
+		.def("onRtnDepthMarketData", &MdApiApp::onRtnDepthMarketData)
+		.def("onRtnForQuoteRsp", &MdApiApp::onRtnForQuoteRsp)
 		;
 }
