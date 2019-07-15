@@ -7,13 +7,13 @@ from typing import Text, AnyStr
 from werkzeug.datastructures import ImmutableDict
 
 from ctpbee.config import Config
+from ctpbee.constant import OrderRequest, CancelRequest
 from ctpbee.context import _app_context_ctx
 from ctpbee.event_engine import EventEngine
 from ctpbee.exceptions import ConfigError
 from ctpbee.func import ExtAbstract, send_monitor, cancle_monitor
 from ctpbee.helpers import locked_cached_property, find_package, check
 from ctpbee.interface import Interface
-from ctpbee.constant import OrderRequest, CancelRequest
 from ctpbee.record import Recorder
 
 

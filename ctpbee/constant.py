@@ -4,10 +4,9 @@ Basic data structure used for general trading function in VN Trader.
 
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 from logging import INFO
 from typing import Any
-
-from enum import Enum
 
 
 class Direction(Enum):

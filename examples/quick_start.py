@@ -58,10 +58,6 @@ class DataRecorder(ExtAbstract):
         # print(shared)
         pass
 
-    """
-     "md_address": "tcp://218.202.237.33:10112",
-    "td_address": "tcp://218.202.237.33:10102",
-            """
 
 
 def go():
@@ -98,8 +94,11 @@ def go():
 
     """ 启动 """
     app.start()
-    sleep(1)
+    while True:
 
+        sleep(1)
+        app.query_position()
+        [ print(x) for x in app.recorder.get_all_positions()]
 
 if __name__ == '__main__':
     go()

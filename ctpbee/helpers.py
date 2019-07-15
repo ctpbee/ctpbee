@@ -1,11 +1,11 @@
 """ 工具函数 """
 
-import pkgutil
 import os
+import pkgutil
 import sys
 from functools import wraps
 from threading import RLock
-from typing import List, AnyStr
+from typing import AnyStr
 
 _missing = object()
 
@@ -99,7 +99,5 @@ def check(type: AnyStr):
             return func(*args, **kwargs)
 
         return wrapper
+
     return midlle
-
-
-
