@@ -80,7 +80,9 @@ class PositionHolding:
         self.short_yd_frozen = 0
         self.short_td_frozen = 0
 
-    def updateTrade(self, trade):
+        self.last_price = 0
+
+    def update_trade(self, trade):
         """成交更新"""
         # 多头
         if trade.direction == Direction.LONG:
@@ -131,10 +133,10 @@ class PositionHolding:
 
         # 汇总
         self.calculate_price(trade)
-        self.calculatePosition()
+        self.calculate_position()
         self.calculate_pnl()
 
-    def calculatePosition(self):
+    def calculate_position(self):
         """计算持仓情况"""
         self.long_pos = self.long_td + self.long_yd
         self.short_pos = self.short_td + self.short_yd
@@ -155,6 +157,7 @@ class PositionHolding:
             self.short_pnl = position.pnl
             self.short_price = position.price
 
+
     def update_order(self, order: OrderData):
         """"""
         if order.is_active():
@@ -172,7 +175,7 @@ class PositionHolding:
         order = req.create_order_data(orderid, gateway_name)
         self.update_order(order)
 
-    def updateTick(self, tick):
+    def update_tick(self, tick):
         """行情更新"""
         self.last_price = tick.last_price
         self.calculate_pnl()
@@ -295,14 +298,16 @@ class PositionHolding:
     def calculate_pnl(self):
         """计算持仓盈亏"""
         try:
-            open_cost = self.app.td_api.open_cost_dict.get(self.symbol)
+            open_cost = self.app.trader.open_cost_dict.get(self.symbol)
             single = LocalVariable(open_cost)
         except AttributeError as e:
             single = None
         try:
+
             if self.long_pos == self.long_yd:
                 self.long_pnl = self.long_pos * (
                         self.last_price - single.long / (self.size * self.long_pos)) * self.size
+
             if self.long_pos != self.long_yd:
                 self.long_pnl = self.long_pos * (self.last_price - self.long_price) * self.size
         except ZeroDivisionError:
@@ -311,8 +316,7 @@ class PositionHolding:
             self.long_pnl = 0
         try:
             if self.short_pos == self.short_yd:
-                self.short_pnl = self.short_pos * (
-                        single.short / (self.size * self.short_pos) - self.last_price) * self.size
+                self.short_pnl = self.short_pos * (single.short / (self.size * self.short_pos) - self.last_price) * self.size
             if self.short_pos != self.short_yd:
                 self.short_pnl = self.short_pos * (self.short_price - self.last_price) * self.size
         except ZeroDivisionError:

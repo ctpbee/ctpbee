@@ -3,13 +3,13 @@ from time import sleep
 from ctpbee import CtpBee
 from ctpbee import ExtAbstract
 from ctpbee import helper
-from ctpbee.interface.ctp.constant import PositionData, AccountData, OrderType, Offset
+from ctpbee.interface.ctp.constant import PositionData, AccountData, OrderType, Offset, Direction
 
 
 class DataRecorder(ExtAbstract):
     def __init__(self, name, app=None):
         super().__init__(name, app)
-        self.subscribe_set = set(["MA002", "AP001", "IC1909"])
+        self.subscribe_set = set(["MA002"])
 
     def on_trade(self, trade):
         pass
@@ -43,15 +43,14 @@ class DataRecorder(ExtAbstract):
 
     def on_bar(self, bar):
         """bar process function"""
-        bar.exchange = bar.exchange.value
         interval = bar.interval
 
         req = helper.generate_order_req_by_var(symbol=bar.symbol, exchange=bar.exchange, type=OrderType.LIMIT, volume=2,
-                                               offset=Offset.OPEN, price=bar.open_price)
+                                               direction=Direction.LONG,offset=Offset.OPEN, price=bar.open_price)
 
-        req = helper.generate_order_req_by_str(symbol=bar.symbol, exchange="shfe", type="limit", volume=2,
-                                               price=bar.open_price,
-                                               offset="open")
+        # req = helper.generate_order_req_by_str(symbol=bar.symbol, exchange="shfe", type="limit", volume=2,
+        #                                        price=bar.open_price,direction="long"
+        #                                        ,offset="open")
         self.app.send_order(req)
 
         print(bar)
@@ -92,7 +91,7 @@ def go():
     app.config.from_mapping(info)
 
     """ 载入用户层 """
-    data_recorder = DataRecorder("data_recorder", app)
+    # data_recorder = DataRecorder("data_recorder", app)
 
     """ 启动 """
     app.start()
@@ -101,11 +100,14 @@ def go():
     for con in app.recorder.get_all_contracts():
         # print(app.subscribe(con.symbol))
         pass
-    print(app.recorder.get_all_contracts())
+    app.subscribe("MA002")
+    # print(app.recorder.get_all_contracts())
     app.query_position()
-
-    sleep(1)
-    # print(app.recorder.get_all_positions())
+    sleep(2)
+    while True:
+        sleep(1)
+        print(app.recorder.get_all_positions())
+        app.query_position()
 
 
 if __name__ == '__main__':

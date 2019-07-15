@@ -242,7 +242,7 @@ class OrderData(BaseData):
     """
     symbol: str
     exchange: Exchange
-    orderid: str
+    order_id: str
 
     type: OrderType = OrderType.LIMIT
     direction: Direction = ""
@@ -256,7 +256,7 @@ class OrderData(BaseData):
     def __post_init__(self):
         """"""
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
-        self.local_order_id = f"{self.gateway_name}.{self.orderid}"
+        self.local_order_id = f"{self.gateway_name}.{self.order_id}"
 
     def is_active(self):
         """
@@ -415,14 +415,14 @@ class OrderRequest:
         """"""
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
-    def create_order_data(self, orderid: str, gateway_name: str):
+    def create_order_data(self, order_id: str, gateway_name: str):
         """
         Create order data from request.
         """
         order = OrderData(
             symbol=self.symbol,
             exchange=self.exchange,
-            orderid=orderid,
+            order_id=order_id,
             type=self.type,
             direction=self.direction,
             offset=self.offset,

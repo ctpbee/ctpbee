@@ -189,7 +189,6 @@ class BeeTdApi(TdApi):
             self.open_cost_dict[position.symbol]["long"] = data['OpenCost']
         elif position.direction == Direction.SHORT:
             self.open_cost_dict[position.symbol]["short"] = data['OpenCost']
-
         # Calculate average position price
         if position.volume and size:
             cost += data["PositionCost"]
@@ -277,7 +276,7 @@ class BeeTdApi(TdApi):
         order = OrderData(
             symbol=symbol,
             exchange=exchange,
-            orderid=orderid,
+            order_id=orderid,
             type=ORDERTYPE_CTP2VT[data["OrderPriceType"]],
             direction=DIRECTION_CTP2VT[data["Direction"]],
             offset=OFFSET_CTP2VT[data["CombOffsetFlag"]],
@@ -412,11 +411,11 @@ class BeeTdApi(TdApi):
 
         self.reqid += 1
         self.reqOrderInsert(ctp_req, self.reqid)
-        orderid = f"{self.frontid}_{self.sessionid}_{self.order_ref}"
-        order = req.create_order_data(orderid, self.gateway_name)
+        order_id = f"{self.frontid}_{self.sessionid}_{self.order_ref}"
+        order = req.create_order_data(order_id, self.gateway_name)
         self.on_event(type=EVENT_ORDER, data=order)
 
-        return order.vt_orderid
+        return order.local_order_id
 
     def cancel_order(self, req: CancelRequest):
         """
