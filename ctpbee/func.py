@@ -151,34 +151,6 @@ class ExtAbstract(object):
         setattr(cls, "parmeter", parmeter)
 
 
-class ApplyTransmission:
-    # todo  申请穿透式 代码
-    """
-        # 简单使用
-        from ctpbee import ApplyTransmission
-        ctp = ApplyTransmission()
-        ctp.connect(account)
-        ctp.send(...)
-        ctp.cancle(...)
-
-    """
-
-    def connect(self, info):
-        pass
-
-    def send(self, request):
-        pass
-
-    def cancle(self):
-        pass
-
-    def query_position(self):
-        pass
-
-    def query_account(self):
-        pass
-
-
 class Helper():
     """ 工具函数 帮助你快速构建发单请求 """
 

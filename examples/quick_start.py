@@ -65,11 +65,12 @@ def go():
             "password": "350888",
             "brokerid": "9999",
 
-            "md_address": "tcp://180.168.146.187:10131",
-            "td_address": "tcp://180.168.146.187:10130",
-            # "md_address": "tcp://218.202.237.33:10112",
-            # "td_address": "tcp://218.202.237.33:10102",
+            # "md_address": "tcp://180.168.146.187:10131",
+            # "td_address": "tcp://180.168.146.187:10130",
+            "md_address": "tcp://218.202.237.33:10112",
+            "td_address": "tcp://218.202.237.33:10102",
 
+            "product_info":"",
             "appid": "simnow_client_test",
             "auth_code": "0000000000000000",
         },

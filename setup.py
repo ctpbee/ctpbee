@@ -1,5 +1,6 @@
 import platform
 from setuptools import Extension, setup
+runtime_library_dir = []
 
 if platform.uname().system == "Windows":
     compiler_flags = [
@@ -15,6 +16,7 @@ else:
         "-Wno-delete-incomplete", "-Wno-sign-compare", "-pthread"
     ]
     extra_link_args = ["-lstdc++"]
+    runtime_library_dir = ["$ORIGIN"]
 
 vnctpmd = Extension(
     "ctpbee.api.ctp.vnctpmd",
@@ -33,7 +35,7 @@ vnctpmd = Extension(
     extra_compile_args=compiler_flags,
     extra_link_args=extra_link_args,
     depends=[],
-    runtime_library_dirs=["$ORIGIN"],
+    runtime_library_dirs=runtime_library_dir,
 )
 vnctptd = Extension(
     "ctpbee.api.ctp.vnctptd",
@@ -52,7 +54,7 @@ vnctptd = Extension(
     libraries=["thostmduserapi_se", "thosttraderapi_se"],
     extra_compile_args=compiler_flags,
     extra_link_args=extra_link_args,
-    runtime_library_dirs=["$ORIGIN"],
+    runtime_library_dirs=runtime_library_dir,
     depends=[],
     language="cpp",
 )
@@ -60,11 +62,11 @@ vnctptd = Extension(
 vnctpmd_se = Extension(
     "ctpbee.api.ctp.vnctpmd_se",
     [
-        "ctpbee/api/ctp/vnctp/vnctpmd/vnctpmd.cpp",
+        "ctpbee/api/ctp/vnctp_se/vnctpmd/vnctpmd.cpp",
     ],
     include_dirs=[
         "ctpbee/api/ctp/include",
-        "ctpbee/api/ctp/vnctp",
+        "ctpbee/api/ctp/vnctp_se",
     ],
     language="cpp",
     define_macros=[],
@@ -74,17 +76,17 @@ vnctpmd_se = Extension(
     extra_compile_args=compiler_flags,
     extra_link_args=extra_link_args,
     depends=[],
-    runtime_library_dirs=["$ORIGIN"],
+    runtime_library_dirs=runtime_library_dir,
 )
 
 vnctptd_se = Extension(
     "ctpbee.api.ctp.vnctptd_se",
     [
-        "ctpbee/api/ctp/vnctp/vnctptd/vnctptd.cpp",
+        "ctpbee/api/ctp/vnctp_se/vnctptd/vnctptd.cpp",
     ],
     include_dirs=[
         "ctpbee/api/ctp/include",
-        "ctpbee/api/ctp/vnctp",
+        "ctpbee/api/ctp/vnctp_se",
     ],
     define_macros=[],
     undef_macros=[],
@@ -113,7 +115,7 @@ install_requires = ['flask', "blinker", "dataclasses"]
 setup(
     name='ctpbee',
     version='0.18',
-    description="easy ctp trade and market support",
+    description="Easy ctp trade and market support",
     author='somewheve',
     author_email='somewheve@gmail.com',
     url='https://github.com/somewheve/ctpbee',

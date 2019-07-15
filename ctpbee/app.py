@@ -5,16 +5,16 @@ from time import sleep
 from typing import Text, AnyStr
 
 from werkzeug.datastructures import ImmutableDict
-from ctpbee.interface.ctp.constant import OrderRequest, CancelRequest
+
+from ctpbee.config import Config
+from ctpbee.context import _app_context_ctx
+from ctpbee.event_engine import EventEngine
+from ctpbee.exceptions import ConfigError
 from ctpbee.func import ExtAbstract, send_monitor, cancle_monitor
 from ctpbee.helpers import locked_cached_property, find_package, check
-from ctpbee.exceptions import ConfigError
-from ctpbee.record import Recorder
-from ctpbee.context import _app_context_ctx
-from ctpbee.interface.ctp import BeeMdApi, BeeTdApi
 from ctpbee.interface import Interface
-from ctpbee.config import Config
-from ctpbee.event_engine import EventEngine
+from ctpbee.interface.ctp.constant import OrderRequest, CancelRequest
+from ctpbee.record import Recorder
 
 
 class CtpBee(object):
@@ -30,7 +30,8 @@ class CtpBee(object):
 
     # 默认配置
     default_config = ImmutableDict(
-        dict(LOG_OUTPUT=True, TD_FUNC=False,INTERFACE="ctp", MD_FUNC=True, XMIN=[], ALL_SUBSCRIBE=False, SHARE_MD=False))
+        dict(LOG_OUTPUT=True, TD_FUNC=False, INTERFACE="ctp", MD_FUNC=True, XMIN=[], ALL_SUBSCRIBE=False,
+             SHARE_MD=False))
     config_class = Config
     import_name = None
     # 数据记录载体
@@ -62,7 +63,6 @@ class CtpBee(object):
         self.interface = Interface()
         _app_context_ctx.push(self.name, self)
 
-
     def make_config(self):
         """ 生成class类"""
         defaults = dict(self.default_config)
@@ -83,8 +83,6 @@ class CtpBee(object):
             raise ConfigError(message="没有相应的登录信息", args=("没有发现登录信息",))
         MdApi, TdApi = self.interface.get_interface(self)
         if self.config.get("MD_FUNC"):
-
-
             self.market = MdApi(self.event_engine)
             self.market.connect(info)
 
@@ -159,6 +157,14 @@ class CtpBee(object):
         if extension.extension_name in self.extensions:
             return
         self.extensions[extension.extension_name] = extension
+
+    def reload(self):
+        """ 重新载入接口 """
+        if self.market is not None:
+            self.market.close()
+        if self.trader is not None:
+            self.trader.close()
+        self._load_ext()
 
     def __del__(self):
         """释放账户 安全退出"""
