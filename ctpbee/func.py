@@ -4,6 +4,7 @@
 
 """
 from datetime import time
+from functools import wraps
 from typing import Text
 
 from ctpbee.constant import \
@@ -155,8 +156,8 @@ class ExtAbstract(object):
 class Helper():
     """ 工具函数 帮助你快速构建查询请求 """
     direction_map = {
-        "long": Direction.LONG,
-        "short": Direction.SHORT,
+        "LONG": Direction.LONG,
+        "SHORT": Direction.SHORT,
     }
     exchange_map = {
         "SHFE": Exchange.SHFE,
@@ -180,7 +181,6 @@ class Helper():
         "LIMIT": OrderType.LIMIT,
         "FOK": OrderType.FOK
     }
-
 
     @classmethod
     def generate_order_req_by_str(cls, symbol: str, exchange: str, direction: str, offset: str, type: str, volume,
@@ -208,24 +208,24 @@ class Helper():
         return CancelRequest(symbol=symbol, exchange=exchange, order_id=order_id)
 
     @classmethod
-    def generate_ac_register_req(cls, bank_id, bank_branch_id, currency_id):
-        return AccountRegisterRequest(bank_id=bank_id, bank_branch_id=bank_branch_id, currency_id=currency_id)
+    def generate_ac_register_req(cls, bank_id, currency_id="CNY"):
+        return AccountRegisterRequest(bank_id=bank_id, currency_id=currency_id)
 
     @classmethod
-    def generate_ac_banlance_req(cls, bank_id, bank_branch_id, broker_branch_id, bank_account, bank_password,
-                                 currency_id):
-        return AccountBanlanceRequest(bank_id, bank_branch_id, broker_branch_id, bank_account, bank_password,
+    def generate_ac_banlance_req(cls, bank_id, bank_account, bank_password,
+                                 currency_id="CNY"):
+        return AccountBanlanceRequest(bank_id, bank_account, bank_password,
                                       currency_id=currency_id)
 
     @classmethod
-    def generate_transfer_request(cls, bank_id, bank_branch_id, broker_branch_id, bank_account, bank_password,
-                                  currency_id, trade_account):
-        return TransferRequest(bank_id=bank_id, bank_branch_id=bank_branch_id, broker_branch_id=broker_branch_id,
-                               bank_account=bank_account, band_password=bank_password, currency_id=currency_id,
+    def generate_transfer_request(cls, bank_id, bank_account, bank_password,
+                                  trade_account, currency_id="CNY"):
+        return TransferRequest(bank_id=bank_id, bank_account=bank_account, band_password=bank_password,
+                               currency_id=currency_id,
                                trade_account=trade_account)
 
     @classmethod
-    def genetate_transfer_serial_req(cls, bank_id, currency_id):
+    def generate_transfer_serial_req(cls, bank_id, currency_id="CNY"):
         return TransferSerialRequest(bank_id=bank_id, currency_id=currency_id)
 
 
@@ -251,3 +251,4 @@ def auth_time(data_time: time):
     if data_time <= NIGHT_END:
         return True
     return False
+

@@ -271,12 +271,12 @@ class BeeTdApi(TdApi):
         frontid = data["FrontID"]
         sessionid = data["SessionID"]
         order_ref = data["OrderRef"]
-        orderid = f"{frontid}_{sessionid}_{order_ref}"
+        order_id = f"{frontid}_{sessionid}_{order_ref}"
 
         order = OrderData(
             symbol=symbol,
             exchange=exchange,
-            order_id=orderid,
+            order_id=order_id,
             type=ORDERTYPE_CTP2VT[data["OrderPriceType"]],
             direction=DIRECTION_CTP2VT[data["Direction"]],
             offset=OFFSET_CTP2VT[data["CombOffsetFlag"]],
@@ -289,7 +289,7 @@ class BeeTdApi(TdApi):
         )
         self.on_event(type=EVENT_ORDER, data=order)
 
-        self.sysid_orderid_map[data["OrderSysID"]] = orderid
+        self.sysid_orderid_map[data["OrderSysID"]] = order_id
 
     def onRtnTrade(self, data: dict):
         """
@@ -301,12 +301,12 @@ class BeeTdApi(TdApi):
             self.trade_data.append(data)
             return
 
-        orderid = self.sysid_orderid_map[data["OrderSysID"]]
+        order_id = self.sysid_orderid_map[data["OrderSysID"]]
 
         trade = TradeData(
             symbol=symbol,
             exchange=exchange,
-            orderid=orderid,
+            order_id=order_id,
             tradeid=data["TradeID"],
             direction=DIRECTION_CTP2VT[data["Direction"]],
             offset=OFFSET_CTP2VT[data["OffsetFlag"]],
@@ -558,7 +558,6 @@ class BeeTdApiApp(TdApiApp):
 
         self.frontid = 0
         self.sessionid = 0
-
         self.order_data = []
         self.trade_data = []
         self.positions = {}
@@ -613,7 +612,7 @@ class BeeTdApiApp(TdApiApp):
     def onRspOrderInsert(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
         order_ref = data["OrderRef"]
-        orderid = f"{self.frontid}_{self.sessionid}_{order_ref}"
+        order_id = f"{self.frontid}_{self.sessionid}_{order_ref}"
 
         symbol = data["InstrumentID"]
         exchange = symbol_exchange_map[symbol]
@@ -621,7 +620,7 @@ class BeeTdApiApp(TdApiApp):
         order = OrderData(
             symbol=symbol,
             exchange=exchange,
-            order_id=orderid,
+            order_id=order_id,
             direction=DIRECTION_CTP2VT[data["Direction"]],
             offset=OFFSET_CTP2VT[data["CombOffsetFlag"]],
             price=data["LimitPrice"],

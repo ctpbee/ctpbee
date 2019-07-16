@@ -1,15 +1,14 @@
 from time import sleep
 
-from ctpbee import CtpBee
+from ctpbee import CtpBee, helper
 from ctpbee import ExtAbstract
-from ctpbee import helper
-from ctpbee.constant import PositionData, AccountData, OrderType, Offset, Direction
+from ctpbee.constant import PositionData, AccountData
 
 
 class DataRecorder(ExtAbstract):
     def __init__(self, name, app=None):
         super().__init__(name, app)
-        self.subscribe_set = set(["MA002"])
+        self.subscribe_set = set(["rb1910"])
 
     def on_trade(self, trade):
         pass
@@ -38,20 +37,20 @@ class DataRecorder(ExtAbstract):
 
     def on_tick(self, tick):
         """tick process function"""
-        # print(tick)
         pass
 
     def on_bar(self, bar):
         """bar process function"""
         interval = bar.interval
-
-        req = helper.generate_order_req_by_var(symbol=bar.symbol, exchange=bar.exchange, type=OrderType.LIMIT, volume=2,
-                                               direction=Direction.LONG, offset=Offset.OPEN, price=bar.open_price)
+        #
+        # req = helper.generate_order_req_by_var(symbol=bar.symbol, exchange=bar.exchange, type=OrderType.LIMIT, volume=2,
+        #                                        direction=Direction.LONG, offset=Offset.OPEN, price=bar.open_price)
 
         # req = helper.generate_order_req_by_str(symbol=bar.symbol, exchange="shfe", type="limit", volume=2,
-        #                                        price=bar.open_price,direction="long"
-        #                                        ,offset="open")
-        self.app.send_order(req)
+        #                                        price=bar.open_price, direction="long"
+        #                                        , offset="open")
+        # vt_id = self.app.send_order(req)
+        pass
 
     def on_shared(self, shared):
         """process shared function"""
@@ -61,6 +60,20 @@ class DataRecorder(ExtAbstract):
 
 def go():
     app = CtpBee("last", __name__)
+
+    # 风险控制层
+    @app.risk_control.connect_via()
+    def conn(app: CtpBee):
+        """
+        用户可以在每个app实例下面来使用app.risk_control.connect_via() 来装饰函数
+        接受一个参数来访问到当前app的实例, 以此判断是否进行下单 , 需要注意, 如果一旦返回错误, 那么函数这单将无法下载
+        """
+        return False  # return True
+
+    #  或者
+    # def conn(app: CtpBee):
+    #     return False  # return True
+    # app.risk_control.connect(conn)
 
     info = {
         "CONNECT_INFO": {
@@ -78,9 +91,11 @@ def go():
         "INTERFACE": "ctp",
         "TD_FUNC": True,
         "MD_FUNC": True,
-        "XMIN": [1, 3, 5],
     }
-    """ 载入配置信息 """
+    """ 
+        载入配置信息 
+    
+    """
     app.config.from_mapping(info)
 
     """ 
@@ -93,17 +108,11 @@ def go():
     """ 启动 """
     app.start()
     # while True:
-    #
-    #
-    #
-    # while True:
     #     app.query_position()
     #     sleep(1)
-    #     # [ print(x) for x in app.recorder.get_all_positions()]
-    #     print(app.query_account())
-    a = app.recorder.get_all_contracts()[0]
-    print(a)
-    print(a._to_dict())
+    #     from pprint import pprint
+    #     pprint(app.recorder.get_all_positions())
+
 
 if __name__ == '__main__':
     go()
