@@ -135,8 +135,20 @@ class CtpBee(object):
         return self.trader.query_position()
 
     @check(type="trader")
-    def transfer(self, desti, count):
-        pass
+    def transfer(self, req, type):
+        self.trader.transfer(req, type=type)
+
+    @check(type="trader")
+    def query_account_register(self, req):
+        self.trader.query_account_register(req)
+
+    @check(type="trader")
+    def query_bank_account_money(self, req):
+        self.trader.query_bank_account_money(req)
+
+    @check(type="trader")
+    def query_transfer_serial(self, req):
+        self.trader.query_transfer_serial(req)
 
     @check(type="trader")
     def query_bank(self):
@@ -175,3 +187,5 @@ class CtpBee(object):
         self.market, self.trader = None, None
 
         del self.event_engine
+
+

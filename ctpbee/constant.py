@@ -151,9 +151,20 @@ class BaseData:
     gateway_name: str
     iterable_count = 0
 
-    def serialize(self, **kwargs):
+    def _serialize(self, **kwargs):
         for key, value in kwargs.values():
             setattr(self, key, value)
+
+    def _to_dict(self) -> dict:
+        temp = {}
+        for x in dir(self):
+            if x.startswith("_"):
+                continue
+            if isinstance(getattr(self, x), Enum):
+                temp[x] = getattr(self, x).value
+                continue
+            temp[x] = getattr(self, x)
+        return temp
 
 
 @dataclass
@@ -438,7 +449,7 @@ class CancelRequest:
     Request sending to specific gateway for canceling an existing order.
     """
 
-    orderid: str
+    order_id: str
     symbol: str
     exchange: Exchange
 
@@ -456,3 +467,48 @@ class SharedData:
     volume: float = 0
     last_price: float = 0
     average_price: float = 0
+
+
+# type check
+# https://www.jianshu.com/p/36bfc4a927a4
+
+# 查询银行账号
+@dataclass
+class AccountRegisterRequest:
+    bank_id: str = ""
+    bank_branch_id: str = ""
+    currency_id: str = ""
+
+
+# 查询银行余额
+@dataclass
+class AccountBanlanceRequest:
+    bank_id: str
+    bank_branch_id: str
+    broker_branch_id: str
+    bank_account: str
+    bank_password: str
+    currency_id: str
+
+
+# 证券与银行互转请求
+@dataclass
+class TransferRequest:
+    bank_id: str
+    bank_branch_id: str
+
+    broker_branch_id: str
+    # 银行
+    bank_account: str
+    band_password: str
+
+    # 币
+    currency_id: str
+    trade_account: int
+
+
+@dataclass
+class TransferSerialRequest:
+    """ 查询转账流水 """
+    bank_id: str
+    currency_id: str

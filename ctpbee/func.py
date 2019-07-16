@@ -10,7 +10,7 @@ from ctpbee.constant import \
     (OrderRequest, CancelRequest, EVENT_TRADE, EVENT_SHARED, EVENT_ORDER,
      OrderData, TradeData, PositionData, AccountData, TickData, SharedData,
      BarData, EVENT_POSITION, EVENT_ACCOUNT, EVENT_TICK, EVENT_BAR, EVENT_CONTRACT, ContractData, Direction, Exchange,
-     Offset, OrderType)
+     Offset, OrderType, AccountRegisterRequest, AccountBanlanceRequest, TransferRequest, TransferSerialRequest)
 from ctpbee.context import current_app
 from ctpbee.context import get_app
 from ctpbee.event_engine import Event
@@ -153,7 +153,7 @@ class ExtAbstract(object):
 
 
 class Helper():
-    """ 工具函数 帮助你快速构建发单请求 """
+    """ 工具函数 帮助你快速构建查询请求 """
     direction_map = {
         "long": Direction.LONG,
         "short": Direction.SHORT,
@@ -197,6 +197,35 @@ class Helper():
                                   price):
         return OrderRequest(symbol=symbol, exchange=exchange, direction=direction, offset=offset, type=type,
                             volume=volume, price=price)
+
+    @classmethod
+    def generate_cancle_req_by_str(cls, symbol: str, exchange: str, order_id: str):
+        return CancelRequest(symbol=symbol, exchange=cls.exchange_map.get(exchange), order_id=order_id)
+
+    @classmethod
+    def generate_cancle_req_by_var(cls, symbol: str, exchange: Exchange, order_id: str):
+        return CancelRequest(symbol=symbol, exchange=exchange, order_id=order_id)
+
+    @classmethod
+    def generate_ac_register_req(cls, bank_id, bank_branch_id, currency_id):
+        return AccountRegisterRequest(bank_id=bank_id, bank_branch_id=bank_branch_id, currency_id=currency_id)
+
+    @classmethod
+    def generate_ac_banlance_req(cls, bank_id, bank_branch_id, broker_branch_id, bank_account, bank_password,
+                                 currency_id):
+        return AccountBanlanceRequest(bank_id, bank_branch_id, broker_branch_id, bank_account, bank_password,
+                                      currency_id=currency_id)
+
+    @classmethod
+    def generate_transfer_request(cls, bank_id, bank_branch_id, broker_branch_id, bank_account, bank_password,
+                                  currency_id, trade_account):
+        return TransferRequest(bank_id=bank_id, bank_branch_id=bank_branch_id, broker_branch_id=broker_branch_id,
+                               bank_account=bank_account, band_password=bank_password, currency_id=currency_id,
+                               trade_account=trade_account)
+
+    @classmethod
+    def genetate_transfer_serial_req(cls, bank_id, currency_id):
+        return TransferSerialRequest(bank_id=bank_id, currency_id=currency_id)
 
 
 helper = Helper()

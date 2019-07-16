@@ -21,8 +21,8 @@ Notice : 神兽保佑 ，测试一次通过
 """
 from collections import defaultdict
 
-from ctpbee.event_engine import Event
 from ctpbee.constant import *
+from ctpbee.event_engine import Event
 from ctpbee.interface.ctp.lib import *
 
 
@@ -353,6 +353,77 @@ class BeeTdApi(TdApi):
 
         self.reqid += 1
         self.reqAuthenticate(req, self.reqid)
+
+    def onRspQryTransferBank(self, data, error, reqid, last: bool):
+        print("transfer callback: ", data)
+
+    def onRspQryTransferSerial(self, data, error, reqid, last):
+        # 查询流水回调
+        print("serial: ", data, "error", error)
+
+    def onRspQryAccountregister(self, data, error, reqid, last):
+        print("query account register callback: data", data, "error")
+
+    def query_transfer_serial(self, req:TransferSerialRequest):
+        """ 查询转账流水 """
+        self.reqid += 1
+        reqd = {
+            "BankID":req.bank_id,
+            "CurrencyID":req.currency_id
+        }
+        self.ReqQryTransferSerial(reqd, self.reqid)
+
+    def query_bank_account_money(self, req: AccountBanlanceRequest):
+        """ 查询银行余额 """
+        self.reqid += 1
+        reqd = {
+            "BankID": req.bank_id,
+            "BankBranchID": req.bank_branch_id,
+            "BrokerID": self.brokerid,
+            "BrokerBranchID": req.broker_branch_id,
+            "BankAccount": req.bank_account,
+            "BankPassWord": req.bank_password,
+            "AccountID": self.userid,
+            "Password": self.password,
+            "CurrentId": req.currency_id,
+            "SecuPwdFlag": THOST_FTDC_BPWDF_BlankCheck
+        }
+        self.reqQueryBankAccountMoneyByFuture(reqd, self.reqid)
+
+    def query_account_register(self, req: AccountRegisterRequest):
+        """ 查询银行账户 """
+        self.reqid += 1
+        # todo: 生成请求
+        reqd = \
+            {
+                "BrokerID": self.brokerid,
+                "AccountID": self.userid,
+                "BankID": req.bank_id,
+                "BankBranchID": req.bank_branch_id,
+                "CurrencyID": req.currency_id
+            }
+        self.reqQryAccountregister(reqd, self.reqid)
+
+    def transfer(self, req: TransferRequest, type):
+        """ 银行和证券互转 """
+        self.reqid += 1
+        reqd = {
+            "BankID": req.bank_id,
+            "BankBranchID": req.bank_branch_id,
+            "BrokerID": self.brokerid,
+            "BrokerBranchID": req.broker_branch_id,
+            "BankAccount": req.bank_account,
+            "BankPassWord": req.band_password,
+            "AccountID": self.userid,
+            "Password": self.password,
+            "CurrentID": req.currency_id,
+            "TradeAmount": req.trade_account,
+            "SecuPwdFlag": THOST_FTDC_BPWDF_BlankCheck,
+        }
+        if type == "to_bank":
+            self.reqFromBankToFutureByFuture(reqd, self.reqid)
+        if type == "to_trade":
+            self.ReqFromFutureToBankByFuture(reqd, self.reqid)
 
     def login(self):
         """

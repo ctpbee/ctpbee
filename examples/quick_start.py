@@ -33,12 +33,12 @@ class DataRecorder(ExtAbstract):
 
     def on_account(self, account: AccountData) -> None:
         # print(account)
+        print(account)
         pass
 
     def on_tick(self, tick):
         """tick process function"""
         # print(tick)
-        print(tick)
         pass
 
     def on_bar(self, bar):
@@ -67,11 +67,10 @@ def go():
             "userid": "089131",
             "password": "350888",
             "brokerid": "9999",
-            "md_address": "tcp://180.168.146.187:10131",
-            "td_address": "tcp://180.168.146.187:10130",
-            # "md_address": "tcp://218.202.237.33:10112",
-            # "td_address": "tcp://218.202.237.33:10102",
-
+            # "md_address": "tcp://180.168.146.187:10131",
+            # "td_address": "tcp://180.168.146.187:10130",
+            "md_address": "tcp://218.202.237.33:10112",
+            "td_address": "tcp://218.202.237.33:10102",
             "product_info": "",
             "appid": "simnow_client_test",
             "auth_code": "0000000000000000",
@@ -93,11 +92,18 @@ def go():
 
     """ 启动 """
     app.start()
-    while True:
-
-        sleep(1)
-        app.query_position()
-        [ print(x) for x in app.recorder.get_all_positions()]
+    # while True:
+    #
+    #
+    #
+    # while True:
+    #     app.query_position()
+    #     sleep(1)
+    #     # [ print(x) for x in app.recorder.get_all_positions()]
+    #     print(app.query_account())
+    a = app.recorder.get_all_contracts()[0]
+    print(a)
+    print(a._to_dict())
 
 if __name__ == '__main__':
     go()
