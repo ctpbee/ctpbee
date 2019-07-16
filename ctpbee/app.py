@@ -136,6 +136,13 @@ class CtpBee(object):
 
     @check(type="trader")
     def transfer(self, req, type):
+        """
+        req currency attribute
+        [ "USD", "HKD", "CNY"]
+        :param req:
+        :param type:
+        :return:
+        """
         self.trader.transfer(req, type=type)
 
     @check(type="trader")
@@ -187,5 +194,3 @@ class CtpBee(object):
         self.market, self.trader = None, None
 
         del self.event_engine
-
-

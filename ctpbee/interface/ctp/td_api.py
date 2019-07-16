@@ -112,7 +112,7 @@ class BeeTdApi(TdApi):
     def onRspOrderInsert(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
         order_ref = data["OrderRef"]
-        orderid = f"{self.frontid}_{self.sessionid}_{order_ref}"
+        order_id = f"{self.frontid}_{self.sessionid}_{order_ref}"
 
         symbol = data["InstrumentID"]
         exchange = symbol_exchange_map[symbol]
@@ -120,7 +120,7 @@ class BeeTdApi(TdApi):
         order = OrderData(
             symbol=symbol,
             exchange=exchange,
-            order_id=orderid,
+            order_id=order_id,
             direction=DIRECTION_CTP2VT[data["Direction"]],
             offset=OFFSET_CTP2VT[data["CombOffsetFlag"]],
             price=data["LimitPrice"],
@@ -378,14 +378,14 @@ class BeeTdApi(TdApi):
         self.reqid += 1
         reqd = {
             "BankID": req.bank_id,
-            "BankBranchID": req.bank_branch_id,
+            # "BankBranchID": req.bank_branch_id,
             "BrokerID": self.brokerid,
-            "BrokerBranchID": req.broker_branch_id,
+            # "BrokerBranchID": req.broker_branch_id,
             "BankAccount": req.bank_account,
             "BankPassWord": req.bank_password,
             "AccountID": self.userid,
             "Password": self.password,
-            "CurrentId": req.currency_id,
+            "CurrencyID": req.currency_id,
             "SecuPwdFlag": THOST_FTDC_BPWDF_BlankCheck
         }
         self.reqQueryBankAccountMoneyByFuture(reqd, self.reqid)
@@ -393,13 +393,12 @@ class BeeTdApi(TdApi):
     def query_account_register(self, req: AccountRegisterRequest):
         """ 查询银行账户 """
         self.reqid += 1
-        # todo: 生成请求
         reqd = \
             {
                 "BrokerID": self.brokerid,
                 "AccountID": self.userid,
                 "BankID": req.bank_id,
-                "BankBranchID": req.bank_branch_id,
+                # "BankBranchID": req.bank_branch_id,
                 "CurrencyID": req.currency_id
             }
         self.reqQryAccountregister(reqd, self.reqid)
@@ -409,14 +408,14 @@ class BeeTdApi(TdApi):
         self.reqid += 1
         reqd = {
             "BankID": req.bank_id,
-            "BankBranchID": req.bank_branch_id,
+            # "BankBranchID": req.bank_branch_id,
             "BrokerID": self.brokerid,
-            "BrokerBranchID": req.broker_branch_id,
+            # "BrokerBranchID": req.broker_branch_id,
             "BankAccount": req.bank_account,
             "BankPassWord": req.band_password,
             "AccountID": self.userid,
             "Password": self.password,
-            "CurrentID": req.currency_id,
+            "CurrencyID": req.currency_id,
             "TradeAmount": req.trade_account,
             "SecuPwdFlag": THOST_FTDC_BPWDF_BlankCheck,
         }
@@ -492,7 +491,7 @@ class BeeTdApi(TdApi):
         """
         Cancel existing order.
         """
-        frontid, sessionid, order_ref = req.orderid.split("_")
+        frontid, sessionid, order_ref = req.order_id.split("_")
         ctp_req = {
             "InstrumentID": req.symbol,
             "OrderRef": order_ref,
@@ -768,12 +767,12 @@ class BeeTdApiApp(TdApiApp):
         frontid = data["FrontID"]
         sessionid = data["SessionID"]
         order_ref = data["OrderRef"]
-        orderid = f"{frontid}_{sessionid}_{order_ref}"
+        order_id = f"{frontid}_{sessionid}_{order_ref}"
 
         order = OrderData(
             symbol=symbol,
             exchange=exchange,
-            orderid=orderid,
+            order_id=order_id,
             type=ORDERTYPE_CTP2VT[data["OrderPriceType"]],
             direction=DIRECTION_CTP2VT[data["Direction"]],
             offset=OFFSET_CTP2VT[data["CombOffsetFlag"]],
@@ -786,7 +785,7 @@ class BeeTdApiApp(TdApiApp):
         )
         self.on_event(EVENT_ORDER, data=order)
 
-        self.sysid_orderid_map[data["OrderSysID"]] = orderid
+        self.sysid_orderid_map[data["OrderSysID"]] = order_id
 
     def onRtnTrade(self, data: dict):
         """
@@ -798,12 +797,12 @@ class BeeTdApiApp(TdApiApp):
             self.trade_data.append(data)
             return
 
-        orderid = self.sysid_orderid_map[data["OrderSysID"]]
+        order_id = self.sysid_orderid_map[data["OrderSysID"]]
 
         trade = TradeData(
             symbol=symbol,
             exchange=exchange,
-            orderid=orderid,
+            order_id=order_id,
             tradeid=data["TradeID"],
             direction=DIRECTION_CTP2VT[data["Direction"]],
             offset=OFFSET_CTP2VT[data["OffsetFlag"]],
@@ -916,8 +915,8 @@ class BeeTdApiApp(TdApiApp):
         self.reqid += 1
         self.reqOrderInsert(ctp_req, self.reqid)
 
-        orderid = f"{self.frontid}_{self.sessionid}_{self.order_ref}"
-        order = req.create_order_data(orderid, self.gateway_name)
+        order_id = f"{self.frontid}_{self.sessionid}_{self.order_ref}"
+        order = req.create_order_data(order_id, self.gateway_name)
         self.on_event(type=EVENT_ORDER, data=order)
 
         return order.vt_orderid
@@ -926,7 +925,7 @@ class BeeTdApiApp(TdApiApp):
         """
         Cancel existing order.
         """
-        frontid, sessionid, order_ref = req.orderid.split("_")
+        frontid, sessionid, order_ref = req.order_id.split("_")
 
         ctp_req = {
             "InstrumentID": req.symbol,

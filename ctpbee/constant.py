@@ -152,7 +152,7 @@ class BaseData:
     iterable_count = 0
 
     def _serialize(self, **kwargs):
-        for key, value in kwargs.values():
+        for key, value in kwargs.items():
             setattr(self, key, value)
 
     def _to_dict(self) -> dict:
@@ -282,7 +282,7 @@ class OrderData(BaseData):
         Create cancel request object from order.
         """
         req = CancelRequest(
-            orderid=self.orderid, symbol=self.symbol, exchange=self.exchange
+            order_id=self.order_id, symbol=self.symbol, exchange=self.exchange
         )
         return req
 
@@ -296,7 +296,7 @@ class TradeData(BaseData):
 
     symbol: str
     exchange: Exchange
-    orderid: str
+    order_id: str
     tradeid: str
     direction: Direction = ""
 
@@ -308,7 +308,7 @@ class TradeData(BaseData):
     def __post_init__(self):
         """"""
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
-        self.local_order_id = f"{self.gateway_name}.{self.orderid}"
+        self.local_order_id = f"{self.gateway_name}.{self.order_id}"
         self.local_trade_id = f"{self.gateway_name}.{self.tradeid}"
 
 
@@ -476,39 +476,38 @@ class SharedData:
 @dataclass
 class AccountRegisterRequest:
     bank_id: str = ""
-    bank_branch_id: str = ""
-    currency_id: str = ""
+    # bank_branch_id: str = ""
+    currency_id: str = "CNY"
 
 
 # 查询银行余额
 @dataclass
 class AccountBanlanceRequest:
     bank_id: str
-    bank_branch_id: str
-    broker_branch_id: str
+    # bank_branch_id: str
+    # broker_branch_id: str
     bank_account: str
     bank_password: str
-    currency_id: str
+    currency_id: str = "CNY"
 
 
 # 证券与银行互转请求
 @dataclass
 class TransferRequest:
     bank_id: str
-    bank_branch_id: str
+    # bank_branch_id: str
 
-    broker_branch_id: str
+    # broker_branch_id: str
     # 银行
     bank_account: str
     band_password: str
-
     # 币
-    currency_id: str
     trade_account: int
+    currency_id: str = "CNY"
 
 
 @dataclass
 class TransferSerialRequest:
     """ 查询转账流水 """
     bank_id: str
-    currency_id: str
+    currency_id: str = "CNY"

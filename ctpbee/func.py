@@ -181,6 +181,7 @@ class Helper():
         "FOK": OrderType.FOK
     }
 
+
     @classmethod
     def generate_order_req_by_str(cls, symbol: str, exchange: str, direction: str, offset: str, type: str, volume,
                                   price):
