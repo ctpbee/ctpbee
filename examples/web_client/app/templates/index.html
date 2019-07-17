@@ -1,0 +1,102 @@
+{% extends "base.html"%}
+
+{% block head %}
+<style>
+    * {
+        font-size: 16px;
+    }
+
+    .sidebar_user {
+        background-color: #f5f5f5;
+    }
+
+    nav {
+        padding: 0;
+    }
+
+    ul {
+        text-align: center;
+    }
+</style>
+
+{% endblock %}
+{% block body%}
+
+
+<nav class="navbar navbar-default" role="navigation">
+    <div class="container-fluid">
+        <div class="container">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">Ctpbee</a>
+                <a class="navbar-brand" href="#">社区</a>
+                <a class="navbar-brand" href="#">文档</a>
+            </div>
+
+            <ul class="nav navbar-nav navbar-right">
+                <li style="float: right"><a href="">注销</a></li>
+                <li style="float: right"><a href="">小明</a></li>
+
+                <li class="github" style="float: right"><a href="https://github.com/somewheve/ctpbee"> <img
+                        src="{{ url_for('static', filename='icon/github.png')}}" height="20px;" alt=""></a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="row" id="main">
+    <div class="col-md-3" style="padding: 0;">
+        <!-- Sidebar -->
+        <nav class="navbar navbar-default sidebar_user" id="sidebar-wrapper" role="navigation">
+            <ul class="nav sidebar-nav">
+                <li class="sidebar-brand" style="text-align: center; font-size: 22px;">
+                    Ctpbee控制台
+                </li>
+                <li>
+                    <a href="#" onclick="switch_action('account')"><i class="fa fa-fw fa-home"></i>账户</a>
+                </li>
+                <li>
+                    <a href="#"><i class="fa fa-fw fa-folder" onclick="switch_action('account')"></i>行情</a>
+                </li>
+                <li>
+                    <a href="#"><i class="fa fa-fw fa-file-o"></i>策略</a>
+                </li>
+                <li>
+                    <a href="#"><i class="fa fa-fw fa-cog"></i>回测</a>
+                </li>
+                <li>
+                    <a href="#"><i class="fa fa-fw fa-bank"></i>下单</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    <div class="col-md-9 iframeBox" style="padding: 0;">
+        <iframe id="iframe_instance" src="{{url_for('account')}}" height="100%" width="100%" frameborder="0"
+                scrolling="0">
+        </iframe>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block script%}
+<script>
+    // 设置高度
+    var height = $(window).height() - 51;
+    $("#main").css('height', height);
+    $(".sidebar_user").css('height', height);
+    $(".iframeBox").css('height', height);
+
+    function switch_action(title) {
+        console.log(title);
+
+        var mapd = {
+            "account": "{{ url_for('account') }}"
+        };
+        console.log(mapd[title])
+        console.log(mapd)
+        $("#iframe_instance").attr("src", mapd[title]);
+    }
+
+</script>
+
+{% endblock%}

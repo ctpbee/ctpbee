@@ -459,7 +459,7 @@ class CancelRequest:
 
 
 @dataclass
-class SharedData:
+class SharedData(BaseData):
     local_symbol: str
     datatime: datetime
 

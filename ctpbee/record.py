@@ -64,6 +64,8 @@ class Recorder(object):
         self.logs[self.get_local_time()] = event.data
         if self.app.config.get("LOG_OUTPUT"):
             print(self.get_local_time() + ": ", event.data)
+        for value in self.app.extensions.values():
+            value(event)
 
     def process_bar_event(self, event: Event):
         self.bar[event.data.local_symbol] = event.data

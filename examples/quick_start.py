@@ -1,8 +1,6 @@
-from time import sleep
-
-from ctpbee import CtpBee, helper
+from ctpbee import CtpBee
 from ctpbee import ExtAbstract
-from ctpbee.constant import PositionData, AccountData
+from ctpbee.constant import PositionData, AccountData, LogData
 
 
 class DataRecorder(ExtAbstract):
@@ -37,6 +35,7 @@ class DataRecorder(ExtAbstract):
 
     def on_tick(self, tick):
         """tick process function"""
+        # print(tick._to_dict())
         pass
 
     def on_bar(self, bar):
@@ -53,8 +52,11 @@ class DataRecorder(ExtAbstract):
         pass
 
     def on_shared(self, shared):
-        """process shared function"""
-        # print(shared)
+        """ 处理分时图数据 """
+        pass
+
+    def on_log(self, log: LogData):
+        """ 可以用于将log信息推送到外部 """
         pass
 
 

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block head %}
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>Minimal and Clean Sign up / Login and Forgot Form by FreeHTML5.co</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Free HTML5 Template by FreeHTML5.co"/>
+<meta name="keywords" content="free html5, free template, free bootstrap, html5, css3, mobile first, responsive"/>
+
+
+<!-- Facebook and Twitter integration -->
+<meta property="og:title" content=""/>
+<meta property="og:image" content=""/>
+<meta property="og:url" content=""/>
+<meta property="og:site_name" content=""/>
+<meta property="og:description" content=""/>
+<meta name="twitter:title" content=""/>
+<meta name="twitter:image" content=""/>
+<meta name="twitter:url" content=""/>
+<meta name="twitter:card" content=""/>
+
+
+{% endblock%}
+
+
+{% block body %}
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <ul class="menu">
+                <li></li>
+            </ul>
+        </div>
+    </div>
+    <div class="row" id="form_box">
+        <div class="col-md-4">
+
+
+            <!-- Start Sign In Form -->
+            <form action="{{ url_for('login') }}" method="post" class="fh5co-form animate-box"
+                  data-animate-effect="fadeIn">
+                <h2>C<span style="text-transform:lowercase">tpbee</span>账户登录 </h2>
+                <div class="form-group">
+                    <label for="userid" class="sr-only">userid</label>
+                    <input type="text" class="form-control" name="userid" id="userid" placeholder="用户名/username" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="password" class="sr-only">Password</label>
+                    <input type="password" class="form-control" name="password" id="password" placeholder="账户密码/password"
+                           autocomplete="on">
+                </div>
+
+                <div class="form-group">
+                    <label for="brokerid" class="sr-only">brokerid</label>
+                    <input type="text" class="form-control" name="brokerid" id="brokerid" placeholder="期货公司编号/brokerid"
+                           autocomplete="on">
+                </div>
+                <div class="form-group">
+                    <label for="appid" class="sr-only">appid</label>
+                    <input type="text" class="form-control" name="appid" id="appid" placeholder="产品名称/appid" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="auth_code" class="sr-only">auth_code</label>
+                    <input type="text" class="form-control" name="auth_code" id="auth_code" placeholder="认证码/auth_code"
+                           autocomplete="on">
+                </div>
+
+                <div class="form-group">
+                    <label for="td_address" class="sr-only">交易前置</label>
+                    <input type="text" class="form-control" name="td_address" id="td_address" placeholder="交易前置/td_address"
+                           autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label for="md_address" class="sr-only">行情前置</label>
+                    <input type="text" class="form-control" name="md_address" id="md_address" placeholder="行情前置/md_address"
+                           autocomplete="on">
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">登录</button>
+                </div>
+            </form>
+            <!-- END Sign In Form -->
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+

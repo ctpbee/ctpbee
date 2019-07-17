@@ -4,14 +4,14 @@
 
 """
 from datetime import time
-from functools import wraps
 from typing import Text
 
 from ctpbee.constant import \
     (OrderRequest, CancelRequest, EVENT_TRADE, EVENT_SHARED, EVENT_ORDER,
      OrderData, TradeData, PositionData, AccountData, TickData, SharedData,
      BarData, EVENT_POSITION, EVENT_ACCOUNT, EVENT_TICK, EVENT_BAR, EVENT_CONTRACT, ContractData, Direction, Exchange,
-     Offset, OrderType, AccountRegisterRequest, AccountBanlanceRequest, TransferRequest, TransferSerialRequest)
+     Offset, OrderType, AccountRegisterRequest, AccountBanlanceRequest, TransferRequest, TransferSerialRequest, LogData,
+     EVENT_LOG)
 from ctpbee.context import current_app
 from ctpbee.context import get_app
 from ctpbee.event_engine import Event
@@ -116,6 +116,9 @@ class ExtAbstract(object):
     def on_contract(self, contract: ContractData):
         raise NotImplemented
 
+    def on_log(self, log: LogData):
+        raise NotImplemented
+
     def init_app(self, app):
         if app is not None:
             self.app = app
@@ -136,6 +139,7 @@ class ExtAbstract(object):
             EVENT_POSITION: cls.on_position,
             EVENT_ACCOUNT: cls.on_account,
             EVENT_CONTRACT: cls.on_contract,
+            EVENT_LOG: cls.on_log
 
         }
         parmeter = {
@@ -146,7 +150,8 @@ class ExtAbstract(object):
             EVENT_ORDER: EVENT_ORDER,
             EVENT_SHARED: EVENT_SHARED,
             EVENT_ACCOUNT: EVENT_ACCOUNT,
-            EVENT_CONTRACT: EVENT_CONTRACT
+            EVENT_CONTRACT: EVENT_CONTRACT,
+            EVENT_LOG: EVENT_LOG
         }
 
         setattr(cls, "map", map)
@@ -186,6 +191,8 @@ class Helper():
     def generate_order_req_by_str(cls, symbol: str, exchange: str, direction: str, offset: str, type: str, volume,
                                   price):
         """ 手动构造发单请求"""
+        if "." in symbol:
+            symbol = symbol.split(".")[1]
 
         return OrderRequest(exchange=cls.exchange_map.get(exchange.upper()), symbol=symbol,
                             direction=cls.direction_map.get(direction.upper()),
@@ -194,21 +201,27 @@ class Helper():
 
     @classmethod
     def generate_order_req_by_var(cls, symbol: str, exchange: Exchange, direction: Direction, offset: Offset,
-                                  type: OrderType, volume,
-                                  price):
+                                  type: OrderType, volume, price):
+        if "." in symbol:
+            symbol = symbol.split(".")[1]
         return OrderRequest(symbol=symbol, exchange=exchange, direction=direction, offset=offset, type=type,
                             volume=volume, price=price)
 
     @classmethod
     def generate_cancle_req_by_str(cls, symbol: str, exchange: str, order_id: str):
+        if "." in symbol:
+            symbol = symbol.split(".")[1]
         return CancelRequest(symbol=symbol, exchange=cls.exchange_map.get(exchange), order_id=order_id)
 
     @classmethod
     def generate_cancle_req_by_var(cls, symbol: str, exchange: Exchange, order_id: str):
+        if "." in symbol:
+            symbol = symbol.split(".")[1]
         return CancelRequest(symbol=symbol, exchange=exchange, order_id=order_id)
 
     @classmethod
     def generate_ac_register_req(cls, bank_id, currency_id="CNY"):
+
         return AccountRegisterRequest(bank_id=bank_id, currency_id=currency_id)
 
     @classmethod
@@ -251,4 +264,3 @@ def auth_time(data_time: time):
     if data_time <= NIGHT_END:
         return True
     return False
-

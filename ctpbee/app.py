@@ -134,6 +134,8 @@ class CtpBee(object):
     @check(type="market")
     def subscribe(self, symbol: AnyStr):
         """订阅行情"""
+        if "." in symbol:
+            symbol = symbol.split(".")[1]
         return self.market.subscribe(symbol)
 
     @check(type="trader")

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block body%}
+<div class="container">
+
+    <div style="margin: 10px; padding: 10px;">
+        <h2>基本账户信息 </h2>
+        <div id="main">
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}
+
+
+{% block script %}
+<script>
+    account_data = localStorage.getItem("account");
+
+    function create_table(data, id) {
+        data = '<table class="table">' + '<th>key</th> <th>value>';
+        for (key in data) {
+            data += "<tr>" + +"<td>" + key + "</td>" + "<td>" + data[key] + "</td>" + "</tr>"
+        }
+        $("#main").innerHTML = data;
+    }
+
+</script>
+
+
+{% endblock %}
