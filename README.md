@@ -48,7 +48,9 @@ pip3 install ctpbee
 5. 自由自在的发单方式
 6. 多账户支持
 7. 支持申请穿透式接口
-
+8. 快速下单助手
+9. 风控层建立
+9. 客户端
 ## 快速开始 
 ```python
 from ctpbee import CtpBee
@@ -73,13 +75,11 @@ app.start()
 
 ## 等待完成 
 - 优化代码
-- 创建实例 --> 包括一个 web client --> 即将以ctpbee_client发布
-- 快速下单助手
 - 策略层对接CTA  --> 即将以[ctpbee_cta](https://github.com/somewheve/ctpbee_cta) 
 - 跟单信号 
 - 回测系统搭建 
 - 多路行情对比
-- 风控层建立
+
 
 - 再立个flag, 暑假结束之前一定推出1.0正式版！
 
