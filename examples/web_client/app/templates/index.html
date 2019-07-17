@@ -54,7 +54,7 @@
                     <a href="#" onclick="switch_action('account')"><i class="fa fa-fw fa-home"></i>账户</a>
                 </li>
                 <li>
-                    <a href="#"><i class="fa fa-fw fa-folder" onclick="switch_action('account')"></i>行情</a>
+                    <a href="#" onclick="switch_action('market')"><i class="fa fa-fw fa-folder" ></i>行情</a>
                 </li>
                 <li>
                     <a href="#"><i class="fa fa-fw fa-file-o"></i>策略</a>
@@ -87,16 +87,26 @@
     $(".iframeBox").css('height', height);
 
     function switch_action(title) {
-        console.log(title);
-
         var mapd = {
-            "account": "{{ url_for('account') }}"
+            "account": "{{ url_for('account') }}",
+            "market":"{{ url_for('market') }}"
         };
-        console.log(mapd[title])
-        console.log(mapd)
         $("#iframe_instance").attr("src", mapd[title]);
     }
 
 </script>
+<script src="{{ url_for('static', filename='js/socket.io.js')}}"></script>
+<script>
+    var socket = io.connect('http://localhost:5000');
+    socket.on('contract', function (data) {
+        console.log("I have receieve contract");
+        console.log(data)
+    });
 
-{% endblock%}
+    socket.on("account", function (data) {
+        console.log("正在查账户数据");
+        // console.log(JSON.stringify(data['data']));
+        localStorage.setItem("account", JSON.stringify(data['data']))
+    })
+</script>
+{%endblock %}

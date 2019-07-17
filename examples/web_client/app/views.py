@@ -1,3 +1,6 @@
+from threading import Thread
+from time import sleep
+
 from flask import request, render_template, url_for, redirect
 from flask.views import MethodView
 
@@ -6,9 +9,13 @@ from ctpbee import helper
 from .default_settings import DefaultSettings, true_response, false_response
 from .ext import io
 
+is_send = True
+
+
 class AccountView(MethodView):
     def get(self):
         return render_template("account.html")
+
 
 class LoginView(MethodView):
     def get(self):
@@ -26,11 +33,28 @@ class LoginView(MethodView):
         app.config.from_mapping(login_info)
         default = DefaultSettings("default_settings", app, io)
         app.start()
+
+        def run(app: CtpBee):
+            while True:
+                app.query_position()
+                sleep(1)
+                app.query_account()
+                sleep(1)
+
+        p = Thread(target=run, args=(app,))
+        p.start()
         return redirect(url_for("index"))
 
 
 class IndexView(MethodView):
     def get(self):
+        from .default_settings import contract_list
+        global is_send
+        if is_send:
+            sleep(1)
+            io.emit("contract", contract_list)
+            print("发送emit", contract_list)
+            is_send = False
         return render_template("index.html")
 
 
@@ -39,6 +63,9 @@ class MarketView(MethodView):
         symbol = request.values.get("symbol")
         current_app.subscribe(symbol)
         return true_response(message="订阅成功")
+
+    def get(self):
+        return render_template("market.html")
 
 
 class OrderView(MethodView):

@@ -1,5 +1,7 @@
 import platform
+
 from setuptools import Extension, setup
+
 runtime_library_dir = []
 
 if platform.uname().system == "Windows":
@@ -111,7 +113,7 @@ else:
 
 pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.interface',
         'ctpbee.event_engine', 'ctpbee.interface.ctp']
-install_requires = ['flask', "blinker", "dataclasses"]
+install_requires = ['flask', "blinker", "dataclasses", "flask_socketio"]
 setup(
     name='ctpbee',
     version='0.19',

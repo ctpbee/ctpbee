@@ -1,9 +1,18 @@
 {% extends "base.html" %}
 
-{% block body%}
-<div class="container">
+{% block head %}
+<style>
+    #center {
+        margin: 10px;
+        padding: 10px;
+    }
 
-    <div style="margin: 10px; padding: 10px;">
+</style>
+{% endblock %}
+
+{% block body%}
+<div class="container" onload="">
+    <div id="center">
         <h2>基本账户信息 </h2>
         <div id="main">
         </div>
@@ -14,20 +23,26 @@
 
 {% endblock %}
 
-
 {% block script %}
 <script>
-    account_data = localStorage.getItem("account");
 
-    function create_table(data, id) {
-        data = '<table class="table">' + '<th>key</th> <th>value>';
-        for (key in data) {
-            data += "<tr>" + +"<td>" + key + "</td>" + "<td>" + data[key] + "</td>" + "</tr>"
+    function create_table() {
+        var account_data = JSON.parse(localStorage.getItem("account"));
+        data = '<table class="table table-bordered">' + '<th>key</th> <th>value' + '</th>';
+        for (key in account_data) {
+            console.log(key);
+            data += "<tr>" + "<td>" + key + "</td>" + "<td>" + account_data[key] + "</td>" + "</tr>"
         }
-        $("#main").innerHTML = data;
+        data += "</table>";
+        $("#main").html(data);
     }
-
+    create_table()
 </script>
 
 
 {% endblock %}
+
+
+{%block footer %}
+
+{%endblock%}

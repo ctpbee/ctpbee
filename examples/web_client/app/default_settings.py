@@ -1,10 +1,14 @@
+
 from flask import make_response
 from flask_socketio import SocketIO
+
 
 from ctpbee import ExtAbstract
 from ctpbee.constant import LogData, AccountData, ContractData, BarData, OrderData, PositionData, TickData, SharedData, \
     TradeData
 
+
+contract_list = []
 
 class DefaultSettings(ExtAbstract):
 
@@ -17,63 +21,65 @@ class DefaultSettings(ExtAbstract):
             "type": "log",
             "data": log
         }
-        self.io.send(data)
+        self.io.emit('log', data)
 
     def on_account(self, account: AccountData) -> None:
         data = {
             "type": "account",
             "data": account._to_dict()
         }
-        self.io.send(data)
+        self.io.emit('account', data)
 
     def on_contract(self, contract: ContractData):
         data = {
             "type": "contract",
             "data": contract._to_dict()
         }
-        self.io.send(data)
+        global contract_list
+        contract_list.append(contract.symbol)
+        self.io.emit('contract', data)
 
     def on_bar(self, bar: BarData) -> None:
         data = {
             "type": "bar",
             "data": bar._to_dict()
         }
-        self.io.send(data)
+        self.io.emit('bar', data)
 
     def on_order(self, order: OrderData) -> None:
         data = {
             "type": "order",
             "data": order._to_dict()
         }
-        self.io.send(data)
+        self.io.emit("order", data)
 
     def on_position(self, position: PositionData) -> None:
         data = {
             "type": "position",
             "data": self.app.recorder.get_all_positions()
         }
-        self.io.send(data)
+        self.io.emit("position", data)
 
     def on_tick(self, tick: TickData) -> None:
         data = {
             "type": "tick",
             "data": tick._to_dict()
         }
-        self.io.send(data)
+        self.io.emit("tick", data)
 
     def on_shared(self, shared: SharedData) -> None:
         data = {
             "type": "shared",
             "data": shared._to_dict()
         }
-        self.io.send(data)
+        self.io.emit('shared', data)
 
     def on_trade(self, trade: TradeData) -> None:
         data = {
             "type": "trade",
             "data": trade._to_dict()
         }
-        self.io.send(data)
+        self.io.emit('trade', data)
 
 
 def true_response(data="", message="操作成功执行"):
