@@ -1,6 +1,9 @@
 # ctpbee 
 bee bee .... there is an industrious bee created ~~
 
+
+![ctpbee](https://github.com/somewheve/ctpbee/blob/master/docs/source/ctpbee.jpg)
+
 ctpbee 提供了一个可供使用的微框架, 你可以通过这个微小的核心来构建值得信赖的工具， 
 当然这需要你的编程功力。 你所需要关心的是如何编程来处理行情和交易信息即可。
 
@@ -12,6 +15,7 @@ sudo locale-gen zh_CN.GB18030
 ## 起源
 
 - 衍生自 [vnpy](https://github.com/vnpy/vnpy) 和 [flask](https://github.com/pallets/flask)  
+
 
 
 ## 安装 
