@@ -1,14 +1,12 @@
-
 from flask import make_response
 from flask_socketio import SocketIO
-
 
 from ctpbee import ExtAbstract
 from ctpbee.constant import LogData, AccountData, ContractData, BarData, OrderData, PositionData, TickData, SharedData, \
     TradeData
 
-
 contract_list = []
+
 
 class DefaultSettings(ExtAbstract):
 
@@ -31,15 +29,11 @@ class DefaultSettings(ExtAbstract):
         self.io.emit('account', data)
 
     def on_contract(self, contract: ContractData):
-        data = {
-            "type": "contract",
-            "data": contract._to_dict()
-        }
         global contract_list
         contract_list.append(contract.symbol)
-        self.io.emit('contract', data)
 
     def on_bar(self, bar: BarData) -> None:
+        bar.datetime = str(bar)
         data = {
             "type": "bar",
             "data": bar._to_dict()
@@ -61,6 +55,7 @@ class DefaultSettings(ExtAbstract):
         self.io.emit("position", data)
 
     def on_tick(self, tick: TickData) -> None:
+        tick.datetime = str(tick.datetime)
         data = {
             "type": "tick",
             "data": tick._to_dict()
@@ -68,6 +63,7 @@ class DefaultSettings(ExtAbstract):
         self.io.emit("tick", data)
 
     def on_shared(self, shared: SharedData) -> None:
+        shared.datetime = str(shared.datetime)
         data = {
             "type": "shared",
             "data": shared._to_dict()

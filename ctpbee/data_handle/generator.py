@@ -69,7 +69,7 @@ class DataGenerator:
             [self.update_bar(x, getattr(self, "min_{}_bar".format(x)), self.bar) for x in self.XMIN]
             new_minute = True
         if new_minute:
-            shared = SharedData(last_price=round(self.last_price, 2), datatime=tick.datetime, local_symbol=self.local_symbol,
+            shared = SharedData(last_price=round(self.last_price, 2), datetime=tick.datetime, local_symbol=self.local_symbol,
                                 open_interest=self.open_interest, average_price=round(self.average_price, 2),
                                 volume=self.volume - self.last_volume, gateway_name=tick.gateway_name)
             self.last_volume = tick.volume

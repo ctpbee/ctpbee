@@ -25,12 +25,10 @@
 
 {% block script %}
 <script>
-
     function create_table() {
         var account_data = JSON.parse(localStorage.getItem("account"));
         data = '<table class="table table-bordered">' + '<th>key</th> <th>value' + '</th>';
         for (key in account_data) {
-            console.log(key);
             data += "<tr>" + "<td>" + key + "</td>" + "<td>" + account_data[key] + "</td>" + "</tr>"
         }
         data += "</table>";

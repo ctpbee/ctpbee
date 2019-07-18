@@ -52,8 +52,8 @@ class IndexView(MethodView):
         global is_send
         if is_send:
             sleep(1)
-            io.emit("contract", contract_list)
-            print("发送emit", contract_list)
+            if len(contract_list) != 0:
+                io.emit("contract", contract_list)
             is_send = False
         return render_template("index.html")
 
@@ -61,8 +61,13 @@ class IndexView(MethodView):
 class MarketView(MethodView):
     def post(self):
         symbol = request.values.get("symbol")
-        current_app.subscribe(symbol)
-        return true_response(message="订阅成功")
+        try:
+            current_app.subscribe(symbol)
+            return true_response(message="订阅成功")
+        except Exception:
+            return false_response(message="订阅失败")
+
+
 
     def get(self):
         return render_template("market.html")
@@ -101,3 +106,7 @@ class OrderView(MethodView):
             return true_response(message="成功撤单")
         except Exception:
             return false_response(message="撤单失败")
+
+    def get(self):
+
+        return render_template("send_order.html")

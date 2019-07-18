@@ -4,17 +4,29 @@
 {% block body %}
 
 <div class="row">
-    <div class="col-md-8"></div>
+    <div class="col-md-7 ">
+        <div class="container">
+            <h2>订阅列表</h2>
+
+            <div id="main"></div>
+        </div>
+    </div>
+    <div class="col-md-1">
+
+        
+    </div>
     <div class="col-md-4">
         <div class="fh5co-form animate-box">
             <div class="form-group">
                 <title>Password</title>
             </div>
             <div class="form-group">
-                <input type="text" class="form-control" name="userid" id="userid" placeholder="订阅代码" autocomplete="off">
+                <input type="text" class="form-control" list="input_list" name="symbol" id="symbol" placeholder="订阅代码"
+                       autocomplete="off">
+                <datalist id="input_list"></datalist>
             </div>
             <div class="form-group">
-                <button type="submit" class="btn btn-primary">订阅单个</button>
+                <button type="submit" class="btn btn-primary" onclick="subscribe_single()">订阅单个</button>
                 <button type="submit" class="btn btn-primary">订阅所有</button>
             </div>
         </div>
@@ -25,5 +37,80 @@
 
 
 {%block footer %}
+
+{%endblock%}
+
+{%block script %}
+<script>
+    function inputList(input, list) {
+        var contract_list = JSON.parse(localStorage.getItem("contract_list"));
+        input.bind('input propertychange', function () {
+            var key = input.val();
+            result = [];
+            for (var i = 0; i < contract_list.length; i++) {
+                contract_symbol = contract_list[i];
+                if (contract_symbol.indexOf(key) != -1) {//因为indexof找不到的时候是一律为-1，所以直接判断是否为-1，不是就弹出这个值
+                    result.push(contract_symbol);//将值放入第二个数组
+                }
+            }
+            var html = "";
+            for (var temp = 0; temp < result.length; temp++) {
+                html += '<option value="' + result[temp] + '"></option>';
+            }
+            list.html(html);
+            result = [];//清空数组，否则第二次查询时会因为有是全局变
+        });
+    }
+    inputList($("input"), $("#input_list"));
+    function subscribe_single() {
+        var subscribed_symbol = $("#symbol").val();
+        $.ajax({
+            url: "{{ url_for('market')}}",
+            method: "post",
+            dataType: "json",
+            data: {"symbol": subscribed_symbol},
+            success: function (data) {
+                console.log(data['message']);
+            },
+            error: function (error) {
+                alert("服务器开小差了 ,请前往社区寻求帮助");
+            }
+        });
+        $("#symbol").val("")
+    }
+
+
+</script>
+
+<script>
+    window.onload = function () {
+        var tick_realtime = JSON.parse(localStorage.getItem("tick_realtime"));
+        data = '<table class="table table-bordered">' + '<th>中文名</th><th>品种</th> <th>最新行情' + '</th>' + "<th> 操作 </th>";
+        for (var key in tick_realtime) {
+            data += "<tr>" +"<td>" + tick_realtime[key]["name"]+ "</td>" + "<td>" + key + "</td>" + "<td>" + tick_realtime[key]["last_price"] + "</td>" + "<td>" + "<a href='#'>前往下单</a>" + "</td>" + "</tr>";
+        }
+        data += "</table>";
+        $("#main").html(data);
+    };
+    socket.on("tick", function (data) {
+        // 收到tick --- > 更新到本地的tick缓存上面去
+        var tick = data['data'];
+        // 更新到本地缓存进去
+        var tick_realtime = JSON.parse(localStorage.getItem("tick_realtime"));
+        if (tick_realtime == null) {
+            tick_realtime = {};
+        }
+        tick_realtime[tick.symbol] = tick;
+        // 更新之后 先渲染图表
+        data = '<table class="table table-bordered">' + '<th>中文名</th><th>品种</th> <th>最新行情' + '</th>' + "<th> 操作 </th>";
+        for (var key in tick_realtime) {
+            data += "<tr>" +"<td>" + tick_realtime[key]["name"]+ "</td>" + "<td>" + key + "</td>" + "<td>" + tick_realtime[key]["last_price"] + "</td>" + "<td>" + "<a href='#'>前往下单</a>" + "</td>" + "</tr>";
+        }
+        data += "</table>";
+        $("#main").html(data);
+        localStorage.setItem("tick_realtime", JSON.stringify(tick_realtime));
+    })
+
+</script>
 
 {%endblock%}

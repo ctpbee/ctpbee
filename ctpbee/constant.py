@@ -461,7 +461,7 @@ class CancelRequest:
 @dataclass
 class SharedData(BaseData):
     local_symbol: str
-    datatime: datetime
+    datetime: datetime
 
     open_interest: int = 0
     volume: float = 0

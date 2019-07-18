@@ -115,7 +115,7 @@ class DataRecorder(ExtAbstract):
                 # self.rd.set(vt, dumps([]))
             print("恢复数据")
             self.recover = True
-        if not auth_time(shared.datatime.time()):
+        if not auth_time(shared.datetime.time()):
             """过滤非法"""
             return
         try:
@@ -123,7 +123,7 @@ class DataRecorder(ExtAbstract):
                 self.shared_data[shared.vt_symbol] = list()
             else:
                 self.shared_data[shared.vt_symbol].append(
-                    [shared.datatime.strftime("%H:%M"), shared.last_price, shared.average_price, shared.volume,
+                    [shared.datetime.strftime("%H:%M"), shared.last_price, shared.average_price, shared.volume,
                      shared.open_interest])
         except AttributeError:
             print(shared.__dict__)

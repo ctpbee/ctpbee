@@ -32,19 +32,25 @@
             font-family: monaco;
         url("{{ url_for('static', filename='fonts/YaHeiMonacoHybrid.ttf') }}")format('truetype');
         }
-        html{
+
+        html {
             height: 100%;
         }
+
         body {
             font-family: monaco;
             min-height: 100%;
             display: flex;
             flex-direction: column;
         }
-        .copyright_footer{
+
+        .copyright_footer {
             width: 100%;
         }
-        .wrap{flex: 1;}
+
+        .wrap {
+            flex: 1;
+        }
     </style>
 
     {% block head %}
@@ -57,7 +63,6 @@
 
     {% endblock%}
 </div>
-
 
 
 {% block footer %}
@@ -82,12 +87,17 @@
 <script src='{{ url_for("static", filename="js/jquery.waypoints.min.js") }}'></script>
 <!-- Main JS -->
 <script src='{{ url_for("static", filename="js/main.js") }}'></script>
-
-
+<!--  Socket.io.js -->
+<script src="{{ url_for('static', filename='js/socket.io.js')}}"></script>
+<script>
+    var socket = io.connect('http://localhost:5000');
+    socket.on('contract', function (data) {
+        console.log("I have receieve contract");
+        localStorage.setItem("contract_list", JSON.stringify(data));
+    });
+</script>
 {% block script %}
 
 {% endblock%}
-
-
 </body>
 </html>

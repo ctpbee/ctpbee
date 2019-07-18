@@ -7,7 +7,7 @@
     }
 
     .sidebar_user {
-        background-color: #f5f5f5;
+        /*background-color: #f5f5f5;*/
     }
 
     nav {
@@ -16,6 +16,30 @@
 
     ul {
         text-align: center;
+    }
+
+    ul.sidebar-nav a {
+        color: #33cccc;
+        /*font-weight: ;*/
+        font-size: 20px;
+    }
+
+    .li_active {
+        background-image: url("{{ url_for('static', filename='picture/sidebar.jpeg') }}");
+        background-size: 100%;
+        background-position: 15px 170px;
+    }
+
+    #sidebar_ul li:hover, #sidebar_ul li:active {
+        background-image: url("{{ url_for('static', filename='picture/sidebar.jpeg') }}") !important;
+        /*background-size: 100%;*/
+        /*background-position: 15px 170px;*/
+    }
+
+    #sidebar_ul li a:hover, #sidebar_ul li a:active {
+        background-image: url("{{ url_for('static', filename='picture/sidebar.jpeg') }}") !important;
+        /*background-size: 100%;*/
+        /*background-position: 16px 170px;*/
     }
 </style>
 
@@ -46,15 +70,15 @@
     <div class="col-md-3" style="padding: 0;">
         <!-- Sidebar -->
         <nav class="navbar navbar-default sidebar_user" id="sidebar-wrapper" role="navigation">
-            <ul class="nav sidebar-nav">
-                <li class="sidebar-brand" style="text-align: center; font-size: 22px;">
+            <ul class="nav sidebar-nav" id="sidebar_ul">
+                <p class="sidebar-brand" style="text-align: center; font-size: 22px;line-height: 60px">
                     Ctpbee控制台
-                </li>
-                <li>
+                </p>
+                <li class="li_active">
                     <a href="#" onclick="switch_action('account')"><i class="fa fa-fw fa-home"></i>账户</a>
                 </li>
                 <li>
-                    <a href="#" onclick="switch_action('market')"><i class="fa fa-fw fa-folder" ></i>行情</a>
+                    <a href="#" onclick="switch_action('market')"><i class="fa fa-fw fa-folder"></i>行情</a>
                 </li>
                 <li>
                     <a href="#"><i class="fa fa-fw fa-file-o"></i>策略</a>
@@ -63,7 +87,7 @@
                     <a href="#"><i class="fa fa-fw fa-cog"></i>回测</a>
                 </li>
                 <li>
-                    <a href="#"><i class="fa fa-fw fa-bank"></i>下单</a>
+                    <a href="#" onclick="switch_action('order')"><i class="fa fa-fw fa-bank"></i>下单</a>
                 </li>
             </ul>
         </nav>
@@ -80,6 +104,10 @@
 
 {% block script%}
 <script>
+    $("#sidebar_ul>li").click(function () {
+        $(this).addClass("li_active").siblings().removeClass("li_active");
+
+    });
     // 设置高度
     var height = $(window).height() - 51;
     $("#main").css('height', height);
@@ -89,24 +117,18 @@
     function switch_action(title) {
         var mapd = {
             "account": "{{ url_for('account') }}",
-            "market":"{{ url_for('market') }}"
+            "market": "{{ url_for('market') }}",
+            "order": "{{ url_for('order_request') }}"
         };
         $("#iframe_instance").attr("src", mapd[title]);
     }
 
-</script>
-<script src="{{ url_for('static', filename='js/socket.io.js')}}"></script>
-<script>
-    var socket = io.connect('http://localhost:5000');
-    socket.on('contract', function (data) {
-        console.log("I have receieve contract");
-        console.log(data)
+    socket.on("account", function (data) {
+        // console.log("data", data, "index");
+        localStorage.setItem("account", JSON.stringify(data['data']))
     });
 
-    socket.on("account", function (data) {
-        console.log("正在查账户数据");
-        // console.log(JSON.stringify(data['data']));
-        localStorage.setItem("account", JSON.stringify(data['data']))
-    })
+
 </script>
+
 {%endblock %}
