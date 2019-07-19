@@ -153,7 +153,6 @@ class ExtAbstract(object):
             EVENT_CONTRACT: EVENT_CONTRACT,
             EVENT_LOG: EVENT_LOG
         }
-
         setattr(cls, "map", map)
         setattr(cls, "parmeter", parmeter)
 

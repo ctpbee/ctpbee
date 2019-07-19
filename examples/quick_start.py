@@ -1,7 +1,7 @@
 from ctpbee import CtpBee
 from ctpbee import ExtAbstract
 from ctpbee.constant import PositionData, AccountData, LogData
-
+from ctpbee import dumps, loads
 
 class DataRecorder(ExtAbstract):
     def __init__(self, name, app=None):
@@ -36,7 +36,8 @@ class DataRecorder(ExtAbstract):
     def on_tick(self, tick):
         """tick process function"""
         # print(tick._to_dict())
-        pass
+        print(tick)
+
 
     def on_bar(self, bar):
         """bar process function"""
@@ -82,10 +83,10 @@ def go():
             "userid": "089131",
             "password": "350888",
             "brokerid": "9999",
-            # "md_address": "tcp://180.168.146.187:10131",
-            # "td_address": "tcp://180.168.146.187:10130",
-            "md_address": "tcp://218.202.237.33:10112",
-            "td_address": "tcp://218.202.237.33:10102",
+            "md_address": "tcp://180.168.146.187:10131",
+            "td_address": "tcp://180.168.146.187:10130",
+            # "md_address": "tcp://218.202.237.33:10112",
+            # "td_address": "tcp://218.202.237.33:10102",
             "product_info": "",
             "appid": "simnow_client_test",
             "auth_code": "0000000000000000",

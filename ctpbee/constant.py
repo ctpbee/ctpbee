@@ -2,7 +2,7 @@
 Basic data structure used for general trading function in VN Trader.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import datetime
 from enum import Enum
 from logging import INFO
@@ -143,7 +143,7 @@ EVENT_ACCOUNT = "account"
 EVENT_SHARED = "shared"
 
 
-@dataclass
+@dataclass(init=False, repr=False)
 class BaseData:
     """
     Any data object needs a gateway_name as source
@@ -153,11 +153,39 @@ class BaseData:
     gateway_name: str
     iterable_count = 0
 
-    def _serialize(self, **kwargs):
-        for key, value in kwargs.items():
+    def __new__(cls, **kwargs):
+        args = super().__new__(cls)
+        setattr(args, "__name__", cls.__name__)
+        return args
+
+    def __init__(self, **mapping):
+        for key, value in mapping.items():
+            setattr(self, key, value)
+        if hasattr(self, "__post_init__"):
+            self.__post_init__()
+
+    def __repr__(self):
+        mat = []
+        for key in dir(self):
+            if key.startswith("_"):
+                continue
+            mat.append(f" {key}={getattr(self, key)}, ")
+        return f"{self.__name__}({''.join(mat)})"
+
+    @classmethod
+    def _create_class(cls, kwargs: dict):
+        """ 根据字典值创建类 """
+        args = super().__new__(cls)
+        args.__init__(**kwargs)
+        setattr(args, "__name__", cls.__name__)
+        return args
+
+    def _serialize(self, data):
+        for key, value in data:
             setattr(self, key, value)
 
     def _to_dict(self) -> dict:
+        """ 转换enum为value的字典 """
         temp = {}
         for x in dir(self):
             if x.startswith("_"):
@@ -168,8 +196,11 @@ class BaseData:
             temp[x] = getattr(self, x)
         return temp
 
+    def _asdict(self):
+        """ 转换为字典 里面会有enum """
+        return asdict(self)
 
-@dataclass
+
 class TickData(BaseData):
     """
     Tick data contains information about:
@@ -181,7 +212,6 @@ class TickData(BaseData):
     symbol: str
     exchange: Any
     datetime: datetime
-
     name: str = ""
     volume: float = 0
     last_price: float = 0
@@ -225,7 +255,6 @@ class TickData(BaseData):
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
-@dataclass
 class BarData(BaseData):
     """
     Candlestick bar data of a certain trading period.
@@ -246,7 +275,6 @@ class BarData(BaseData):
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
-@dataclass
 class OrderData(BaseData):
     """
     Order data contains information for tracking lastest status
@@ -289,7 +317,6 @@ class OrderData(BaseData):
         return req
 
 
-@dataclass
 class TradeData(BaseData):
     """
     Trade data contains information of a fill of an order. One order
@@ -314,7 +341,6 @@ class TradeData(BaseData):
         self.local_trade_id = f"{self.gateway_name}.{self.tradeid}"
 
 
-@dataclass
 class PositionData(BaseData):
     """
     Positon data is used for tracking each individual position holding.
@@ -336,7 +362,6 @@ class PositionData(BaseData):
         self.local_position_id = f"{self.local_symbol}.{self.direction}"
 
 
-@dataclass
 class AccountData(BaseData):
     """
     Account data contains information about balance, frozen and
@@ -354,7 +379,6 @@ class AccountData(BaseData):
         self.local_account_id = f"{self.gateway_name}.{self.accountid}"
 
 
-@dataclass
 class LogData(BaseData):
     """
     Log data is used for recording log messages on GUI or in log files.
@@ -368,7 +392,6 @@ class LogData(BaseData):
         self.time = datetime.now()
 
 
-@dataclass
 class ContractData(BaseData):
     """
     Contract data contains basic information about each contract traded.
@@ -395,7 +418,6 @@ class ContractData(BaseData):
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
-@dataclass
 class SubscribeRequest:
     """
     Request sending to specific gateway for subscribing tick data update.
@@ -409,7 +431,6 @@ class SubscribeRequest:
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
-@dataclass
 class OrderRequest:
     """
     Request sending to specific gateway for creating a new order.
@@ -445,7 +466,6 @@ class OrderRequest:
         return order
 
 
-@dataclass
 class CancelRequest:
     """
     Request sending to specific gateway for canceling an existing order.
@@ -460,7 +480,6 @@ class CancelRequest:
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
-@dataclass
 class SharedData(BaseData):
     local_symbol: str
     datetime: datetime
@@ -475,7 +494,6 @@ class SharedData(BaseData):
 # https://www.jianshu.com/p/36bfc4a927a4
 
 # 查询银行账号
-@dataclass
 class AccountRegisterRequest:
     bank_id: str = ""
     # bank_branch_id: str = ""
@@ -483,7 +501,6 @@ class AccountRegisterRequest:
 
 
 # 查询银行余额
-@dataclass
 class AccountBanlanceRequest:
     bank_id: str
     # bank_branch_id: str
@@ -494,7 +511,6 @@ class AccountBanlanceRequest:
 
 
 # 证券与银行互转请求
-@dataclass
 class TransferRequest:
     bank_id: str
     # bank_branch_id: str
@@ -508,7 +524,6 @@ class TransferRequest:
     currency_id: str = "CNY"
 
 
-@dataclass
 class TransferSerialRequest:
     """ 查询转账流水 """
     bank_id: str
