@@ -127,6 +127,8 @@ class Interval(Enum):
     WEEKLY = "w"
 
 
+enums = [Interval, Currency, Exchange, OptionType, OrderType, Product, Status, Offset, Direction]
+
 ACTIVE_STATUSES = set([Status.SUBMITTING, Status.NOTTRADED, Status.PARTTRADED])
 
 EVENT_LOG = "log"
