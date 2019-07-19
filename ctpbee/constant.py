@@ -201,6 +201,61 @@ class BaseData:
         return asdict(self)
 
 
+@dataclass(init=False, repr=False)
+class BaseRequest:
+    """
+    Any data object needs a gateway_name as source
+    and should inherit base data.
+    """
+
+    def __new__(cls, **kwargs):
+        args = super().__new__(cls)
+        setattr(args, "__name__", cls.__name__)
+        return args
+
+    def __init__(self, **mapping):
+        for key, value in mapping.items():
+            setattr(self, key, value)
+        if hasattr(self, "__post_init__"):
+            self.__post_init__()
+
+    def __repr__(self):
+        mat = []
+        for key in dir(self):
+            if key.startswith("_"):
+                continue
+            mat.append(f" {key}={getattr(self, key)}, ")
+        return f"{self.__name__}({''.join(mat)})"
+
+    @classmethod
+    def _create_class(cls, kwargs: dict):
+        """ 根据字典值创建类 """
+        args = super().__new__(cls)
+        args.__init__(**kwargs)
+        setattr(args, "__name__", cls.__name__)
+        return args
+
+    def _serialize(self, data):
+        for key, value in data:
+            setattr(self, key, value)
+
+    def _to_dict(self) -> dict:
+        """ 转换enum为value的字典 """
+        temp = {}
+        for x in dir(self):
+            if x.startswith("_"):
+                continue
+            if isinstance(getattr(self, x), Enum):
+                temp[x] = getattr(self, x).value
+                continue
+            temp[x] = getattr(self, x)
+        return temp
+
+    def _asdict(self):
+        """ 转换为字典 里面会有enum """
+        return asdict(self)
+
+
 class TickData(BaseData):
     """
     Tick data contains information about:
@@ -418,7 +473,7 @@ class ContractData(BaseData):
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
-class SubscribeRequest:
+class SubscribeRequest(BaseRequest):
     """
     Request sending to specific gateway for subscribing tick data update.
     """
@@ -431,7 +486,7 @@ class SubscribeRequest:
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
-class OrderRequest:
+class OrderRequest(BaseRequest):
     """
     Request sending to specific gateway for creating a new order.
     """
@@ -466,7 +521,7 @@ class OrderRequest:
         return order
 
 
-class CancelRequest:
+class CancelRequest(BaseRequest):
     """
     Request sending to specific gateway for canceling an existing order.
     """
@@ -494,14 +549,14 @@ class SharedData(BaseData):
 # https://www.jianshu.com/p/36bfc4a927a4
 
 # 查询银行账号
-class AccountRegisterRequest:
+class AccountRegisterRequest(BaseRequest):
     bank_id: str = ""
     # bank_branch_id: str = ""
     currency_id: str = "CNY"
 
 
 # 查询银行余额
-class AccountBanlanceRequest:
+class AccountBanlanceRequest(BaseRequest):
     bank_id: str
     # bank_branch_id: str
     # broker_branch_id: str
@@ -511,7 +566,7 @@ class AccountBanlanceRequest:
 
 
 # 证券与银行互转请求
-class TransferRequest:
+class TransferRequest(BaseRequest):
     bank_id: str
     # bank_branch_id: str
 
@@ -524,7 +579,7 @@ class TransferRequest:
     currency_id: str = "CNY"
 
 
-class TransferSerialRequest:
+class TransferSerialRequest(BaseRequest):
     """ 查询转账流水 """
     bank_id: str
     currency_id: str = "CNY"
