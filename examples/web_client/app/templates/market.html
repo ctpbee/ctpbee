@@ -4,18 +4,18 @@
 {% block body %}
 
 <div class="row">
-    <div class="col-md-7 ">
+    <div class="col-md-9 ">
         <div class="container">
             <h2>订阅列表</h2>
 
             <div id="main"></div>
         </div>
     </div>
-    <div class="col-md-1">
+<!--    <div class="col-md-2">-->
 
-        
-    </div>
-    <div class="col-md-4">
+
+<!--    </div>-->
+    <div class="col-md-3">
         <div class="fh5co-form animate-box">
             <div class="form-group">
                 <title>Password</title>
@@ -61,7 +61,9 @@
             result = [];//清空数组，否则第二次查询时会因为有是全局变
         });
     }
+
     inputList($("input"), $("#input_list"));
+
     function subscribe_single() {
         var subscribed_symbol = $("#symbol").val();
         $.ajax({
@@ -87,7 +89,8 @@
         var tick_realtime = JSON.parse(localStorage.getItem("tick_realtime"));
         data = '<table class="table table-bordered">' + '<th>中文名</th><th>品种</th> <th>最新行情' + '</th>' + "<th> 操作 </th>";
         for (var key in tick_realtime) {
-            data += "<tr>" +"<td>" + tick_realtime[key]["name"]+ "</td>" + "<td>" + key + "</td>" + "<td>" + tick_realtime[key]["last_price"] + "</td>" + "<td>" + "<a href='#'>前往下单</a>" + "</td>" + "</tr>";
+            url = '{{url_for('order_request', symbol=key) }}' + key;
+            data += "<tr>" + "<td>" + tick_realtime[key]["name"] + "</td>" + "<td>" + key + "</td>" + "<td>" + tick_realtime[key]["last_price"] + "</td>" + "<td>" + "<a href='" + url + "'>" + "前往下单" + "</a>" + "</td>" + "</tr>";
         }
         data += "</table>";
         $("#main").html(data);
@@ -95,6 +98,7 @@
     socket.on("tick", function (data) {
         // 收到tick --- > 更新到本地的tick缓存上面去
         var tick = data['data'];
+        console.log(data);
         // 更新到本地缓存进去
         var tick_realtime = JSON.parse(localStorage.getItem("tick_realtime"));
         if (tick_realtime == null) {
@@ -104,11 +108,13 @@
         // 更新之后 先渲染图表
         data = '<table class="table table-bordered">' + '<th>中文名</th><th>品种</th> <th>最新行情' + '</th>' + "<th> 操作 </th>";
         for (var key in tick_realtime) {
-            data += "<tr>" +"<td>" + tick_realtime[key]["name"]+ "</td>" + "<td>" + key + "</td>" + "<td>" + tick_realtime[key]["last_price"] + "</td>" + "<td>" + "<a href='#'>前往下单</a>" + "</td>" + "</tr>";
+            url = '{{url_for('order_request', symbol=key) }}' + key;
+            data += "<tr>" + "<td>" + tick_realtime[key]["name"] + "</td>" + "<td>" + key + "</td>" + "<td>" + tick_realtime[key]["last_price"] + "</td>" + "<td>" + "<a href='" + url + "'>" + "前往下单" + "</a>" + "</td>" + "</tr>";
         }
         data += "</table>";
         $("#main").html(data);
         localStorage.setItem("tick_realtime", JSON.stringify(tick_realtime));
+        localStorage.setItem(tick.symbol, JSON.stringify(tick));
     })
 
 </script>

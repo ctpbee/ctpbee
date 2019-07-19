@@ -67,27 +67,32 @@ class MarketView(MethodView):
         except Exception:
             return false_response(message="订阅失败")
 
-
-
     def get(self):
         return render_template("market.html")
 
 
 class OrderView(MethodView):
+    def get(self, symbol):
+        return render_template("send_order.html", symbol=symbol)
+
+
+class OpenOrderView(MethodView):
     def post(self):
         """ 发单 """
-        info = request.values
+        info = request.values.to_dict()
+
+        print(info)
         local_symbol = info.get("local_symbol")
-        direction = info.get("direction"),
+        direction = info.get("direction")
         offset = info.get("offset")
-        type = info.get("type"),
+        type = info.get("type")
         price = info.get("price")
         volume = info.get("volume")
+        exchange = info.get("exchange")
         req = helper.generate_order_req_by_str(symbol=local_symbol,
-                                               exchange=current_app.recorder.get_contract(
-                                                   local_symbol=local_symbol).exchange.value,
-                                               direction=direction, offset=offset, volume=volume, price=price, type=type
-                                               )
+                                               exchange=exchange,
+                                               direction=direction, offset=offset, volume=volume, price=price,
+                                               type=type)
         try:
             current_app.send_order(req)
             return true_response(message="成功下单")
@@ -99,14 +104,10 @@ class OrderView(MethodView):
         info = request.values
         local_symbol = info.get("local_symbol")
         order_id = info.get("order_id")
-        req = helper.generate_cancle_req_by_str(symbol=local_symbol, exchange=current_app.recorder.get_contract(
-            local_symbol=local_symbol).exchange.value, order_id=order_id)
+        exchange = info.get("exchange")
+        req = helper.generate_cancle_req_by_str(symbol=local_symbol, exchange=exchange, order_id=order_id)
         try:
             current_app.cancle_order(req)
             return true_response(message="成功撤单")
         except Exception:
             return false_response(message="撤单失败")
-
-    def get(self):
-
-        return render_template("send_order.html")

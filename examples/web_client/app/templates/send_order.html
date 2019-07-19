@@ -3,9 +3,42 @@
 {% block head %}
 
 <style>
-.row {
-    width: 100%;
-}
+    .row {
+        width: 100%;
+    }
+
+    .editor {
+        border: 1px solid #000000;
+    }
+
+    .buy {
+        background-color: red;
+        height: 60px;
+        width: 60px;
+        color: whitesmoke;
+        text-align: center;
+        border-radius: 2px;
+
+    }
+
+    .sell {
+        background-color: green;
+        height: 60px;
+        width: 60px;
+        color: whitesmoke;
+        text-align: center;
+        border-radius: 2px;
+    }
+
+    .send_order {
+        padding: 0px;
+        margin: 0px;
+
+    }
+
+    #block {
+        margin: 10px;
+    }
 
 </style>
 
@@ -14,10 +47,10 @@
 {% block body %}
 
 <h2>个人终端</h2>
-<pre>当前合约 --></pre>
+<pre id="cock"></pre>
 <div></div>
 
-<div class="row" style="height: 500px;">
+<div class="row" style="height: 400px;">
     <div class="col-md-6">
         <code class="code">分时图</code>
     </div>
@@ -26,19 +59,55 @@
     </div>
 </div>
 
-
+<hr>
 <div class="">
     <div class="row">
-        <div class="data col-md-5">下单界面</div>
-        <div class="data col-md-2">合约具体数据</div>
+        <div class="data col-md-6" id="content">
+            <ul class="breadcrumb" style="display: inline-block">
 
 
-         <div class="data col-md-5">界面</div>
+                <li class="navbar-brand" style="list-style:none;float: right">发单数据</li>
+                <li class="navbar-brand" style="list-style:none;float: right;">成交数据</li>
+                <li class="navbar-brand" style="list-style:none;float: right">待成交数据</li>
+                <li class="navbar-brand" style="list-style:none;float: right" onclick="switch_func('position')">持仓数据
+                </li>
+            </ul>
 
-
+            <div id="position_data"></div>
+            <div id="un_traded"></div>
+            <div id="order_data"></div>
+            <div id="trade_data"></div>
+        </div>
+        <div class="data col-md-2" id="tick" style="font-size: 10px;">合约具体数据</div>
+        <div class="data col-md-4 send_order" id="send_order">
+            <div id="block">
+                <h3>下单控制台</h3>
+                <div style="width: 100%">
+                    <div class="row">
+                        <div class="col-md-3 send_order">价格类型</div>
+                        <div class="col-md-5"><input id="type" class="col-md-3 editor form-control"/></div>
+                        <div class="col-md-4"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 send_order">价格</div>
+                        <div class="col-md-5"><input type="number" id="price" class="col-md-3 editor form-control"/>
+                        </div>
+                        <div class="col-md-4"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 send_order">手数</div>
+                        <div class="col-md-5"><input type="number" id="volume" class="col-md-3 editor form-control"/>
+                        </div>
+                        <div class="col-md-4"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 buy send_order" onclick="order('long')">买多</div>
+                        <div class="col-md-4 sell send_order" onclick="order('short')">卖空</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
-
 </div>
 
 
@@ -50,5 +119,82 @@
 {%endblock%}
 
 {%block script %}
+<script>
+    window.onload = function () {
+        // 更新个人终端数据
+        var symbol = "{{ symbol }}";
+        var detail_info = JSON.parse(localStorage.getItem(symbol));
+        console.log(detail_info);
+        $("#cock").html("当前合约 --> {{ symbol }} " + "交易所: " + detail_info['exchange']);
+        localStorage.setItem("current_symbol", symbol)
+    };
+    var detail = ['ask_price_1', 'ask_volume_1', 'bid_price_1', 'bid_volume_1', 'last_price', 'high_price', 'low_price', 'open_interest', 'pre_close'];
+
+    socket.on("tick", function (data) {
+        // 更新实时行情
+        tick = data['data'];
+        if (tick.symbol != "{{symbol}}") return;
+        data = '<table class="table table-bordered">' + '<th>详细数据</th> <th>值' + '</th>';
+        for (key in tick) {
+            if (!detail.includes(key)) continue;
+            if (key.includes("2") || key.includes("3") || key.includes("4") || key.includes("5")) continue;
+            data += "<tr>" + "<td>" + key + "</td>" + "<td>" + tick[key] + "</td>" + "</tr>"
+        }
+        data += "</table>";
+        $("#tick").html(data);
+        // localStorage.setItem(tick.symbol, {});
+        localStorage.setItem(tick.symbol, JSON.stringify(tick));
+    });
+    socket.on("position", function (data) {
+        // 更新持仓数据
+        positons = data.data;
+        console.log(positons);
+        data = '<table class="table table-bordered">' + '<th>持仓合约</th><th>持仓方向</th><th>交易所' + '</th>' + "<th> 持仓手数 </th>" + "<th> 浮动盈亏 </th>" + "<th> 持仓均价</th>" + "<th> 昨日持仓手数</th>" + "<th> 操作</th>";
+        for (var key in positons) {
+            data += "<tr>" + "<td>" + positons[key]["symbol"] + "</td>" + "<td>" + positons[key]["direction"] + "</td>" + "<td>" + positons[key]["exchange"] + "</td>"
+                + "<td>" + positons[key]["volume"] + "</td>" + "<td>" + positons[key]["position_profit"] + "</td>" + "<td>" + positons[key]["price"] + "</td>" + "<td>" + positons[key]["yd_volume"] + "</td>" + "<td>" + "<a>平仓</a>" + "</td>" + "</tr>";
+        }
+        data += "</table>";
+        $("#position_data").html(data);
+    });
+
+    socket.on("order", function (data) {
+        console.log("收到v发单信息");
+        console.log(data['data']);
+    });
+
+    function order(direction) {
+        price = $("#price").val();
+        volume = $("#volume").val();
+        type = $("#type").val();
+        var detail_info = JSON.parse(localStorage.getItem("{{ symbol }}"));
+        exchange = detail_info['exchange'];
+        console.log(direction);
+        req = {
+            "direction": direction,
+            "offset": "open",
+            "price": price,
+            "volume": volume,
+            "type": type,
+            "exchange": exchange,
+            "local_symbol": "{{ symbol }}"
+        };
+        console.log(req);
+        $.ajax({
+            dataType: "json",
+            method: "POST",
+            data: req,
+            url: "{{ url_for('order_solve')}} ",
+            success: function (data) {
+                console.log(data['message'])
+            },
+            error: function (err) {
+                console.log("error")
+            }
+        })
+
+    }
+</script>
+
 
 {%endblock%}

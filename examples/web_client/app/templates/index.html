@@ -115,10 +115,12 @@
     $(".iframeBox").css('height', height);
 
     function switch_action(title) {
+        curren_symbol = localStorage.getItem("current_symbol");
+        var url = '{{url_for('order_request', symbol=key) }}' + curren_symbol;
         var mapd = {
             "account": "{{ url_for('account') }}",
             "market": "{{ url_for('market') }}",
-            "order": "{{ url_for('order_request') }}"
+            "order": url
         };
         $("#iframe_instance").attr("src", mapd[title]);
     }

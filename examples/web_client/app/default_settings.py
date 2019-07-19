@@ -38,6 +38,7 @@ class DefaultSettings(ExtAbstract):
             "type": "bar",
             "data": bar._to_dict()
         }
+
         self.io.emit('bar', data)
 
     def on_order(self, order: OrderData) -> None:
@@ -103,3 +104,5 @@ def warning_response(data="", message="警告"):
         "message": message
     }
     return make_response(warning_response)
+
+
