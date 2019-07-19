@@ -11,7 +11,7 @@ from ctpbee.constant import OrderRequest, CancelRequest, EVENT_LOG
 from ctpbee.context import _app_context_ctx
 from ctpbee.event_engine import EventEngine, Event
 from ctpbee.exceptions import ConfigError
-from ctpbee.func import ExtAbstract, send_monitor, cancle_monitor
+from ctpbee.func import CtpbeeApi, send_monitor, cancle_monitor
 from ctpbee.helpers import locked_cached_property, find_package, check
 from ctpbee.interface import Interface
 from ctpbee.record import Recorder
@@ -75,6 +75,16 @@ class CtpBee(object):
         if prefix is None:
             return os.path.join(package_path)
         return os.path.join(prefix, 'var', self.name + '-instance')
+
+    @property
+    def td_login_status(self):
+        """ 交易 API 都应该实现td_status"""
+        return self.trader.td_status
+
+    @property
+    def md_login_status(self):
+        """ 行情 API 都应该实现md_status"""
+        return self.market.md_status
 
     def _load_ext(self):
         """根据当前配置文件下的信息载入行情api和交易api,记住这个api的选项是可选的"""
@@ -147,7 +157,7 @@ class CtpBee(object):
     def transfer(self, req, type):
         """
         req currency attribute
-        [ "USD", "HKD", "CNY"]
+        ["USD", "HKD", "CNY"]
         :param req:
         :param type:
         :return:
@@ -180,11 +190,25 @@ class CtpBee(object):
         if extension_name in self.extensions:
             del self.extensions[extension_name]
 
-    def add_extensison(self, extension: ExtAbstract):
+    def add_extensison(self, extension: CtpbeeApi):
         """添加插件"""
         if extension.extension_name in self.extensions:
             return
         self.extensions[extension.extension_name] = extension
+
+    def suspend_extension(self, extension_name):
+        extension = self.extensions.get(extension_name, None)
+        if not extension:
+            return False
+        extension.frozen = True
+        return True
+
+    def enable_extension(self, extension_name):
+        extension = self.extensions.get(extension_name, None)
+        if not extension:
+            return False
+        extension.frozen = False
+        return True
 
     def reload(self):
         """ 重新载入接口 """

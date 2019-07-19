@@ -16,8 +16,6 @@ sudo locale-gen zh_CN.GB18030
 
 - 衍生自 [vnpy](https://github.com/vnpy/vnpy) 和 [flask](https://github.com/pallets/flask)  
 
-
-
 ## 安装 
 ```bash
 # code install 
@@ -50,7 +48,9 @@ pip3 install ctpbee
 7. 支持申请穿透式接口
 8. 快速下单助手
 9. 风控层建立
-9. 客户端
+10. 客户端
+11. 跟单信号 
+
 ## 快速开始 
 ```python
 from ctpbee import CtpBee
@@ -76,7 +76,6 @@ app.start()
 ## 等待完成 
 - 优化代码
 - 策略层对接CTA  --> 即将以[ctpbee_cta](https://github.com/somewheve/ctpbee_cta) 
-- 跟单信号 
 - 回测系统搭建 
 - 多路行情对比
 
@@ -91,6 +90,6 @@ ctpbee主要面对开发者, 希望能得到各位大佬的支持. 后续不再�
 ## 最后一句 
 如果这个能帮助到你, 请点击star来支持我噢. ^_^  
 
-如果你希望贡献代码, 欢迎加群一起讨论和或者提交PR  QQ群号(: 756319143) \
+如果你希望贡献代码, 欢迎加群一起讨论和或者提交PR  QQ群号(: 756319143) [点进加入群聊以了解更多](https://jq.qq.com/?_wv=1027&k=5xWbIq3)
 
 最后一句 ----> 祝各位大佬都能赚钱 ！

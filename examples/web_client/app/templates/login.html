@@ -37,10 +37,8 @@
     </div>
     <div class="row" id="form_box">
         <div class="col-md-4">
-
-
             <!-- Start Sign In Form -->
-            <form action="{{ url_for('login') }}" method="post" class="fh5co-form animate-box"
+            <div action="{{ url_for('login') }}" method="post" class="fh5co-form animate-box"
                   data-animate-effect="fadeIn">
                 <h2>C<span style="text-transform:lowercase">tpbee</span>账户登录 </h2>
                 <div class="form-group">
@@ -83,7 +81,7 @@
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">登录</button>
                 </div>
-            </form>
+            </div>
             <!-- END Sign In Form -->
 
         </div>
@@ -91,5 +89,8 @@
 
 </div>
 
+
 {% endblock %}
 
+
+{%  %}

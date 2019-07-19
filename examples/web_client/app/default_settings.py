@@ -1,14 +1,15 @@
 from flask import make_response
 from flask_socketio import SocketIO
 
-from ctpbee import ExtAbstract
+from ctpbee import CtpbeeApi
 from ctpbee.constant import LogData, AccountData, ContractData, BarData, OrderData, PositionData, TickData, SharedData, \
     TradeData
 
+#  订阅的全局变量
 contract_list = []
 
 
-class DefaultSettings(ExtAbstract):
+class DefaultSettings(CtpbeeApi):
 
     def __init__(self, name, app, socket_io: SocketIO):
         super().__init__(name, app)
@@ -104,5 +105,3 @@ def warning_response(data="", message="警告"):
         "message": message
     }
     return make_response(warning_response)
-
-

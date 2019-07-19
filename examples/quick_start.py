@@ -1,9 +1,9 @@
 from ctpbee import CtpBee
-from ctpbee import ExtAbstract
+from ctpbee import CtpbeeApi
 from ctpbee.constant import PositionData, AccountData, LogData
 from ctpbee import dumps, loads
 
-class DataRecorder(ExtAbstract):
+class DataRecorder(CtpbeeApi):
     def __init__(self, name, app=None):
         super().__init__(name, app)
         self.subscribe_set = set(["rb1910"])

@@ -65,7 +65,7 @@ def query_func(type: Text) -> None:
         app.trader.query_account()
 
 
-class ExtAbstract(object):
+class CtpbeeApi(object):
     """
     数据模块
     策略模块
@@ -81,16 +81,29 @@ class ExtAbstract(object):
             data_processor.init_app(app)
     """
 
-    def __init__(self, name, app=None):
+    # 分为四种 ---- > strategy
+    #               data
+    #               looper
+    #               user-define
+
+    API_TYPE = ['strategy', 'data', 'looper', 'user_defined']
+
+    def __init__(self, extension_name, app=None, api_type='strategy'):
         """
         init function
-        :param name: extension name , development
-        :param app: CtpBee instance
+        :param name: extension name , 插件名字
+        :param app: CtpBee 实例
+        :param api_type 针对几种API实行不同的优化措施
         """
-        self.extension_name = name
+        self.extension_name = extension_name
         self.app = app
         if self.app is not None:
             self.init_app(self.app)
+        if api_type not in self.API_TYPE:
+            raise TypeError("错误API参数, 你的API是以下几种之一吗  ['strategy', 'data', 'looper', 'user_defined']")
+        self.type = api_type
+        # 是否冻结
+        self.fronzen = False
 
     def on_order(self, order: OrderData) -> None:
         raise NotImplemented
@@ -129,7 +142,7 @@ class ExtAbstract(object):
         func(self, event.data)
 
     def __init_subclass__(cls, **kwargs):
-        setattr(cls, "__call__", getattr(ExtAbstract, "__call__"))
+        setattr(cls, "__call__", getattr(CtpbeeApi, "__call__"))
         map = {
             EVENT_TICK: cls.on_tick,
             EVENT_BAR: cls.on_bar,

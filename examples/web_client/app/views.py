@@ -1,6 +1,7 @@
 from threading import Thread
 from time import sleep
 
+from flask import flash
 from flask import request, render_template, url_for, redirect
 from flask.views import MethodView
 
@@ -33,6 +34,10 @@ class LoginView(MethodView):
         app.config.from_mapping(login_info)
         default = DefaultSettings("default_settings", app, io)
         app.start()
+        sleep(1)
+        if not app.td_login_status:
+            flash("登录失败， 请检查当前")
+            return
 
         def run(app: CtpBee):
             while True:
@@ -43,6 +48,7 @@ class LoginView(MethodView):
 
         p = Thread(target=run, args=(app,))
         p.start()
+
         return redirect(url_for("index"))
 
 

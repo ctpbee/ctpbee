@@ -1,7 +1,9 @@
-from .lib import *
-from ctpbee.constant import *
 from datetime import date, datetime
+
+from ctpbee.constant import *
 from ctpbee.event_engine import Event
+from .lib import *
+
 
 class BeeMdApi(MdApi):
     """"""
@@ -21,6 +23,10 @@ class BeeMdApi(MdApi):
         self.userid = ""
         self.password = ""
         self.brokerid = 0
+
+    @property
+    def md_status(self):
+        return self.login_status
 
     def on_event(self, type, data):
         event = Event(type=type, data=data)

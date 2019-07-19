@@ -59,6 +59,10 @@ class BeeTdApi(TdApi):
         self.sysid_orderid_map = {}
         self.open_cost_dict = defaultdict(dict)
 
+    @property
+    def td_status(self):
+        return self.login_status
+
     def on_event(self, type, data):
         event = Event(type=type, data=data)
         self.event_engine.put(event)
@@ -364,12 +368,12 @@ class BeeTdApi(TdApi):
     def onRspQryAccountregister(self, data, error, reqid, last):
         print("query account register callback: data", data, "error")
 
-    def query_transfer_serial(self, req:TransferSerialRequest):
+    def query_transfer_serial(self, req: TransferSerialRequest):
         """ 查询转账流水 """
         self.reqid += 1
         reqd = {
-            "BankID":req.bank_id,
-            "CurrencyID":req.currency_id
+            "BankID": req.bank_id,
+            "CurrencyID": req.currency_id
         }
         self.ReqQryTransferSerial(reqd, self.reqid)
 
