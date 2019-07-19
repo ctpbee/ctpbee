@@ -173,8 +173,7 @@ class TagBytes(PollenTag):
         return isinstance(value, bytes)
 
     def to_json(self, value):
-        res = "b>" + b64encode(value).decode("ascii")
-        return res
+        return value.decode()
 
     """
     def to_pollen(self, value):
@@ -218,9 +217,6 @@ class TagStr(PollenTag):
         if re.match(tag_datetime.patternForTime, value):
             time = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
             return time
-        """if bytes"""
-        if value.startswith('b>'):
-            return b64decode(value[2:])
         return value
 
 
