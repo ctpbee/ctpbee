@@ -583,3 +583,10 @@ class TransferSerialRequest(BaseRequest):
     """ 查询转账流水 """
     bank_id: str
     currency_id: str = "CNY"
+
+
+data_class = [TickData, BarData, OrderData, TradeData, PositionData, AccountData, LogData, ContractData, SharedData]
+request_class = [SubscribeRequest, OrderRequest, CancelRequest, AccountRegisterRequest, AccountBanlanceRequest,
+                 TransferRequest, TransferSerialRequest]
+
+

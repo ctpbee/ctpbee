@@ -1,149 +1,200 @@
 import re
-from base64 import b64encode, b64decode
-from collections import defaultdict
 from datetime import datetime
 from enum import Enum
 
-TAG_ENUM = 'e'
-TAG_DICT = 'd'
-TAG_LIST = 'l'
-TAG_TUPLE = 't'
-TAG_DATETIME = 'dt'
-TAG_BYTES = 'b'
-TAG_STR = 's'
-TAG_NUM = 'n'
+TAG_ENUM = 'enum'
+TAG_DICT = 'dict'
+TAG_LIST = 'list'
+TAG_TUPLE = 'tuple'
+TAG_DATETIME = 'datetime'
+TAG_BYTES = 'bytes'
+TAG_STR = 'str'
+TAG_NUM = 'num'
+TAG_DATACLASS = 'dataclass'
 
 
 class PollenTag(object):
-    def __init__(self, tags, enums):
-        self.proxy = tags
+    def __init__(self, proxy):
+        self.proxy = proxy
 
-    def check(self, value):
+    def check(self, data):
         """检查类型"""
         pass
 
-    def to_json(self, value):
+    def to_json(self, data):
         """转json"""
         pass
 
-    def to_pollen(self, value):
+    def to_pollen(self, data):
         """转python"""
         pass
+
+
+class TagDataClass(PollenTag):
+    tag = TAG_DATACLASS
+
+    def check(self, data):
+        try:
+            return isinstance(data, self.proxy.data_base_class) or isinstance(data, self.proxy.request_base_class)
+        except TypeError:
+            return False
+
+    def match_data_class(self, data: dict):
+        """
+            dict匹配到相应类
+        :param data:
+        :return:
+        """
+        attrs = set(data.keys())
+        for cls_name, cls_attr in self.proxy.data_class_store.items():
+            if attrs == cls_attr:
+                return cls_name
+        return None
+
+    def to_json(self, data):
+        """
+        调用类_to_dict,同时更新data_class_store
+        :param data:
+        :return:
+        """
+        tag_dict = self.proxy.default_tags[TAG_DICT]
+        res = data._to_dict()
+        self.proxy.update_data_class_store(data)  # 更新
+        return tag_dict.to_json(res)
+
+    def to_pollen(self, data: list):
+        """
+        创建类实例:DataClass,RequestClass
+        :param data:
+        :return:
+        """
+        if not isinstance(data, list): return data
+        instance = data[0]._create_class(data[1])
+        return instance
 
 
 class TagEnum(PollenTag):
     tag = TAG_ENUM
 
-    def __init__(self, tags, enums):
-        self.proxy = tags
-        self.enum_store = defaultdict(dict)
-        for e in enums:
-            for _, v in e.__members__.items():
-                self.enum_store[v] = v.value
-                self.enum_store[v.value] = v
+    def check(self, data):
+        return isinstance(data, Enum)
 
-    def check(self, value):
-        return isinstance(value, Enum)
+    def find_enum(self, data):
+        """
+        查找
+        :param data:
+        :return:
+        """
+        return self.proxy.enum_store.get(data, data)
 
-    def find_enum(self, value):
-        return self.enum_store.get(value, None)
+    def to_json(self, data):
+        return data.value
 
-    def to_json(self, value):
-        if value is None: return
-        e = self.find_enum(value)
-
-        if e:
-            return e
-        return value
+    def to_pollen(self, data):
+        return self.find_enum(data)
 
 
 class TagDict(PollenTag):
     tag = TAG_DICT
 
-    def check(self, value):
-        return isinstance(value, dict)
+    def check(self, data):
+        return isinstance(data, dict)
 
-    def to_json(self, value: dict):
-        if value is None: return
-        for k in list(value.keys()):
+    def to_json(self, data: dict):
+        """
+        分解dict,逐项查找替换
+        :param data:
+        :return:
+        """
+        if data is None: return
+        for k in list(data.keys()):
             for tag in self.proxy.default_tags.values():
+                """顺序很重要;先value"""
+                if tag.check(data[k]):
+                    data[k] = tag.to_json(data[k])
                 if tag.check(k):
-                    value[tag.to_json(k)] = value.pop(k)
-                if tag.check(value[k]):
-                    value[k] = tag.to_json(value[k])
-        return value
+                    data[tag.to_json(k)] = data.pop(k)
+        return data
 
-    def to_pollen(self, value):
-        if value is None: return
-        for k in list(value.keys()):
+    def to_pollen(self, data):
+        """
+        分解dict,逐项查找替换
+        :param data:
+        :return:
+        """
+        if data is None: return
+        tag_dataclass = self.proxy.default_tags[TAG_DATACLASS]
+        cls_name = tag_dataclass.match_data_class(data)
+        for k in list(data.keys()):
             for tag in self.proxy.default_tags.values():
-                if tag.check(value[k]):
-                    value[k] = tag.to_pollen(value[k])
+                if tag.check(data[k]):
+                    data[k] = tag.to_pollen(data[k])
                 if tag.check(k):
-                    value[tag.to_pollen(k)] = value.pop(k)
-        return value
+                    data[tag.to_pollen(k)] = data.pop(k)
+        if cls_name:
+            return tag_dataclass.to_pollen([cls_name, data])
+        return data
 
 
 class TagList(PollenTag):
     tag = TAG_LIST
 
-    def check(self, value):
-        return isinstance(value, list)
+    def check(self, data):
+        return isinstance(data, list)
 
-    def to_json(self, value):
-        if value is None: return
-        size = len(value)
+    def to_json(self, data):
+        """
+        遍历list
+        :param data:
+        :return:
+        """
+        if data is None: return
+        size = len(data)
         i = 0
         while i < size:
-            li = value[i]
+            li = data[i]
             for tag in self.proxy.default_tags.values():
                 if tag.check(li):
-                    value[i] = tag.to_json(li)
-                    i += 1
+                    data[i] = tag.to_json(li)
                     break
             i += 1
-        return value
+        return data
 
-    def to_pollen(self, value):
-        if value is None: return
-        size = len(value)
+    def to_pollen(self, data):
+        if data is None: return
+        size = len(data)
         i = 0
         while i < size:
-            li = value[i]
+            li = data[i]
             for tag in self.proxy.default_tags.values():
                 if tag.check(li):
-                    value[i] = tag.to_pollen(li)
-                    i += 1
+                    data[i] = tag.to_pollen(li)
                     break
             i += 1
-        return value
+        return data
 
 
 class TagTuple(PollenTag):
     tag = TAG_TUPLE
 
-    def check(self, value):
-        return isinstance(value, tuple)
+    def check(self, data):
+        return isinstance(data, tuple)
 
-    def to_json(self, value):
-        if value is None: return
-        temp = list(value)
-        size = len(value)
+    def to_json(self, data):
+        if data is None: return
+        temp = list(data)
+        size = len(data)
         i = 0
         while i < size:
-            li = value[i]
+            li = data[i]
             for tag in self.proxy.default_tags.values():
                 if tag.check(li):
                     temp[i] = tag.to_json(li)
-                    i += 1
                     break
             i += 1
         return tuple(temp)
 
-    def to_pollen(self, value):
-        """
-        字符list --> list or tuple
-        """
+    def to_pollen(self, data):
         pass
 
 
@@ -152,72 +203,76 @@ class TagDatetime(PollenTag):
     patternForTimef = r'\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}.\d+'
     patternForTime = r'\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}'
 
-    def check(self, value):
-        return isinstance(value, datetime)
+    def check(self, data):
+        return isinstance(data, datetime)
 
-    def to_json(self, value):
-        if value is None: return
-        time_str = datetime.strftime(value, '%Y-%m-%d %H:%M:%S')
+    def to_json(self, data):
+        if data is None: return
+        time_str = datetime.strftime(data, '%Y-%m-%d %H:%M:%S')
         return time_str
 
-    """
-    def to_pollen(self, value):
-        TagStr.to_pollen
-    """
+    def to_pollen(self, data):
+        if re.match(self.patternForTimef, data):
+            time = datetime.strptime(data, '%Y-%m-%d %H:%M:%S.%f')
+            return time
+        if re.match(self.patternForTime, data):
+            time = datetime.strptime(data, '%Y-%m-%d %H:%M:%S')
+            return time
+        return None
 
 
 class TagBytes(PollenTag):
     tag = TAG_BYTES
 
-    def check(self, value):
-        return isinstance(value, bytes)
+    def check(self, data):
+        return isinstance(data, bytes)
 
-    def to_json(self, value):
-        return value.decode()
-
-    """
-    def to_pollen(self, value):
-        TagStr.to_pollen
-    """
+    def to_json(self, data):
+        return data.decode()
 
 
 class TagNum(PollenTag):
     tag = TAG_NUM
 
-    def check(self, value):
-        return isinstance(value, int) or isinstance(value, float)
+    def check(self, data):
+        return isinstance(data, int) or isinstance(data, float)
 
-    def to_json(self, value):
-        return value
+    def to_json(self, data):
+        return data
 
-    def to_pollen(self, value):
-        return value
+    def to_pollen(self, data):
+        return data
 
 
 class TagStr(PollenTag):
     tag = TAG_STR
 
-    def check(self, value):
-        return isinstance(value, str)
+    def check(self, data):
+        return isinstance(data, str)
 
-    def to_json(self, value):
-        return value
+    def to_json(self, data):
+        return data
 
-    def to_pollen(self, value):
-        tag_enum = self.proxy.default_tags.get(TAG_ENUM)
-        tag_datetime = self.proxy.default_tags.get(TAG_DATETIME)
-        """if enum"""
-        e = tag_enum.find_enum(value)
-        if e:
-            return e
-        """if datetime"""
-        if re.match(tag_datetime.patternForTimef, value):
-            time = datetime.strptime(value, '%Y-%m-%d %H:%M:%S.%f')
-            return time
-        if re.match(tag_datetime.patternForTime, value):
-            time = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
-            return time
-        return value
+    def to_pollen(self, data):
+        """
+        字符不能准确判断,但能缩小范围:Enum,Datetime或Int
+        :param data:
+        :return:
+        """
+        for s in self.proxy.str_tags.values():
+            res = s.to_pollen(data)
+            if res: return res
+        return data
 
 
-tags = [TagEnum, TagBytes, TagDatetime, TagDict, TagList, TagTuple, TagStr, TagNum]
+tags = [
+    TagStr,
+    TagDict,
+    TagDataClass,
+    TagEnum,
+    TagDatetime,
+    TagList,
+    TagTuple,
+    TagNum,
+    TagBytes,
+]
