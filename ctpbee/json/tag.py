@@ -12,6 +12,7 @@ TAG_STR = 'str'
 TAG_DATACLASS = 'dataclass'
 
 
+
 class PollenTag(object):
     def __init__(self, proxy):
         self.proxy = proxy
@@ -62,6 +63,7 @@ class TagEnum(PollenTag):
     def check(self, data):
         return isinstance(data, Enum)
 
+
     def find_enum(self, data):
         return self.proxy.enum_store.get(data, data)
 
@@ -91,8 +93,10 @@ class TagDict(PollenTag):
 
     def to_pollen(self, data):
         if data is None: return
+
         tag_dataclass = self.proxy.default_tags[TAG_DATACLASS]
         cls_name = tag_dataclass.find_data_class(data)
+
         for k in list(data.keys()):
             for tag in self.proxy.default_tags.values():
                 if tag.check(data[k]):
@@ -192,6 +196,7 @@ class TagBytes(PollenTag):
 
     def to_json(self, data):
         return data.decode()
+
 
 
 class TagStr(PollenTag):

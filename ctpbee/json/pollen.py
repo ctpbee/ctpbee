@@ -1,7 +1,6 @@
 import json
 from inspect import isfunction
 from collections import defaultdict
-from pprint import pprint
 
 
 class ProxyPollen(object):
@@ -27,7 +26,7 @@ class ProxyPollen(object):
     +-------------------+---------------+--------------------+
     """
     """
-        python_eq_json:用于筛选str转python类型时的tag类,存在str_tags
+        str_can_to:用于筛选str转python类型时的tag类,存在str_tags
         default_tags:所有tag实例
         str_tags: ""
         enum_store:自定义Enum仓库
