@@ -9,7 +9,7 @@ TAG_TUPLE = 'tuple'
 TAG_DATETIME = 'datetime'
 TAG_BYTES = 'bytes'
 TAG_STR = 'str'
-TAG_NUM = 'num'
+TAG_DATACLASS = 'dataclass'
 
 
 class PollenTag(object):
@@ -29,6 +29,33 @@ class PollenTag(object):
         pass
 
 
+class TagDataClass(PollenTag):
+    tag = TAG_DATACLASS
+
+    def check(self, data):
+        try:
+            return isinstance(data, self.proxy.data_base_class) or isinstance(data, self.proxy.request_base_class)
+        except TypeError:
+            return False
+
+    def find_data_class(self, data: dict):
+        attrs = set(data.keys())
+        for cls_name, cls_attr in self.proxy.data_class_store.items():
+            if (cls_attr & attrs) == cls_attr:
+                return cls_name
+        return None
+
+    def to_json(self, data):
+        tag_dict = self.proxy.default_tags[TAG_DICT]
+        res = data._to_dict()
+        return tag_dict.to_json(res)
+
+    def to_pollen(self, data: list):
+        if not isinstance(data,list):return data
+        instance = data[0]._create_class(data[1])
+        return instance
+
+
 class TagEnum(PollenTag):
     tag = TAG_ENUM
 
@@ -36,10 +63,9 @@ class TagEnum(PollenTag):
         return isinstance(data, Enum)
 
     def find_enum(self, data):
-        return self.proxy.enum_store.get(data, None)
+        return self.proxy.enum_store.get(data, data)
 
     def to_json(self, data):
-        if data is None: return
         return data.value
 
     def to_pollen(self, data):
@@ -65,12 +91,16 @@ class TagDict(PollenTag):
 
     def to_pollen(self, data):
         if data is None: return
+        tag_dataclass = self.proxy.default_tags[TAG_DATACLASS]
+        cls_name = tag_dataclass.find_data_class(data)
         for k in list(data.keys()):
             for tag in self.proxy.default_tags.values():
                 if tag.check(data[k]):
                     data[k] = tag.to_pollen(data[k])
                 if tag.check(k):
                     data[tag.to_pollen(k)] = data.pop(k)
+        if cls_name:
+            return tag_dataclass.to_pollen([cls_name, data])
         return data
 
 
@@ -89,7 +119,6 @@ class TagList(PollenTag):
             for tag in self.proxy.default_tags.values():
                 if tag.check(li):
                     data[i] = tag.to_json(li)
-                    i += 1
                     break
             i += 1
         return data
@@ -103,7 +132,6 @@ class TagList(PollenTag):
             for tag in self.proxy.default_tags.values():
                 if tag.check(li):
                     data[i] = tag.to_pollen(li)
-                    i += 1
                     break
             i += 1
         return data
@@ -125,7 +153,6 @@ class TagTuple(PollenTag):
             for tag in self.proxy.default_tags.values():
                 if tag.check(li):
                     temp[i] = tag.to_json(li)
-                    i += 1
                     break
             i += 1
         return tuple(temp)
@@ -167,19 +194,6 @@ class TagBytes(PollenTag):
         return data.decode()
 
 
-class TagNum(PollenTag):
-    tag = TAG_NUM
-
-    def check(self, data):
-        return isinstance(data, int) or isinstance(data, float)
-
-    def to_json(self, data):
-        return data
-
-    def to_pollen(self, data):
-        return data
-
-
 class TagStr(PollenTag):
     tag = TAG_STR
 
@@ -196,11 +210,13 @@ class TagStr(PollenTag):
         return data
 
 
-tags = [TagEnum,
-        TagBytes,
-        TagDatetime,
-        TagDict,
-        TagList,
-        TagTuple,
-        TagStr,
-        TagNum]
+tags = [
+    TagStr,
+    TagDict,
+    TagDataClass,
+    TagEnum,
+    TagDatetime,
+    TagList,
+    TagTuple,
+    TagBytes,
+]
