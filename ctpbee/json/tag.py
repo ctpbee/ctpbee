@@ -13,6 +13,7 @@ TAG_NUM = 'num'
 TAG_DATACLASS = 'dataclass'
 
 
+
 class PollenTag(object):
     def __init__(self, proxy):
         self.proxy = proxy
@@ -39,10 +40,12 @@ class TagDataClass(PollenTag):
         except TypeError:
             return False
 
+
     def match_data_class(self, data: dict):
         attrs = set(data.keys())
         for cls_name, cls_attr in self.proxy.data_class_store.items():
             if attrs == cls_attr:
+
                 return cls_name
         return None
 
@@ -53,7 +56,6 @@ class TagDataClass(PollenTag):
 
     def to_pollen(self, data: list):
         if not isinstance(data, list): return data
-        print(data)
         instance = data[0]._create_class(data[1])
         return instance
 
@@ -192,6 +194,7 @@ class TagBytes(PollenTag):
     def check(self, data):
         return isinstance(data, bytes)
 
+
     def to_json(self, data):
         return data.decode()
 
@@ -207,6 +210,7 @@ class TagNum(PollenTag):
 
     def to_pollen(self, data):
         return data
+
 
 
 class TagStr(PollenTag):

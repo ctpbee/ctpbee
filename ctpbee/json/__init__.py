@@ -3,6 +3,7 @@ from ctpbee.json.pollen import Pollen
 loads = Pollen.loads
 dumps = Pollen.dumps
 
+
 if __name__ == '__main__':
     from ctpbee.constant import *
 
@@ -23,3 +24,5 @@ if __name__ == '__main__':
     print(f'dumps-->{type(res)}   {res}')
     pp = loads(res)
     print(f'loads-->{type(pp)}   {pp}')
+
+
