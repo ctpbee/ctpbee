@@ -1,16 +1,15 @@
-
 .. _策略以及数据录入:
 
 策略以及数据录入
 ======================
-两者核心都来自于ExtAbstract
+两者核心都来自于CtpbeeApi
 继承此类::
 
-    from ctpbee import ExtAbstract
+    from ctpbee import CtpbeeApi
 
     class HelloWorld(ExtAbstract):
         def __init__(self, name, app=None):
-            super().__init__(name, app)  # 无论你做啥,记得执行这一句
+            super().__init__(name, app, type="data")  # 无论你做啥,记得执行这一句
             # 你可以扩充参数,但是请记得name和app是必须要的
 
         def on_tick(tick):
@@ -51,6 +50,12 @@
     app.start()  # 开始执行
 
 
+
+
+
+为了足够支持各种类型的需求，CtpbeeApi 支持api_type参数
+分为 策略、数据、回测、用户自定义四种
+ctpbee对这几种分别做了不同的优化， 以支持更加优雅的实现。下面分别是详情解释
 
 
 数据录入
