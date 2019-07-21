@@ -1,7 +1,6 @@
 import json
 from inspect import isfunction
 from collections import defaultdict
-from pprint import pprint
 
 
 class ProxyPollen(object):
@@ -23,7 +22,7 @@ class ProxyPollen(object):
     +-------------------+---------------+--------------------+
     | None              | null          |                    |
     +-------------------+---------------+--------------------+
-    |Datetime           + str(Datetime) + Datetime           |
+    |Datetime           | str(Datetime) | Datetime           |
     +-------------------+---------------+--------------------+
     """
     """

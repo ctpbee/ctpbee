@@ -588,5 +588,3 @@ class TransferSerialRequest(BaseRequest):
 data_class = [TickData, BarData, OrderData, TradeData, PositionData, AccountData, LogData, ContractData, SharedData]
 request_class = [SubscribeRequest, OrderRequest, CancelRequest, AccountRegisterRequest, AccountBanlanceRequest,
                  TransferRequest, TransferSerialRequest]
-data_class=[BarData]
-request_class = []
