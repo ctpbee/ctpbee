@@ -13,7 +13,6 @@ TAG_NUM = 'num'
 TAG_DATACLASS = 'dataclass'
 
 
-
 class PollenTag(object):
     def __init__(self, proxy):
         self.proxy = proxy
@@ -40,21 +39,35 @@ class TagDataClass(PollenTag):
         except TypeError:
             return False
 
-
     def match_data_class(self, data: dict):
+        """
+            dict匹配到相应类
+        :param data:
+        :return:
+        """
         attrs = set(data.keys())
         for cls_name, cls_attr in self.proxy.data_class_store.items():
             if attrs == cls_attr:
-
                 return cls_name
         return None
 
     def to_json(self, data):
+        """
+        调用类_to_dict,同时更新data_class_store
+        :param data:
+        :return:
+        """
         tag_dict = self.proxy.default_tags[TAG_DICT]
         res = data._to_dict()
+        self.proxy.update_data_class_store(data)  # 更新
         return tag_dict.to_json(res)
 
     def to_pollen(self, data: list):
+        """
+        创建类实例:DataClass,RequestClass
+        :param data:
+        :return:
+        """
         if not isinstance(data, list): return data
         instance = data[0]._create_class(data[1])
         return instance
@@ -67,6 +80,11 @@ class TagEnum(PollenTag):
         return isinstance(data, Enum)
 
     def find_enum(self, data):
+        """
+        查找
+        :param data:
+        :return:
+        """
         return self.proxy.enum_store.get(data, data)
 
     def to_json(self, data):
@@ -83,6 +101,11 @@ class TagDict(PollenTag):
         return isinstance(data, dict)
 
     def to_json(self, data: dict):
+        """
+        分解dict,逐项查找替换
+        :param data:
+        :return:
+        """
         if data is None: return
         for k in list(data.keys()):
             for tag in self.proxy.default_tags.values():
@@ -94,6 +117,11 @@ class TagDict(PollenTag):
         return data
 
     def to_pollen(self, data):
+        """
+        分解dict,逐项查找替换
+        :param data:
+        :return:
+        """
         if data is None: return
         tag_dataclass = self.proxy.default_tags[TAG_DATACLASS]
         cls_name = tag_dataclass.match_data_class(data)
@@ -115,6 +143,11 @@ class TagList(PollenTag):
         return isinstance(data, list)
 
     def to_json(self, data):
+        """
+        遍历list
+        :param data:
+        :return:
+        """
         if data is None: return
         size = len(data)
         i = 0
@@ -194,7 +227,6 @@ class TagBytes(PollenTag):
     def check(self, data):
         return isinstance(data, bytes)
 
-
     def to_json(self, data):
         return data.decode()
 
@@ -212,7 +244,6 @@ class TagNum(PollenTag):
         return data
 
 
-
 class TagStr(PollenTag):
     tag = TAG_STR
 
@@ -223,6 +254,11 @@ class TagStr(PollenTag):
         return data
 
     def to_pollen(self, data):
+        """
+        字符不能准确判断,但能缩小范围:Enum,Datetime或Int
+        :param data:
+        :return:
+        """
         for s in self.proxy.str_tags.values():
             res = s.to_pollen(data)
             if res: return res

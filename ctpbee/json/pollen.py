@@ -73,6 +73,11 @@ class ProxyPollen(object):
                 self.enum_store[v.value] = v
 
     def add_data_class(self, data_class: list):
+        """
+        {cls_name:{attr1,attr2},} 模糊获取类变量属性
+        :param data_class:
+        :return:
+        """
         if not isinstance(data_class, list): raise TypeError("[^^]data_class must list")
         for d in data_class:
             attrs = set()
@@ -83,6 +88,11 @@ class ProxyPollen(object):
         self.data_base_class = data_class[0].__bases__
 
     def add_request_class(self, request_class: list):
+        """
+        {cls_name:{attr1,attr2},} 模糊获取类变量属性
+        :param request_class:
+        :return:
+        """
         if not isinstance(request_class, list): raise TypeError("[^^]request_class must list")
         for d in request_class:
             attrs = set()
@@ -92,8 +102,23 @@ class ProxyPollen(object):
             self.data_class_store[d] = attrs
         self.request_base_class = request_class[0].__bases__
 
+    def update_data_class_store(self, data):
+        """
+        在dumps时将类实例的全部属性覆盖模糊获取的属性,提高精确性
+        :param data:  Dataclass或RequestClass实例
+        :return:
+        """
+        cls_name = data.__class__.__name__
+        for c in list(self.data_class_store.keys()):
+            if c.__name__ == cls_name:
+                self.data_class_store[c] = set(data._to_dict().keys())
+
     @classmethod
     def find_tag(cls, value):
+        """
+        :param value:
+        :return:
+        """
         for t in cls.default_tags.values():
             if t.check(value):
                 return t
