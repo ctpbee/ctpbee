@@ -11,6 +11,8 @@ TAG_BYTES = 'bytes'
 TAG_STR = 'str'
 TAG_NUM = 'num'
 TAG_DATACLASS = 'dataclass'
+TAG_NONE = 'none'
+TAG_SET = 'set'
 
 
 class PollenTag(object):
@@ -46,6 +48,7 @@ class TagDataClass(PollenTag):
         :return:
         """
         attrs = set(data.keys())
+        if len(attrs) < 1: return None
         for cls_name, cls_attr in self.proxy.data_class_store.items():
             if attrs == cls_attr:
                 return cls_name
@@ -198,6 +201,19 @@ class TagTuple(PollenTag):
         pass
 
 
+class TagSet(PollenTag):
+    tag = TAG_SET
+
+    def check(self, data):
+        return isinstance(data, set)
+
+    def to_json(self, data):
+        return list(data)
+
+    def to_pollen(self, data):
+        return data
+
+
 class TagDatetime(PollenTag):
     tag = TAG_DATETIME
     patternForTimef = r'\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}.\d+'
@@ -235,7 +251,21 @@ class TagNum(PollenTag):
     tag = TAG_NUM
 
     def check(self, data):
+        """bool: true == 1 ; false == 0"""
         return isinstance(data, int) or isinstance(data, float)
+
+    def to_json(self, data):
+        return data
+
+    def to_pollen(self, data):
+        return data
+
+
+class TagNone(PollenTag):
+    tag = TAG_NONE
+
+    def check(self, data):
+        return data is None
 
     def to_json(self, data):
         return data
@@ -275,4 +305,6 @@ tags = [
     TagTuple,
     TagNum,
     TagBytes,
+    TagNone,
+    TagSet
 ]
