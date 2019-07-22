@@ -1,11 +1,11 @@
 from ctpbee import CtpBee
 from ctpbee import CtpbeeApi
 from ctpbee.constant import PositionData, AccountData, LogData
-from ctpbee import dumps, loads
+
 
 class DataRecorder(CtpbeeApi):
     def __init__(self, name, app=None):
-        super().__init__(name, app)
+        super().__init__(name, app, api_type="data")
         self.subscribe_set = set(["rb1910"])
 
     def on_trade(self, trade):
@@ -37,7 +37,6 @@ class DataRecorder(CtpbeeApi):
         """tick process function"""
         # print(tick._to_dict())
         print(tick)
-
 
     def on_bar(self, bar):
         """bar process function"""

@@ -21,6 +21,14 @@
 <meta name="twitter:card" content=""/>
 
 
+<style>
+    .detail {
+        display: none;
+    }
+
+
+</style>
+
 {% endblock%}
 
 
@@ -39,48 +47,67 @@
         <div class="col-md-4">
             <!-- Start Sign In Form -->
             <div action="{{ url_for('login') }}" method="post" class="fh5co-form animate-box"
-                  data-animate-effect="fadeIn">
+                 data-animate-effect="fadeIn">
                 <h2>C<span style="text-transform:lowercase">tpbee</span>账户登录 </h2>
                 <div class="form-group">
                     <label for="userid" class="sr-only">userid</label>
-                    <input type="text" class="form-control" name="userid" id="userid" placeholder="用户名/username" autocomplete="off">
+                    <input type="text" class="form-control" name="userid" id="userid" placeholder="用户名/username"
+                           required autocomplete="off">
                 </div>
                 <div class="form-group">
                     <label for="password" class="sr-only">Password</label>
-                    <input type="password" class="form-control" name="password" id="password" placeholder="账户密码/password"
+                    <input type="password" class="form-control" name="password" id="password" required
+                           placeholder="账户密码/password"
                            autocomplete="on">
                 </div>
-
-                <div class="form-group">
+                <div class="row list-inline" id="list_option">
+                    <div class="col-md-6">
+                        <div class="form-group simple">
+                            <select class="selectpicker" id="choice" data-style="btn-primary">
+                                <option value="simnow_forever">simnow24小时</option>
+                                <option value="simnow_inet">simnow移动</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div><a href="#" onclick="show_fly()">详细登录</a></div>
+                    </div>
+                </div>
+                <div class="form-group detail">
                     <label for="brokerid" class="sr-only">brokerid</label>
                     <input type="text" class="form-control" name="brokerid" id="brokerid" placeholder="期货公司编号/brokerid"
                            autocomplete="on">
                 </div>
-                <div class="form-group">
+                <div class="form-group detail">
                     <label for="appid" class="sr-only">appid</label>
-                    <input type="text" class="form-control" name="appid" id="appid" placeholder="产品名称/appid" autocomplete="off">
+                    <input type="text" class="form-control" name="appid" id="appid" placeholder="产品名称/appid"
+                           autocomplete="off">
                 </div>
-                <div class="form-group">
+                <div class="form-group detail">
                     <label for="auth_code" class="sr-only">auth_code</label>
                     <input type="text" class="form-control" name="auth_code" id="auth_code" placeholder="认证码/auth_code"
                            autocomplete="on">
                 </div>
 
-                <div class="form-group">
+                <div class="form-group detail">
                     <label for="td_address" class="sr-only">交易前置</label>
-                    <input type="text" class="form-control" name="td_address" id="td_address" placeholder="交易前置/td_address"
+                    <input type="text" class="form-control" name="td_address" id="td_address"
+                           placeholder="交易前置/td_address"
                            autocomplete="off">
                 </div>
 
-                <div class="form-group">
+                <div class="form-group detail">
                     <label for="md_address" class="sr-only">行情前置</label>
-                    <input type="text" class="form-control" name="md_address" id="md_address" placeholder="行情前置/md_address"
+                    <input type="text" class="form-control" name="md_address" id="md_address"
+                           placeholder="行情前置/md_address"
                            autocomplete="on">
                 </div>
 
                 <div class="form-group">
-                    <button type="submit" class="btn btn-primary">登录</button>
+                    <button type="submit" class="btn btn-primary" onclick="login()">登录</button>
                 </div>
+
+
             </div>
             <!-- END Sign In Form -->
 
@@ -93,4 +120,100 @@
 {% endblock %}
 
 
-{%  %}
+{% block script %}
+<script>
+    let hidden_flag = true;
+    simple_login_info = {
+        "simnow_forever": {
+            "appid": "simnow_client_test",
+            "auth_code": "0000000000000000",
+            "td_address": "tcp://180.168.146.187:10130",
+            "md_address": "tcp://180.168.146.187:10131",
+            "brokerid": "9999",
+        },
+        "simnow_inet": {
+            "appid": "simnow_client_test",
+            "auth_code": "0000000000000000",
+            "td_address": "tcp://218.202.237.33:10112",
+            "md_address": "tcp://218.202.237.33:10102",
+            "brokerid": "9999"
+        }
+    };
+
+    var mapping = {
+        "simnow_forever": simple_login_info['simnow_forever'],
+        "simnow_inet": simple_login_info['simnow_inet']
+    };
+
+    merge_dict = function (dict_1, dict_2) {
+        var resultd = {};
+        for (var attr in dict_1) {
+            resultd[attr] = dict_1[attr];
+        }
+        for (var attr in dict_2) {
+            resultd[attr] = dict_2[attr];
+        }
+
+        return resultd;
+    };
+
+
+    function show_fly() {
+        // 展示详细的行情API
+        hidden_flag = false;
+        var doms = $(".detail");
+        try {
+            for (var i in doms) {
+                doms[i].style.display = "block";
+            }
+        } catch (e) {
+        }
+        $("#list_option")[0].style.display = "none";
+
+    }
+
+    function login() {
+        // 首先检测 是否点击了 详细按钮
+        var login_req = {
+            "userid": $("#userid").val(),
+            "password": $("#password").val()
+        };
+        if (hidden_flag === true) {
+            var choice = $("#choice").val();
+            var result = merge_dict(mapping[choice], login_req)
+        } else {
+            var new_login = {
+                "brokerid": $("#brokerid").val(),
+                "auth_code": $("#auth_code").val(),
+                "appid": $("#appid").val(),
+                "td_address": $("#td_address").val(),
+                "md_address": $("#md_address").val()
+            };
+            var result = merge_dict(new_login, login_req);
+        }
+        $.ajax({
+            dataType: "json",
+            url: "{{ url_for('login') }}",
+            method: "post",
+            data: result,
+            success: function (data) {
+                // 自行跳转到主页
+                if (data['result'] == "success") {
+                    window.location.href = "{{ url_for('index')}}"
+                } else {
+                    alert("登录失败")
+                }
+
+
+            }
+
+        })
+
+
+    }
+
+
+</script>
+
+
+{% endblock %}

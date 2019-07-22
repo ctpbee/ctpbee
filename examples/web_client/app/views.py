@@ -24,6 +24,7 @@ class LoginView(MethodView):
 
     def post(self):
         info = request.values
+        print(info)
         app = CtpBee(info.get("username"), __name__)
         login_info = {
             "CONNECT_INFO": info,
@@ -36,8 +37,7 @@ class LoginView(MethodView):
         app.start()
         sleep(1)
         if not app.td_login_status:
-            flash("登录失败， 请检查当前")
-            return
+            return false_response(message="登录出现错误")
 
         def run(app: CtpBee):
             while True:
@@ -49,7 +49,7 @@ class LoginView(MethodView):
         p = Thread(target=run, args=(app,))
         p.start()
 
-        return redirect(url_for("index"))
+        return true_response(message="登录成功")
 
 
 class IndexView(MethodView):
