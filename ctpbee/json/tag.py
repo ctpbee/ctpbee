@@ -110,12 +110,15 @@ class TagDict(PollenTag):
         """
         if data is None: return
         for k in list(data.keys()):
+            key_ok = value_ok = False
             for tag in self.proxy.default_tags.values():
                 """顺序很重要;先value"""
-                if tag.check(data[k]):
+                if not value_ok and tag.check(data[k]):
                     data[k] = tag.to_json(data[k])
-                if tag.check(k):
+                    value_ok = True
+                if not key_ok and tag.check(k):
                     data[tag.to_json(k)] = data.pop(k)
+                    key_ok = True
         return data
 
     def to_pollen(self, data):
