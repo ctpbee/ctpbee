@@ -7,7 +7,7 @@ dumps = Pollen.dumps
 if __name__ == '__main__':
     from ctpbee.constant import *
 
-    t = BarData(symbol='1', exchange=Status.ALLTRADED, datetime=datetime.now())
+    t = SubscribeRequest(symbol='1', exchange=Status.ALLTRADED, datetime=datetime.now())
     tick = {'float2': 53.12321,
             'int': (123, "123", t, Status.ALLTRADED, 23432),
             ' ': None,
@@ -20,7 +20,7 @@ if __name__ == '__main__':
             "dcit": {"enum": Offset.CLOSE,
                      'int': 999.9}
             }
-    res = dumps(tick)
+    res = dumps({1:t})
     print(f'dumps-->{type(res)}   {res}')
     pp = loads(res)
     print(f'loads-->{type(pp)}   {pp}')
