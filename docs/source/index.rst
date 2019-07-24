@@ -1,8 +1,15 @@
-欢迎来到ctpbee的文档
+欢迎来到Ctpbee的文档
 ==================================
 
 bee bee .... there is an industrious bee created ~~
 ctpbee 提供了一个可供使用的微小的ctp核心, 你可以通过这个核心来构建值得信赖的工具， 当然这需要你的编程功力。 你所需要关心的是如何编程来处理行情和交易信息即可。
+
+.. image:: ctpbee.jpg
+
+
+ctpbee主要依赖于flask, 文档请移步
+
+     `flask文档 <http://flask.pocoo.org/>`_
 
 用户导航
 =================================

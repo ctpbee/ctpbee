@@ -7,9 +7,11 @@
 
 获取计算机相关信息::
 
-    # is developing
+    你需要获取到相关的信息
 
-coding::
+
+
+
 
     # is developing
 

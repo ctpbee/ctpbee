@@ -110,15 +110,23 @@
 
 
 
-快捷下单助手
-helper.generate_order_req_by_var::
+ctpbee内置快速为你构建各类请求的函数， 这些函数都被包括在helper助手里面::
 
+    from ctpbee import helper
+
+
+
+
+以下是各种方法， 出于考虑到数据的来源不同，内置了两种方式::
+
+    # helper.generate_order_req_by_var::
     函数签名: symbol: str, exchange: Exchange, direction: Direction, offset: Offset, type: OrderType, volume, price
     函数返回: OrderRequest
     函数用途: 通过传入常量来构建OrderRequest
+    for example：
 
-generate_order_req_by_str::
 
+    # helper.generate_order_req_by_str::
     函数签名: symbol: str, exchange: Exchange, direction: Direction, offset: Offset, type: OrderType, volume, price
     函数返回: OrderRequest
     函数用途: 通过传入字符串来构建OrderRequest, 可以大小写(除symbol,volume, price外)
