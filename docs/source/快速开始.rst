@@ -25,6 +25,16 @@ flask的微核心设计结构的来了无限的可能性, 能够让你快速上�
         def __init__(self, extension_name): # 你可以在这里自定义扩展参数
             super().__init__(extension_name, api_type="data")
 
+        def on_tick(self, tick):
+            """ process tick in here """
+            pass
+
+        def on_bar(self, bar):
+            """ process bar in here """
+            pass
+
+
+
     app = CtpBee("ctpbee", __name__)
     info = {
         "CONNECT_INFO": {
@@ -35,6 +45,7 @@ flask的微核心设计结构的来了无限的可能性, 能够让你快速上�
             "td_address": "",
             "appid": "",
             "auth_code": "",
+            "product_info":""
         },
         "TD_FUNC": True,
     }
@@ -42,8 +53,6 @@ flask的微核心设计结构的来了无限的可能性, 能够让你快速上�
     app.config.from_mapping(info)  #
     app.add_extension(recorder)
     app.start()
-
-
 
 
 - 创建核心账户对象 app = CtpBee("ctpbee", __name__)
@@ -63,6 +72,8 @@ flask的微核心设计结构的来了无限的可能性, 能够让你快速上�
 - 最后开启功能
     app.start() 开始事件引擎进行事件处理
 
+
+上面的只是让你快速上手ctpbee，但是ctpbee有一些值得惊喜的特性让你去探索， just to get it !
 
 
 下一章：
