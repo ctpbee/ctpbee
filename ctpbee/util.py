@@ -17,25 +17,3 @@ class RiskController:
 
     def send(self, app):
         return [x(app) for x in self.func_set]
-
-
-if __name__ == '__main__':
-    # An very easy simple
-    risk_control = RiskController("risk_control")
-
-
-    @risk_control.connect_via()
-    def add(app):
-        print("执行B", app)
-        return True
-
-
-    @risk_control.connect_via()
-    def comm(app):
-        print("执行A", app)
-        return True
-
-
-    print(risk_control.func_set)
-    result = risk_control.send(app="123")
-    print(result)

@@ -19,44 +19,47 @@ from ctpbee.exceptions import TraderError, MarketError
 from ctpbee.signals import send_monitor, cancle_monitor
 
 
-def send_order(order_req: OrderRequest, account_name: str = "current_app"):
+def send_order(order_req: OrderRequest, app_name: str = "current_app"):
     """ 发单 """
-    if account_name == "current_app":
+    if app_name == "current_app":
         app = current_app
     else:
-        app = get_app(account_name)
+        app = get_app(app_name)
     if not app.config.get("TD_FUNC"):
         raise TraderError(message="交易功能未开启", args=("交易功能未开启",))
     send_monitor.send(order_req)
     return app.trader.send_order(order_req)
 
 
-def cancle_order(cancle_req: CancelRequest, account_name: str = "current_app"):
+def cancle_order(cancle_req: CancelRequest, app_name: str = "current_app"):
     """ 撤单 """
-    if account_name == "current_app":
+    if app_name == "current_app":
         app = current_app
     else:
-        app = get_app(account_name)
+        app = get_app(app_name)
     if not app.config.get("TD_FUNC"):
         raise TraderError(message="交易功能未开启", args=("交易功能未开启",))
     cancle_monitor.send(cancle_req)
     app.trader.cancel_order(cancle_req)
 
 
-def subscribe(symbol: Text, account_name: str = "current_app") -> None:
+def subscribe(symbol: Text, app_name: str = "current_app") -> None:
     """订阅"""
-    if account_name == "current_app":
+    if app_name == "current_app":
         app = current_app
     else:
-        app = get_app(account_name)
+        app = get_app(app_name)
     if not app.config.get("MD_FUNC"):
         raise MarketError(message="行情功能未开启, 无法进行订阅")
     app.market.subscribe(symbol)
 
 
-def query_func(type: Text) -> None:
+def query_func(type: Text, app_name: str = "current_app") -> None:
     """查询持仓 or 账户"""
-    app = current_app
+    if app_name == "current_app":
+        app = current_app
+    else:
+        app = get_app(app_name)
     if not app.config.get("TD_FUNC"):
         raise TraderError(message="交易功能未开启", args=("交易功能未开启",))
     if type == "position":
@@ -239,7 +242,7 @@ class Helper():
     @classmethod
     def generate_ac_banlance_req(cls, bank_id, bank_account, bank_password,
                                  currency_id="CNY"):
-        return AccountBanlanceRequest(bank_id, bank_account, bank_password,
+        return AccountBanlanceRequest(bank_id=bank_id, bank_account=bank_account, bank_password=bank_password,
                                       currency_id=currency_id)
 
     @classmethod

@@ -57,8 +57,8 @@
             </div>
 
             <ul class="nav navbar-nav navbar-right">
-                <li style="float: right"><a href="">注销</a></li>
-                <li style="float: right"><a href="">小明</a></li>
+                <li style="float: right"><a href="" onclick="logout()">注销</a></li>
+                <li style="float: right"><a href="">{{ username}}</a></li>
 
                 <li class="github" style="float: right"><a href="https://github.com/somewheve/ctpbee"> <img
                         src="{{ url_for('static', filename='icon/github.png')}}" height="20px;" alt=""></a></li>
@@ -116,7 +116,7 @@
 
     function switch_action(title) {
         curren_symbol = localStorage.getItem("current_symbol");
-        var url = '{{url_for('order_request', symbol=key) }}' + curren_symbol;
+        var url = "{{url_for('order_request', symbol=key) }}" + curren_symbol;
         var mapd = {
             "account": "{{ url_for('account') }}",
             "market": "{{ url_for('market') }}",
@@ -129,6 +129,16 @@
         // console.log("data", data, "index");
         localStorage.setItem("account", JSON.stringify(data['data']))
     });
+
+    function logout() {
+        localStorage.clear();
+        // 访问注销路由
+        $.ajax({
+            url
+
+        })
+
+    }
 
 
 </script>
