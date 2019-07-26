@@ -3,9 +3,10 @@
 import os
 import pkgutil
 import sys
+import types
 from functools import wraps
 from threading import RLock
-from typing import AnyStr
+from typing import AnyStr, Tuple, IO
 
 _missing = object()
 
@@ -83,7 +84,7 @@ def _matching_loader_thinks_module_is_package(loader, mod_name):
 
 
 def check(type: AnyStr):
-    """ check the api before you make action"""
+    """ 检查API是否存在 """
 
     def midlle(func):
         @wraps(func)
@@ -101,3 +102,22 @@ def check(type: AnyStr):
         return wrapper
 
     return midlle
+
+
+def dynamic_loading_api(f):
+    """
+    f 是文件流
+    主要是用来通过文件动态载入策略。 返回策略类的实例， 应该通过Ctpbee.add_extension() 加以载入
+    你需要在策略代码文件中显式指定ext
+    返回元组
+    """
+    if not isinstance(f, IO):
+        raise ValueError(f"请确保你传入的是文件流(IO)，而不是{str(type(f))}")
+    d = types.ModuleType("object")
+    d.__file__ = f.name
+    exec(compile(f.read(), f.name, 'exec'), d.__dict__)
+    if "ext" not in d.__dict__:
+        raise AttributeError("请检查你的策略中是否包含ext变量")
+    if not isinstance(d.ext, Tuple):
+        raise ValueError("错误变量")
+    return d.ext
