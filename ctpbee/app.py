@@ -190,10 +190,11 @@ class CtpBee(object):
         if extension_name in self.extensions:
             del self.extensions[extension_name]
 
-    def add_extensison(self, extension: CtpbeeApi):
+    def add_extension(self, extension: CtpbeeApi):
         """添加插件"""
         if extension.extension_name in self.extensions:
             return
+        extension.init_app(self)
         self.extensions[extension.extension_name] = extension
 
     def suspend_extension(self, extension_name):
