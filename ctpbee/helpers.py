@@ -116,7 +116,7 @@ def dynamic_loading_api(f):
     d = types.ModuleType("object")
     d.__file__ = f.name
     exec(compile(f.read(), f.name, 'exec'), d.__dict__)
-    if "ext" not in d.__dict__:
+    if not hasattr(d, "ext"):
         raise AttributeError("请检查你的策略中是否包含ext变量")
     if not isinstance(d.ext, Tuple):
         raise ValueError("错误变量")

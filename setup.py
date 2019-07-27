@@ -113,10 +113,10 @@ else:
 
 pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.interface',
         'ctpbee.event_engine', 'ctpbee.interface.ctp']
-install_requires = ['flask', "blinker", "dataclasses", "flask_socketio"]
+install_requires = ['flask', "blinker", "dataclasses"]
 setup(
     name='ctpbee',
-    version='0.19',
+    version='0.20',
     description="Easy ctp trade and market support",
     author='somewheve',
     author_email='somewheve@gmail.com',
