@@ -20,9 +20,7 @@ if __name__ == '__main__':
             "dcit": {"enum": Offset.CLOSE,
                      'int': 999.9}
             }
-    res = dumps({1:t})
+    res = dumps(tick)
     print(f'dumps-->{type(res)}   {res}')
     pp = loads(res)
     print(f'loads-->{type(pp)}   {pp}')
-
-
