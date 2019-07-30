@@ -87,7 +87,7 @@ class TagEnum(PollenTag):
         :param data:
         :return:
         """
-        return self.proxy.enum_store.get(data, data)
+        return self.proxy.enum_store.get(data, None)
 
     def to_json(self, data):
         return data.value
@@ -234,11 +234,9 @@ class TagDatetime(PollenTag):
 
     def to_pollen(self, data):
         if re.match(self.patternForTimef, data):
-            time = datetime.strptime(data, '%Y-%m-%d %H:%M:%S.%f')
-            return time
+            return datetime.strptime(data, '%Y-%m-%d %H:%M:%S.%f')
         if re.match(self.patternForTime, data):
-            time = datetime.strptime(data, '%Y-%m-%d %H:%M:%S')
-            return time
+            return datetime.strptime(data, '%Y-%m-%d %H:%M:%S')
         return None
 
 
@@ -296,7 +294,7 @@ class TagStr(PollenTag):
         """
         for s in self.proxy.str_tags.values():
             res = s.to_pollen(data)
-            if res: return res
+            if res is not None: return res
         return data
 
 
