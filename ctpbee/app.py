@@ -58,7 +58,7 @@ class CtpBee(object):
                 'If an instance path is provided it must be absolute.'
                 ' A relative path was given instead.'
             )
-        self.risk_control = RiskController(self.name)
+        self.risk_gateway = RiskController(self.name)
         self.recorder = Recorder(self, self.event_engine)
         self.instance_path = instance_path
         self.config = self.make_config()
@@ -127,7 +127,7 @@ class CtpBee(object):
     @check(type="trader")
     def send_order(self, order_req: OrderRequest) -> AnyStr:
         """发单"""
-        result = self.risk_control.send(self)
+        result = self.risk_gateway.send(self)
         if False in result:
             event = Event(type=EVENT_LOG, data="风控阻止下单")
             self.event_engine.put(event)

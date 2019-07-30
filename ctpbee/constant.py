@@ -167,9 +167,9 @@ class BaseData:
     def __repr__(self):
         mat = []
         for key in dir(self):
-            if key.startswith("_"):
+            if key.startswith("_") or key.startswith("create"):
                 continue
-            mat.append(f" {key}={getattr(self, key)}, ")
+            mat.append(f" {key}={getattr(self, key, None)}, ")
         return f"{self.__name__}({''.join(mat)})"
 
     @classmethod
@@ -353,6 +353,7 @@ class OrderData(BaseData):
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
         self.local_order_id = f"{self.gateway_name}.{self.order_id}"
 
+    @property
     def is_active(self):
         """
         Check if the order is active.
@@ -588,5 +589,3 @@ class TransferSerialRequest(BaseRequest):
 data_class = [TickData, BarData, OrderData, TradeData, PositionData, AccountData, LogData, ContractData, SharedData]
 request_class = [SubscribeRequest, OrderRequest, CancelRequest, AccountRegisterRequest, AccountBanlanceRequest,
                  TransferRequest, TransferSerialRequest]
-
-

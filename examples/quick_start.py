@@ -64,7 +64,7 @@ def go():
     app = CtpBee("last", __name__)
 
     # 风险控制层
-    @app.risk_control.connect_via()
+    @app.risk_gateway.connect_via()
     def conn(app: CtpBee):
         """
         用户可以在每个app实例下面来使用app.risk_control.connect_via() 来装饰函数
@@ -82,10 +82,10 @@ def go():
             "userid": "089131",
             "password": "350888",
             "brokerid": "9999",
-            "md_address": "tcp://180.168.146.187:10131",
-            "td_address": "tcp://180.168.146.187:10130",
-            # "md_address": "tcp://218.202.237.33:10112",
-            # "td_address": "tcp://218.202.237.33:10102",
+            # "md_address": "tcp://180.168.146.187:10131",
+            # "td_address": "tcp://180.168.146.187:10130",
+            "md_address": "tcp://218.202.237.33:10112",
+            "td_address": "tcp://218.202.237.33:10102",
             "product_info": "",
             "appid": "simnow_client_test",
             "auth_code": "0000000000000000",
