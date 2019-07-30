@@ -47,6 +47,7 @@ class DefaultSettings(CtpbeeApi):
             "type": "order",
             "data": order._to_dict()
         }
+        print(data)
         self.io.emit("order", data)
 
     def on_position(self, position: PositionData) -> None:
@@ -63,6 +64,11 @@ class DefaultSettings(CtpbeeApi):
             "data": tick._to_dict()
         }
         self.io.emit("tick", data)
+        data = {
+            "type": "position",
+            "data": self.app.recorder.get_all_positions()
+        }
+        self.io.emit("position", data)
 
     def on_shared(self, shared: SharedData) -> None:
         shared.datetime = str(shared.datetime)

@@ -50,70 +50,77 @@
 <pre id="cock"></pre>
 <div></div>
 
-<div class="row" style="height: 400px;">
-    <div class="col-md-6">
-        <code class="code">分时图</code>
+<div class="row" style="height: 2000px;">
+    <div class="col-md-10">
+        <div class="col-md-6">
+            <div class="code" style="height: 600px;">分时图</div>
+            <div class="data col-md-12" id="content">
+                <ul class="breadcrumb" style="display: inline-block">
+                    <li class="navbar-brand" style="list-style:none;float: right">发单数据</li>
+                    <li class="navbar-brand" style="list-style:none;float: right;">成交数据</li>
+                    <li class="navbar-brand" style="list-style:none;float: right">待成交数据</li>
+                    <li class="navbar-brand" style="list-style:none;float: right" onclick="switch_func('position')">持仓数据
+                    </li>
+                </ul>
+                <div id="position_data"></div>
+                <div id="un_traded"></div>
+                <div id="order_data"></div>
+                <div id="trade_data"></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="code" style="height: 600px;width: 100%">K线图</div>
+
+            <div class="data col-md-12 send_order" id="send_order">
+                <div id="block">
+                    <h3>下单控制台</h3>
+                    <div style="width: 100%">
+                        <div class="row">
+                            <div class="col-md-3 send_order">价格类型</div>
+                            <div class="col-md-6">
+                                <div class="form-group simple">
+                                    <select class="selectpicker" id="type" data-style="btn-primary">
+                                        <option value="limit">限价</option>
+                                        <option value="market">市价</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 send_order">价格</div>
+                            <div class="col-md-5"><input type="number" id="price" class="col-md-3 editor form-control"/>
+                            </div>
+                            <div class="col-md-4"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 send_order">手数</div>
+                            <div class="col-md-5"><input type="number" id="volume"
+                                                         class="col-md-3 editor form-control"/>
+                            </div>
+                            <div class="col-md-4"></div>
+                        </div>
+                        <div class="row list-inline">
+                            <button class="btn-primary col-md-6 buy send_order" onclick="order('long')">买多</button>
+                            <button class="btn-danger col-md-6 sell send_order" onclick="order('short')">卖空</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
     </div>
-    <div class="col-md-6">
-        <code class="code">K线图</code>
+    <div class="col-md-2">
+        <div class="data" id="tick" style="font-size: 10px;">合约具体数据</div>
     </div>
 </div>
 
 <hr>
 <div class="">
     <div class="row">
-        <div class="data col-md-6" id="content">
-            <ul class="breadcrumb" style="display: inline-block">
 
 
-                <li class="navbar-brand" style="list-style:none;float: right">发单数据</li>
-                <li class="navbar-brand" style="list-style:none;float: right;">成交数据</li>
-                <li class="navbar-brand" style="list-style:none;float: right">待成交数据</li>
-                <li class="navbar-brand" style="list-style:none;float: right" onclick="switch_func('position')">持仓数据
-                </li>
-            </ul>
-
-            <div id="position_data"></div>
-            <div id="un_traded"></div>
-            <div id="order_data"></div>
-            <div id="trade_data"></div>
-        </div>
-        <div class="data col-md-2" id="tick" style="font-size: 10px;">合约具体数据</div>
-        <div class="data col-md-4 send_order" id="send_order">
-            <div id="block">
-                <h3>下单控制台</h3>
-                <div style="width: 100%">
-                    <div class="row">
-                        <div class="col-md-3 send_order">价格类型</div>
-                        <div class="col-md-6">
-                            <div class="form-group simple">
-                                <select class="selectpicker" id="type" data-style="btn-primary">
-                                    <option value="limit">限价</option>
-                                    <option value="market">市价</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4"></div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-3 send_order">价格</div>
-                        <div class="col-md-5"><input type="number" id="price" class="col-md-3 editor form-control"/>
-                        </div>
-                        <div class="col-md-4"></div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-3 send_order">手数</div>
-                        <div class="col-md-5"><input type="number" id="volume" class="col-md-3 editor form-control"/>
-                        </div>
-                        <div class="col-md-4"></div>
-                    </div>
-                    <div class="row list-inline">
-                        <button class="btn-primary col-md-6 buy send_order" onclick="order('long')">买多</button>
-                        <button class="btn-danger col-md-6 sell send_order" onclick="order('short')">卖空</button>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -134,7 +141,7 @@
         $("#cock").html("当前合约 --> {{ symbol }} " + "交易所: " + detail_info['exchange']);
         localStorage.setItem("current_symbol", symbol)
     };
-    var detail = ['ask_price_1', 'ask_volume_1', 'bid_price_1', 'bid_volume_1', 'last_price', 'high_price', 'low_price', 'open_interest', 'pre_close'];
+
 
     socket.on("tick", function (data) {
         // 更新实时行情
@@ -142,7 +149,6 @@
         if (tick.symbol != "{{symbol}}") return;
         data = '<table class="table table-bordered">' + '<th>详细数据</th> <th>值' + '</th>';
         for (key in tick) {
-            if (!detail.includes(key)) continue;
             if (key.includes("2") || key.includes("3") || key.includes("4") || key.includes("5")) continue;
             data += "<tr>" + "<td>" + key + "</td>" + "<td>" + tick[key] + "</td>" + "</tr>"
         }

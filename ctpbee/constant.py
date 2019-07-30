@@ -188,7 +188,7 @@ class BaseData:
         """ 转换enum为value的字典 """
         temp = {}
         for x in dir(self):
-            if x.startswith("_"):
+            if x.startswith("_") or x.startswith("create"):
                 continue
             if isinstance(getattr(self, x), Enum):
                 temp[x] = getattr(self, x).value
@@ -222,7 +222,7 @@ class BaseRequest:
     def __repr__(self):
         mat = []
         for key in dir(self):
-            if key.startswith("_"):
+            if key.startswith("_") or key.startswith("create"):
                 continue
             mat.append(f" {key}={getattr(self, key)}, ")
         return f"{self.__name__}({''.join(mat)})"
@@ -243,7 +243,7 @@ class BaseRequest:
         """ 转换enum为value的字典 """
         temp = {}
         for x in dir(self):
-            if x.startswith("_"):
+            if x.startswith("_") or x.startswith("create"):
                 continue
             if isinstance(getattr(self, x), Enum):
                 temp[x] = getattr(self, x).value
@@ -353,8 +353,7 @@ class OrderData(BaseData):
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
         self.local_order_id = f"{self.gateway_name}.{self.order_id}"
 
-    @property
-    def is_active(self):
+    def _is_active(self):
         """
         Check if the order is active.
         """

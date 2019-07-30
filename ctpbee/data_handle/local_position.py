@@ -160,7 +160,7 @@ class PositionHolding:
 
     def update_order(self, order: OrderData):
         """"""
-        if order.is_active:
+        if order._is_active():
             self.active_orders[order.local_order_id] = order
         else:
             if order.local_order_id in self.active_orders:

@@ -100,7 +100,7 @@ class Recorder(object):
         order = event.data
         self.orders[order.local_order_id] = order
         # If order is active, then update data in dict.
-        if order.is_active:
+        if order._is_active():
             self.active_orders[order.local_order_id] = order
         # Otherwise, pop inactive order from in dict
         elif order.local_order_id in self.active_orders:

@@ -8,7 +8,7 @@ from flask.views import MethodView
 from ctpbee import CtpBee, current_app
 from ctpbee import helper
 from .default_settings import DefaultSettings, true_response, false_response
-from .ext import io,current_user
+from .ext import io, current_user
 
 is_send = True
 
@@ -121,12 +121,15 @@ class OpenOrderView(MethodView):
         exchange = info.get("exchange")
         req = helper.generate_order_req_by_str(symbol=local_symbol,
                                                exchange=exchange,
-                                               direction=direction, offset=offset, volume=volume, price=price,
+                                               direction=direction, offset=offset, volume=int(volume),
+                                               price=float(price),
                                                type=type)
+        print(req)
         try:
             current_app.send_order(req)
             return true_response(message="成功下单")
-        except Exception:
+        except Exception as e:
+            print(e)
             return false_response(message="下单失败")
 
     def delete(self):
@@ -141,3 +144,12 @@ class OpenOrderView(MethodView):
             return true_response(message="成功撤单")
         except Exception:
             return false_response(message="撤单失败")
+
+
+class LogoutView(MethodView):
+    decorators = [login_required]
+
+    def get(self):
+        global current_user
+        current_user = None
+
