@@ -68,8 +68,13 @@ class Recorder(object):
             value(event)
 
     def process_bar_event(self, event: Event):
-        self.bar[event.data.local_symbol] = event.data
-
+        local = self.bar[event.data.local_symbol]
+        if local is None:
+            self.bar[event.data.local_symbol] = {event.data.interval: []}
+        else:
+            if self.bar[event.data.local_symbol].get(event.data.interval) is None:
+                self.bar[event.data.local_symbol] = {event.data.interval: []}
+        self.bar[event.data.local_symbol].get(event.data.interval).append(event.data)
         for value in self.app.extensions.values():
             value(event)
 

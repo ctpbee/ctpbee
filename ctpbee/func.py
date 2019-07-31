@@ -84,14 +84,7 @@ class CtpbeeApi(object):
             data_processor.init_app(app)
     """
 
-    # 分为四种 ---- > strategy
-    #               data
-    #               looper
-    #               user-define
-
-    API_TYPE = ['strategy', 'data', 'looper', 'user_defined']
-
-    def __init__(self, extension_name, app=None, api_type='strategy'):
+    def __init__(self, extension_name, app=None):
         """
         init function
         :param name: extension name , 插件名字
@@ -102,9 +95,6 @@ class CtpbeeApi(object):
         self.app = app
         if self.app is not None:
             self.init_app(self.app)
-        if api_type not in self.API_TYPE:
-            raise TypeError("错误API参数, 你的API是以下几种之一吗  ['strategy', 'data', 'looper', 'user_defined']")
-        self.type = api_type
         # 是否冻结
         self.fronzen = False
 

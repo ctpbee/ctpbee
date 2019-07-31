@@ -5,23 +5,23 @@
 
 交易函数
 -----------
-1, 发单函数---> send_order
+1, 发单函数---> ``send_order``
     基于ctpbee的设计，让一切都变得自由和简单～
     没错发单也继承了此特性
     ctpbe提供了两种发单方式，核心对象发单直接发单和全局代理发单，以下是两种方式的简单介绍
 
     + 通过核心对象发单
 
-        通过调用核心CtpBee的send_order接口来进行发单
+        通过调用核心CtpBee的 ``send_order`` 接口来进行发单
 
         - 函数参数签名
-            CtpBee.send_order()
+            ``CtpBee.send_order()``
 
         - 简单使用
-            app.send_order(req)
+            ``app.send_order(req)``
 
         - 解释
-            直接拿到核心app进行下单,接受参数为OrderRequest类的实例, ctpbee提供了helper让你可以快速构建请求
+            直接拿到核心app进行下单,接受参数为 ``OrderRequest`` 类的实例, ctpbee提供了 ``helper`` 让你可以快速构建请求
 
 
 
@@ -35,12 +35,13 @@
             send_order(order_req)
 
         - 函数签名
-            def send_order(order_req: OrderRequest, app_name: str = "current_app") -> str:
+            ``def send_order(order_req: OrderRequest, app_name: str = "current_app") -> str:``
 
         - 解释
-            调用CtpBee对象进行发单, 当不指定account_name时候,默认调用current_app进行下单
-            param: order_req  OrderRequest 发单请求
-            param: app_name 字符串  CtpBee的第一个参数,默认为current_app，也就是当前最近推入栈中的对象
+
+            + 调用CtpBee对象进行发单, 当不指定account_name时候,默认调用current_app进行下单
+            + param: ``order_req``  OrderRequest 发单请求
+            + param: ``app_name`` 字符串  CtpBee的第一个参数,默认为 ``current_app``，也就是当前最近推入栈中的对象
 
 
 
@@ -202,10 +203,11 @@
     通过变量::
 
         helper.generate_cancle_req_by_var
+
     通过字符串::
 
          helper.generate_cancle_req_by_str
 
 
 下一章
-    :ref:`配置文件`
+    :ref:`策略以及数据录入`

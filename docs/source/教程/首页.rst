@@ -29,7 +29,7 @@
 
     - 我们设想的场景是单用户存在下
     - 第一步 肯定是要flask先拿到登录信息， 然后登录创建CtpBee核心对象
-    - 第二步 需要在flask里面任意拿到CtpBee变量， 得益于ctpbee的current_app， 你可以在任意地点进行导入使用，好像好像就搞定了？ 是不是出乎意料的简单
+    - 第二步 需要在flask里面任意拿到 ``CtpBee`` 变量， 得益于ctpbee的 ``current_app``， 你可以在任意地点进行导入使用，好像好像就搞定了？ 是不是出乎意料的简单
 + 3 最后 ctpbee <--->期货公司柜台
     `这个地方ctpbee已经帮助你写了 相应的处理代码，你只需要在我开放的CtpbeeApi层进行编写处理代码即可哦`
 
@@ -62,9 +62,9 @@
             return app
 
     - `ext是全局模块, view是视图模块`
-    - 首先创建Flask核心对象， __name__ 为导入名字， static_folder指定静态文件资源目录, template_folder制定模板文件目录
+    - 首先创建Flask核心对象， ``__name__`` 为导入名字， ``static_folder`` 指定静态文件资源目录,  ``template_folder`` 制定模板文件目录
 
-    - 通过app.add_url_rule将视图类插入进去
+    - 通过 ``app.add_url_rule`` 将视图类插入进去
 
     - io为创建的SocketIO核心对象， 在此处使用他的init_app方法进行初始化
 
@@ -72,6 +72,7 @@
 
 + 在 *ext.py* ::
     - 代码::
+
         from flask_socketio import SocketIO
         io = SocketIO()
         current_user = None
@@ -96,25 +97,25 @@
                 self.io.emit('account', data)
             ....
 
-    - 继承CtpbeeApi， 此处需要使用载入的socket服务端，所以重写了__init__方法, 而且你必须使用super().__init__(name, app )来载入初始化父类
+    - 继承CtpbeeApi， 此处需要使用载入的socket服务端，所以重写了__init__方法, 这里意味着如果你需要扩展其他参数，就必须使用 ``super().__init__(name, app)`` 来载入初始化父类
 
-    - 同时你必须要重写掉所有的on_***方法，来实现你的自己的方法。最后通过self.io.emit("account", data), account和data是对应的事件名称和时间数据，将数据发送回前端
+    - 同时你必须要重写掉所有的on_***方法，来实现你的自己的方法。最后通过 ``self.io.emit("account", data)`` , account和data是对应的事件名称和时间数据，将数据发送回前端
 
 + 视图函数 *views.py*
     - 登录 `LoginView`
         + get方法渲染了登录页面 https://127.0.0.1:5000/login
-        + post制订了登录流程 从前端获得表单信息，然后创建app变量， 然后将DefaultSettings实例化为default， 再载入进去,最后开启处理，值得注意的是你需要在最后单独开启一个线程循环查询持仓和账户信息
+        + post制订了登录流程 从前端获得表单信息，然后创建app变量， 然后将 ``DefaultSettings`` 实例化为 ``default``， 再载入进去,最后开启处理，值得注意的是你需要在最后单独开启一个线程循环查询持仓和账户信息
     - 行情 `MarketView`
-        + post 接受symbol，调用current_app.subscribe进行订阅行情， 然后推送前端
+        + post 接受symbol，调用 ``current_app.subscribe`` 进行订阅行情， 然后推送前端
         + get 渲染订阅界面
 
     - 发单界面 `OrderView`
         + get 渲染发单界面,需要向界面传递symbol
     - 发单接口 `OpenOrderView`
 
-        - post 发单信息,从前端获取相应信息，然后通过helper.generate_order_req_by_str生成请求,再通过current_app进行下单
+        - post 发单信息,从前端获取相应信息，然后通过 ``helper.generate_order_req_by_str`` 生成请求,再通过current_app进行下单
 
-        - delete 撤单 ,从前端获取相应信息，然后通过helper.generate_cancle_req_by_str生成撤单请求,再通过current_app进行下单
+        - delete 撤单 ,从前端获取相应信息，然后通过 ``helper.generate_cancle_req_by_str`` 生成撤单请求,再通过current_app进行下单
     - 注销登录 `LogoutView`
 
         - get访问即注销当前用户
@@ -126,9 +127,13 @@
 
 客户端
 -------------
-接下来我将阐如何基于boostrap和socketio来构建前端客户端
+接下来我将阐如何基于boostrap和socketio来构建前端客户端::
+
+    isdeveloping...
+
 
 
 下一章：
+    :ref:`配置文件`
 
 
