@@ -126,7 +126,7 @@
     }
 
     socket.on("account", function (data) {
-        // console.log("data", data, "index");
+        // console.log("data.json", data.json, "index");
         localStorage.setItem("account", JSON.stringify(data['data']))
     });
 

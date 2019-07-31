@@ -30,12 +30,19 @@ from ctpbee.constant import PositionData, Offset, Direction, OrderRequest, Order
 
 class LocalVariable:
     def __init__(self, data):
-        if data.get("long") is not None:
-            self.long = float(data.get('long'))
+        try:
+            if data.get("long") is not None:
+                self.long = float(data.get('long'))
+        except TypeError:
+            self.long = 0
         else:
             self.long = 0
         if data.get("short") is not None:
-            self.short = float(data.get('long'))
+            try:
+                self.short = float(data.get('long'))
+            #todo: error solve
+            except TypeError:
+                self.short = 0
         else:
             self.short = 0
 

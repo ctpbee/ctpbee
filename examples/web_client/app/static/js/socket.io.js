@@ -428,7 +428,7 @@
             var n;
             if ("string" == typeof t) n = c(t), e.BINARY_EVENT === n.type || e.BINARY_ACK === n.type ? (this.reconstructor = new u(n), 0 === this.reconstructor.reconPack.attachments && this.emit("decoded", n)) : this.emit("decoded", n); else {
                 if (!m(t) && !t.base64) throw new Error("Unknown type: " + t);
-                if (!this.reconstructor) throw new Error("got binary data when not reconstructing a packet");
+                if (!this.reconstructor) throw new Error("got binary data.json when not reconstructing a packet");
                 n = this.reconstructor.takeBinaryData(t), n && (this.reconstructor = null, this.emit("decoded", n))
             }
         }, a.prototype.destroy = function () {
@@ -827,7 +827,7 @@
                 for (var t = 0, e = this.upgrades.length; t < e; t++) this.probe(this.upgrades[t])
             }
         }, r.prototype.onPacket = function (t) {
-            if ("opening" === this.readyState || "open" === this.readyState || "closing" === this.readyState) switch (a('socket receive: type "%s", data "%s"', t.type, t.data), this.emit("packet", t), this.emit("heartbeat"), t.type) {
+            if ("opening" === this.readyState || "open" === this.readyState || "closing" === this.readyState) switch (a('socket receive: type "%s", data.json "%s"', t.type, t.data), this.emit("packet", t), this.emit("heartbeat"), t.type) {
                 case"open":
                     this.onHandshake(JSON.parse(t.data));
                     break;
@@ -1011,7 +1011,7 @@
                     4 === e.readyState && (200 === e.status || 1223 === e.status ? n.onLoad() : setTimeout(function () {
                         n.onError(e.status)
                     }, 0))
-                }, h("xhr data %s", this.data), e.send(this.data)
+                }, h("xhr data.json %s", this.data), e.send(this.data)
             } catch (o) {
                 return void setTimeout(function () {
                     n.onError(o)
@@ -1085,7 +1085,7 @@
             p("polling"), this.polling = !0, this.doPoll(), this.emit("poll")
         }, r.prototype.onData = function (t) {
             var e = this;
-            p("polling got data %s", t);
+            p("polling got data.json %s", t);
             var n = function (t, n, r) {
                 return "opening" === e.readyState && e.onOpen(), "close" === t.type ? (e.onClose(), !1) : void e.onPacket(t)
             };

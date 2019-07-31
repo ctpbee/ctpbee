@@ -1,0 +1,115 @@
+﻿<html>
+<head>
+    <title>K线图</title>
+    <meta name="renderer" content="webkit"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script src="/lib/jquery.js"></script>
+    <script src="/lib/jquery.mousewheel.js"></script>
+    <style type="text/css">
+        .kline {
+            width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 462px;
+            position: relative;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="kline">
+
+    <h1>K线图</h1>
+    <div id="kline_container"></div>
+    <hr>
+
+    Width: <input id="width" type="text" value="1200">
+    Height: <input id="height" type="text" value="650">
+    <button id="resize-btn">resize</button>
+    <hr>
+
+    <button id="switch-trade-btn">Switch Trade</button>
+    <hr>
+
+    Symbol: <input id="symbol" type="text" value="BTC">
+    Symbol Name: <input id="symbol-name" type="text" value="BTC/USD">
+    <button id="set-symbol-btn">setSymbol</button>
+    <hr>
+
+    <button id="toggle-theme-btn">Toggle Theme</button>
+    <hr>
+
+    设置语言:
+    <select name="" id="lang-select">
+        <option value="zh-cn">简体中文</option>
+        <option value="zh-tw">繁体中文</option>
+        <option value="en-us">英文</option>
+    </select>
+    <button id="set-lang-btn">设置</button>
+    <hr>
+
+</div>
+
+<script src="/dist/kline.js"></script>
+
+<script type="text/javascript">
+
+    var kline = new Kline({
+        element: "#kline_container",
+        width: 1200,
+        height: 650,
+        theme: 'dark', // light/dark
+        language: 'zh-cn', // zh-cn/en-us/zh-tw
+        ranges: ["1w", "1d", "1h", "30m", "15m", "5m", "1m", "line"],
+        symbol: "BTC",
+        symbolName: "BTC/USD",
+        type: "poll", // poll/socket
+        url: "/examples/mock.json",
+        limit: 1000,
+        intervalTime: 5000,
+        debug: true,
+        showTrade: true,
+        onResize: function(width, height) {
+            console.log("chart resized: " + width + " " + height);
+        }
+    });
+
+    kline.draw();
+
+
+    $('#resize-btn').click(function () {
+        var height = $('#height').val();
+        var width = $('#width').val();
+        kline.resize(width, height);
+    });
+
+    $('#switch-trade-btn').click(function () {
+        kline.toggleTrade();
+    });
+
+    $('#set-symbol-btn').click(function () {
+        var symbol = $('#symbol').val();
+        var symbolName = $('#symbol-name').val();
+        kline.setSymbol(symbol, symbolName);
+    });
+
+    $('#toggle-theme-btn').click(function () {
+        if(kline.theme == "dark") {
+            kline.setTheme("light");
+        } else {
+            kline.setTheme("dark");
+        }
+    });
+
+    $('#set-lang-btn').click(function () {
+        var lang = $('#lang-select').val();
+        kline.setLanguage(lang);
+    });
+
+</script>
+
+</body>
+
+</html>

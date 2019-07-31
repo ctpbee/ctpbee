@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>K线图</title>
+    <link href="/src/css/main.css" rel="stylesheet"/>
+    <script src="../lib/require.js"></script>
+    <style type="text/css">
+        .kline {
+            width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 462px;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+
+<div class="kline">
+
+    <h1>K线图</h1>
+
+    <div id="kline_container"></div>
+</div>
+
+
+<script type="text/javascript">
+
+    require.config({
+        paths: {
+            "jquery": "../lib/jquery",
+            "jquery.mousewheel": "../lib/jquery.mousewheel",
+            "sockjs": "../lib/sockjs",
+            "stomp": "../lib/stomp",
+            "kline": "../dist/kline"
+        },
+        shim: {
+            "jquery.mousewheel": {
+                deps: ["jquery"]
+            },
+            "kline": {
+                deps: ["jquery.mousewheel", "sockjs", "stomp"]
+            }
+        }
+    });
+
+    require(['kline'], function () {
+        var kline = new Kline({
+            element: "#kline_container",
+            width: 1200,
+            height: 650,
+            theme: 'dark', // light/dark
+            language: 'zh-cn', // zh-cn/en-us/zh-tw
+            ranges: ["1w", "1d", "1h", "30m", "15m", "5m", "1m", "line"],
+            symbol: "BTC",
+            symbolName: "BTC/USD",
+            type: "poll", // poll/socket
+            url: "/examples/mock.json",
+            limit: 1000,
+            intervalTime: 5000,
+            debug: true,
+            showTrade: true
+        });
+
+        kline.draw();
+    });
+
+</script>
+
+</body>
+</html>

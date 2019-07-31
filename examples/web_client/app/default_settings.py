@@ -1,3 +1,5 @@
+import time
+
 from flask import make_response
 from flask_socketio import SocketIO
 
@@ -27,6 +29,7 @@ class DefaultSettings(CtpbeeApi):
             "type": "account",
             "data": account._to_dict()
         }
+
         self.io.emit('account', data)
 
     def on_contract(self, contract: ContractData):
@@ -39,15 +42,26 @@ class DefaultSettings(CtpbeeApi):
             "type": "bar",
             "data": bar._to_dict()
         }
-
         self.io.emit('bar', data)
 
     def on_order(self, order: OrderData) -> None:
+        # 更新活跃报单
+        active_orders = []
+        for order in self.app.recorder.get_all_active_orders(order.local_symbol):
+            active_orders.append(order._to_dict())
+        data = {
+            "type": "active_order",
+            "data": active_orders
+        }
+
+        self.io.emit("active_order", data)
+        orders = []
+        for order in self.app.recorder.get_all_orders():
+            orders.append(order._to_dict())
         data = {
             "type": "order",
-            "data": order._to_dict()
+            "data": orders
         }
-        print(data)
         self.io.emit("order", data)
 
     def on_position(self, position: PositionData) -> None:
@@ -69,6 +83,47 @@ class DefaultSettings(CtpbeeApi):
             "data": self.app.recorder.get_all_positions()
         }
         self.io.emit("position", data)
+        # 更新持仓数据
+        bars = []
+        current_bar = self.app.recorder.get_bar(tick.local_symbol)
+        if current_bar is not None:
+            value = current_bar.get(1)
+            for single_bar in value:
+                timed = getattr(single_bar, "datetime")
+
+                timeArray = time.strptime(timed, "%Y-%m-%d %H:%M:%S")
+                # 转换成时间戳
+                timestamp = time.mktime(timeArray)
+                bars.append([timestamp, single_bar.open_price, single_bar.high_price, single_bar.low_price, single_bar.close_price, single_bar.volume])
+
+        tick = self.app.recorder.get_tick(tick.local_symbol)
+        update_result = {
+            "success": True,
+            "symbol": tick.symbol,
+            "data": {
+                "lines": bars,
+                "depths": {
+                    "asks": [
+                        [
+                            tick.ask_price_1,
+                            tick.ask_volume_1
+                        ]
+                    ],
+                    "bids": [
+                        [
+                            tick.bid_price_1,
+                            tick.bid_volume_1
+                        ]
+                    ]
+                }
+            }
+        }
+        import os
+        with open(f"{os.path.dirname(__file__)}/static/json/{tick.symbol}.json", "w+") as f:
+            from json import dump
+            dump(update_result, f)
+
+        self.io.emit("update_all", update_result)
 
     def on_shared(self, shared: SharedData) -> None:
         shared.datetime = str(shared.datetime)
@@ -79,9 +134,12 @@ class DefaultSettings(CtpbeeApi):
         self.io.emit('shared', data)
 
     def on_trade(self, trade: TradeData) -> None:
+        trades = []
+        for trade in self.app.recorder.get_all_trades():
+            trades.append(trade._to_dict())
         data = {
             "type": "trade",
-            "data": trade._to_dict()
+            "data": trades
         }
         self.io.emit('trade', data)
 
@@ -89,7 +147,7 @@ class DefaultSettings(CtpbeeApi):
 def true_response(data="", message="操作成功执行"):
     true_response = {
         "result": "success",
-        "data": data,
+        "data.json": data,
         "message": message
     }
     return make_response(true_response)
@@ -98,7 +156,7 @@ def true_response(data="", message="操作成功执行"):
 def false_response(data="", message="出现错误, 请检查"):
     false_response = {
         "result": "error",
-        "data": data,
+        "data.json": data,
         "message": message
     }
     return make_response(false_response)
@@ -107,7 +165,7 @@ def false_response(data="", message="出现错误, 请检查"):
 def warning_response(data="", message="警告"):
     warning_response = {
         "result": "warning",
-        "data": data,
+        "data.json": data,
         "message": message
     }
     return make_response(warning_response)
