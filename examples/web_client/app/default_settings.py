@@ -37,7 +37,7 @@ class DefaultSettings(CtpbeeApi):
         contract_list.append(contract.symbol)
 
     def on_bar(self, bar: BarData) -> None:
-        bar.datetime = str(bar)
+        bar.datetime = str(bar.datetime)
         data = {
             "type": "bar",
             "data": bar._to_dict()
@@ -85,21 +85,21 @@ class DefaultSettings(CtpbeeApi):
         self.io.emit("position", data)
         # 更新持仓数据
         bars = []
+
+        # 获取当前bars
         current_bar = self.app.recorder.get_bar(tick.local_symbol)
         if current_bar is not None:
             value = current_bar.get(1)
             for single_bar in value:
-                timed = getattr(single_bar, "datetime")
-
-                timeArray = time.strptime(timed, "%Y-%m-%d %H:%M:%S")
+                timeArray = time.strptime(str(single_bar.datetime), "%Y-%m-%d %H:%M:%S")
                 # 转换成时间戳
-                timestamp = time.mktime(timeArray)
-                bars.append([timestamp, single_bar.open_price, single_bar.high_price, single_bar.low_price, single_bar.close_price, single_bar.volume])
+                timestamp = round(time.mktime(timeArray)*1000)
+                bars.append([timestamp, single_bar.open_price, single_bar.high_price, single_bar.low_price,
+                             single_bar.close_price, single_bar.volume])
 
         tick = self.app.recorder.get_tick(tick.local_symbol)
         update_result = {
             "success": True,
-            "symbol": tick.symbol,
             "data": {
                 "lines": bars,
                 "depths": {

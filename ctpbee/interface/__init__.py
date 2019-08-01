@@ -19,15 +19,25 @@ Notice : 神兽保佑 ，测试一次通过
 //          ┗━┻━┛   ┗━┻━┛
 //
 """
-from ctpbee.interface.ctp import BeeTdApi, BeeMdApi, BeeTdApiApp
 
 
 class Interface:
-    api_map = {
-        "ctp": (BeeMdApi, BeeTdApi),
-        "ctp_se": (BeeMdApi, BeeTdApiApp)
-    }
+    """ 按照接口进行加载而不是一次性进行加载 """
 
     @classmethod
-    def get_interface(self, app):
-        return self.api_map.get(app.config.get("INTERFACE"), None)
+    def load_interface(cls, interface):
+        if interface == "ctp":
+            from ctpbee.interface.ctp import BeeTdApi, BeeMdApi
+            return (BeeMdApi, BeeTdApi)
+        if interface == "ctp_se":
+            from ctpbee.interface.ctp import BeeTdApiApp, BeeMdApi
+            return (BeeMdApi, BeeTdApiApp)
+        if interface == "looper":
+            from ctpbee.interface.looper import BeeTdLooperApi, BeeMdLooperApi
+            return (BeeMdLooperApi, BeeTdLooperApi)
+        else:
+            raise ValueError("错误参数")
+
+    @classmethod
+    def get_interface(cls, app):
+        return cls.load_interface(app.config.get("INTERFACE"))

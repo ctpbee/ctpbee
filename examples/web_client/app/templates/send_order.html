@@ -5,6 +5,9 @@
 <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
 <script src="{{ url_for('static', filename='kline/dist/kline.js') }}"></script>
 <script src="{{ url_for('static', filename='kline/lib/jquery.mousewheel.js') }}"></script>
+<!--<script src="{{ url_for('static', filename='kline/lib/sockjs.js') }}"></script>-->
+<!--<script src="{{ url_for('static', filename='kline/lib/stomp.js') }}"></script>-->
+<!--<script src="{{ url_for('static', filename='kline/lib/require.js') }}"></script>-->
 <style>
     .row {
         width: 100%;
@@ -159,7 +162,6 @@
         localStorage.setItem("current_symbol", symbol)
     };
 
-
     socket.on("tick", function (data) {
         // 更新实时行情
         tick = data['data'];
@@ -258,8 +260,10 @@
         symbol: "{{ symbol }}",
         symbolName: "{{symbol}}",
         type: "poll", // poll/stomp
-        debug: false,
-        url:"http://127.0.0.1:5000/static/json/rb1910.json",
+        debug: true,
+        limit: 1000,
+        intervalTime: 1000,
+        url: "http://127.0.0.1:5000/static/json/zn1910.json",
     });
     kline.draw();
 

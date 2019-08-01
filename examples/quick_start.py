@@ -13,11 +13,11 @@ class DataRecorder(CtpbeeApi):
 
     def on_contract(self, contract):
         # 订阅所有
-        # self.app.subscribe(contract.symbol)
+        self.app.subscribe(contract.symbol)
 
         # 或者 单独制定
-        if contract.symbol in self.subscribe_set:
-            self.app.subscribe(contract.symbol)
+        # if contract.symbol in self.subscribe_set:
+        #     self.app.subscribe(contract.symbol)
             # 或者
             # current_app.subscribe(contract.symbol)
 

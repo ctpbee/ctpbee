@@ -85,7 +85,8 @@
 <!-- jQuery -->
 <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
 <!-- Bootstrap -->
-<script src="https://cdn.bootcss.com/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<!--<script src="https://cdn.bootcss.com/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>-->
+<script src="https://cdn.bootcss.com/twitter-bootstrap/3.4.1/js/bootstrap.min.js"></script>
 <!-- Placeholder -->
 <script src='{{ url_for("static", filename="js/jquery.placeholder.min.js") }}'></script>
 
@@ -93,8 +94,11 @@
 <script src='{{ url_for("static", filename="js/jquery.waypoints.min.js") }}'></script>
 <!-- Main JS -->
 <script src='{{ url_for("static", filename="js/main.js") }}'></script>
+
 <!--  Socket.io.js -->
-<script src="https://cdn.bootcss.com/socket.io/2.2.0/socket.io.js"></script>
+<script src='{{ url_for("static", filename="js/socket.io.js") }}'></script>
+
+
 <script>
     var socket = io.connect('http://localhost:5000');
     socket.on('contract', function (data) {

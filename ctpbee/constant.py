@@ -9,6 +9,10 @@ from logging import INFO
 from typing import Any
 
 
+class Missing:
+    value = "属性缺失"
+
+
 class Direction(Enum):
     """
     Direction of order/trade/position.
@@ -143,7 +147,7 @@ EVENT_ACCOUNT = "account"
 EVENT_SHARED = "shared"
 
 
-@dataclass(init=False, repr=False)
+# @dataclass(init=False, repr=False)
 class BaseData:
     """
     Any data object needs a gateway_name as source
@@ -164,6 +168,9 @@ class BaseData:
         if hasattr(self, "__post_init__"):
             self.__post_init__()
 
+    # def __getattribute__(self, item):
+    #     """ 访问属性 """
+
     def __repr__(self):
         mat = []
         for key in dir(self):
@@ -174,7 +181,7 @@ class BaseData:
 
     @classmethod
     def _create_class(cls, kwargs: dict):
-        """ 根据字典值创建类 """
+        """ 根据字典值创建类实例 """
         args = super().__new__(cls)
         args.__init__(**kwargs)
         setattr(args, "__name__", cls.__name__)

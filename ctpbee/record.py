@@ -1,3 +1,4 @@
+from copy import deepcopy
 from datetime import datetime
 
 from ctpbee.constant import EVENT_TICK, EVENT_ORDER, EVENT_TRADE, EVENT_POSITION, EVENT_ACCOUNT, \
@@ -24,9 +25,11 @@ class Recorder(object):
         self.logs = {}
         self.errors = {}
         self.shared = {}
+        self.generators = {}
         self.active_orders = {}
         self.event_engine = event_engine
         self.register_event()
+
         self.app = app
         self.position_manager = LocalPositionManager(app=self.app)
 
@@ -54,7 +57,7 @@ class Recorder(object):
         else:
             self.shared[event.data.local_symbol] = []
         for value in self.app.extensions.values():
-            value(event)
+            value(deepcopy(event))
 
     def process_error_event(self, event: Event):
         self.errors[self.get_local_time()] = event.data
@@ -65,18 +68,20 @@ class Recorder(object):
         if self.app.config.get("LOG_OUTPUT"):
             print(self.get_local_time() + ": ", event.data)
         for value in self.app.extensions.values():
-            value(event)
+            value(deepcopy(event))
 
     def process_bar_event(self, event: Event):
-        local = self.bar.get(event.data.local_symbol)
+        bar = event.data
+        local = self.bar.get(bar.local_symbol)
         if local is None:
-            self.bar[event.data.local_symbol] = {event.data.interval: []}
+            self.bar[bar.local_symbol] = {bar.interval: []}
         else:
-            if self.bar[event.data.local_symbol].get(event.data.interval) is None:
-                self.bar[event.data.local_symbol] = {event.data.interval: []}
-        self.bar[event.data.local_symbol].get(event.data.interval).append(event.data)
+            if self.bar[bar.local_symbol].get(bar.interval) is None:
+                self.bar[bar.local_symbol] = {bar.interval: []}
+        self.bar[bar.local_symbol][bar.interval].append(bar)
+
         for value in self.app.extensions.values():
-            value(event)
+            value(deepcopy(event))
 
     def process_tick_event(self, event: Event):
         """"""
@@ -90,14 +95,14 @@ class Recorder(object):
                 tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y%m%d %H:%M:%S.%f')
             else:
                 tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y%m%d %H:%M:%S')
-        bm = self.bar.get(symbol, None)
+        bm = self.generators.get(symbol, None)
         if bm:
             bm.update_tick(tick)
         if not bm:
-            self.bar[symbol] = generator(self.event_engine)
+            self.generators[symbol] = generator(self.event_engine)
 
         for value in self.app.extensions.values():
-            value(event)
+            value(deepcopy(event))
 
     def process_order_event(self, event: Event):
         """"""
@@ -112,7 +117,7 @@ class Recorder(object):
             self.active_orders.pop(order.local_order_id)
         self.position_manager.update_order(order)
         for value in self.app.extensions.values():
-            value(event)
+            value(deepcopy(event))
 
     def process_trade_event(self, event: Event):
         """"""
@@ -121,7 +126,7 @@ class Recorder(object):
 
         self.position_manager.update_trade(trade)
         for value in self.app.extensions.values():
-            value(event)
+            value(deepcopy(event))
 
     def process_position_event(self, event: Event):
         """"""
@@ -129,21 +134,21 @@ class Recorder(object):
         self.positions[position.local_position_id] = position
         self.position_manager.update_position(position)
         for value in self.app.extensions.values():
-            value(event)
+            value(deepcopy(event))
 
     def process_account_event(self, event: Event):
         """"""
         account = event.data
         self.accounts[account.local_account_id] = account
         for value in self.app.extensions.values():
-            value(event)
+            value(deepcopy(event))
 
     def process_contract_event(self, event: Event):
         """"""
         contract = event.data
         self.contracts[contract.local_symbol] = contract
         for value in self.app.extensions.values():
-            value(event)
+            value(deepcopy(event))
 
     def get_shared(self, symbol):
         return self.shared.get(symbol, None)
