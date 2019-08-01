@@ -113,7 +113,7 @@ else:
 
 pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.interface',
         'ctpbee.event_engine', 'ctpbee.interface.ctp', 'ctpbee.json']
-install_requires = ['flask', "blinker", "dataclasses", "eventlet"]
+install_requires = ['flask', "blinker", "dataclasses", "eventlet", "flask_socketio"]
 setup(
     name='ctpbee',
     version='0.22',
