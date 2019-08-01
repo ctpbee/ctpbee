@@ -2,7 +2,7 @@ import time
 
 from flask import make_response
 from flask_socketio import SocketIO
-
+import  json
 from ctpbee import CtpbeeApi
 from ctpbee.constant import LogData, AccountData, ContractData, BarData, OrderData, PositionData, TickData, SharedData, \
     TradeData
@@ -150,7 +150,7 @@ def true_response(data="", message="操作成功执行"):
         "data.json": data,
         "message": message
     }
-    return make_response(true_response)
+    return make_response(json.dumps(true_response))
 
 
 def false_response(data="", message="出现错误, 请检查"):
@@ -159,7 +159,7 @@ def false_response(data="", message="出现错误, 请检查"):
         "data.json": data,
         "message": message
     }
-    return make_response(false_response)
+    return make_response(json.dumps(false_response))
 
 
 def warning_response(data="", message="警告"):
@@ -168,4 +168,4 @@ def warning_response(data="", message="警告"):
         "data.json": data,
         "message": message
     }
-    return make_response(warning_response)
+    return make_response(json.dumps(warning_response))
