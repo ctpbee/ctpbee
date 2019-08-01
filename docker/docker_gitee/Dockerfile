@@ -20,7 +20,7 @@ ENV LC_ALL zh_CN.GB18030
 
 
 RUN cd ~ \
-&& git clone https://github.com/yutiansut/ctpbee \
+&& git clone https://gitee.com/yutiansut/ctpbee \
 && chmod +x ~/ctpbee/examples/run.py \
 && cd ctpbee && pip install -e .
 
@@ -28,3 +28,4 @@ RUN cd ~ \
 EXPOSE 5000
 
 CMD ["python", "/root/ctpbee/examples/run.py"]
+
