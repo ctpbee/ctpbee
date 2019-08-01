@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+    #center {
+        margin: 10px;
+        padding: 10px;
+    }
+
+</style>
+{% endblock %}
+
+{% block body%}
+<div class="container" onload="">
+    <div id="center">
+        <h2>基本账户信息 </h2>
+        <div id="main">
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}
+
+{% block script %}
+<script>
+    function create_table() {
+        local_account = localStorage.getItem("account");
+        if (local_account === undefined)
+            return 0;
+        var account_data = JSON.parse(local_account);
+
+        data = '<table class="table table-bordered">' + '<th>key</th> <th>value' + '</th>';
+        for (key in account_data) {
+            data += "<tr>" + "<td>" + key + "</td>" + "<td>" + account_data[key] + "</td>" + "</tr>"
+        }
+        data += "</table>";
+        $("#main").html(data);
+    }
+    setInterval(create_table(), 1000)
+</script>
+
+
+{% endblock %}
+
+
+{%block footer %}
+
+{%endblock%}

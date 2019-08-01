@@ -1,0 +1,40 @@
+{
+  "name": "kline",
+  "version": "1.1.8",
+  "description": "本项目基于某K线插件做了一些封装和二次开发,使插件更加易用,方便后来的开发者.",
+  "main": "dist/kline.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "dev": "webpack --progress --colors --watch",
+    "pack": "webpack --progress --colors"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chxj1992/kline.git"
+  },
+  "keywords": [
+    "kline"
+  ],
+  "author": "chxj1992",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chxj1992/kline/issues"
+  },
+  "homepage": "https://github.com/chxj1992/kline#readme",
+  "devDependencies": {
+    "@babel/core": "^7.0.0-beta.36",
+    "@babel/preset-env": "^7.0.0-beta.36",
+    "babel-loader": "^8.0.0-beta.0",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "css-loader": "^0.28.7",
+    "file-loader": "^1.1.6",
+    "firebase": "^4.8.1",
+    "html-loader": "^0.5.1",
+    "style-loader": "^0.19.1",
+    "uglifyjs-webpack-plugin": "^1.1.6",
+    "url-loader": "^0.6.2",
+    "webpack": "^3.10.0"
+  }
+}

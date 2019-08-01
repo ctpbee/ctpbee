@@ -1,13 +1,14 @@
-from threading import get_ident, Lock
 from typing import Text
 from ctpbee.exceptions import ContextError
 from werkzeug.local import LocalProxy
+from threading import Lock
 
 
 class LocalStack(object):
     def __init__(self):
         self._local = list()
         self._simple = dict()
+        self.lock = Lock()
 
     def __call__(self):
         def _lookup():
@@ -18,19 +19,25 @@ class LocalStack(object):
 
         return LocalProxy(_lookup)
 
+    def get_app(self, name):
+        with self.lock:
+            return self._simple.get(name, None)
+
     def push(self, name, obj):
+
         """Pushes a new item to the stack"""
-        self._local.append(obj)
-        self._simple[name] = obj
+        with self.lock:
+            self._local.append(obj)
+            self._simple[name] = obj
         return self._local
 
     def switch(self, name: Text):
-        if name in self._simple.keys():
-            rv = getattr(self._local, "stack", None)
-            index = rv.index(self._simple.get(name))
-            rv[index], rv[-1] = rv[-1], rv[index]
-            return True
-        return False
+        with self.lock:
+            if name in self._simple.keys():
+                index = self._local.index(self._simple.get(name))
+                self._local[index], self._local[-1] = self._local[-1], self._local[index]
+                return True
+            return False
 
     def pop(self):
         """Removes the topmost item from the stack, will return the
@@ -48,18 +55,15 @@ class LocalStack(object):
         """The topmost item on the stack.  If the stack is empty,
         `None` is returned.
         """
-        try:
-            return self._local[-1]
-        except (AttributeError, IndexError):
-            return None
+        with self.lock:
+            try:
+                return self._local[-1]
+            except (AttributeError, IndexError):
+                return None
 
 
 _app_context_ctx = LocalStack()
 
-
-def _switch_app():
-    """将指定app的变量切换到栈顶 方便current_app进行访问"""
-    return _app_context_ctx.switch
 
 
 def _find_app():
@@ -70,5 +74,12 @@ def _find_app():
     return top
 
 
+def _get_app(name):
+    """ 根据CtpBee的名字找到CtpBee 对象 """
+    return _app_context_ctx.get_app(name)
+
+
 current_app = LocalProxy(_find_app)
-switch_app = LocalProxy(_switch_app)
+switch_app = _app_context_ctx.switch
+
+get_app = _app_context_ctx.get_app

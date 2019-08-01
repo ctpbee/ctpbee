@@ -1,7 +1,12 @@
-import pkgutil
+""" 工具函数 """
+
 import os
+import pkgutil
 import sys
+import types
+from functools import wraps
 from threading import RLock
+from typing import AnyStr, Tuple, IO
 
 _missing = object()
 
@@ -76,3 +81,43 @@ def _matching_loader_thinks_module_is_package(loader, mod_name):
          'PEP 302 import hooks.  If you do not use import hooks and '
          'you encounter this error please file a bug against Flask.') %
         loader.__class__.__name__)
+
+
+def check(type: AnyStr):
+    """ 检查API是否存在 """
+
+    def midlle(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if type == "market":
+                if args[0].market is None:
+                    raise ValueError("当前账户行情api未连接")
+            elif type == "trader":
+                if args[0].market is None:
+                    raise ValueError("当前账户交易api未连接")
+            else:
+                raise ValueError("非法字符串")
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return midlle
+
+
+def dynamic_loading_api(f):
+    """
+    f 是文件流
+    主要是用来通过文件动态载入策略。 返回策略类的实例， 应该通过Ctpbee.add_extension() 加以载入
+    你需要在策略代码文件中显式指定ext
+    返回元组
+    """
+    if not isinstance(f, IO):
+        raise ValueError(f"请确保你传入的是文件流(IO)，而不是{str(type(f))}")
+    d = types.ModuleType("object")
+    d.__file__ = f.name
+    exec(compile(f.read(), f.name, 'exec'), d.__dict__)
+    if not hasattr(d, "ext"):
+        raise AttributeError("请检查你的策略中是否包含ext变量")
+    if not isinstance(d.ext, Tuple):
+        raise ValueError("错误变量")
+    return d.ext

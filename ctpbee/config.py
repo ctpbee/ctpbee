@@ -2,13 +2,13 @@
 """
 use for refrence from flask config
 """
+import errno
 import os
 import types
-import errno
 
-from werkzeug.utils import import_string
-from flask._compat import string_types, iteritems
 from flask import json
+from flask._compat import string_types, iteritems
+from werkzeug.utils import import_string
 
 
 class ConfigAttribute(object):
