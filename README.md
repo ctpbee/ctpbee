@@ -1,5 +1,5 @@
 # ctpbee 
-bee bee .... there is an industrious bee created ~~
+bee bee .... 为二次开发而生 ~~
 
 
 ![ctpbee](https://github.com/somewheve/ctpbee/blob/master/docs/source/ctpbee.jpg)

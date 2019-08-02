@@ -34,5 +34,4 @@ class BeeTdLooperApi(Client):
         pass
 
 
-A = MdApi()
-A.connect({"md_address": "tcp://127.0.0.1:3000"})
+
