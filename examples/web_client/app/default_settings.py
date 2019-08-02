@@ -1,14 +1,15 @@
+import json
+import os
 import time
+from json import JSONDecodeError
 
 from flask import make_response
 from flask_socketio import SocketIO
-import  json
+
 from ctpbee import CtpbeeApi
 from ctpbee.constant import LogData, AccountData, ContractData, BarData, OrderData, PositionData, TickData, SharedData, \
     TradeData
 
-#  订阅的全局变量
-contract_list = []
 
 
 class DefaultSettings(CtpbeeApi):
@@ -16,6 +17,11 @@ class DefaultSettings(CtpbeeApi):
     def __init__(self, name, app, socket_io: SocketIO):
         super().__init__(name, app)
         self.io = socket_io
+        ## 记录所有的bar
+        self.global_bar = {}
+
+        ## 记录每个合约是否载入状态
+        self.local_status = {}
 
     def on_log(self, log: LogData):
         data = {
@@ -29,20 +35,18 @@ class DefaultSettings(CtpbeeApi):
             "type": "account",
             "data": account._to_dict()
         }
-
         self.io.emit('account', data)
 
     def on_contract(self, contract: ContractData):
-        global contract_list
-        contract_list.append(contract.symbol)
+        pass
 
     def on_bar(self, bar: BarData) -> None:
-        bar.datetime = str(bar.datetime)
-        data = {
-            "type": "bar",
-            "data": bar._to_dict()
-        }
-        self.io.emit('bar', data)
+        timeArray = time.strptime(str(bar.datetime), "%Y-%m-%d %H:%M:%S")
+        # 转换成时间戳
+        timestamp = round(time.mktime(timeArray) * 1000)
+        info = [timestamp, bar.open_price, bar.high_price, bar.low_price,
+                bar.close_price, bar.volume]
+        self.global_bar[bar.local_symbol].append(info)
 
     def on_order(self, order: OrderData) -> None:
         # 更新活跃报单
@@ -72,6 +76,9 @@ class DefaultSettings(CtpbeeApi):
         self.io.emit("position", data)
 
     def on_tick(self, tick: TickData) -> None:
+        self.local_status.setdefault(tick.local_symbol, False)
+        self.global_bar.setdefault(tick.local_symbol, [])
+
         tick.datetime = str(tick.datetime)
         data = {
             "type": "tick",
@@ -83,44 +90,47 @@ class DefaultSettings(CtpbeeApi):
             "data": self.app.recorder.get_all_positions()
         }
         self.io.emit("position", data)
-        # 更新持仓数据
-        bars = []
+        if not self.local_status.get(tick.local_symbol):
+            try:
+                with open(f"{os.path.dirname(__file__)}/static/json/{tick.symbol}.json", "r") as f:
+                    from json import load
+                    st = True
+                    try:
+                        data = load(f)
+                    except JSONDecodeError:
+                        st = False
+                    if data.get("data") is not None and st:
+                        klines = data.get("data").get("lines")
+                        assert type(klines) == list
+                        if len(klines) != 0:
+                            self.global_bar.get(tick.local_symbol).extend(klines)
+            except FileNotFoundError:
+                pass
+            self.local_status[tick.local_symbol] = True
 
-        # 获取当前bars
-        current_bar = self.app.recorder.get_bar(tick.local_symbol)
-        if current_bar is not None:
-            value = current_bar.get(1)
-            for single_bar in value:
-                timeArray = time.strptime(str(single_bar.datetime), "%Y-%m-%d %H:%M:%S")
-                # 转换成时间戳
-                timestamp = round(time.mktime(timeArray)*1000)
-                bars.append([timestamp, single_bar.open_price, single_bar.high_price, single_bar.low_price,
-                             single_bar.close_price, single_bar.volume])
-
-        tick = self.app.recorder.get_tick(tick.local_symbol)
-        update_result = {
-            "success": True,
-            "data": {
-                "lines": bars,
-                "depths": {
-                    "asks": [
-                        [
-                            tick.ask_price_1,
-                            tick.ask_volume_1
+        with open(f"{os.path.dirname(__file__)}/static/json/{tick.symbol}.json", "w") as f:
+            from json import dump
+            update_result = {
+                "success": True,
+                "data": {
+                    "lines": self.global_bar.get(tick.local_symbol),
+                    "depths": {
+                        "asks": [
+                            [
+                                tick.ask_price_1,
+                                tick.ask_volume_1
+                            ]
+                        ],
+                        "bids": [
+                            [
+                                tick.bid_price_1,
+                                tick.bid_volume_1
+                            ]
                         ]
-                    ],
-                    "bids": [
-                        [
-                            tick.bid_price_1,
-                            tick.bid_volume_1
-                        ]
-                    ]
+                    }
                 }
             }
-        }
-        import os
-        with open(f"{os.path.dirname(__file__)}/static/json/{tick.symbol}.json", "w+") as f:
-            from json import dump
+            f.truncate(0)
             dump(update_result, f)
 
         self.io.emit("update_all", update_result)

@@ -11,10 +11,10 @@
             <div id="main"></div>
         </div>
     </div>
-<!--    <div class="col-md-2">-->
+    <!--    <div class="col-md-2">-->
 
 
-<!--    </div>-->
+    <!--    </div>-->
     <div class="col-md-3">
         <div class="fh5co-form animate-box">
             <div class="form-group">
@@ -28,6 +28,7 @@
             <div class="form-group">
                 <button type="submit" class="btn btn-primary" onclick="subscribe_single()">订阅单个</button>
                 <button type="submit" class="btn btn-primary">订阅所有</button>
+                <button type="submit" class="btn btn-primary" onclick="update_contract()">更新合约</button>
             </div>
         </div>
     </div>
@@ -81,20 +82,44 @@
         $("#symbol").val("")
     }
 
+    function update_contract() {
+        $.ajax({
+            url: "{{ url_for('market')}}",
+            method: "put",
+            dataType: "json",
+            success: function (data) {
+                console.log(data['message']);
+                render_contract_list()
+            },
+            error: function (error) {
+                alert("服务器开小差了 ,请前往社区寻求帮助");
+            }
+        });
+    }
 
+    update_contract()
+
+</script>
+<script>
+    var socket = io.connect('http://localhost:5000');
+    socket.on('contract', function (data) {
+        localStorage.setItem("contract_list", JSON.stringify(data));
+    });
 </script>
 
 <script>
-    window.onload = function () {
+
+    function render_contract_list() {
         var tick_realtime = JSON.parse(localStorage.getItem("tick_realtime"));
         data = '<table class="table table-bordered">' + '<th>中文名</th><th>品种</th> <th>最新行情' + '</th>' + "<th> 操作 </th>";
         for (var key in tick_realtime) {
-            url = '{{url_for('order_request', symbol=key) }}' + key;
+            url = "{{url_for('order_request', symbol=key) }}" + key;
             data += "<tr>" + "<td>" + tick_realtime[key]["name"] + "</td>" + "<td>" + key + "</td>" + "<td>" + tick_realtime[key]["last_price"] + "</td>" + "<td>" + "<a href='" + url + "'>" + "前往下单" + "</a>" + "</td>" + "</tr>";
         }
         data += "</table>";
         $("#main").html(data);
-    };
+    }
+
     socket.on("tick", function (data) {
         // 收到tick --- > 更新到本地的tick缓存上面去
         var tick = data['data'];
@@ -108,7 +133,7 @@
         // 更新之后 先渲染图表
         data = '<table class="table table-bordered">' + '<th>中文名</th><th>品种</th> <th>最新行情' + '</th>' + "<th> 操作 </th>";
         for (var key in tick_realtime) {
-            url = '{{url_for('order_request', symbol=key) }}' + key;
+            url = "{{url_for('order_request', symbol=key) }}" + key;
             data += "<tr>" + "<td>" + tick_realtime[key]["name"] + "</td>" + "<td>" + key + "</td>" + "<td>" + tick_realtime[key]["last_price"] + "</td>" + "<td>" + "<a href='" + url + "'>" + "前往下单" + "</a>" + "</td>" + "</tr>";
         }
         data += "</table>";

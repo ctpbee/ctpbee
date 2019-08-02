@@ -1,7 +1,8 @@
-from typing import Text
-from ctpbee.exceptions import ContextError
-from werkzeug.local import LocalProxy
+import warnings
 from threading import Lock
+from typing import Text
+
+from werkzeug.local import LocalProxy
 
 
 class LocalStack(object):
@@ -65,12 +66,12 @@ class LocalStack(object):
 _app_context_ctx = LocalStack()
 
 
-
 def _find_app():
     # 返回栈顶的app变量.
     top = _app_context_ctx.top
     if top is None:
-        raise ContextError("无app变量")
+        warnings.warn("当前current_app未代理任何Ctpbee对象")
+        return None
     return top
 
 
@@ -81,5 +82,4 @@ def _get_app(name):
 
 current_app = LocalProxy(_find_app)
 switch_app = _app_context_ctx.switch
-
 get_app = _app_context_ctx.get_app

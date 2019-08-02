@@ -16,7 +16,11 @@
     .editor {
         border: 1px solid #000000;
     }
-    #kline_container{padding-right: 0}
+
+    #kline_container {
+        margin-right: 0px;
+    }
+
     .buy {
         height: 60px;
         width: 60px;
@@ -59,7 +63,7 @@
 <div class="row" style="height: 1200px;">
     <div class="col-md-12">
         <div class="row">
-            <div class="col-md-10">
+            <div class="col-md-9">
                 <div id="kline_container"></div>
                 <div class="row">
                     <div class="col-md-7">
@@ -112,17 +116,17 @@
                                     </div>
                                     <div class="row">
                                         <div class="col-md-3 send_order">价格</div>
-                                        <div class="col-md-5">
+                                        <div class="col-md-7">
                                             <input type="number" id="send_price" class="editor form-control"/>
                                         </div>
-                                        <div class="col-md-4"></div>
+                                        <div class="col-md-2"></div>
                                     </div>
                                     <div class="row">
                                         <div class="col-md-3 send_order">手数</div>
-                                        <div class="col-md-5">
+                                        <div class="col-md-7">
                                             <input type="number" id="volume" class="editor form-control"/>
                                         </div>
-                                        <div class="col-md-4"></div>
+                                        <div class="col-md-2"></div>
                                     </div>
                                     <div class="row list-inline">
                                         <button class="btn-primary col-md-6 buy send_order" onclick="order('long')">买多
@@ -137,7 +141,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <div id="tick"></div>
             </div>
         </div>
@@ -216,10 +220,10 @@
             return;
         }
         var order_array = JSON.parse(order);
-        var data = '<table class="table table-bordered">' + '<th>报单合约</th><th>报单方向</th><th>交易所' + '</th>' + "<th> 报单手数 </th>" + "<th> 报单价格 </th>" + "<th> 状态</th>" + "<th> 价格类型</th>"
+        var data = '<table class="table table-bordered">' + '<th>报单合约</th><th>报单方向</th><th>交易所' + '</th>' + "<th> 报单手数 </th>" + "<th> 报单价格 </th>" + "<th> 状态</th>" + "<th> 报单时间</th>" + "<th> 价格类型</th>"
         for (var key in order_array) {
             data += "<tr>" + "<td>" + order_array[key]["symbol"] + "</td>" + "<td>" + order_array[key]["direction"] + "</td>" + "<td>" + order_array[key]["exchange"] + "</td>"
-                + "<td>" + order_array[key]["volume"] + "</td>" + "<td>" + order_array[key]["price"].toFixed(2) + "</td>" + "<td>" + order_array[key]["status"] + "</td>" + "<td>" + order_array[key]["type"] + "</td>" + "</tr>";
+                + "<td>" + order_array[key]["volume"] + "</td>" + "<td>" + order_array[key]["price"].toFixed(2) + "</td>" + "<td>" + order_array[key]["status"] + "</td>" + "<td>" + order_array[key]["time"] + "</td>" + "<td>" + order_array[key]["type"] + "</td>" + "</tr>";
         }
         data += "</table>";
         $("#order_data").html(data);
@@ -248,10 +252,10 @@
             return
         }
         var order_array = JSON.parse(array);
-        data = '<table class="table table-bordered">' + '<th>报单合约</th><th>报单方向</th><th>交易所' + '</th>' + "<th> 报单手数 </th>" + "<th> 报单价格 </th>" + "<th> 状态</th>" + "<th> 价格类型</th>" + "<th> 操作</th>";
+        data = '<table class="table table-bordered">' + '<th>报单合约</th><th>报单方向</th><th>交易所' + '</th>' + "<th> 报单手数 </th>" + "<th> 报单价格 </th>" + "<th> 状态</th>" + "<th> 价格类型</th>" + "<th> 报单时间</th>" + "<th> 操作</th>";
         for (var key in order_array) {
             data += "<tr>" + "<td>" + order_array[key]["symbol"] + "</td>" + "<td>" + order_array[key]["direction"] + "</td>" + "<td>" + order_array[key]["exchange"] + "</td>"
-                + "<td>" + order_array[key]["volume"] + "</td>" + "<td>" + order_array[key]["price"].toFixed(2) + "</td>" + "<td>" + order_array[key]["status"] + "</td>" + "<td>" + order_array[key]["type"] + "</td>" + "<td>" + "<a>撤单</a>" + "</td>" + "</tr>";
+                + "<td>" + order_array[key]["volume"] + "</td>" + "<td>" + order_array[key]["price"].toFixed(2) + "</td>" + "<td>" + order_array[key]["status"] + "</td>" + "<td>" + order_array[key]["type"] + "</td>" + "<td>" + order_array[key]["time"] + "</td>" + "<td>" + "<a>撤单</a>" + "</td>" + "</tr>";
         }
         data += "</table>";
         $("#un_traded").html(data);
@@ -307,7 +311,7 @@
         element: "#kline_container",
         height: 400,
         theme: "light",
-        width: 1300,
+        width: 1285,
         showTrade: false,
         symbol: "{{ symbol }}",
         symbolName: "{{symbol}}",

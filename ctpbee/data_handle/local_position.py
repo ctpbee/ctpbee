@@ -245,7 +245,6 @@ class PositionHolding:
             return [req_td]
         else:
             req_list = []
-
             if td_available > 0:
                 req_td = copy(req)
                 req_td.offset = Offset.CLOSETODAY

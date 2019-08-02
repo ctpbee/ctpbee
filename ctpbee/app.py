@@ -221,6 +221,7 @@ class CtpBee(object):
 
     def __del__(self):
         """释放账户 安全退出"""
+        print("注销")
         if self.market is not None:
             self.market.close()
         if self.trader is not None:
