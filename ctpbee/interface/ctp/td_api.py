@@ -120,7 +120,6 @@ class BeeTdApi(TdApi):
 
         symbol = data["InstrumentID"]
         exchange = symbol_exchange_map[symbol]
-
         order = OrderData(
             symbol=symbol,
             exchange=exchange,

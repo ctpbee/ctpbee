@@ -147,7 +147,7 @@ EVENT_ACCOUNT = "account"
 EVENT_SHARED = "shared"
 
 
-# @dataclass(init=False, repr=False)
+@dataclass(init=False, repr=False)
 class BaseData:
     """
     Any data object needs a gateway_name as source
