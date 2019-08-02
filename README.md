@@ -25,6 +25,15 @@ git clone https://github.com/somewheve/ctpbee && cd ctpbee && python3 setup.py i
 pip3 install ctpbee
 ```
 
+## docker 快速部署
+
+```
+docker pull yutiansut/ctpbee:latest
+docker run -p 5000:5000 yutiansut/ctpbee:latest
+```
+
+本地打开 localhost:5000 即可使用
+
 ## 文档
 本地生成:
 
