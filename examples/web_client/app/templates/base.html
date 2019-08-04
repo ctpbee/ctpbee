@@ -51,6 +51,16 @@
         .wrap {
             flex: 1;
         }
+
+        #alertMsg {
+            width: 300px;
+            position: absolute;
+            bottom: 100px;
+            right: 100px;
+            /*transform: translateX(-50%);*/
+            background-color: rgba(62, 241, 167, 1);
+            color: #000;
+        }
     </style>
 
     {% block head %}
@@ -58,6 +68,7 @@
 
 </head>
 <body>
+<div class="alert" role="alert" style="display: none" id="alertMsg"></div>
 <div class="wrap">
     {% block body %}
 
@@ -74,8 +85,6 @@
             <a href="http://120.79.8.150/">
                 <small>About us</small>
             </a>
-
-
         </p>
     </div>
 </div>
@@ -101,7 +110,23 @@
 <script>
     var socket = io.connect('http://localhost:5000');
 </script>
+<script>
+    function alertMsg(msg, level = "msg") {
+        // let top=$(window).scrollTop()
+        // let marginTop=top+50
+        // $('#alertMsg').css('bottom','100px')
+        ext = "提示信息: " + msg;
+        if (level == "err") {
+            $("#alertMsg").css({"backgroundColor":"red"});
+        }
+        $('#alertMsg').fadeIn().html(ext);
+        setTimeout(function () {
+            $('#alertMsg').fadeOut()
+        }, 2000)
+    }
 
+
+</script>
 {% block script %}
 
 

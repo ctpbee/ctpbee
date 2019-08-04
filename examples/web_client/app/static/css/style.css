@@ -183,3 +183,7 @@ input, textarea {
 }
 /*# sourceMappingURL=style.css.map */
 
+.card{
+  background-color: white;
+  border-radius: 3px;
+}

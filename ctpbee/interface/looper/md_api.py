@@ -1,6 +1,9 @@
 import re
 from typing import Dict
 
+from ctpbee import loads
+from ctpbee.constant import EVENT_TICK
+from ctpbee.event_engine import Event
 from ctpbee.interface.looper.base_client import Client
 
 
@@ -27,11 +30,13 @@ class BeeMdLooperApi(Client):
         self.socket.connect(self.md_address)
         self.after_connect()
 
-    def message_distribute(self, message:bytes):
+    def message_distribute(self, message: bytes):
         """ 实现消息的封装与分发到具体的处理函数 """
 
-    def onRspTickEvent(self, data, bool):
-        pass
+    def onRspTic(self, data, bool):
+        tick = loads(data)
+        event = Event(type=EVENT_TICK, data=tick)
+        self.event_engine.put(event)
 
 
 A = BeeMdLooperApi()

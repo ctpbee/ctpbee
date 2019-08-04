@@ -88,9 +88,9 @@ class MarketView(MethodView):
         symbol = request.values.get("symbol")
         try:
             current_app.subscribe(symbol)
-            return true_response(message="订阅成功")
+            return true_response(message=f"订阅{symbol}成功")
         except Exception:
-            return false_response(message="订阅失败")
+            return false_response(message=f"订阅{symbol}失败")
 
     def put(self):
         """ 更新contract"""
@@ -98,8 +98,8 @@ class MarketView(MethodView):
             contracts = [contract.symbol for contract in current_app.recorder.get_all_contracts()]
             io.emit("contract", contracts)
         except Exception:
-            return false_response(message="bad")
-        return true_response(message="ok")
+            return false_response(message="更新合约失败", )
+        return true_response(message="更新合约列表完成")
 
     def get(self):
         return render_template("market.html")
@@ -118,8 +118,6 @@ class OpenOrderView(MethodView):
     def post(self):
         """ 发单 """
         info = request.values.to_dict()
-
-        print(info)
         local_symbol = info.get("local_symbol")
         direction = info.get("direction")
         offset = info.get("offset")
@@ -132,12 +130,14 @@ class OpenOrderView(MethodView):
                                                direction=direction, offset=offset, volume=int(volume),
                                                price=float(price),
                                                type=type)
-        print(req)
         try:
-            current_app.send_order(req)
+            req_id = current_app.send_order(req)
+            sleep(0.2)
+            order = current_app.recorder.get_order(req_id)
+            if order.status.value == "拒单":
+                return false_response(message=current_app.recorder.get_new_error()['data']['ErrorMsg'])
             return true_response(message="成功下单")
         except Exception as e:
-            print(e)
             return false_response(message="下单失败")
 
     def delete(self):

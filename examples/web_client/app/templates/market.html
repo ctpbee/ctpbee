@@ -1,13 +1,26 @@
 {% extends "base.html" %}
 
 
+{% block head %}
+<style>
+    .form-group button {
+        height: 40px;
+        width: 60px;
+        text-align: center;
+        padding: 5px;
+        font-size: 12px;
+    }
+
+</style>
+
+{% endblock %}
+
 {% block body %}
 
 <div class="row">
-    <div class="col-md-9 ">
+    <div class="col-md-9 card">
         <div class="container">
             <h2>订阅列表</h2>
-
             <div id="main"></div>
         </div>
     </div>
@@ -73,7 +86,7 @@
             dataType: "json",
             data: {"symbol": subscribed_symbol},
             success: function (data) {
-                console.log(data['message']);
+                alertMsg(data['message']);
             },
             error: function (error) {
                 alert("服务器开小差了 ,请前往社区寻求帮助");
@@ -88,7 +101,7 @@
             method: "put",
             dataType: "json",
             success: function (data) {
-                console.log(data['message']);
+                alertMsg(data['message']);
                 render_contract_list()
             },
             error: function (error) {
@@ -108,7 +121,6 @@
 </script>
 
 <script>
-
     function render_contract_list() {
         var tick_realtime = JSON.parse(localStorage.getItem("tick_realtime"));
         data = '<table class="table table-bordered">' + '<th>中文名</th><th>品种</th> <th>最新行情' + '</th>' + "<th> 操作 </th>";
@@ -123,7 +135,6 @@
     socket.on("tick", function (data) {
         // 收到tick --- > 更新到本地的tick缓存上面去
         var tick = data['data'];
-        console.log(data);
         // 更新到本地缓存进去
         var tick_realtime = JSON.parse(localStorage.getItem("tick_realtime"));
         if (tick_realtime == null) {
@@ -141,7 +152,6 @@
         localStorage.setItem("tick_realtime", JSON.stringify(tick_realtime));
         localStorage.setItem(tick.symbol, JSON.stringify(tick));
     })
-
 </script>
 
 {%endblock%}

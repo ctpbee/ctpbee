@@ -165,7 +165,7 @@ def true_response(data="", message="操作成功执行"):
 
 def false_response(data="", message="出现错误, 请检查"):
     false_response = {
-        "result": "error",
+        "result": "failed",
         "data.json": data,
         "message": message
     }

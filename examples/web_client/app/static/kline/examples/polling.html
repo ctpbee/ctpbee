@@ -27,7 +27,7 @@
 
     Width: <input id="width" type="text" value="1200">
     Height: <input id="height" type="text" value="650">
-    <button id="resize-btn">resize</button>
+    <button id="resize-btn">resize</button>                                                   
     <hr>
 
     <button id="switch-trade-btn">Switch Trade</button>
@@ -71,7 +71,7 @@
         intervalTime: 5000,
         debug: true,
         showTrade: true,
-        onResize: function(width, height) {
+        onResize: function (width, height) {
             console.log("chart resized: " + width + " " + height);
         }
     });
@@ -96,7 +96,7 @@
     });
 
     $('#toggle-theme-btn').click(function () {
-        if(kline.theme == "dark") {
+        if (kline.theme == "dark") {
             kline.setTheme("light");
         } else {
             kline.setTheme("dark");

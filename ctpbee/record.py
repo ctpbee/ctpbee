@@ -23,7 +23,7 @@ class Recorder(object):
         self.accounts = {}
         self.contracts = {}
         self.logs = {}
-        self.errors = {}
+        self.errors = []
         self.shared = {}
         self.generators = {}
         self.active_orders = {}
@@ -60,7 +60,7 @@ class Recorder(object):
             value(deepcopy(event))
 
     def process_error_event(self, event: Event):
-        self.errors[self.get_local_time()] = event.data
+        self.errors.append({"time": self.get_local_time(), "data": event.data})
         print(self.get_local_time() + ": ", event.data)
 
     def process_log_event(self, event: Event):
@@ -203,6 +203,12 @@ class Recorder(object):
         Get all position data.
         """
         return self.position_manager.get_all_positions()
+
+    def get_errors(self):
+        return self.errors
+
+    def get_new_error(self):
+        return self.errors[-1]
 
     def get_all_accounts(self):
         """

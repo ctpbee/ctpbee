@@ -101,7 +101,7 @@ def go():
     app.config.from_mapping(info)
 
     """ 
-        载入用户层定义层 你可以编写多个继承ExtAbstract ,然后实例化它, 记得传入app, 当然你可以通过app.remove_extension("data_recorder")
+        载入用户层定义层 你可以编写多个继承CtpbeeApi ,然后实例化它, 记得传入app, 当然你可以通过app.remove_extension("data_recorder")
         data_recorder 就是下面传入的插件名字
     
     """

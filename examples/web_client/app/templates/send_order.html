@@ -5,6 +5,8 @@
 <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
 <script src="{{ url_for('static', filename='kline/dist/kline.js') }}"></script>
 <script src="{{ url_for('static', filename='kline/lib/jquery.mousewheel.js') }}"></script>
+<script src="{{ url_for('static', filename='js/pargms.js') }}"></script>
+
 <!--<script src="{{ url_for('static', filename='kline/lib/sockjs.js') }}"></script>-->
 <!--<script src="{{ url_for('static', filename='kline/lib/stomp.js') }}"></script>-->
 <!--<script src="{{ url_for('static', filename='kline/lib/require.js') }}"></script>-->
@@ -61,90 +63,90 @@
 <div></div>
 
 <div class="row" style="height: 1200px;">
-    <div class="col-md-12">
+
+    <div class="col-md-9 card">
+        <div id="kline_container"></div>
         <div class="row">
-            <div class="col-md-9">
-                <div id="kline_container"></div>
-                <div class="row">
-                    <div class="col-md-7">
-                        <div class="data col-md-12" id="content">
-                            <div>
-                                <!-- Nav tabs -->
-
-                                <ul class="nav nav-tabs" role="tablist">
-                                    <li role="presentation" class="active"><a href="#position_data"
-                                                                              aria-controls="position_data"
-                                                                              role="tab"
-                                                                              data-toggle="tab"
-                                                                              onclick="click_position()">持仓数据</a></li>
-                                    <li role="presentation"><a href="#un_traded" aria-controls="un_traded" role="tab"
-                                                               data-toggle="tab"
-                                                               onclick="click_active_order()">待成交数据</a>
-                                    </li>
-                                    <li role="presentation"><a href="#order_data" aria-controls="order_data" role="tab"
-                                                               data-toggle="tab" onclick="click_order()">发单数据</a></li>
-                                    <li role="presentation"><a href="#trade_data" aria-controls="trade_data" role="tab"
-                                                               data-toggle="tab" onclick="click_trade()">成交数据</a></li>
-                                </ul>
-                                <!-- Tab panes -->
-                                <div class="tab-content">
-                                    <div role="tabpanel" class="tab-pane active" id="position_data"></div>
-                                    <div role="tabpanel" class="tab-pane" id="un_traded"></div>
-                                    <div role="tabpanel" class="tab-pane" id="order_data"></div>
-                                    <div role="tabpanel" class="tab-pane" id="trade_data"></div>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="data col-md-12 send_order" id="send_order">
-                            <div id="block">
-                                <h3>下单控制台</h3>
-                                <div style="width: 100%">
-                                    <div class="row">
-                                        <div class="col-md-3 send_order">价格类型</div>
-                                        <div class="col-md-6">
-                                            <div class="form-group simple">
-                                                <select class="selectpicker" id="type" data-style="btn-primary">
-                                                    <option value="limit">限价</option>
-                                                    <option value="market">市价</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4"></div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-3 send_order">价格</div>
-                                        <div class="col-md-7">
-                                            <input type="number" id="send_price" class="editor form-control"/>
-                                        </div>
-                                        <div class="col-md-2"></div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-3 send_order">手数</div>
-                                        <div class="col-md-7">
-                                            <input type="number" id="volume" class="editor form-control"/>
-                                        </div>
-                                        <div class="col-md-2"></div>
-                                    </div>
-                                    <div class="row list-inline">
-                                        <button class="btn-primary col-md-6 buy send_order" onclick="order('long')">买多
-                                        </button>
-                                        <button class="btn-danger col-md-6 sell send_order" onclick="order('short')">卖空
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+            <div class="col-md-8 card">
+                <div class="data col-md-12" id="content">
+                    <div>
+                        <!-- Nav tabs -->
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li role="presentation" class="active"><a href="#position_data"
+                                                                      aria-controls="position_data"
+                                                                      role="tab"
+                                                                      data-toggle="tab"
+                                                                      onclick="click_position()">持仓数据</a></li>
+                            <li role="presentation"><a href="#un_traded" aria-controls="un_traded" role="tab"
+                                                       data-toggle="tab"
+                                                       onclick="click_active_order()">待成交数据</a>
+                            </li>
+                            <li role="presentation"><a href="#order_data" aria-controls="order_data" role="tab"
+                                                       data-toggle="tab" onclick="click_order()">发单数据</a></li>
+                            <li role="presentation"><a href="#trade_data" aria-controls="trade_data" role="tab"
+                                                       data-toggle="tab" onclick="click_trade()">成交数据</a></li>
+                        </ul>
+                        <!-- Tab panes -->
+                        <div class="tab-content">
+                            <div role="tabpanel" class="tab-pane active" id="position_data"></div>
+                            <div role="tabpanel" class="tab-pane" id="un_traded"></div>
+                            <div role="tabpanel" class="tab-pane" id="order_data"></div>
+                            <div role="tabpanel" class="tab-pane" id="trade_data"></div>
                         </div>
 
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div id="tick"></div>
+            <div class="col-md-4 card">
+                <div class="data col-md-12 send_order" id="send_order">
+                    <div id="block">
+                        <h3>下单控制台</h3>
+                        <div style="width: 100%">
+                            <div class="row">
+                                <div class="col-md-3 send_order">价格类型</div>
+                                <div class="col-md-6">
+                                    <div class="form-group simple">
+                                        <select class="selectpicker" id="type" data-style="btn-primary">
+                                            <option value="limit">限价</option>
+                                            <option value="market">市价</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4"></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3 send_order">价格</div>
+                                <div class="col-md-7">
+                                    <input type="number" id="send_price" class="editor form-control"/>
+                                </div>
+                                <div class="col-md-2"></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3 send_order">手数</div>
+                                <div class="col-md-7">
+                                    <input type="number" id="volume" class="editor form-control"/>
+                                </div>
+                                <div class="col-md-2"></div>
+                            </div>
+                            <div class="row list-inline">
+                                <button class="btn-primary btn col-md-6 buy send_order"
+                                        onclick="send_order('long')">
+                                    买多
+                                </button>
+                                <button class="btn-danger btn col-md-6 sell send_order"
+                                        onclick="send_order('short')">卖空
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
+    </div>
+    <div class="col-md-3">
+        <div id="tick"></div>
+
     </div>
     <!--    <div class="col-md-2">-->
     <!--        <div class="data" id="tick" style="font-size: 10px;">合约具体数据</div>-->
@@ -168,6 +170,8 @@
 {%endblock%}
 
 {%block script %}
+
+<script src="{{ url_for('static', filename='js/trade_operation.js') }}"></script>
 <script>
     window.onload = function () {
         // 更新个人终端数据
@@ -177,14 +181,19 @@
         localStorage.setItem("current_symbol", symbol)
     };
 
+    function send_order(direction) {
+        order(direction, '{{ symbol }}', "{{ url_for('order_solve')}}")
+    }
+
     socket.on("tick", function (data) {
         // 更新实时行情
+        console.log(data);
         tick = data['data'];
-        if (tick.symbol != "{{symbol}}") return;
+        if (tick.symbol !== "{{symbol}}") return;
         data = '<table class="table table-bordered">' + '<th>详细数据</th> <th>值' + '</th>';
         for (key in tick) {
-            if (key.includes("2") || key.includes("3") || key.includes("4") || key.includes("5")) continue;
-            data += "<tr>" + "<td>" + key + "</td>" + "<td>" + tick[key] + "</td>" + "</tr>"
+            if (!tick_par_array.includes(key)) continue;
+            data += "<tr>" + "<td style='font-size: 12px;'>" + tick_map[key] + "</td>" + "<td style='font-size: 12px;'>" + tick[key] + "</td>" + "</tr>"
         }
         data += "</table>";
         $("#tick").html(data);
@@ -202,7 +211,6 @@
         order_array = data['data'];
         localStorage.setItem("local_active_order", JSON.stringify(order_array));
     });
-
 
     socket.on("trade", function (data) {
         var trade_data = data['data'];
@@ -276,42 +284,13 @@
         $("#trade_data").html(data);
     }
 
-
-    function order(direction) {
-        price = $("#send_price").val();
-        volume = $("#volume").val();
-        type = $("#type").val();
-        var detail_info = JSON.parse(localStorage.getItem("{{ symbol }}"));
-        exchange = detail_info['exchange'];
-        req = {
-            "direction": direction,
-            "offset": "open",
-            "price": price,
-            "volume": volume,
-            "type": type,
-            "exchange": exchange,
-            "local_symbol": "{{ symbol }}"
-        };
-        $.ajax({
-            dataType: "json",
-            method: "POST",
-            data: req,
-            url: "{{ url_for('order_solve')}} ",
-            success: function (data) {
-                console.log(data['message'])
-            },
-            error: function (err) {
-                console.log("error")
-            }
-        })
-    }
-
     var url = "http://127.0.0.1:5000/static/json/" + "{{ symbol}}" + ".json";
     var kline = new Kline({
         element: "#kline_container",
         height: 400,
         theme: "light",
-        width: 1285,
+        width: window.innerWidth * 0.75 - 30,
+        ranges: ["1w", "1d", "1h", "30m", "15m", "5m", "1m", "line"],
         showTrade: false,
         symbol: "{{ symbol }}",
         symbolName: "{{symbol}}",
@@ -322,7 +301,10 @@
         url: url,
     });
     kline.draw();
+
+    // 默认点击持仓信息
     click_position();
 </script>
+
 
 {% endblock %}
