@@ -1,6 +1,8 @@
 from socket import socket, AF_INET, SOCK_STREAM
 from threading import Thread
 
+from ctpbee.interface.looper.protocal import TransferProtocal
+
 
 class Client:
     ip_re = r".*?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5}).*"
@@ -16,7 +18,10 @@ class Client:
         """ 失去连接触发 """
         raise NotImplemented
 
-    def message_distribute(self, message):
+    def connection_made(self):
+        raise NotImplemented
+
+    def message_distribute(self, data: TransferProtocal):
         raise NotImplemented
 
     def after_connect(self):
@@ -33,4 +38,4 @@ class Client:
         """ 循环监听请求 ，然后解耦后分发到不同的消息处理机制 """
         while True:
             s = self.socket.recv(4096)
-            self.message_distribute(s)
+            self.message_distribute(TransferProtocal(s))
