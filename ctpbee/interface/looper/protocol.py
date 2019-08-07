@@ -1,4 +1,4 @@
-class TransferProtocal:
+class TransferProtocol:
     """ 用于解析回测时候传送的tick数据 """
 
     def __init__(self, data):

@@ -5,7 +5,7 @@ from ctpbee.constant import PositionData, AccountData, LogData
 
 class DataRecorder(CtpbeeApi):
     def __init__(self, name, app=None):
-        super().__init__(name, app, api_type="data")
+        super().__init__(name, app)
         self.subscribe_set = set(["rb1910"])
 
     def on_trade(self, trade):

@@ -28,7 +28,7 @@ class BeeMdLooperApi(Client):
         add, port = result.group(1).split(":")
         self.md_address = (add, int(port))
         self.socket.connect(self.md_address)
-        self.after_connect()
+        self._after_connect()
 
     def message_distribute(self, message: bytes):
         """ 实现消息的封装与分发到具体的处理函数 """

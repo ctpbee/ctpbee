@@ -1,7 +1,7 @@
 from socket import socket, AF_INET, SOCK_STREAM
 from threading import Thread
 
-from ctpbee.interface.looper.protocal import TransferProtocal
+from ctpbee.interface.looper.protocol import TransferProtocol
 
 
 class Client:
@@ -21,10 +21,10 @@ class Client:
     def connection_made(self):
         raise NotImplemented
 
-    def message_distribute(self, data: TransferProtocal):
+    def message_distribute(self, data: TransferProtocol):
         raise NotImplemented
 
-    def after_connect(self):
+    def _after_connect(self):
         """
         此函数应该在主动连接之后调用
         然后开始监听消息
@@ -38,4 +38,4 @@ class Client:
         """ 循环监听请求 ，然后解耦后分发到不同的消息处理机制 """
         while True:
             s = self.socket.recv(4096)
-            self.message_distribute(TransferProtocal(s))
+            self.message_distribute(TransferProtocol(s))
