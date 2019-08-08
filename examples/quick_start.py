@@ -6,7 +6,7 @@ from ctpbee.constant import PositionData, AccountData, LogData
 class DataRecorder(CtpbeeApi):
     def __init__(self, name, app=None):
         super().__init__(name, app)
-        self.subscribe_set = set(["rb1910"])
+        self.subscribe_set = set(["ic1909"])
 
     def on_trade(self, trade):
         pass
@@ -16,8 +16,8 @@ class DataRecorder(CtpbeeApi):
         self.app.subscribe(contract.symbol)
 
         # 或者 单独制定
-        # if contract.symbol in self.subscribe_set:
-        #     self.app.subscribe(contract.symbol)
+        if contract.symbol in self.subscribe_set:
+            self.app.subscribe(contract.symbol)
             # 或者
             # current_app.subscribe(contract.symbol)
 
