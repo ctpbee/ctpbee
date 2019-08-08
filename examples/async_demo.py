@@ -1,9 +1,12 @@
+import asyncio
+
 from ctpbee import CtpBee
 from ctpbee import CtpbeeApi
 from ctpbee.constant import PositionData, AccountData, LogData
+from ctpbee.func import AsyncApi
 
 
-class DataRecorder(CtpbeeApi):
+class DataRecorder(AsyncApi):
     def __init__(self, name, app=None):
         super().__init__(name, app)
         self.subscribe_set = set(["rb1910"])
@@ -47,7 +50,7 @@ class DataRecorder(CtpbeeApi):
 
     async def on_log(self, log: LogData):
         """ 可以用于将log信息推送到外部 """
-        pass
+        await asyncio.sleep(1)
 
 
 def go():

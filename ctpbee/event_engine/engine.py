@@ -2,7 +2,6 @@
 Event-driven framework of vn.py framework.
 """
 import asyncio
-from _contextvars import ContextVar
 from collections import defaultdict
 from queue import Empty, Queue
 from threading import Thread
@@ -164,7 +163,6 @@ class AsyncEngine:
         self.loop = asyncio.new_event_loop()
         self._func = defaultdict(list)
         self.work_core = work_core
-        self.queue = ContextVar('queue')
         self.init_flag = True
         self._active = False
 
@@ -209,7 +207,6 @@ class AsyncEngine:
         self._active = True
         asyncio.set_event_loop(self.loop)
         self._queue = asyncio.Queue()
-        self.queue.set(self._queue)
         tasks = []
         for i in range(self.work_core):
             task = asyncio.create_task(self.worker(self._queue))

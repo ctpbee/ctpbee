@@ -6,26 +6,23 @@ from ctpbee.constant import PositionData, AccountData, LogData
 class DataRecorder(CtpbeeApi):
     def __init__(self, name, app=None):
         super().__init__(name, app)
-        self.subscribe_set = set(["ic1909"])
+        self.subscribe_set = set(["rb1910"])
 
     def on_trade(self, trade):
         pass
 
     def on_contract(self, contract):
         # 订阅所有
-        self.app.subscribe(contract.symbol)
+        # self.app.subscribe(contract.symbol)
 
         # 或者 单独制定
         if contract.symbol in self.subscribe_set:
             self.app.subscribe(contract.symbol)
-            # 或者
-            # current_app.subscribe(contract.symbol)
 
     def on_order(self, order):
         pass
 
     def on_position(self, position: PositionData) -> None:
-        # print(position)
         pass
 
     def on_account(self, account: AccountData) -> None:
@@ -35,21 +32,11 @@ class DataRecorder(CtpbeeApi):
 
     def on_tick(self, tick):
         """tick process function"""
-        # print(tick._to_dict())
         print(tick)
 
     def on_bar(self, bar):
         """bar process function"""
         interval = bar.interval
-        #
-        # req = helper.generate_order_req_by_var(symbol=bar.symbol, exchange=bar.exchange, type=OrderType.LIMIT, volume=2,
-        #                                        direction=Direction.LONG, offset=Offset.OPEN, price=bar.open_price)
-
-        # req = helper.generate_order_req_by_str(symbol=bar.symbol, exchange="shfe", type="limit", volume=2,
-        #                                        price=bar.open_price, direction="long"
-        #                                        , offset="open")
-        # vt_id = self.app.send_order(req)
-        pass
 
     def on_shared(self, shared):
         """ 处理分时图数据 """
@@ -109,11 +96,6 @@ def go():
 
     """ 启动 """
     app.start()
-    # while True:
-    #     app.query_position()
-    #     sleep(1)
-    #     from pprint import pprint
-    #     pprint(app.recorder.get_all_positions())
 
 
 if __name__ == '__main__':

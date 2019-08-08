@@ -130,12 +130,12 @@ class CtpbeeApi(object):
             self.app = app
             self.app.extensions[self.extension_name] = self
 
-    async def __call__(self, event: Event):
+    def __call__(self, event: Event):
         func = self.map[event.type]
-        await func(self, event.data)
+        if not self.fronzen:
+            func(self, event.data)
 
     def __init_subclass__(cls, **kwargs):
-        setattr(cls, "__call__", getattr(CtpbeeApi, "__call__"))
         map = {
             EVENT_TICK: cls.on_tick,
             EVENT_BAR: cls.on_bar,
@@ -217,12 +217,12 @@ class AsyncApi(object):
             self.app = app
             self.app.extensions[self.extension_name] = self
 
-    def __call__(self, event: Event):
+    async def __call__(self, event: Event):
         func = self.map[event.type]
-        func(self, event.data)
+        if not self.fronzen:
+            await func(self, event.data)
 
     def __init_subclass__(cls, **kwargs):
-        setattr(cls, "__call__", getattr(CtpbeeApi, "__call__"))
         map = {
             EVENT_TICK: cls.on_tick,
             EVENT_BAR: cls.on_bar,
