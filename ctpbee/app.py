@@ -9,12 +9,12 @@ from werkzeug.datastructures import ImmutableDict
 from ctpbee.config import Config
 from ctpbee.constant import OrderRequest, CancelRequest, EVENT_LOG
 from ctpbee.context import _app_context_ctx
-from ctpbee.event_engine import EventEngine, Event
+from ctpbee.event_engine import EventEngine, Event, AsyncEngine
 from ctpbee.exceptions import ConfigError
 from ctpbee.func import CtpbeeApi, send_monitor, cancle_monitor
 from ctpbee.helpers import locked_cached_property, find_package, check
 from ctpbee.interface import Interface
-from ctpbee.record import Recorder
+from ctpbee.record import Recorder, AsyncRecorder
 from ctpbee.util import RiskController
 
 
@@ -32,7 +32,7 @@ class CtpBee(object):
     # 默认配置
     default_config = ImmutableDict(
         dict(LOG_OUTPUT=True, TD_FUNC=False, INTERFACE="ctp", MD_FUNC=True, XMIN=[], ALL_SUBSCRIBE=False,
-             SHARE_MD=False))
+             SHARE_MD=False, ENGINE_METHOD="thread"))
     config_class = Config
     import_name = None
     # 数据记录载体
@@ -46,11 +46,18 @@ class CtpBee(object):
     # todo :等共享内存块出来了 是否可以尝试在外部进行
     extensions = {}
 
-    def __init__(self, name: Text, import_name, instance_path=None):
+    def __init__(self, name: Text, import_name, engine_method: str = "thread", instance_path=None):
         """ 初始化 """
         self.name = name
         self.import_name = import_name
-        self.event_engine = EventEngine()
+        if engine_method == "thread":
+            self.event_engine = EventEngine()
+            self.recorder = Recorder(self, self.event_engine)
+        elif engine_method == "async":
+            self.event_engine = AsyncEngine()
+            self.recorder = AsyncRecorder(self, self.event_engine)
+        else:
+            raise TypeError("引擎参数错误，只支持thread和async，请检查代码")
         if instance_path is None:
             instance_path = self.auto_find_instance_path()
         elif not os.path.isabs(instance_path):
@@ -59,7 +66,7 @@ class CtpBee(object):
                 ' A relative path was given instead.'
             )
         self.risk_gateway = RiskController(self.name)
-        self.recorder = Recorder(self, self.event_engine)
+
         self.instance_path = instance_path
         self.config = self.make_config()
         self.interface = Interface()

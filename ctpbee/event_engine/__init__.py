@@ -1,3 +1,3 @@
-from .engine import EventEngine, Event
+from .engine import EventEngine, Event, AsyncEngine
 
-__all__ = [EventEngine, Event]
+__all__ = [EventEngine, Event, AsyncEngine]

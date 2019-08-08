@@ -162,17 +162,19 @@ class AsyncEngine:
     def __init__(self, work_core=10):
         # 用于主循环
         self.loop = asyncio.new_event_loop()
-
-        # 用于发送put事件
-        self.sup_loop = asyncio.new_event_loop()
         self._func = defaultdict(list)
         self.work_core = work_core
         self.queue = ContextVar('queue')
         self.init_flag = True
+        self._active = False
 
+    @property
+    def status(self):
+        """ 状态 """
+        return self._active
 
     async def worker(self, queue):
-        await sleep(0.1)
+        await asyncio.sleep(0.1)
         while True:
             try:
                 event = await asyncio.wait_for(queue.get(), timeout=1)
@@ -185,7 +187,7 @@ class AsyncEngine:
         await self._queue.put(event)
 
     def put(self, event):
-        self.sup_loop.run_until_complete(self._put(event))
+        self.loop.create_task(self._put(event))
 
     async def future_finish(self, event: Event):
         for func in self._func.get(event.type):
@@ -204,8 +206,8 @@ class AsyncEngine:
             handler_list.remove(func)
 
     async def main(self):
+        self._active = True
         asyncio.set_event_loop(self.loop)
-        asyncio.set_event_loop(self.sup_loop)
         self._queue = asyncio.Queue()
         self.queue.set(self._queue)
         tasks = []
