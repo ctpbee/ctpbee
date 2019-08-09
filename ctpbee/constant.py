@@ -155,7 +155,7 @@ class BaseData:
     """
 
     gateway_name: str
-    iterable_count = 0
+    local_symbol: str
 
     def __new__(cls, **kwargs):
         args = super().__new__(cls)
@@ -168,8 +168,10 @@ class BaseData:
         if hasattr(self, "__post_init__"):
             self.__post_init__()
 
-    # def __getattribute__(self, item):
-    #     """ 访问属性 """
+    def __init_subclass__(cls, **kwargs):
+        # ??? excuse me ....
+        cls.__dict__['__annotations__']['gateway_name'] = str
+        cls.__dict__['__annotations__']['local_symbol'] = str
 
     def __repr__(self):
         mat = []
@@ -270,7 +272,6 @@ class TickData(BaseData):
         * orderbook snapshot
         * intraday market statistics.
     """
-
     symbol: str
     exchange: Any
     datetime: datetime
@@ -342,6 +343,7 @@ class OrderData(BaseData):
     Order data contains information for tracking lastest status
     of a specific order.
     """
+    local_order_id: str = ""
     symbol: str
     exchange: Exchange
     order_id: str
@@ -384,7 +386,8 @@ class TradeData(BaseData):
     Trade data contains information of a fill of an order. One order
     can have several trade fills.
     """
-
+    local_order_id: str = ""
+    local_trade_id: str = ""
     symbol: str
     exchange: Exchange
     order_id: str
@@ -407,7 +410,7 @@ class PositionData(BaseData):
     """
     Positon data is used for tracking each individual position holding.
     """
-
+    local_position_id: str = ""
     symbol: str
     exchange: Exchange
     direction: Direction
@@ -429,7 +432,7 @@ class AccountData(BaseData):
     Account data contains information about balance, frozen and
     available.
     """
-
+    local_account_id: str = ""
     accountid: str
 
     balance: float = 0
@@ -445,7 +448,7 @@ class LogData(BaseData):
     """
     Log data is used for recording log messages on GUI or in log files.
     """
-
+    time: datetime = None
     msg: str
     level: int = INFO
 
@@ -484,7 +487,7 @@ class SubscribeRequest(BaseRequest):
     """
     Request sending to specific gateway for subscribing tick data update.
     """
-
+    local_symbol: str = ""
     symbol: str
     exchange: Exchange
 
@@ -497,7 +500,7 @@ class OrderRequest(BaseRequest):
     """
     Request sending to specific gateway for creating a new order.
     """
-
+    local_symbol: str = ""
     symbol: str
     exchange: Exchange
     direction: Direction
@@ -532,7 +535,7 @@ class CancelRequest(BaseRequest):
     """
     Request sending to specific gateway for canceling an existing order.
     """
-
+    local_symbol: str = ""
     order_id: str
     symbol: str
     exchange: Exchange

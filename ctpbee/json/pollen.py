@@ -1,5 +1,4 @@
 import json
-from inspect import isfunction
 from collections import defaultdict
 
 
@@ -48,6 +47,19 @@ class ProxyPollen(object):
         if enums: self.add_enum(enums)
         if data_class: self.add_data_class(data_class)
         if request_class: self.add_request_class(request_class)
+        self._init_class_store()
+
+    def _init_class_store(self):
+        # 初始化 data_class_store
+        data = data_class + request_class
+        for cls in data:
+            cls_name = cls.__name__
+            attribute = set()
+            for c in cls.__dict__['__annotations__']:
+                if c.startswith("__") or c.startswith("create"):
+                    continue
+                attribute.add(c)
+            self.data_class_store[cls] = attribute
 
     def labeling(self, tags: list):
         """
@@ -79,12 +91,6 @@ class ProxyPollen(object):
         :return:
         """
         if not isinstance(data_class, list): raise TypeError("[^^]data_class must list")
-        for d in data_class:
-            attrs = set()
-            for attr in dir(d):
-                if not attr.startswith('__') and not attr.startswith('_') and not isfunction(getattr(d, attr)):
-                    attrs.add(attr)
-            self.data_class_store[d].update(attrs)
         self.data_base_class = data_class[0].__bases__
 
     def add_request_class(self, request_class: list):
@@ -94,12 +100,6 @@ class ProxyPollen(object):
         :return:
         """
         if not isinstance(request_class, list): raise TypeError("[^^]request_class must list")
-        for d in request_class:
-            attrs = set()
-            for attr in dir(d):
-                if not attr.startswith('__') and not attr.startswith('_') and not isfunction(getattr(d, attr)):
-                    attrs.add(attr)
-            self.data_class_store[d] = attrs
         self.request_base_class = request_class[0].__bases__
 
     def update_data_class_store(self, data):

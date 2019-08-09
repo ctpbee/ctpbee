@@ -203,6 +203,7 @@ class BeeTdApi(TdApi):
         else:
             position.frozen += data["LongFrozen"]
 
+
         if last:
             for position in self.positions.values():
                 self.on_event(type=EVENT_POSITION, data=position)
