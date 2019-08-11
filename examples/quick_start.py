@@ -8,20 +8,14 @@ from ctpbee.constant import PositionData, AccountData, LogData, Direction, Offse
 class DataRecorder(CtpbeeApi):
     def __init__(self, name, app=None):
         super().__init__(name, app)
-        self.subscribe_set = set(["rb1910"])
+        self.subscribe_set = set(["UR2001"])
 
     def on_trade(self, trade):
         pass
 
     def on_contract(self, contract):
         # 订阅所有
-        # self.app.subscribe(contract.symbol)
-        # 或者 单独制定
-        # print(contract.symbol)
-        if "尿" in contract.name:
-            print(contract.symbol)
-        if contract.symbol in self.subscribe_set:
-            self.app.subscribe(contract.symbol)
+        self.app.subscribe(contract.symbol)
 
     def on_order(self, order):
         pass
@@ -38,9 +32,10 @@ class DataRecorder(CtpbeeApi):
         """tick process function"""
         # print(tick)
         # print(self.app.recorder.get_all_positions())
-        p = dumps(tick)
-        print(p)
-        print(loads(p))
+        print(tick)
+        # p = dumps(tick)
+        # print(p)
+        # print(loads(p))
 
 
 
@@ -90,10 +85,10 @@ def go():
             "userid": "089131",
             "password": "350888",
             "brokerid": "9999",
-            # "md_address": "tcp://180.168.146.187:10131",
-            # "td_address": "tcp://180.168.146.187:10130",
-            "md_address": "tcp://218.202.237.33:10112",
-            "td_address": "tcp://218.202.237.33:10102",
+            "md_address": "tcp://180.168.146.187:10131",
+            "td_address": "tcp://180.168.146.187:10130",
+            # "md_address": "tcp://218.202.237.33:10112",
+            # "td_address": "tcp://218.202.237.33:10102",
             "product_info": "",
             "appid": "simnow_client_test",
             "auth_code": "0000000000000000",

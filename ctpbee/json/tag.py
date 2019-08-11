@@ -229,7 +229,10 @@ class TagDatetime(PollenTag):
 
     def to_json(self, data):
         if data is None: return
-        time_str = datetime.strftime(data, '%Y-%m-%d %H:%M:%S')
+        if data.microsecond != 500000:
+            time_str = datetime.strftime(data, '%Y-%m-%d %H:%M:%S')
+        else:
+            time_str = datetime.strftime(data, '%Y-%m-%d %H:%M:%S.%f')
         return time_str
 
     def to_pollen(self, data):
