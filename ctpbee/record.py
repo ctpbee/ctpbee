@@ -132,6 +132,7 @@ class Recorder(object):
         """"""
         position = event.data
         self.positions[position.local_position_id] = position
+        # 本地实时计算 --> todo :优化
         self.position_manager.update_position(position)
         for value in self.app.extensions.values():
             value(deepcopy(event))
@@ -202,7 +203,8 @@ class Recorder(object):
         """
         Get all position data.
         """
-        return self.position_manager.get_all_positions()
+        return list(self.positions.values())
+        # return self.position_manager.get_all_positions()
 
     def get_errors(self):
         return self.errors
@@ -428,7 +430,8 @@ class AsyncRecorder(object):
         """
         Get all position data.
         """
-        return self.position_manager.get_all_positions()
+        return list(self.positions.values())
+        # return self.position_manager.get_all_positions()
 
     def get_errors(self):
         return self.errors
