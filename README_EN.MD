@@ -85,11 +85,6 @@ info = {
 app.config.from_mapping(info)  # 从dict中载入信息 对于更多配置载入方式, 请参阅文档或者阅读代码
 app.start() 
 ```
-## Documention
-for README in English please see [戳我戳我](https://github.com/somewheve/ctpbee/blob/master/README_EN.MD)
-
-document is developing....  just waiting for it.
-
 
 ## More 
 > for more information , please see the [wiki](https://github.com/somewheve/ctpbee/wiki)
