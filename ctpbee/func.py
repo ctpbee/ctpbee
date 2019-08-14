@@ -42,7 +42,6 @@ def cancle_order(cancle_req: CancelRequest, app_name: str = "current_app"):
     cancle_monitor.send(cancle_req)
     app.trader.cancel_order(cancle_req)
 
-
 def subscribe(symbol: Text, app_name: str = "current_app") -> None:
     """订阅"""
     if app_name == "current_app":

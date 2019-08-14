@@ -1,20 +1,23 @@
+class RiskLevel:
+    def __init__(self, app):
+        self.app = app
 
-class RiskController:
-    def __init__(self, name):
-        self.name = name
-        self.func_set = set()
+    def __call__(self, *args, **kwargs):
+        """ 将事件传输进来 """
+        pass
 
-    def connect_via(self):
-        def decorator(fn):
-            self.connect(fn)
-            return fn
+    def before_send(self):
+        raise NotImplemented
 
-        return decorator
+    def after_send(self):
+        raise NotImplemented
 
-    def connect(self, func):
-        if len(self.func_set) > 50:
-            raise EnvironmentError("不可添加太多函数")
-        self.func_set.add(func)
+    def before_cancle(self):
+        raise NotImplemented
 
-    def send(self, app):
-        return [x(app) for x in self.func_set]
+    def after_cancel(self):
+        raise NotImplemented
+
+    def checking(self):
+        """这个函数会一直被触发 用于检查你的信息"""
+        raise NotImplemented

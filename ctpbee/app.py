@@ -15,7 +15,7 @@ from ctpbee.func import CtpbeeApi, send_monitor, cancle_monitor
 from ctpbee.helpers import locked_cached_property, find_package, check
 from ctpbee.interface import Interface
 from ctpbee.record import Recorder, AsyncRecorder
-from ctpbee.util import RiskController
+from ctpbee.util import RiskLevel
 
 
 class CtpBee(object):
@@ -25,7 +25,7 @@ class CtpBee(object):
     ctpbee提供完整的支持 ，一个CtpBee对象可以登录一个账户 ，
     当你登录多个账户时， 可以通过current_app, 以及switch_app还有 get_app提供完整的支持,
     每个账户对象都拥有单独的发单接口 ,在你实现策略的地方 可以通过上述api实现发单支持,
-    当然ctpbee提供了ExtAbstract 抽象插件 ，继承此插件即可快速载入支持.
+    当然ctpbee提供了CtpbeeApi 抽象插件 ，继承此插件即可快速载入支持.
     总而言之,希望能够极大的简化目前的开发流程 !
     """
 
@@ -65,7 +65,7 @@ class CtpBee(object):
                 'If an instance path is provided it must be absolute.'
                 ' A relative path was given instead.'
             )
-        self.risk_gateway = RiskController(self.name)
+        self.risk_gateway = RiskLevel(self)
 
         self.instance_path = instance_path
         self.config = self.make_config()

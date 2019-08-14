@@ -1,13 +1,14 @@
 # ctpbee
 
-bee bee .... there is an industrious bee created ~~
+bee bee .... created for secondary development ~~
 
-ctpbee just provide a tiny core, you can extent the function by programming
+ctpbee just provide a micro framework, you can extent the function by this tiny core. of course your programm
 
 
 >  Using Old Interface
 # Before you start
 ```bash
+# just for linux 
 sudo locale-gen zh_CN.GB18030
 ```
 
@@ -20,7 +21,7 @@ git clone https://github.com/somewheve/ctpbee
 
 ## Origin
 
-- Derived from [vnpy](https://github.com/vnpy/vnpy) 
+- Derived from [vnpy](https://github.com/vnpy/vnpy) and [flask](https://github.com/pallets/flask)
 
 ## Install 
 ```bash
@@ -31,13 +32,37 @@ or
 pip3 install ctpbee 
 ```
 
+## Docker 
+
+```bash
+docker pull yutiansut/ctpbee:latest
+docker run -p 5000:5000 yutiansut/ctpbee:latest
+```
+
+## Documention
+local generated:
+    1. git clone https://github.com/somewheve/ctpbee 
+    2. pip3 install sphinx
+    3. cd ./ctpbee/docs && make html
+    4. you can see the index.html at /build/html, just use web browser to open it  
+
+
 ## Function
 
-1. k-line data support
-2. time-shared data support
-3. trade support
-4. market support
-5. monitor
+- [x] k-line data support
+- [x] time-shared data support
+- [x] trade support
+- [x] market support
+- [x] multiple style of sending order
+- [x] multi-account support
+- [x] apply penetrating interface
+- [x] generate the order fastly
+- [x] risk level
+- [x] documentary signal
+- [x] multiplex market comparison
+- [ ] optimizing code
+- [ ] establishment of back measuring system
+- [ ] cta support 
 
 ## Quick start 
 ```python
@@ -52,12 +77,13 @@ info = {
         "td_address": "",
         "appid": "",
         "auth_code": "",
+        "product_info":""
     },
-    "TD_FUNC": True,  # 开启交易功能
+    "INTERFACE":"ctp",
+    "TD_FUNC": True,  # 开启交易功能 
 }
-app.config.from_mapping(info)  # 载入信息
-app.start()  
-
+app.config.from_mapping(info)  # 从dict中载入信息 对于更多配置载入方式, 请参阅文档或者阅读代码
+app.start() 
 ```
 ## Documention
 for README in English please see [戳我戳我](https://github.com/somewheve/ctpbee/blob/master/README_EN.MD)
@@ -70,10 +96,6 @@ document is developing....  just waiting for it.
 or  read the [examples](https://github.com/somewheve/ctpbee/blob/master/examples/app.py)
 
 
-## Todo 
-- To optimize code 
-- Example created
-- Add local position 
 
 ## End
 If this is helpful for you, click the star to support me. QAQ

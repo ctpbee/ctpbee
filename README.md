@@ -48,17 +48,21 @@ docker run -p 5000:5000 yutiansut/ctpbee:latest
     
 ## 功能
 
-1. k线数据支持
-2. 分时图数据支持
-3. 交易支持
-4. 行情支持 --> 需要自己编写相应的数据库写入代码。
-5. 自由自在的发单方式
-6. 多账户支持
-7. 支持申请穿透式接口
-8. 快速下单助手
-9. 风控层建立
-10. 客户端
-11. 跟单信号 
+- [x] k线数据支持
+- [x] 分时图数据支持
+- [x] 交易支持
+- [x] 行情支持 --> 需要自己编写相应的数据库写入代码。
+- [x] 自由自在的发单方式
+- [x] 多账户支持
+- [x] 支持申请穿透式接口
+- [x] 快速下单助手
+- [x] 风控层建立
+- [x] 跟单信号
+- [x] 多路行情对比 --> [looper_me](https://github.com/somewheve/looper_me)
+- [ ] 优化代码
+- [ ] 策略层对接CTA  --> 即将以[ctpbee_cta](https://github.com/somewheve/ctpbee_cta) 
+- [ ] 回测系统搭建 
+
 
 ## 快速开始 
 ```python
@@ -82,14 +86,6 @@ app.config.from_mapping(info)  # 从dict中载入信息 对于更多配置载入
 app.start() 
 ```
 
-## 等待完成 
-- 优化代码
-- 策略层对接CTA  --> 即将以[ctpbee_cta](https://github.com/somewheve/ctpbee_cta) 
-- 回测系统搭建 
-- 多路行情对比
-
-
-- 再立个flag, 暑假结束之前一定推出1.0正式版！
 
 
 ## 发展计划

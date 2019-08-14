@@ -36,6 +36,8 @@ class Demo(CtpbeeApi):
 
         print("返回id", id)
 
+        sleep(1)
+
     def on_order(self, order: OrderData) -> None:
         """ 报单回报 """
         print("order", order)
