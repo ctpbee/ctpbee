@@ -87,11 +87,9 @@ app.start()
 ```
 
 ## More 
-> for more information , please see the [wiki](https://github.com/somewheve/ctpbee/wiki)
-or  read the [examples](https://github.com/somewheve/ctpbee/blob/master/examples/app.py)
-
-
+read the [examples](https://github.com/somewheve/ctpbee/blob/master/examples/)
 
 ## End
-If this is helpful for you, click the star to support me. QAQ
+If this is helpful for you, click the star to support me. QAQ, if you want to communicate  together just [click](https://jq.qq.com/?_wv=1027&k=5xWbIq3) if you have a Tencent QQ Account
+
 
