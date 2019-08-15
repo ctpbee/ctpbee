@@ -143,7 +143,7 @@ class CtpBee(object):
         return self.trader.send_order(order_req)
 
     @check(type="trader")
-    def cancle_order(self, cancle_req: CancelRequest):
+    def cancel_order(self, cancle_req: CancelRequest):
         """撤单"""
         cancle_monitor.send(cancle_req)
         self.trader.cancel_order(cancle_req)

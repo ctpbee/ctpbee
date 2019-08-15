@@ -146,9 +146,9 @@ class OpenOrderView(MethodView):
         local_symbol = info.get("local_symbol")
         order_id = info.get("order_id")
         exchange = info.get("exchange")
-        req = helper.generate_cancle_req_by_str(symbol=local_symbol, exchange=exchange, order_id=order_id)
+        req = helper.generate_cancel_req_by_str(symbol=local_symbol, exchange=exchange, order_id=order_id)
         try:
-            current_app.cancle_order(req)
+            current_app.cancel_order(req)
             return true_response(message="成功撤单")
         except Exception:
             return false_response(message="撤单失败")

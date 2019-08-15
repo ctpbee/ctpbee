@@ -31,7 +31,7 @@ def send_order(order_req: OrderRequest, app_name: str = "current_app"):
     return app.trader.send_order(order_req)
 
 
-def cancle_order(cancle_req: CancelRequest, app_name: str = "current_app"):
+def cancel_order(cancle_req: CancelRequest, app_name: str = "current_app"):
     """ 撤单 """
     if app_name == "current_app":
         app = current_app
@@ -41,6 +41,7 @@ def cancle_order(cancle_req: CancelRequest, app_name: str = "current_app"):
         raise TraderError(message="交易功能未开启", args=("交易功能未开启",))
     cancle_monitor.send(cancle_req)
     app.trader.cancel_order(cancle_req)
+
 
 def subscribe(symbol: Text, app_name: str = "current_app") -> None:
     """订阅"""
@@ -299,13 +300,13 @@ class Helper():
                             volume=volume, price=price)
 
     @classmethod
-    def generate_cancle_req_by_str(cls, symbol: str, exchange: str, order_id: str):
+    def generate_cancel_req_by_str(cls, symbol: str, exchange: str, order_id: str):
         if "." in symbol:
             symbol = symbol.split(".")[1]
         return CancelRequest(symbol=symbol, exchange=cls.exchange_map.get(exchange), order_id=order_id)
 
     @classmethod
-    def generate_cancle_req_by_var(cls, symbol: str, exchange: Exchange, order_id: str):
+    def generate_cancel_req_by_var(cls, symbol: str, exchange: Exchange, order_id: str):
         if "." in symbol:
             symbol = symbol.split(".")[1]
         return CancelRequest(symbol=symbol, exchange=exchange, order_id=order_id)
