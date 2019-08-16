@@ -95,8 +95,7 @@ def go():
     app.start(log_output=False)
 
     def run_query(app):
-        for x in range(2):
-            print("正在查询持仓")
+        for _ in range(2):
             app.query_position()
             sleep(1)
 
@@ -111,9 +110,9 @@ def go():
         # td = [i._to_dict() for i in app.recorder.get_all_positions()]
         td = app.recorder.get_all_positions()
         data = [x["position_profit"] for x in td]
-        datad = [x["flo_position_profit"] for x in td]
+        datad = [x["stare_position_profit"] for x in td]
         print(f"\r {data} ", end="", flush=True)
-        # print(f"{datad}", end="", flush=True)
+        print(f"{datad}", end="", flush=True)
 
 
         # sys.stdout.flush()
