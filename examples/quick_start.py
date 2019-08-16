@@ -1,6 +1,9 @@
+import os
+from pprint import pprint
+from threading import Thread
 from time import sleep
 
-from ctpbee import CtpBee, helper, dumps, loads
+from ctpbee import CtpBee, helper
 from ctpbee import CtpbeeApi
 from ctpbee.constant import PositionData, AccountData, LogData, Direction, Offset, OrderType
 
@@ -25,34 +28,27 @@ class DataRecorder(CtpbeeApi):
 
     def on_account(self, account: AccountData) -> None:
         # print(account)
-        print(account)
+        # print(account)
         pass
 
     def on_tick(self, tick):
         """tick process function"""
         # print(tick)
-        # print(self.app.recorder.get_all_positions())
-        print(tick)
-        # p = dumps(tick)
-        # print(p)
-        # print(loads(p))
-
-
 
     def on_bar(self, bar):
         """bar process function"""
 
-        self.app.recorder.get_all_positions()
+        # self.app.recorder.get_all_positions()
+        #
+        # interval = bar.interval
+        #
+        # req = helper.generate_order_req_by_var(symbol=bar.symbol, exchange=bar.exchange, price=bar.high_price,
+        #                                        direction=Direction.LONG, type=OrderType.LIMIT, volume=3,
+        #                                        offset=Offset.OPEN)
+        # # 调用绑定的app进行发单
+        # id = self.app.send_order(req)
 
-        interval = bar.interval
-
-        req = helper.generate_order_req_by_var(symbol=bar.symbol, exchange=bar.exchange, price=bar.high_price,
-                                               direction=Direction.LONG, type=OrderType.LIMIT, volume=3,
-                                               offset=Offset.OPEN)
-        # 调用绑定的app进行发单
-        id = self.app.send_order(req)
-
-        print("返回id", id)
+        # print("返回id", id)
 
     def on_shared(self, shared):
         """ 处理分时图数据 """
@@ -66,29 +62,15 @@ class DataRecorder(CtpbeeApi):
 def go():
     app = CtpBee("last", __name__)
 
-    # 风险控制层
-    # @app.risk_gateway.connect_via()
-    # def conn(app: CtpBee):
-    #     """
-    #     用户可以在每个app实例下面来使用app.risk_control.connect_via() 来装饰函数
-    #     接受一个参数来访问到当前app的实例, 以此判断是否进行下单 , 需要注意, 如果一旦返回错误, 那么函数这单将无法下载
-    #     """
-    #     return False  # return True
-
-    #  或者
-    # def conn(app: CtpBee):
-    #     return False  # return True
-    # app.risk_control.connect(conn)
-
     info = {
         "CONNECT_INFO": {
             "userid": "089131",
             "password": "350888",
             "brokerid": "9999",
-            "md_address": "tcp://180.168.146.187:10131",
-            "td_address": "tcp://180.168.146.187:10130",
-            # "md_address": "tcp://218.202.237.33:10112",
-            # "td_address": "tcp://218.202.237.33:10102",
+            # "md_address": "tcp://180.168.146.187:10131",
+            # "td_address": "tcp://180.168.146.187:10130",
+            "md_address": "tcp://218.202.237.33:10112",
+            "td_address": "tcp://218.202.237.33:10102",
             "product_info": "",
             "appid": "simnow_client_test",
             "auth_code": "0000000000000000",
@@ -110,13 +92,31 @@ def go():
     data_recorder = DataRecorder("data_recorder", app)
 
     """ 启动 """
-    app.start()
-    while True:
-        app.query_position()
-        sleep(1)
+    app.start(log_output=False)
 
-        app.query_account()
-        sleep(1)
+    def run_query(app):
+        for x in range(2):
+            print("正在查询持仓")
+            app.query_position()
+            sleep(1)
+
+            app.query_account()
+            sleep(1)
+
+    p = Thread(target=run_query, args=(app,))
+    p.start()
+    while True:
+        import sys
+        # sys.stdout.write
+        # td = [i._to_dict() for i in app.recorder.get_all_positions()]
+        td = app.recorder.get_all_positions()
+        data = [x["position_profit"] for x in td]
+        datad = [x["flo_position_profit"] for x in td]
+        print(f"\r {data} ", end="", flush=True)
+        # print(f"{datad}", end="", flush=True)
+
+
+        # sys.stdout.flush()
 
 
 if __name__ == '__main__':

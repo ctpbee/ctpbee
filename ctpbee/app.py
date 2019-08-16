@@ -11,7 +11,7 @@ from ctpbee.constant import OrderRequest, CancelRequest, EVENT_LOG
 from ctpbee.context import _app_context_ctx
 from ctpbee.event_engine import EventEngine, Event, AsyncEngine
 from ctpbee.exceptions import ConfigError
-from ctpbee.func import CtpbeeApi, send_monitor, cancle_monitor
+from ctpbee.func import CtpbeeApi, send_monitor, cancel_monitor
 from ctpbee.helpers import locked_cached_property, find_package, check
 from ctpbee.interface import Interface
 from ctpbee.record import Recorder, AsyncRecorder
@@ -134,18 +134,13 @@ class CtpBee(object):
     @check(type="trader")
     def send_order(self, order_req: OrderRequest) -> AnyStr:
         """发单"""
-        result = self.risk_gateway.send(self)
-        if False in result:
-            event = Event(type=EVENT_LOG, data="风控阻止下单")
-            self.event_engine.put(event)
-            return
         send_monitor.send(order_req)
         return self.trader.send_order(order_req)
 
     @check(type="trader")
     def cancel_order(self, cancle_req: CancelRequest):
         """撤单"""
-        cancle_monitor.send(cancle_req)
+        cancel_monitor.send(cancle_req)
         self.trader.cancel_order(cancle_req)
 
     @check(type="market")

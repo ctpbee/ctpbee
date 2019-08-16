@@ -65,14 +65,14 @@ class PositionHolding:
         self.long_yd = 0
         self.long_td = 0
         self.long_pnl = 0
-        self.long_flo_pnl = 0
+        self.long_float_pnl = 0
         self.long_price = 0
 
         self.short_pos = 0
         self.short_yd = 0
         self.short_td = 0
         self.short_pnl = 0
-        self.short_flo_pnl = 0
+        self.short_float_pnl = 0
         self.short_price = 0
 
         self.long_pos_froze = 0
@@ -83,6 +83,7 @@ class PositionHolding:
         self.short_yd_frozen = 0
         self.short_td_frozen = 0
 
+        self.pre_close_price = 0
         self.last_price = 0
 
     def update_trade(self, trade):
@@ -106,13 +107,13 @@ class PositionHolding:
                 # 非上期所，优先平今
                 else:
                     self.short_td -= trade.volume
-
                     if self.short_td < 0:
                         self.short_yd += self.short_td
                         self.short_td = 0
-                        # 空头
-        elif trade.direction == Direction.LONG:
+        # 空头
+        elif trade.direction == Direction.SHORT:
             # 开仓
+
             if trade.offset == Offset.OPEN:
                 self.short_td += trade.volume
             # 平今
@@ -179,9 +180,10 @@ class PositionHolding:
 
     def update_tick(self, tick):
         """行情更新"""
+        self.pre_close_price = tick.pre_close
         self.last_price = tick.last_price
         self.calculate_pnl()
-        self.calculate_flo_pnl()
+        self.calculate_float_pnl()
 
     def calculate_frozen(self):
         """"""
@@ -298,14 +300,13 @@ class PositionHolding:
             return req_list
 
     def calculate_pnl(self):
-        """计算持仓盈亏"""
+        """ 计算持仓盈亏 """
         try:
             open_cost = self.app.trader.open_cost_dict.get(self.symbol)
             single = LocalVariable(open_cost)
         except AttributeError as e:
             single = None
         try:
-
             if self.long_pos == self.long_yd:
                 self.long_pnl = self.long_pos * (
                         self.last_price - single.long / (self.size * self.long_pos)) * self.size
@@ -327,25 +328,24 @@ class PositionHolding:
         except AttributeError:
             self.short_pnl = 0
 
-    def calculate_flo_pnl(self):
+    def calculate_float_pnl(self):
         """计算浮动盈亏"""
-
+        ## 结算价
         try:
             if self.long_pos == self.long_yd:
-                self.long_flo_pnl = self.long_pos * (
-                        self.last_price - self.long_price / (self.size * self.long_pos)) * self.size
+                self.long_float_pnl = self.long_pos * (self.last_price - self.long_price / (self.size * self.long_pos)) * self.size
             if self.long_pos != self.long_yd:
-                self.long_flo_pnl = self.long_pos * (self.last_price - self.long_price) * self.size
+                self.long_float_pnl = self.long_pos * (self.last_price - self.long_price) * self.size
         except ZeroDivisionError:
             self.long_pnl = 0
         except AttributeError:
             self.long_pnl = 0
         try:
             if self.short_pos == self.short_yd:
-                self.short_flo_pnl = self.short_pos * (
+                self.short_float_pnl = self.short_pos * (
                         self.short_price / (self.size * self.short_pos) - self.last_price) * self.size
             if self.short_pos != self.short_yd:
-                self.short_flo_pnl = self.short_pos * (self.short_price - self.last_price) * self.size
+                self.short_float_pnl = self.short_pos * (self.short_price - self.last_price) * self.size
         except ZeroDivisionError:
             self.short_pnl = 0
         except AttributeError:
@@ -396,7 +396,8 @@ class LocalPositionManager(dict):
     def update_trade(self, trade):
         """ 更新成交  """
         if trade.local_symbol not in self:
-            return
+            self[trade.local_symbol] = PositionHolding(trade.local_symbol, self.app)
+            self[trade.local_symbol].update_trade(trade)
         self.get(trade.local_symbol).update_trade(trade)
 
     def update_position(self, position):
@@ -407,9 +408,9 @@ class LocalPositionManager(dict):
         else:
             self.get(position.local_symbol).update_position(position)
 
-    def get_position(self, local_position_id):
-        """ 根据local_position_id 获取持仓信息 """
-        return self.get(local_position_id, None)
+    def get_position(self, local_symbol):
+        """ 根据local_symbol 获取持仓信息 """
+        return self.get(local_symbol, None)
 
     def get_all_positions(self):
         """ 返回所有的持仓信息 """
@@ -427,7 +428,7 @@ class LocalPositionManager(dict):
                 temp['price'] = x.long_price
                 temp['volume'] = x.long_pos
                 temp['yd_volume'] = x.long_yd
-                temp['flo_position_profit'] = x.long_flo_pnl
+                temp['flo_position_profit'] = x.long_float_pnl
                 if x.long_pos == x.long_yd:
                     temp['position_date'] = 2
                 elif x.long_pos != x.long_yd:
@@ -443,7 +444,7 @@ class LocalPositionManager(dict):
                 temp['price'] = x.short_price
                 temp['volume'] = x.short_pos
                 temp['yd_volume'] = x.short_yd
-                temp['flo_position_profit'] = x.short_flo_pnl
+                temp['flo_position_profit'] = x.short_float_pnl
                 if x.short_pos == x.short_yd:
                     temp['position_date'] = 2
                 elif x.short_pos != x.short_yd:

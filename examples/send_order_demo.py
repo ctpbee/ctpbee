@@ -33,7 +33,6 @@ class Demo(CtpbeeApi):
                                                offset=Offset.OPEN)
         # 调用绑定的app进行发单
         id = self.app.send_order(req)
-
         print("返回id", id)
 
         sleep(1)
