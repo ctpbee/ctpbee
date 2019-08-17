@@ -486,7 +486,7 @@ class BeeTdApi(TdApi):
         self.reqid += 1
         self.reqOrderInsert(ctp_req, self.reqid)
         order_id = f"{self.frontid}_{self.sessionid}_{self.order_ref}"
-        order = req.create_order_data(order_id, self.gateway_name)
+        order = req._create_order_data(order_id, self.gateway_name)
         self.on_event(type=EVENT_ORDER, data=order)
 
         return order.local_order_id
@@ -919,7 +919,7 @@ class BeeTdApiApp(TdApiApp):
         self.reqOrderInsert(ctp_req, self.reqid)
 
         order_id = f"{self.frontid}_{self.sessionid}_{self.order_ref}"
-        order = req.create_order_data(order_id, self.gateway_name)
+        order = req._create_order_data(order_id, self.gateway_name)
         self.on_event(type=EVENT_ORDER, data=order)
 
         return order.vt_orderid

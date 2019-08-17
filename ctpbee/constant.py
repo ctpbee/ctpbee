@@ -513,7 +513,7 @@ class OrderRequest(BaseRequest):
         """"""
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
-    def create_order_data(self, order_id: str, gateway_name: str):
+    def _create_order_data(self, order_id: str, gateway_name: str):
         """
         Create order data from request.
         """

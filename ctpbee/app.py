@@ -7,9 +7,9 @@ from typing import Text, AnyStr
 from werkzeug.datastructures import ImmutableDict
 
 from ctpbee.config import Config
-from ctpbee.constant import OrderRequest, CancelRequest, EVENT_LOG
+from ctpbee.constant import OrderRequest, CancelRequest
 from ctpbee.context import _app_context_ctx
-from ctpbee.event_engine import EventEngine, Event, AsyncEngine
+from ctpbee.event_engine import EventEngine, AsyncEngine
 from ctpbee.exceptions import ConfigError
 from ctpbee.func import CtpbeeApi, send_monitor, cancel_monitor
 from ctpbee.helpers import locked_cached_property, find_package, check
@@ -42,9 +42,11 @@ class CtpBee(object):
     market = None
     trader = None
 
-    # 插件系统
-    # todo :等共享内存块出来了 是否可以尝试在外部进行
+    # 插件Api系统
     extensions = {}
+
+    # 工具, 用于提供一些比较优秀的工具
+    tools = {}
 
     def __init__(self, name: Text, import_name, engine_method: str = "thread", instance_path=None):
         """ 初始化 """

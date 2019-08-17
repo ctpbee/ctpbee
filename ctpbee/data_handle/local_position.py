@@ -178,7 +178,7 @@ class PositionHolding:
         """"""
         gateway_name, orderid = local_order_id.split(".")
 
-        order = req.create_order_data(orderid, gateway_name)
+        order = req._create_order_data(orderid, gateway_name)
         self.update_order(order)
 
     def update_tick(self, tick):
@@ -340,7 +340,7 @@ class PositionHolding:
         try:
             if self.long_pos == self.long_yd:
                 self.long_stare_pnl = self.long_pos * (
-                            self.last_price - self.pre_close_price / (self.size * self.long_pos)) * self.size
+                        self.last_price - self.pre_close_price / (self.size * self.long_pos)) * self.size
             if self.long_pos != self.long_yd:
                 self.long_stare_pnl = self.long_pos * (self.last_price - self.pre_close_price) * self.size
         except ZeroDivisionError:
