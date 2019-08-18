@@ -393,6 +393,45 @@ class LocalPositionManager(dict):
             return
         self.get(tick.local_symbol).update_tick(tick)
 
+    def is_convert_required(self, local_symbol: str):
+        """
+        Check if the contract needs offset convert.
+        """
+        contract = self.app.recorder.get_contract(local_symbol)
+
+        # Only contracts with long-short position mode requires convert
+        if not contract:
+            return False
+        elif contract.net_position:
+            return False
+        else:
+            return True
+
+    def update_order_request(self, req: OrderRequest, local_orderid: str):
+        """"""
+        if not self.is_convert_required(req.local_symbol):
+            return
+
+        holding = self.get(req.local_symbol, None)
+        if not holding:
+            self[req.local_symbol] = PositionHolding(req.local_symbol, self.app)
+        self[req.local_symbol].update_order_request(req, local_orderid)
+
+    def convert_order_request(self, req: OrderRequest, lock: bool):
+        """"""
+        if not self.is_convert_required(req.local_symbol):
+            return [req]
+
+        holding = self.get(req.local_symbol, None)
+        if not holding:
+            self[req.local_symbol] = PositionHolding(req.local_symbol, self.app)
+        if lock:
+            return  self[req.local_symbol].convert_order_request_lock(req)
+        elif req.exchange == Exchange.SHFE:
+            return  self[req.local_symbol].convert_order_request_shfe(req)
+        else:
+            return [req]
+
     def update_order(self, order):
         """ 更新order """
         if order.local_symbol not in self:
