@@ -1,23 +1,26 @@
 import re
 from typing import Dict
 
+from ctpbee.interface.looper.base_client import Client
+
 from ctpbee import loads
 from ctpbee.constant import EVENT_TICK
 from ctpbee.event_engine import Event
-from ctpbee.interface.looper.base_client import Client
 
 
-class BeeMdLooperApi(Client):
+class MdLooperApi(Client):
     """
     ctpbee采用非本地的回测方式，数据由服务器提供,
     除了使用官方的回测服务器外你也可以自己搭建服务器进行自用
     行情API服务器标准端口为5400
     """
 
-    def __init__(self, event_engine):
+    def __init__(self, event_engine, app=None):
         super().__init__()
         self.md_address = 0
         self.event_engine = event_engine
+
+
 
     def connect(self, info: Dict):
         md_address = info.get("md_address")
@@ -39,5 +42,5 @@ class BeeMdLooperApi(Client):
         self.event_engine.put(event)
 
 
-A = BeeMdLooperApi()
+A = MdLooperApi()
 A.connect({"md_address": "tcp://127.0.0.1:3000"})

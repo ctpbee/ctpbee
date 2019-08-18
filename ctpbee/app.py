@@ -28,11 +28,30 @@ class CtpBee(object):
     当然ctpbee提供了CtpbeeApi 抽象插件 ，继承此插件即可快速载入支持.
     总而言之,希望能够极大的简化目前的开发流程 !
     """
-
-    # 默认配置
+    # 默认回测配置参数
+    defaut_params = {
+        'cash': 10000.0,
+        'checksubmit': True,
+        'eosbar': False,
+        'filler': None,
+        "commision": 0.01,
+        # slippage options
+        'slip_perc': 0.0,
+        'slip_fixed': 0.0,
+        'slip_open': False,
+        'slip_match': True,
+        'slip_limit': True,
+        'slip_out': False,
+        'coc': False,
+        'coo': False,
+        'int2pnl': True,
+        'shortcash': True,
+        'fundstartval': 100.0,
+        'fundmode': False
+    }
     default_config = ImmutableDict(
         dict(LOG_OUTPUT=True, TD_FUNC=False, INTERFACE="ctp", MD_FUNC=True, XMIN=[], ALL_SUBSCRIBE=False,
-             SHARE_MD=False, ENGINE_METHOD="thread"))
+             SHARE_MD=False, ENGINE_METHOD="thread", LOOPER_SETTING=defaut_params))
     config_class = Config
     import_name = None
     # 数据记录载体
@@ -108,7 +127,10 @@ class CtpBee(object):
             self.market.connect(info)
 
         if self.config.get("TD_FUNC"):
-            self.trader = TdApi(self.event_engine)
+            if self.config['INTERFACE'] == "looper":
+                self.trader = TdApi(self.event_engine, self)
+            else:
+                self.trader = TdApi(self.event_engine)
             self.trader.connect(info)
             sleep(0.5)
 

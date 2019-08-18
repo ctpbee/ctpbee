@@ -33,8 +33,8 @@ class Interface:
             from ctpbee.interface.ctp import BeeTdApiApp, BeeMdApi
             return (BeeMdApi, BeeTdApiApp)
         if interface == "looper":
-            from ctpbee.interface.looper import BeeTdLooperApi, BeeMdLooperApi
-            return (BeeMdLooperApi, BeeTdLooperApi)
+            from ctpbee.interface.looper import BeeTdLooperApi, MdLooperApi
+            return (MdLooperApi, BeeTdLooperApi)
         else:
             raise ValueError("错误参数")
 
