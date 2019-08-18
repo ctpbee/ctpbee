@@ -426,9 +426,9 @@ class LocalPositionManager(dict):
         if not holding:
             self[req.local_symbol] = PositionHolding(req.local_symbol, self.app)
         if lock:
-            return  self[req.local_symbol].convert_order_request_lock(req)
+            return self[req.local_symbol].convert_order_request_lock(req)
         elif req.exchange == Exchange.SHFE:
-            return  self[req.local_symbol].convert_order_request_shfe(req)
+            return self[req.local_symbol].convert_order_request_shfe(req)
         else:
             return [req]
 

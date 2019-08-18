@@ -122,7 +122,7 @@ setup(
     description="Easy ctp trade and market support",
     author='somewheve',
     author_email='somewheve@gmail.com',
-    url='https://github.com/somewheve/ctpbee',
+    url='https://github.com/ctpbee/ctpbee',
     license="MIT",
     packages=pkgs,
     install_requires=install_requires,
