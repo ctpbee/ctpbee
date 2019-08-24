@@ -1,12 +1,13 @@
+import collections
 from collections import defaultdict
 
-from ctpbee.constant import OrderRequest, EVENT_TRADE, CancelRequest
+from ctpbee.constant import OrderRequest, EVENT_TRADE, CancelRequest, PositionData
 from ctpbee.event_engine import Event
 
 
 class LocalLooperApi():
     """
-    本地化回测的API
+    本地化回测的服务端 ---> this will be a very interesting thing!
     """
 
     def __init__(self, event_engine, app):
@@ -17,6 +18,21 @@ class LocalLooperApi():
         # 账户数据
         self.account_data = defaultdict(list)
         # 在载入回测的时候需要传入app来知道配置
+
+        self.starting_cash = self.cash
+        self.order = list()
+        self._value_mkt = 0.0
+        self._leverage = 1.0
+        self._un_realized = 0
+        self._value_level = 0.0
+        self._value_mkt_level = 0.0
+        self.pending = collections.deque()
+        self._to_activate = collections.deque()
+        self.positions = collections.defaultdict(PositionData)
+        self.d_credit = collections.defaultdict(float)
+        self.notifs = collections.deque()
+        self.submitted = collections.deque()
+
         self.init_config(app)
 
     def init_config(self, app):
@@ -50,3 +66,17 @@ class LocalLooperApi():
     @property
     def looper_result(self):
         return self.account_data
+
+    def submit(self, order, check=True):
+        ## 提交order到这里
+
+        pass
+
+    def check_submitted(self):
+        cash = self.cash
+        positions = dict()
+        while self.submitted:
+            pass
+
+    def submit_accept(self, order):
+        pass
