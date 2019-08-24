@@ -46,7 +46,7 @@ docker run -p 5000:5000 yutiansut/ctpbee:latest
     即将推出
     
     
-## 功能
+## 功能支持
 
 - [x] k线数据支持
 - [x] 分时图数据支持
@@ -59,10 +59,13 @@ docker run -p 5000:5000 yutiansut/ctpbee:latest
 - [x] 风控层建立
 - [x] 跟单信号
 - [x] 多路行情对比 --> [looper_me](https://github.com/somewheve/looper_me)
-- [ ] 优化代码
 - [ ] 策略层对接CTA  --> 即将以[ctpbee_cta](https://github.com/somewheve/ctpbee_cta) 
-- [ ] 回测系统搭建 
+- [ ] 回测系统搭建  --> interface/looper
 
+## Maybe 
+- [ ] 性能优化 --> julia支持 ？
+- [ ] 对接多种指标计算                     
+- [ ] 优化代码
 
 ## 快速开始 
 ```python
