@@ -1,11 +1,10 @@
-import os
-from pprint import pprint
+from threading import Thread
 from threading import Thread
 from time import sleep
 
-from ctpbee import CtpBee, helper
+from ctpbee import CtpBee, dumps, loads
 from ctpbee import CtpbeeApi
-from ctpbee.constant import PositionData, AccountData, LogData, Direction, Offset, OrderType
+from ctpbee.constant import PositionData, AccountData, LogData
 
 
 class DataRecorder(CtpbeeApi):
@@ -27,13 +26,11 @@ class DataRecorder(CtpbeeApi):
         pass
 
     def on_account(self, account: AccountData) -> None:
-        # print(account)
-        # print(account)
         pass
 
     def on_tick(self, tick):
         """tick process function"""
-        # print(tick)
+        pass
 
     def on_bar(self, bar):
         """bar process function"""
@@ -52,7 +49,7 @@ class DataRecorder(CtpbeeApi):
 
     def on_shared(self, shared):
         """ 处理分时图数据 """
-        pass
+        print(shared)
 
     def on_log(self, log: LogData):
         """ 可以用于将log信息推送到外部 """
@@ -67,10 +64,10 @@ def go():
             "userid": "089131",
             "password": "350888",
             "brokerid": "9999",
-            # "md_address": "tcp://180.168.146.187:10131",
-            # "td_address": "tcp://180.168.146.187:10130",
-            "md_address": "tcp://218.202.237.33:10112",
-            "td_address": "tcp://218.202.237.33:10102",
+            "md_address": "tcp://180.168.146.187:10131",
+            "td_address": "tcp://180.168.146.187:10130",
+            # "md_address": "tcp://218.202.237.33:10112",
+            # "td_address": "tcp://218.202.237.33:10102",
             "product_info": "",
             "appid": "simnow_client_test",
             "auth_code": "0000000000000000",
@@ -104,18 +101,6 @@ def go():
 
     p = Thread(target=run_query, args=(app,))
     p.start()
-    while True:
-        import sys
-        # sys.stdout.write
-        # td = [i._to_dict() for i in app.recorder.get_all_positions()]
-        td = app.recorder.get_all_positions()
-        data = [x["position_profit"] for x in td]
-        datad = [x["stare_position_profit"] for x in td]
-        print(f"\r {data} ", end="", flush=True)
-        print(f"{datad}", end="", flush=True)
-
-
-        # sys.stdout.flush()
 
 
 if __name__ == '__main__':

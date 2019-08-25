@@ -1,8 +1,21 @@
 import json
 from collections import defaultdict
 
+from ctpbee.constant import enums, data_class, request_class
+from ctpbee.json.tag import tags
 
-class ProxyPollen(object):
+
+class Mether:
+
+    def __init_subclass__(cls, **kwargs):
+        cls.labeling(tags)
+        cls.add_enum(enums)
+        cls.add_data_class(data_class)
+        cls.add_request_class(request_class)
+        cls._init_class_store()
+
+
+class ProxyPollen(Mether):
     """
     +-------------------+---------------+--------------------+
     | Python            | JSON          |Pollen(Can change   |
@@ -35,20 +48,19 @@ class ProxyPollen(object):
     """
     str_can_to = ['enum', 'datetime']
     default_tags = dict()
+
     str_tags = dict()
     enum_store = dict()
 
     data_class_store = defaultdict(set)
     data_base_class = None
     request_base_class = None
+    tags = tags
+    enums = enums
+    data_class = data_class
+    request_class = request_class
 
-    def __init__(self, tags: list = None, enums: list = None, data_class=None, request_class=None):
-        if tags: self.labeling(tags)
-        if enums: self.add_enum(enums)
-        if data_class: self.add_data_class(data_class)
-        if request_class: self.add_request_class(request_class)
-        self._init_class_store()
-
+    @classmethod
     def _init_class_store(self):
         # 初始化 data_class_store
         data = data_class + request_class
@@ -61,6 +73,7 @@ class ProxyPollen(object):
                 attribute.add(c)
             self.data_class_store[cls] = attribute
 
+    @classmethod
     def labeling(self, tags: list):
         """
         添加tag类
@@ -73,6 +86,7 @@ class ProxyPollen(object):
             if t.tag in self.str_can_to:
                 self.str_tags[t.tag] = t(self)
 
+    @classmethod
     def add_enum(self, enums: list):
         """
         添加自定义Enum类属性值
@@ -84,6 +98,7 @@ class ProxyPollen(object):
             for _, v in e.__members__.items():
                 self.enum_store[v.value] = v
 
+    @classmethod
     def add_data_class(self, data_class: list):
         """
         {cls_name:{attr1,attr2},} 模糊获取类变量属性
@@ -93,6 +108,7 @@ class ProxyPollen(object):
         if not isinstance(data_class, list): raise TypeError("[^^]data_class must list")
         self.data_base_class = data_class[0].__bases__
 
+    @classmethod
     def add_request_class(self, request_class: list):
         """
         {cls_name:{attr1,attr2},} 模糊获取类变量属性
@@ -102,6 +118,7 @@ class ProxyPollen(object):
         if not isinstance(request_class, list): raise TypeError("[^^]request_class must list")
         self.request_base_class = request_class[0].__bases__
 
+    @classmethod
     def update_data_class_store(self, data):
         """
         在dumps时将类实例的全部属性覆盖模糊获取的属性,提高精确性
@@ -146,9 +163,3 @@ class ProxyPollen(object):
         tag = cls.find_tag(value)
         if tag:
             return json.dumps(tag.to_json(value), ensure_ascii=False)
-
-
-from .tag import tags
-from ctpbee.constant import enums, data_class, request_class
-
-Pollen = ProxyPollen(tags=tags, enums=enums, data_class=data_class, request_class=request_class)

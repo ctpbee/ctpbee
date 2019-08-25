@@ -10,9 +10,10 @@
 <html class="no-js"> <!--<![endif]-->
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Ctpbee</title>
+
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
-    <!--    <link rel="shortcut icon" href="favicon.ico">-->
+    <link rel="shortcut icon" href="{{ url_for('static', filename='icon/bee.ico') }}">
 
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700,300' rel='stylesheet' type='text/css'>
 
@@ -64,7 +65,7 @@
     </style>
 
     {% block head %}
-    {% endblock%}
+    {% endblock %}
 
 </head>
 <body>
@@ -72,23 +73,23 @@
 <div class="wrap">
     {% block body %}
 
-    {% endblock%}
+    {% endblock %}
 </div>
 
 
 {% block footer %}
-<div class="row copyright_footer" style="padding-top: 60px; clear: both;">
-    <div class="col-md-12 text-center">
-        <p>
-            <small>&copy; All Rights Reserved by somewheve</small>
-            <small>License:Mit</small>
-            <a href="http://120.79.8.150/">
-                <small>About us</small>
-            </a>
-        </p>
+    <div class="row copyright_footer" style="padding-top: 60px; clear: both;">
+        <div class="col-md-12 text-center">
+            <p>
+                <small>&copy; All Rights Reserved by somewheve</small>
+                <small>License:Mit</small>
+                <a href="http://120.79.8.150/">
+                    <small>About us</small>
+                </a>
+            </p>
+        </div>
     </div>
-</div>
-{% endblock%}
+{% endblock %}
 
 
 <!-- jQuery -->
@@ -108,7 +109,7 @@
 <script src='{{ url_for("static", filename="js/socket.io.js") }}'></script>
 
 <script>
-    var socket = io.connect('http://localhost:5000');
+    var socket = io.connect('http://127.0.0.1:5000');
 </script>
 <script>
     function alertMsg(msg, level = "msg") {
@@ -117,7 +118,7 @@
         // $('#alertMsg').css('bottom','100px')
         ext = "提示信息: " + msg;
         if (level == "err") {
-            $("#alertMsg").css({"backgroundColor":"red"});
+            $("#alertMsg").css({"backgroundColor": "red"});
         }
         $('#alertMsg').fadeIn().html(ext);
         setTimeout(function () {
@@ -130,6 +131,6 @@
 {% block script %}
 
 
-{% endblock%}
+{% endblock %}
 </body>
 </html>

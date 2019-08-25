@@ -99,7 +99,7 @@ class Recorder(object):
         if bm:
             bm.update_tick(tick)
         if not bm:
-            self.generators[symbol] = generator(self.event_engine)
+            self.generators[symbol] = generator(self.event_engine, self.app)
 
         for value in self.app.extensions.values():
             value(deepcopy(event))

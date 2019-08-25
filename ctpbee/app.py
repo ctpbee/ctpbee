@@ -20,23 +20,19 @@ from ctpbee.util import RiskLevel
 
 class CtpBee(object):
     """
-    ctpbee 源于我对于做项目的痛点需求, 旨在开发出一套具有完整api的交易微框架 ,
-    在这里你可以看到很多借鉴自flask的设计 , 毕竟本人实在热爱flask ....
-    ctpbee提供完整的支持 ，一个CtpBee对象可以登录一个账户 ，
-    当你登录多个账户时， 可以通过current_app, 以及switch_app还有 get_app提供完整的支持,
-    每个账户对象都拥有单独的发单接口 ,在你实现策略的地方 可以通过上述api实现发单支持,
-    当然ctpbee提供了CtpbeeApi 抽象插件 ，继承此插件即可快速载入支持.
-    总而言之,希望能够极大的简化目前的开发流程 !
+    ctpbee 源于我对于做项目的痛点需求, 旨在开发出一套具有完整api的交易微框架
+    I hope it will help you !
+
     """
     # 默认回测配置参数
-    defaut_params = {
+    default_params = {
         'cash': 10000.0,
-        'checksubmit': True,
-        'eosbar': False,
+        'check_submit': True,
+        'eos_bar': False,
         'filler': None,
         "commision": 0.01,
         # slippage options
-        'slip_perc': 0.0,
+        'slip_percent': 0.0,
         'slip_fixed': 0.0,
         'slip_open': False,
         'slip_match': True,
@@ -45,16 +41,16 @@ class CtpBee(object):
         'coc': False,
         'coo': False,
         'int2pnl': True,
-        'shortcash': True,
-        'fundstartval': 100.0,
-        'fundmode': False
+        'short_cash': True,
+        'fund_start_val': 100.0,
+        'fund_mode': False
     }
     default_config = ImmutableDict(
         dict(LOG_OUTPUT=True, TD_FUNC=False, INTERFACE="ctp", MD_FUNC=True, XMIN=[], ALL_SUBSCRIBE=False,
-             SHARE_MD=False, ENGINE_METHOD="thread", LOOPER_SETTING=defaut_params))
+             SHARE_MD=False, ENGINE_METHOD="thread", LOOPER_SETTING=default_params, SHARED_FUNC=False))
     config_class = Config
     import_name = None
-    # 数据记录载体
+
     __active = False
 
     # 交易api与行情api

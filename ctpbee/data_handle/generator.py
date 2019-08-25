@@ -2,7 +2,6 @@
 
 from ctpbee.constant import BarData, TickData, SharedData, EVENT_BAR, EVENT_SHARED
 from ctpbee.event_engine import Event
-from ctpbee.context import current_app
 
 
 class DataGenerator:
@@ -13,7 +12,7 @@ class DataGenerator:
     3, generate shared time data
     """
 
-    def __init__(self, et_engine):
+    def __init__(self, et_engine, app):
         """Constructor"""
         self.rpo = et_engine
         self.bar = None
@@ -28,8 +27,9 @@ class DataGenerator:
 
         self.denominator = 0
         self.molecule = 0
+        self.app = app
 
-        self.XMIN = current_app.config.get("XMIN")
+        self.XMIN = app.config.get("XMIN")
         self._generator()
         self.rd = None
 
@@ -46,6 +46,8 @@ class DataGenerator:
         self.last_price = tick.last_price
         self.open_interest = tick.open_interest
         self.volume = tick.volume
+
+        # 更新均价线
         self.molecule = self.molecule + tick.last_price * tick.volume
         self.denominator = self.denominator + tick.volume
         try:
@@ -69,12 +71,15 @@ class DataGenerator:
             [self.update_bar(x, getattr(self, "min_{}_bar".format(x)), self.bar) for x in self.XMIN]
             new_minute = True
         if new_minute:
-            shared = SharedData(last_price=round(self.last_price, 2), datetime=tick.datetime, local_symbol=self.local_symbol,
-                                open_interest=self.open_interest, average_price=round(self.average_price, 2),
-                                volume=self.volume - self.last_volume, gateway_name=tick.gateway_name)
+            if self.app.config.get("SHARED_FUNC"):
+                shared = SharedData(last_price=round(self.last_price, 2), datetime=tick.datetime,
+                                    local_symbol=self.local_symbol,
+                                    open_interest=self.open_interest, average_price=round(self.average_price, 2),
+                                    volume=self.volume - self.last_volume, gateway_name=tick.gateway_name)
+                event = Event(type=EVENT_SHARED, data=shared)
+                self.rpo.put(event)
             self.last_volume = tick.volume
-            event = Event(type=EVENT_SHARED, data=shared)
-            self.rpo.put(event)
+
             self.bar = BarData(
                 symbol=tick.symbol,
                 exchange=tick.exchange,
