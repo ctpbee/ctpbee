@@ -1,8 +1,9 @@
+from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime
 
 from ctpbee.constant import EVENT_TICK, EVENT_ORDER, EVENT_TRADE, EVENT_POSITION, EVENT_ACCOUNT, \
-    EVENT_CONTRACT, EVENT_BAR, EVENT_LOG, EVENT_ERROR, EVENT_SHARED
+    EVENT_CONTRACT, EVENT_BAR, EVENT_LOG, EVENT_ERROR, EVENT_SHARED, EVENT_LAST
 from ctpbee.data_handle import generator
 from ctpbee.data_handle.local_position import LocalPositionManager
 from ctpbee.event_engine import Event
@@ -33,6 +34,8 @@ class Recorder(object):
         self.app = app
         self.position_manager = LocalPositionManager(app=self.app)
 
+        self.main_contract_mapping = defaultdict(list)
+
     @staticmethod
     def get_local_time():
         from datetime import datetime
@@ -50,6 +53,37 @@ class Recorder(object):
         self.event_engine.register(EVENT_LOG, self.process_log_event)
         self.event_engine.register(EVENT_ERROR, self.process_error_event)
         self.event_engine.register(EVENT_SHARED, self.process_shared_event)
+        self.event_engine.register(EVENT_LAST, self.process_last_event)
+
+    def process_last_event(self, event):
+        """ 处理最近合约数据 """
+        data = event.data
+
+        # 过滤掉数字 取中文做key
+        key = "".join([x for x in data.symbol if not x.isdigit()])
+        self.main_contract_mapping[key.upper()].append(data)
+
+    @property
+    def main_contract_list(self):
+        """ 返回主力合约列表 """
+        result = []
+        for _ in self.main_contract_mapping.values():
+            x = sorted(_, key=lambda x: x.open_interest, reverse=True)[0]
+            result.append(x.local_symbol)
+        return result
+
+    def get_main_contract_by_code(self, code: str):
+        """ 根据code取相应的主力合约 """
+        d = self.main_contract_mapping.get(code.upper(), None)
+        if not d:
+            return None
+        else:
+            now = sorted(d, key=lambda x: x.open_interest, reverse=True)[0]
+            pre = sorted(d, key=lambda x: x.pre_open_interest, reverse=True)[0]
+            if pre.local_symbol == now.local_symbol:
+                return pre
+            else:
+                return now
 
     def process_shared_event(self, event):
         if self.shared.get(event.data.local_symbol, None) is not None:

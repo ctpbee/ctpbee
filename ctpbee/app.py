@@ -128,7 +128,7 @@ class CtpBee(object):
             else:
                 self.trader = TdApi(self.event_engine)
             self.trader.connect(info)
-            sleep(0.5)
+            sleep(1)
 
     @locked_cached_property
     def name(self):

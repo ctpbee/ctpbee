@@ -125,7 +125,7 @@ class BeeMdApi(MdApi):
 
         # If not connected, then start connection first.
         if not self.connect_status:
-            path = get_folder_path(self.gateway_name.lower())
+            path = get_folder_path(self.gateway_name.lower()+ f"/{self.userid}")
             self.createFtdcMdApi(str(path) + "\\Md")
             self.registerFront(info['md_address'])
             self.init()

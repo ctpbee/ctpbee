@@ -145,7 +145,7 @@ EVENT_TRADE = "trade"
 EVENT_ORDER = "order"
 EVENT_ACCOUNT = "account"
 EVENT_SHARED = "shared"
-
+EVENT_LAST = "last"
 
 @dataclass(init=False, repr=False)
 class BaseData:
@@ -457,6 +457,17 @@ class LogData(BaseData):
         self.time = datetime.now()
 
 
+class LastData(BaseData):
+    symbol: str
+    exchange: Exchange
+    pre_open_interest: float
+    open_interest: float
+    volume: int
+
+    def __post_init__(self):
+        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+
+
 class ContractData(BaseData):
     """
     Contract data contains basic information about each contract traded.
@@ -469,9 +480,9 @@ class ContractData(BaseData):
     size: int
     pricetick: float
 
-    min_volume: float = 1  # minimum trading volume of the contract
-    stop_supported: bool = False  # whether server supports stop order
-    net_position: bool = False  # whether gateway uses net position volume
+    min_volume: float = 1
+    stop_supported: bool = False
+    net_position: bool = False
 
     option_strike: float = 0
     option_underlying: str = ""
@@ -593,6 +604,12 @@ class TransferSerialRequest(BaseRequest):
     """ 查询转账流水 """
     bank_id: str
     currency_id: str = "CNY"
+
+
+class MarketDataRequest(BaseRequest):
+    """ 请求市场数据 """
+    symbol: str
+    exchange: Exchange
 
 
 data_class = [TickData, BarData, OrderData, TradeData, PositionData, AccountData, LogData, ContractData, SharedData]

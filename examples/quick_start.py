@@ -1,8 +1,4 @@
-from threading import Thread
-from threading import Thread
-from time import sleep
-
-from ctpbee import CtpBee, dumps, loads
+from ctpbee import CtpBee
 from ctpbee import CtpbeeApi
 from ctpbee.constant import PositionData, AccountData, LogData
 
@@ -64,10 +60,10 @@ def go():
             "userid": "089131",
             "password": "350888",
             "brokerid": "9999",
-            # "md_address": "tcp://180.168.146.187:10131",
-            # "td_address": "tcp://180.168.146.187:10130",
-            "md_address": "tcp://218.202.237.33:10112",
-            "td_address": "tcp://218.202.237.33:10102",
+            "md_address": "tcp://180.168.146.187:10131",
+            "td_address": "tcp://180.168.146.187:10130",
+            # "md_address": "tcp://218.202.237.33:10112",
+            # "td_address": "tcp://218.202.237.33:10102",
             "product_info": "",
             "appid": "simnow_client_test",
             "auth_code": "0000000000000000",
@@ -90,18 +86,9 @@ def go():
 
     """ 启动 """
     app.start(log_output=True)
-
-    def run_query(app):
-        for _ in range(2):
-            app.query_position()
-            sleep(1)
-
-            app.query_account()
-            sleep(1)
-
-    p = Thread(target=run_query, args=(app,))
-    p.start()
-
+    d = app.recorder.main_contract_list
+    d = app.recorder.get_main_contract_by_code("ag")
+    print(d)
 
 if __name__ == '__main__':
     go()

@@ -4,14 +4,14 @@
 
 """
 from datetime import time
-from typing import Text
+from typing import Text, Any
 
 from ctpbee.constant import \
     (OrderRequest, CancelRequest, EVENT_TRADE, EVENT_SHARED, EVENT_ORDER,
      OrderData, TradeData, PositionData, AccountData, TickData, SharedData,
      BarData, EVENT_POSITION, EVENT_ACCOUNT, EVENT_TICK, EVENT_BAR, EVENT_CONTRACT, ContractData, Direction, Exchange,
      Offset, OrderType, AccountRegisterRequest, AccountBanlanceRequest, TransferRequest, TransferSerialRequest, LogData,
-     EVENT_LOG)
+     EVENT_LOG, MarketDataRequest)
 from ctpbee.context import current_app
 from ctpbee.context import get_app
 from ctpbee.event_engine import Event
@@ -332,6 +332,15 @@ class Helper():
     @classmethod
     def generate_transfer_serial_req(cls, bank_id, currency_id="CNY"):
         return TransferSerialRequest(bank_id=bank_id, currency_id=currency_id)
+
+    @classmethod
+    def generate_market_request(cls, symbol: str, exchange: Any):
+        """ 生成市场数据请求 """
+        if "." in symbol:
+            symbol = symbol.split(".")[1]
+        if isinstance(exchange, Exchange):
+            exchange = exchange.value
+        return MarketDataRequest(symbol=symbol, exchange=exchange)
 
 
 helper = Helper()

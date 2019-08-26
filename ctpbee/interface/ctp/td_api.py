@@ -206,7 +206,6 @@ class BeeTdApi(TdApi):
         if last:
             for position in self.positions.values():
                 self.on_event(type=EVENT_POSITION, data=position)
-
             self.positions.clear()
 
     def onRspQryTradingAccount(self, data: dict, error: dict, reqid: int, last: bool):
@@ -251,6 +250,9 @@ class BeeTdApi(TdApi):
             symbol_size_map[contract.symbol] = contract.size
 
         if last:
+            # 请求计算所有合约所用到的具体数据
+            self.reqid += 1
+            self.reqQryDepthMarketData({}, self.reqid)
             self.on_event(EVENT_LOG, data="合约信息查询成功")
 
             for data in self.order_data:
@@ -332,7 +334,7 @@ class BeeTdApi(TdApi):
         self.product_info = info.get("product_info")
 
         if not self.connect_status:
-            path = get_folder_path(self.gateway_name.lower()+ f"/{self.userid}")
+            path = get_folder_path(self.gateway_name.lower() + f"/{self.userid}")
             self.createFtdcTraderApi(str(path) + "\\Td")
             self.subscribePrivateTopic(0)
             self.subscribePublicTopic(0)
@@ -429,7 +431,7 @@ class BeeTdApi(TdApi):
 
     def login(self):
         """
-        Login onto server.
+        Login into server.
         """
         if self.login_failed:
             return
@@ -445,6 +447,22 @@ class BeeTdApi(TdApi):
 
         self.reqid += 1
         self.reqUserLogin(req, self.reqid)
+
+    def onRspQryDepthMarketData(self, data, error, reqid, last):
+        market = LastData(
+            symbol=data['InstrumentID'],
+            exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
+            pre_open_interest=data['PreOpenInterest'],
+            open_interest=data['OpenInterest'],
+            volume=data['Volume']
+        )
+        self.on_event(type=EVENT_LAST, data=market)
+
+    def request_market_data(self, req: object):
+        """ 请求市场数据 """
+
+        self.reqid += 1
+        self.reqQryDepthMarketData({}, self.reqid)
 
     def send_order(self, req: OrderRequest):
         """
@@ -746,6 +764,8 @@ class BeeTdApiApp(TdApiApp):
             symbol_size_map[contract.symbol] = contract.size
 
         if last:
+            self.reqid += 1
+            self.reqQryDepthMarketData({}, self.reqid)
             self.on_event(type=EVENT_LOG, data="合约信息查询成功")
 
             for data in self.order_data:
@@ -851,9 +871,24 @@ class BeeTdApiApp(TdApiApp):
 
         if self.product_info:
             req["UserProductInfo"] = self.product_info
-
         self.reqid += 1
         self.reqAuthenticate(req, self.reqid)
+
+    def onRspQryDepthMarketData(self, data, error, reqid, last):
+        market = LastData(
+            symbol=data['InstrumentID'],
+            exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
+            pre_open_interest=data['PreOpenInterest'],
+            open_interest=data['OpenInterest'],
+            volume=data['Volume']
+        )
+        self.on_event(type=EVENT_LAST, data=market)
+
+    def request_market_data(self, req: object):
+        """ 请求市场数据 """
+
+        self.reqid += 1
+        self.reqQryDepthMarketData({}, self.reqid)
 
     def login(self):
         """
