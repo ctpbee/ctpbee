@@ -332,7 +332,7 @@ class BeeTdApi(TdApi):
         self.product_info = info.get("product_info")
 
         if not self.connect_status:
-            path = get_folder_path(self.gateway_name.lower())
+            path = get_folder_path(self.gateway_name.lower()+ f"/{self.userid}")
             self.createFtdcTraderApi(str(path) + "\\Td")
             self.subscribePrivateTopic(0)
             self.subscribePublicTopic(0)
@@ -815,9 +815,7 @@ class BeeTdApiApp(TdApiApp):
         )
         self.on_event(type=EVENT_TRADE, data=trade)
 
-    def connect(
-            self, info
-    ):
+    def connect(self, info):
         """
         Start connection to server.
         """
@@ -827,11 +825,9 @@ class BeeTdApiApp(TdApiApp):
         self.auth_code = info.get("auth_code")
         self.appid = info.get("appid")
         self.product_info = info.get("product_info")
-
         if not self.connect_status:
-            path = get_folder_path(self.gateway_name.lower() + "/"+ self.userid)
+            path = get_folder_path(self.gateway_name.lower() + f"/{self.userid}")
             self.createFtdcTraderApi(str(path) + "\\Td")
-
             self.subscribePrivateTopic(0)
             self.subscribePublicTopic(0)
 
