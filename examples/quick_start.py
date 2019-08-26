@@ -94,6 +94,10 @@ class DataRecorder(CtpbeeApi):
         """tick process function"""
         pass
 
+    def on_init(self, init):
+        if init:
+            print("初始化完成")
+
     def on_bar(self, bar):
         """bar process function"""
 

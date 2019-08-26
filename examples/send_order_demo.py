@@ -37,6 +37,10 @@ class Demo(CtpbeeApi):
 
         sleep(1)
 
+    def on_init(self, init):
+        if init:
+            print("初始化完成")
+
     def on_order(self, order: OrderData) -> None:
         """ 报单回报 """
         print("order", order)

@@ -1,7 +1,6 @@
 import asyncio
 
 from ctpbee import CtpBee
-from ctpbee import CtpbeeApi
 from ctpbee.constant import PositionData, AccountData, LogData
 from ctpbee.func import AsyncApi
 
@@ -47,6 +46,9 @@ class DataRecorder(AsyncApi):
     async def on_shared(self, shared):
         """ 处理分时图数据 """
         pass
+
+    async def on_init(self, init):
+        print("init")
 
     async def on_log(self, log: LogData):
         """ 可以用于将log信息推送到外部 """

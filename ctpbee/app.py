@@ -1,7 +1,6 @@
 # coding:utf-8
 import os
 import sys
-from time import sleep
 from typing import Text, AnyStr
 
 from werkzeug.datastructures import ImmutableDict
@@ -134,7 +133,6 @@ class CtpBee(object):
                 self.trader = TdApi(self.event_engine)
             self.trader.connect(info)
             # 显式指定休息1.5 秒 ，等待所有数据回传
-            sleep(1.5)
 
     @locked_cached_property
     def name(self):

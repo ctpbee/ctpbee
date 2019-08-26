@@ -11,7 +11,6 @@ from ctpbee.constant import LogData, AccountData, ContractData, BarData, OrderDa
     TradeData
 
 
-
 class DefaultSettings(CtpbeeApi):
 
     def __init__(self, name, app, socket_io: SocketIO):
@@ -152,6 +151,9 @@ class DefaultSettings(CtpbeeApi):
             "data": trades
         }
         self.io.emit('trade', data)
+
+    def on_init(self, init):
+        pass
 
 
 def true_response(data="", message="操作成功执行"):

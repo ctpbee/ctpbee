@@ -146,6 +146,8 @@ EVENT_ORDER = "order"
 EVENT_ACCOUNT = "account"
 EVENT_SHARED = "shared"
 EVENT_LAST = "last"
+EVENT_INIT_FINISHED = "init"
+
 
 @dataclass(init=False, repr=False)
 class BaseData:

@@ -262,6 +262,8 @@ class BeeTdApi(TdApi):
             for data in self.trade_data:
                 self.onRtnTrade(data)
             self.trade_data.clear()
+            # 回调初始化完成
+            self.on_event(type=EVENT_INIT_FINISHED, data=True)
 
     def onRtnOrder(self, data: dict):
         """
@@ -775,6 +777,8 @@ class BeeTdApiApp(TdApiApp):
             for data in self.trade_data:
                 self.onRtnTrade(data)
             self.trade_data.clear()
+            # 回调初始化完成
+            self.on_event(type=EVENT_INIT_FINISHED, data=True)
 
     def onRtnOrder(self, data: dict):
         """

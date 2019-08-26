@@ -11,7 +11,7 @@ from ctpbee.constant import \
      OrderData, TradeData, PositionData, AccountData, TickData, SharedData,
      BarData, EVENT_POSITION, EVENT_ACCOUNT, EVENT_TICK, EVENT_BAR, EVENT_CONTRACT, ContractData, Direction, Exchange,
      Offset, OrderType, AccountRegisterRequest, AccountBanlanceRequest, TransferRequest, TransferSerialRequest, LogData,
-     EVENT_LOG, MarketDataRequest)
+     EVENT_LOG, MarketDataRequest, EVENT_INIT_FINISHED)
 from ctpbee.context import current_app
 from ctpbee.context import get_app
 from ctpbee.event_engine import Event
@@ -55,7 +55,7 @@ def subscribe(symbol: Text, app_name: str = "current_app") -> None:
 
 
 def query_func(type: Text, app_name: str = "current_app") -> None:
-    """查询持仓 or 账户"""
+    """ 查询持仓或者账户 """
     if app_name == "current_app":
         app = current_app
     else:
@@ -125,6 +125,9 @@ class CtpbeeApi(object):
     def on_log(self, log: LogData):
         raise NotImplemented
 
+    def on_init(self, init):
+        raise NotImplemented
+
     def init_app(self, app):
         if app is not None:
             self.app = app
@@ -137,6 +140,7 @@ class CtpbeeApi(object):
 
     def __init_subclass__(cls, **kwargs):
         map = {
+            EVENT_INIT_FINISHED: cls.on_init,
             EVENT_TICK: cls.on_tick,
             EVENT_BAR: cls.on_bar,
             EVENT_ORDER: cls.on_order,
@@ -149,6 +153,7 @@ class CtpbeeApi(object):
 
         }
         parmeter = {
+            EVENT_INIT_FINISHED: EVENT_INIT_FINISHED,
             EVENT_POSITION: EVENT_POSITION,
             EVENT_TRADE: EVENT_TRADE,
             EVENT_BAR: EVENT_BAR,
@@ -212,6 +217,9 @@ class AsyncApi(object):
     async def on_log(self, log: LogData):
         raise NotImplemented
 
+    async def on_init(self, init):
+        raise NotImplemented
+
     def init_app(self, app):
         if app is not None:
             self.app = app
@@ -224,6 +232,7 @@ class AsyncApi(object):
 
     def __init_subclass__(cls, **kwargs):
         map = {
+            EVENT_INIT_FINISHED: cls.on_init,
             EVENT_TICK: cls.on_tick,
             EVENT_BAR: cls.on_bar,
             EVENT_ORDER: cls.on_order,
@@ -236,6 +245,7 @@ class AsyncApi(object):
 
         }
         parmeter = {
+            EVENT_INIT_FINISHED: EVENT_INIT_FINISHED,
             EVENT_POSITION: EVENT_POSITION,
             EVENT_TRADE: EVENT_TRADE,
             EVENT_BAR: EVENT_BAR,
