@@ -21,7 +21,7 @@ class RiskMe(RiskLevel):
                 # 主动对buy操作添加一个风控
                 self.buy = self.app.risk_gateway_class(self.buy)
 
-            def buy(*args, **kwargs)
+            def buy(self, *args, **kwargs)
                 # 函数最后需要返回一个结果
                 return True
 

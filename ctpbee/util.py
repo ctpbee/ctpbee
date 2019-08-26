@@ -18,7 +18,6 @@ class RiskLevel:
     def __init__(self, func):
         wraps(func)(self)
 
-
     @classmethod
     def update_app(cls, app):
         cls.app = app
