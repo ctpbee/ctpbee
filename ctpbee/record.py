@@ -57,11 +57,14 @@ class Recorder(object):
         self.event_engine.register(EVENT_INIT_FINISHED, self.process_init_event)
 
     def process_init_event(self, event):
+        """ 处理初始化完成事件 """
+        if event.data:
+            self.app.init_finished = True
         for x in self.app.extensions.values():
             x(deepcopy(event))
 
     def process_last_event(self, event):
-        """ 处理最近合约数据 """
+        """ 处理合约的最新行情数据 """
         data = event.data
 
         # 过滤掉数字 取中文做key

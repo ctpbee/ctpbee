@@ -83,6 +83,7 @@ class CtpBee(object):
         self.risk_gateway_class = None
         self.instance_path = instance_path
         self.config = self.make_config()
+        self.init_finished = False
 
         _app_context_ctx.push(self.name, self)
 
