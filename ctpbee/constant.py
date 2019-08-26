@@ -465,6 +465,7 @@ class LastData(BaseData):
     pre_open_interest: float
     open_interest: float
     volume: int
+    last_price: float
 
     def __post_init__(self):
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"

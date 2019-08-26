@@ -3,7 +3,8 @@ from datetime import datetime
 
 from ctpbee.constant import EVENT_LOG, EVENT_ERROR, EVENT_ORDER, EVENT_ACCOUNT, EVENT_POSITION, \
     EVENT_CONTRACT, EVENT_TRADE, AccountBanlanceRequest, AccountRegisterRequest, TransferSerialRequest, TransferRequest, \
-    OrderRequest, EVENT_LAST, CancelRequest, LastData, TradeData, OrderData, ContractData, AccountData, PositionData
+    OrderRequest, EVENT_LAST, CancelRequest, LastData, TradeData, OrderData, ContractData, AccountData, PositionData, \
+    EVENT_INIT_FINISHED
 from ctpbee.event_engine import Event
 from ctpbee.interface.xin.lib import *
 
@@ -436,9 +437,13 @@ class XinTdApi(TdApi):
             exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
             pre_open_interest=data['PreOpenInterest'],
             open_interest=data['OpenInterest'],
-            volume=data['Volume']
+            volume=data['Volume'],
+            last_price=data['LastPrice']
         )
         self.on_event(type=EVENT_LAST, data=market)
+        if last:
+            # 回调初始化完成
+            self.on_event(type=EVENT_INIT_FINISHED, data=True)
 
     def request_market_data(self, req: object):
         """ 请求市场数据 """

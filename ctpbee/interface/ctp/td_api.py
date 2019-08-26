@@ -262,8 +262,6 @@ class BeeTdApi(TdApi):
             for data in self.trade_data:
                 self.onRtnTrade(data)
             self.trade_data.clear()
-            # 回调初始化完成
-            self.on_event(type=EVENT_INIT_FINISHED, data=True)
 
     def onRtnOrder(self, data: dict):
         """
@@ -457,9 +455,13 @@ class BeeTdApi(TdApi):
             exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
             pre_open_interest=data['PreOpenInterest'],
             open_interest=data['OpenInterest'],
-            volume=data['Volume']
+            volume=data['Volume'],
+            last_price=data['LastPrice']
         )
         self.on_event(type=EVENT_LAST, data=market)
+        if last:
+            # 回调初始化完成
+            self.on_event(type=EVENT_INIT_FINISHED, data=True)
 
     def request_market_data(self, req: object):
         """ 请求市场数据 """
@@ -778,8 +780,7 @@ class BeeTdApiApp(TdApiApp):
             for data in self.trade_data:
                 self.onRtnTrade(data)
             self.trade_data.clear()
-            # 回调初始化完成
-            self.on_event(type=EVENT_INIT_FINISHED, data=True)
+
 
     def onRtnOrder(self, data: dict):
         """
@@ -885,9 +886,13 @@ class BeeTdApiApp(TdApiApp):
             exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
             pre_open_interest=data['PreOpenInterest'],
             open_interest=data['OpenInterest'],
-            volume=data['Volume']
+            volume=data['Volume'],
+            last_price=data['LastPrice']
         )
         self.on_event(type=EVENT_LAST, data=market)
+        if last:
+            # 回调初始化完成
+            self.on_event(type=EVENT_INIT_FINISHED, data=True)
 
     def request_market_data(self, req: object):
         """ 请求市场数据 """

@@ -28,6 +28,7 @@ class Recorder(object):
         self.shared = {}
         self.generators = {}
         self.active_orders = {}
+        self.local_contract_price_mapping = {}
         self.event_engine = event_engine
         self.register_event()
 
@@ -66,10 +67,14 @@ class Recorder(object):
     def process_last_event(self, event):
         """ 处理合约的最新行情数据 """
         data = event.data
-
+        self.local_contract_price_mapping[data.local_symbol] = data.last_price
         # 过滤掉数字 取中文做key
         key = "".join([x for x in data.symbol if not x.isdigit()])
         self.main_contract_mapping[key.upper()].append(data)
+
+    def get_contract_last_price(self, local_symbol):
+        """ 获取合约的最新价格 """
+        return self.local_contract_price_mapping.get(local_symbol)
 
     @property
     def main_contract_list(self):
@@ -324,7 +329,6 @@ class AsyncRecorder(object):
         self.event_engine.register(EVENT_LAST, self.process_last_event)
         self.event_engine.register(EVENT_INIT_FINISHED, self.process_init_event)
 
-
     async def process_init_event(self, event):
         """ 处理初始化完成事件 """
         if event.data:
@@ -361,7 +365,6 @@ class AsyncRecorder(object):
                 return pre
             else:
                 return now
-
 
     async def process_shared_event(self, event):
         if self.shared.get(event.data.local_symbol, None) is not None:

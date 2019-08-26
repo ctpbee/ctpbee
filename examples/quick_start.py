@@ -97,6 +97,14 @@ class DataRecorder(CtpbeeApi):
     def on_init(self, init):
         if init:
             print("初始化完成")
+            # 获取主力合约
+            main_contract = self.app.recorder.get_main_contract_by_code("ap")
+
+            # 获取合约的最新价格
+            print(self.app.recorder.get_contract_last_price("AP910.CZCE"))
+
+            # 获取主力合约列表
+            print(self.app.recorder.main_contract_list)
 
     def on_bar(self, bar):
         """bar process function"""
@@ -157,7 +165,6 @@ def go():
     data_recorder = DataRecorder("data_recorder", app)
 
     """ 添加自定义的风控 """
-
 
     """ 启动 """
     app.start(log_output=True)
