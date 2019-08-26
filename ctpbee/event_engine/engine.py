@@ -2,6 +2,7 @@
 Event-driven framework of vn.py framework.
 """
 import asyncio
+from asyncio import iscoroutinefunction
 from collections import defaultdict
 from queue import Empty, Queue
 from threading import Thread
@@ -165,6 +166,7 @@ class AsyncEngine:
         self.work_core = work_core
         self.init_flag = True
         self._active = False
+        self._interval = 1
         self._timer = Thread(target=self._run_timer)
 
     def _run_timer(self):
@@ -195,29 +197,30 @@ class AsyncEngine:
         self.loop.create_task(self._put(event))
 
     async def future_finish(self, event: Event):
-        for func in self._func.get(event.type):
+        for func in self._func[event.type]:
             await func(event)
 
+
     def register(self, type, func):
-        # if not iscoroutinefunction(func):
-        #     raise TypeError("处理函数错误， 不是一个协程对象")
-        handler_list = self._func[type]
-        if func not in handler_list:
-            handler_list.append(func)
+        if not iscoroutinefunction(func):
+            raise TypeError("注册处理函数错误， 不是一个协程对象")
+        if func not in self._func[type]:
+            self._func[type].append(func)
 
     def unregister(self, type, func):
-        handler_list = self._func[type]
-        if func in handler_list:
-            handler_list.remove(func)
+        if func in self._func[type]:
+            self._func[type].remove(func)
 
     async def main(self):
         self._active = True
         asyncio.set_event_loop(self.loop)
         self._queue = asyncio.Queue()
+        self._timer.start()
         tasks = []
         for i in range(self.work_core):
             task = asyncio.create_task(self.worker(self._queue))
             tasks.append(task)
+
         await asyncio.gather(*tasks, return_exceptions=False)
 
     def start(self):

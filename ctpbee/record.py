@@ -285,6 +285,7 @@ class AsyncRecorder(object):
 
     def __init__(self, app, event_engine):
         """"""
+        self.main_contract_mapping = defaultdict(list)
         self.bar = {}
         self.ticks = {}
         self.orders = {}
@@ -320,6 +321,47 @@ class AsyncRecorder(object):
         self.event_engine.register(EVENT_LOG, self.process_log_event)
         self.event_engine.register(EVENT_ERROR, self.process_error_event)
         self.event_engine.register(EVENT_SHARED, self.process_shared_event)
+        self.event_engine.register(EVENT_LAST, self.process_last_event)
+        self.event_engine.register(EVENT_INIT_FINISHED, self.process_init_event)
+
+
+    async def process_init_event(self, event):
+        """ 处理初始化完成事件 """
+        if event.data:
+            self.app.init_finished = True
+        for x in self.app.extensions.values():
+            await x(deepcopy(event))
+
+    async def process_last_event(self, event):
+        """ 处理合约的最新行情数据 """
+        data = event.data
+
+        # 过滤掉数字 取中文做key
+        key = "".join([x for x in data.symbol if not x.isdigit()])
+        self.main_contract_mapping[key.upper()].append(data)
+
+    @property
+    def main_contract_list(self):
+        """ 返回主力合约列表 """
+        result = []
+        for _ in self.main_contract_mapping.values():
+            x = sorted(_, key=lambda x: x.open_interest, reverse=True)[0]
+            result.append(x.local_symbol)
+        return result
+
+    def get_main_contract_by_code(self, code: str):
+        """ 根据code取相应的主力合约 """
+        d = self.main_contract_mapping.get(code.upper(), None)
+        if not d:
+            return None
+        else:
+            now = sorted(d, key=lambda x: x.open_interest, reverse=True)[0]
+            pre = sorted(d, key=lambda x: x.pre_open_interest, reverse=True)[0]
+            if pre.local_symbol == now.local_symbol:
+                return pre
+            else:
+                return now
+
 
     async def process_shared_event(self, event):
         if self.shared.get(event.data.local_symbol, None) is not None:
@@ -369,7 +411,7 @@ class AsyncRecorder(object):
         if bm:
             bm.update_tick(tick)
         if not bm:
-            self.generators[symbol] = generator(self.event_engine)
+            self.generators[symbol] = generator(self.event_engine, self.app)
 
         for value in self.app.extensions.values():
             await value(deepcopy(event))

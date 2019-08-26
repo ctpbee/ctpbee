@@ -451,6 +451,7 @@ class BeeTdApi(TdApi):
         self.reqUserLogin(req, self.reqid)
 
     def onRspQryDepthMarketData(self, data, error, reqid, last):
+
         market = LastData(
             symbol=data['InstrumentID'],
             exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
