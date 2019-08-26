@@ -1,7 +1,7 @@
 # this is the web client in here  you can use it to trade or read market fastly
 from flask import Flask
 
-from .ext import io, cors
+from .ext import io
 from .views import LoginView, MarketView, OrderView, IndexView, AccountView, OpenOrderView, LogoutView
 
 
