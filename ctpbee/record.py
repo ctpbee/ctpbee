@@ -337,7 +337,7 @@ class AsyncRecorder(object):
 
     async def process_timer_event(self, event):
         for x in self.app.extensions.values():
-            x(deepcopy(event))
+            await x(deepcopy(event))
 
     async def process_init_event(self, event):
         """ 处理初始化完成事件 """
