@@ -24,12 +24,6 @@ class RiskLevel:
     def after_cancel(self):
         raise NotImplemented
 
-    def checking(self):
-        """这个函数会一直被触发 用于检查你的信息"""
-        raise NotImplemented
-
     def realtime_check(self):
         """ 一直检查 """
         pass
-
-# 风控层 用户自行自定义

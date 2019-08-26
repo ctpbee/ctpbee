@@ -203,7 +203,6 @@ class BeeTdApi(TdApi):
         else:
             position.frozen += data["LongFrozen"]
 
-
         if last:
             for position in self.positions.values():
                 self.on_event(type=EVENT_POSITION, data=position)
@@ -830,7 +829,7 @@ class BeeTdApiApp(TdApiApp):
         self.product_info = info.get("product_info")
 
         if not self.connect_status:
-            path = get_folder_path(self.gateway_name.lower())
+            path = get_folder_path(self.gateway_name.lower() + "/"+ self.userid)
             self.createFtdcTraderApi(str(path) + "\\Td")
 
             self.subscribePrivateTopic(0)
