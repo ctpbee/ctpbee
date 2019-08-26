@@ -1,6 +1,71 @@
-from ctpbee import CtpBee
+from ctpbee import CtpBee, helper
 from ctpbee import CtpbeeApi
-from ctpbee.constant import PositionData, AccountData, LogData
+from ctpbee import RiskLevel
+from ctpbee.constant import PositionData, AccountData, LogData, Direction, Offset, OrderType
+
+
+class RiskMe(RiskLevel):
+    """
+        约定 1. before_** 函数中 都需要返回True/False, 用于是否阻断操作
+            2. 被装饰的函数必须返回一个结果  -->这个值会被传入到after_**函数中
+            3. after_** 函数必须接受一个参数， 用于知晓执行函数的结果
+
+        你在任何你想要操作的层中 通过func = self.app.risk_gateway_class(func) 执行主动添加事前和事后风控, 但是前提是你需要写好对应的处理函数
+
+        for example:
+        在你策略代码中
+        class MyStrategy(CtpbeeApi):
+
+            def __init__(self, name, app=None):
+                super().__init__(name, app)
+                # 主动对buy操作添加一个风控
+                self.buy = self.app.risk_gateway_class(self.buy)
+
+            def buy(*args, **kwargs)
+                # 函数最后需要返回一个结果
+                return True
+
+
+        在你风控代码中与此同时也要实现对bug的两个操作
+        class Risk(RiskLevel):
+            def before_buy(self):
+                pass
+
+            def after_buy(self, result):
+                pass
+
+        在你的启动代码中
+            ....
+        app.add_risk_gateway(Risk)
+        strategy = MyStrategy("fly_into_sky", app)
+        app.start()
+
+        特别注意：
+            1, 如果你想在你的策略代码想使用风控， 在你载入策略之前必须先通过app.add_risk_gateway(Risk， risk=False) 将风控代码载入进去，风控在运行的时候能够通过
+                self.app 访问所有你想要的数据
+            2, add_risk_gateway的参数risk默认为True将对发单和撤单进行风控检查, 你需要在Risk里面实现before_send_order, before_cancel_order,
+                                                                    after_cancel_order, after_send_order等四个方法.反之不用
+            3. realtime_check(self): 是一直在运行的函数, 一秒一次
+
+    """
+
+    def realtime_check(self):
+        """ 一秒一次的扫描 """
+        print("实时扫描")
+
+    def before_send_order(self) -> bool:
+        """ 返回True不阻止任何操作 """
+        return True
+
+    def before_cancel_cancel(self) -> bool:
+        """ 返回True不阻止任何操作 """
+        return True
+
+    def after_cancel_order(self, result):
+        """ 撤单之后 """
+
+    def after_send_order(self, result):
+        """ 发单之后 """
 
 
 class DataRecorder(CtpbeeApi):
@@ -12,8 +77,9 @@ class DataRecorder(CtpbeeApi):
         pass
 
     def on_contract(self, contract):
-        # 订阅所有
-        self.app.subscribe(contract.symbol)
+        # 订阅单个
+        if contract.symbol in self.subscribe_set:
+            self.app.subscribe(contract.symbol)
 
     def on_order(self, order):
         pass
@@ -35,11 +101,11 @@ class DataRecorder(CtpbeeApi):
         #
         # interval = bar.interval
         #
-        # req = helper.generate_order_req_by_var(symbol=bar.symbol, exchange=bar.exchange, price=bar.high_price,
-        #                                        direction=Direction.LONG, type=OrderType.LIMIT, volume=3,
-        #                                        offset=Offset.OPEN)
+        req = helper.generate_order_req_by_var(symbol=bar.symbol, exchange=bar.exchange, price=bar.high_price,
+                                               direction=Direction.LONG, type=OrderType.LIMIT, volume=3,
+                                               offset=Offset.OPEN)
         # # 调用绑定的app进行发单
-        # id = self.app.send_order(req)
+        id = self.app.send_order(req)
 
         # print("返回id", id)
 
@@ -82,13 +148,16 @@ def go():
         data_recorder 就是下面传入的插件名字
       
     """
+    app.add_risk_gateway(RiskMe)
+
     data_recorder = DataRecorder("data_recorder", app)
+
+    """ 添加自定义的风控 """
+
 
     """ 启动 """
     app.start(log_output=True)
-    d = app.recorder.main_contract_list
-    d = app.recorder.get_main_contract_by_code("ag")
-    print(d)
+
 
 if __name__ == '__main__':
     go()

@@ -15,7 +15,6 @@ from ctpbee.func import CtpbeeApi, send_monitor, cancel_monitor
 from ctpbee.helpers import locked_cached_property, find_package, check
 from ctpbee.interface import Interface
 from ctpbee.record import Recorder, AsyncRecorder
-from ctpbee.util import RiskLevel
 
 
 class CtpBee(object):
@@ -82,12 +81,18 @@ class CtpBee(object):
                 'If an instance path is provided it must be absolute.'
                 ' A relative path was given instead.'
             )
-        self.risk_gateway = RiskLevel(self)
-
+        self.risk_gateway_class = None
         self.instance_path = instance_path
         self.config = self.make_config()
 
         _app_context_ctx.push(self.name, self)
+
+    def add_risk_gateway(self, gateway_class, risk=True):
+        self.risk_gateway_class = gateway_class
+        self.risk_gateway_class.update_app(self)
+        if risk:
+            self.send_order = self.risk_gateway_class(self.send_order)
+            self.cancel_order = self.risk_gateway_class(self.cancel_order)
 
     def make_config(self):
         """ 生成class类"""
@@ -128,7 +133,8 @@ class CtpBee(object):
             else:
                 self.trader = TdApi(self.event_engine)
             self.trader.connect(info)
-            sleep(1)
+            # 显式指定休息1.5 秒 ，等待所有数据回传
+            sleep(1.5)
 
     @locked_cached_property
     def name(self):
@@ -161,7 +167,7 @@ class CtpBee(object):
     def cancel_order(self, cancle_req: CancelRequest):
         """撤单"""
         cancel_monitor.send(cancle_req)
-        self.trader.cancel_order(cancle_req)
+        return self.trader.cancel_order(cancle_req)
 
     @check(type="market")
     def subscribe(self, symbol: AnyStr):

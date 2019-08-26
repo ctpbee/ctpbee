@@ -525,7 +525,7 @@ class BeeTdApi(TdApi):
         }
 
         self.reqid += 1
-        self.reqOrderAction(ctp_req, self.reqid)
+        return self.reqOrderAction(ctp_req, self.reqid)
 
     def query_account(self):
         """
@@ -972,7 +972,7 @@ class BeeTdApiApp(TdApiApp):
         }
 
         self.reqid += 1
-        self.reqOrderAction(ctp_req, self.reqid)
+        return self.reqOrderAction(ctp_req, self.reqid)
 
     def query_account(self):
         """

@@ -165,6 +165,13 @@ class AsyncEngine:
         self.work_core = work_core
         self.init_flag = True
         self._active = False
+        self._timer = Thread(target=self._run_timer)
+
+    def _run_timer(self):
+        while self._active:
+            sleep(self._interval)
+            event = Event(EVENT_TIMER)
+            self.loop.create_task(self._put(event))
 
     @property
     def status(self):

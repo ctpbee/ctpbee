@@ -6,3 +6,5 @@ from ctpbee.func import cancel_order, send_order, CtpbeeApi, subscribe, query_fu
 from ctpbee.json import dumps, loads
 from ctpbee.signals import send_monitor, cancel_monitor
 
+from ctpbee.util import RiskLevel
+

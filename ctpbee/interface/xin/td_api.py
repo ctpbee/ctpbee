@@ -507,7 +507,7 @@ class XinTdApi(TdApi):
         }
 
         self.reqid += 1
-        self.reqOrderAction(ctp_req, self.reqid)
+        return self.reqOrderAction(ctp_req, self.reqid)
 
     def query_account(self):
         """
