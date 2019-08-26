@@ -7,6 +7,7 @@ from ctpbee.constant import EVENT_TICK, EVENT_ORDER, EVENT_TRADE, EVENT_POSITION
 from ctpbee.data_handle import generator
 from ctpbee.data_handle.local_position import LocalPositionManager
 from ctpbee.event_engine import Event
+from ctpbee.event_engine.engine import EVENT_TIMER
 
 
 class Recorder(object):
@@ -34,7 +35,6 @@ class Recorder(object):
 
         self.app = app
         self.position_manager = LocalPositionManager(app=self.app)
-
         self.main_contract_mapping = defaultdict(list)
 
     @staticmethod
@@ -43,7 +43,7 @@ class Recorder(object):
         return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     def register_event(self):
-        """bind process function"""
+        """ bind process function """
         self.event_engine.register(EVENT_TICK, self.process_tick_event)
         self.event_engine.register(EVENT_ORDER, self.process_order_event)
         self.event_engine.register(EVENT_TRADE, self.process_trade_event)
@@ -56,6 +56,11 @@ class Recorder(object):
         self.event_engine.register(EVENT_SHARED, self.process_shared_event)
         self.event_engine.register(EVENT_LAST, self.process_last_event)
         self.event_engine.register(EVENT_INIT_FINISHED, self.process_init_event)
+        self.event_engine.register(EVENT_TIMER, self.process_timer_event)
+
+    def process_timer_event(self, event):
+        for x in self.app.extensions.values():
+            x(deepcopy(event))
 
     def process_init_event(self, event):
         """ 处理初始化完成事件 """
@@ -328,6 +333,11 @@ class AsyncRecorder(object):
         self.event_engine.register(EVENT_SHARED, self.process_shared_event)
         self.event_engine.register(EVENT_LAST, self.process_last_event)
         self.event_engine.register(EVENT_INIT_FINISHED, self.process_init_event)
+        self.event_engine.register(EVENT_TIMER, self.process_timer_event)
+
+    async def process_timer_event(self, event):
+        for x in self.app.extensions.values():
+            x(deepcopy(event))
 
     async def process_init_event(self, event):
         """ 处理初始化完成事件 """

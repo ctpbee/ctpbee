@@ -3,7 +3,7 @@
 面向用户的函数 ,提供极其便捷的体验
 
 """
-from datetime import time
+from datetime import time, datetime
 from typing import Text, Any
 
 from ctpbee.constant import \
@@ -15,6 +15,7 @@ from ctpbee.constant import \
 from ctpbee.context import current_app
 from ctpbee.context import get_app
 from ctpbee.event_engine import Event
+from ctpbee.event_engine.engine import EVENT_TIMER
 from ctpbee.exceptions import TraderError, MarketError
 from ctpbee.signals import send_monitor, cancel_monitor
 
@@ -125,8 +126,11 @@ class CtpbeeApi(object):
     def on_log(self, log: LogData):
         raise NotImplemented
 
-    def on_init(self, init):
+    def on_init(self, init: bool):
         raise NotImplemented
+
+    def on_realtime(self, timed: datetime):
+        pass
 
     def init_app(self, app):
         if app is not None:
@@ -140,6 +144,7 @@ class CtpbeeApi(object):
 
     def __init_subclass__(cls, **kwargs):
         map = {
+            EVENT_TIMER: cls.on_realtime,
             EVENT_INIT_FINISHED: cls.on_init,
             EVENT_TICK: cls.on_tick,
             EVENT_BAR: cls.on_bar,
@@ -153,6 +158,7 @@ class CtpbeeApi(object):
 
         }
         parmeter = {
+            EVENT_TIMER: EVENT_TIMER,
             EVENT_INIT_FINISHED: EVENT_INIT_FINISHED,
             EVENT_POSITION: EVENT_POSITION,
             EVENT_TRADE: EVENT_TRADE,
@@ -217,8 +223,11 @@ class AsyncApi(object):
     async def on_log(self, log: LogData):
         raise NotImplemented
 
-    async def on_init(self, init):
+    async def on_init(self, init: bool):
         raise NotImplemented
+
+    async def on_realtime(self, timed: datetime):
+        pass
 
     def init_app(self, app):
         if app is not None:
@@ -232,6 +241,7 @@ class AsyncApi(object):
 
     def __init_subclass__(cls, **kwargs):
         map = {
+            EVENT_TIMER: cls.on_realtime,
             EVENT_INIT_FINISHED: cls.on_init,
             EVENT_TICK: cls.on_tick,
             EVENT_BAR: cls.on_bar,
@@ -245,6 +255,7 @@ class AsyncApi(object):
 
         }
         parmeter = {
+            EVENT_TIMER: EVENT_TIMER,
             EVENT_INIT_FINISHED: EVENT_INIT_FINISHED,
             EVENT_POSITION: EVENT_POSITION,
             EVENT_TRADE: EVENT_TRADE,

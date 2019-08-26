@@ -4,6 +4,7 @@ Event-driven framework of vn.py framework.
 import asyncio
 from asyncio import iscoroutinefunction
 from collections import defaultdict
+from datetime import datetime
 from queue import Empty, Queue
 from threading import Thread
 from time import sleep
@@ -88,7 +89,7 @@ class EventEngine:
         """
         while self._active:
             sleep(self._interval)
-            event = Event(EVENT_TIMER)
+            event = Event(EVENT_TIMER, data=datetime.now())
             self.put(event)
 
     def start(self):
@@ -199,7 +200,6 @@ class AsyncEngine:
     async def future_finish(self, event: Event):
         for func in self._func[event.type]:
             await func(event)
-
 
     def register(self, type, func):
         if not iscoroutinefunction(func):
