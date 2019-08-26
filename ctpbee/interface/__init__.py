@@ -35,6 +35,9 @@ class Interface:
         if interface == "looper":
             from ctpbee.interface.looper import LocalLooperApi, MdLooperApi
             return (MdLooperApi, LocalLooperApi)
+        if interface == "xin":
+            from ctpbee.interface.xin import XinTdApi, XinMdApi
+            return (XinMdApi, XinTdApi)
         else:
             raise ValueError("错误参数")
 

@@ -86,7 +86,7 @@ class CtpBee(object):
 
         self.instance_path = instance_path
         self.config = self.make_config()
-        self.interface = Interface()
+
         _app_context_ctx.push(self.name, self)
 
     def make_config(self):
@@ -117,7 +117,7 @@ class CtpBee(object):
             info = self.config.get("CONNECT_INFO")
         else:
             raise ConfigError(message="没有相应的登录信息", args=("没有发现登录信息",))
-        MdApi, TdApi = self.interface.get_interface(self)
+        MdApi, TdApi = Interface.get_interface(self)
         if self.config.get("MD_FUNC"):
             self.market = MdApi(self.event_engine)
             self.market.connect(info)
