@@ -7,7 +7,7 @@ ctpbee 提供了一个可供使用的微小的交易核心, 你可以通过这�
 .. image:: ctpbee.jpg
 
 
-ctpbee主要依赖于flask, 文档请移步
+ctpbee界面主要依赖于flask, 文档请移步
 
      `flask文档 <http://flask.pocoo.org/>`_
 

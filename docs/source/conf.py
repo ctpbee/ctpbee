@@ -22,7 +22,7 @@ copyright = '2019, somewheve'
 author = 'somewheve'
 
 # The full version, including alpha/beta/rc tags
-release = '0.17'
+release = '0.28'
 
 
 # -- General configuration ---------------------------------------------------
