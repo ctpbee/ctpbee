@@ -164,17 +164,16 @@ def run_forever(app):
             running_me = False
         else:
             running_me = True
-
         if auth_check_time(current_time):
             pass
         else:
             running_me = False
-
         if running_me and not running_status:
             """ 到了该启动的时间但是没运行 """
             app.reload()
             for x in app.extensions.keys():
                 app.enable_extension(x)
+            print(f"重新进行自动登录， 时间: {str(current_time)}")
             running_status = True
 
         elif running_me and running_status:
@@ -184,6 +183,7 @@ def run_forever(app):
             """ 非交易日 并且在运行 """
             for x in app.extensions.keys():
                 app.suspend_extension(x)
+            print(f"当前时间不允许， 时间: {str(current_time)}, 即将阻断运行")
             running_status = False
 
         elif not running_me and not running_status:

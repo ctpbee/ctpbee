@@ -156,6 +156,8 @@ class CtpBee(object):
 *                                                          *
 {"*" * 60}                       
          """
+        print(show_me)
+
         # 检查work_mode
         if self.work_mode == "forever":
             """ 7×24小时 """
@@ -173,8 +175,6 @@ class CtpBee(object):
             self.p_flag = True
         else:
             pass
-
-        print(show_me)
 
     @locked_cached_property
     def name(self):

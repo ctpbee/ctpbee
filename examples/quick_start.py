@@ -124,17 +124,18 @@ class DataRecorder(CtpbeeApi):
 
     def on_init(self, init):
         if init:
-            print("初始化完成")
+            pass
+            # print("初始化完成")
             # 获取主力合约
-            main_contract = self.app.recorder.get_main_contract_by_code("ap")
-
-            # 获取合约的价格 ##  如果你需要该合约的最新的行情价格 你可能需要通过self.app.trader.request_market_data() 来更新最新的深度行情，回调函数会自动更新行情数据，
-            # 也许在风控那边一直发送请求数据或者在start()之后开个单独线程来请求是个不错的选择
-            print(self.app.recorder.get_contract_last_price("AP910.CZCE"))
-
-            # 获取主力合约列表
-            print(self.app.recorder.main_contract_list)
-
+            # main_contract = self.app.recorder.get_main_contract_by_code("ap")
+            #
+            # # 获取合约的价格 ##  如果你需要该合约的最新的行情价格 你可能需要通过self.app.trader.request_market_data() 来更新最新的深度行情，回调函数会自动更新行情数据，
+            # # 也许在风控那边一直发送请求数据或者在start()之后开个单独线程来请求是个不错的选择
+            # print(self.app.recorder.get_contract_last_price("AP910.CZCE"))
+            #
+            # # 获取主力合约列表
+            # print(self.app.recorder.main_contract_list)
+            #
 
 def go():
     app = CtpBee("last", __name__, work_mode="forever")
@@ -173,7 +174,7 @@ def go():
     """ 添加自定义的风控 """
 
     """ 启动 """
-    app.start(log_output=True)
+    app.start(log_output=False)
 
 
 if __name__ == '__main__':

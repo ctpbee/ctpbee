@@ -6,29 +6,39 @@
 继承此类::
 
     from ctpbee import CtpbeeApi
+    from ctpbee import CtpBee
+
 
     class HelloWorld(CtpbeeApi):
         def __init__(self, name, app=None):
             super().__init__(name, app, type="data")  # 无论你做啥,记得执行这一句
             # 你可以扩充参数,但是请记得name和app是必须要的
 
-        def on_tick(tick):
+        def on_tick(self, tick):
+            """ tick回报 """
+
+        def on_account(self, account):
+            """ 账户信息回报 """
             pass
 
-        def on_account(account):
+        def on_bar(self, bar):
+            """ bar线回报 """
             pass
 
-        def on_bar(bar):
+        def on_trade(self, trade):
+            """ 成交回报 """
             pass
 
-        def on_trade(trade):
+        def on_position(self, position):
+            """ 持仓信息回报 """
             pass
 
-        def on_position(position):
+        def on_order(self, order):
+            """订单回报 """
             pass
 
-        def on_order(order):
-            pass
+        def on_init(self):
+            """初始化回调"""
 
     app = CtpBee("world", __name__)
 
@@ -42,11 +52,13 @@
             "td_address": "",
             "appid": "",
             "auth_code": "",
+            "product_info":""
         },
         "TD_FUNC": True,  # 开启交易功能
     }
     app.config.from_mapping(info) # 载入配置文件
-
+    strategy = HelloWorld("hello")
+    app.add_extension(strategy)
     app.start()  # 开始执行
 
 

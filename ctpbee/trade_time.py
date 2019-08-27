@@ -126,10 +126,12 @@ class Papa:
 
 
 class TradingDay:
+    """ 交易日历支持 """
     trade_time = Papa.get_holiday()
 
     @classmethod
-    def is_holiday(cls, date: datetime.datetime):
+    def is_holiday(cls, date: datetime.datetime or datetime.date):
+
         year = date.year
         month = date.month
         day = date.day
