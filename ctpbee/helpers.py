@@ -4,9 +4,13 @@ import os
 import pkgutil
 import sys
 import types
+from datetime import datetime, time
 from functools import wraps
 from threading import RLock
+from time import sleep
 from typing import AnyStr, Tuple, IO
+
+from ctpbee.trade_time import TradingDay
 
 _missing = object()
 
@@ -121,3 +125,68 @@ def dynamic_loading_api(f):
     if not isinstance(d.ext, Tuple):
         raise ValueError("错误变量")
     return d.ext
+
+
+def auth_check_time(timed: datetime):
+    """ 检查启动时间 """
+    data_time = timed.time()
+    if not isinstance(data_time, time):
+        raise TypeError("参数类型错误, 期望为datatime.time}")
+    DAY_START = time(8, 45)  # 日盘启动和停止时间
+    DAY_END = time(15, 0)
+    NIGHT_START = time(20, 45)  # 夜盘启动和停止时间
+    NIGHT_END = time(2, 30)
+    if data_time <= DAY_END and data_time >= DAY_START:
+        return True
+    if data_time >= NIGHT_START:
+        return True
+    if data_time <= NIGHT_END:
+        return True
+    return False
+
+
+def run_forever(app):
+    """
+        永久运行函数 60秒检查一次
+        非交易日不进行载入
+
+    """
+
+    running_me = False
+    running_status = True
+
+    while True:
+
+        if not app.p_flag:
+            break
+        current_time = datetime.now()
+        if TradingDay.is_holiday(current_time) or TradingDay.is_weekend(current_time):
+            running_me = False
+        else:
+            running_me = True
+
+        if auth_check_time(current_time):
+            pass
+        else:
+            running_me = False
+
+        if running_me and not running_status:
+            """ 到了该启动的时间但是没运行 """
+            app.reload()
+            for x in app.extensions.keys():
+                app.enable_extension(x)
+            running_status = True
+
+        elif running_me and running_status:
+            """ 到了该启动的时间已经在运行 """
+
+        elif not running_me and running_status:
+            """ 非交易日 并且在运行 """
+            for x in app.extensions.keys():
+                app.suspend_extension(x)
+            running_status = False
+
+        elif not running_me and not running_status:
+            """  非交易日 并且不运行 """
+
+        sleep(1)

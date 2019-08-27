@@ -1,17 +1,20 @@
 # coding:utf-8
 import os
 import sys
+from threading import Thread
+from time import sleep
 from typing import Text, AnyStr
 
 from werkzeug.datastructures import ImmutableDict
 
+from ctpbee import __version__
 from ctpbee.config import Config
 from ctpbee.constant import OrderRequest, CancelRequest
 from ctpbee.context import _app_context_ctx
 from ctpbee.event_engine import EventEngine, AsyncEngine
 from ctpbee.exceptions import ConfigError
 from ctpbee.func import CtpbeeApi, send_monitor, cancel_monitor
-from ctpbee.helpers import locked_cached_property, find_package, check
+from ctpbee.helpers import locked_cached_property, find_package, check, run_forever
 from ctpbee.interface import Interface
 from ctpbee.record import Recorder, AsyncRecorder
 
@@ -22,6 +25,7 @@ class CtpBee(object):
     I hope it will help you !
 
     """
+
     # 默认回测配置参数
     default_params = {
         'cash': 10000.0,
@@ -61,7 +65,8 @@ class CtpBee(object):
     # 工具, 用于提供一些比较优秀的工具
     tools = {}
 
-    def __init__(self, name: Text, import_name, engine_method: str = "thread", instance_path=None):
+    def __init__(self, name: Text, import_name, engine_method: str = "thread", work_mode="limit_time",
+                 instance_path=None):
         """ 初始化 """
         self.name = name
         self.import_name = import_name
@@ -72,7 +77,7 @@ class CtpBee(object):
             self.event_engine = AsyncEngine()
             self.recorder = AsyncRecorder(self, self.event_engine)
         else:
-            raise TypeError("引擎参数错误，只支持thread和async，请检查代码")
+            raise TypeError("引擎参数错误，只支持 thread 和 async，请检查代码")
         if instance_path is None:
             instance_path = self.auto_find_instance_path()
         elif not os.path.isabs(instance_path):
@@ -84,6 +89,9 @@ class CtpBee(object):
         self.instance_path = instance_path
         self.config = self.make_config()
         self.init_finished = False
+        self.p = None
+        self.p_flag = True
+        self.work_mode = work_mode
 
         _app_context_ctx.push(self.name, self)
 
@@ -134,6 +142,39 @@ class CtpBee(object):
                 self.trader = TdApi(self.event_engine)
             self.trader.connect(info)
             # 显式指定休息1.5 秒 ，等待所有数据回传
+
+        show_me = \
+            f"""
+{"*" * 60}                                                               
+*                                                          *
+*          -------------------------------------           *
+*          |                                   |           *
+*          |      ctpbee:   {__version__.center(16, " ")}   |           *
+*          |      work_mode:{self.work_mode.center(16, " ")}   |           *
+*          |                                   |           *
+*          -------------------------------------           *
+*                                                          *
+{"*" * 60}                       
+         """
+        # 检查work_mode
+        if self.work_mode == "forever":
+            """ 7×24小时 """
+            # 启动监视器
+
+            if self.p is not None:
+                self.p_flag = False
+                sleep(1.5)
+                self.p = Thread(target=run_forever, args=(self,))
+                self.p.start()
+
+            else:
+                self.p = Thread(target=run_forever, args=(self,))
+                self.p.start()
+            self.p_flag = True
+        else:
+            pass
+
+        print(show_me)
 
     @locked_cached_property
     def name(self):

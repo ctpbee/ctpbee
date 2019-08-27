@@ -37,13 +37,14 @@ docker run -p 5000:5000 yutiansut/ctpbee:latest
 ## 文档
 本地生成:
 
-    1. git clone https://github.com/somewheve/ctpbee 
+    1. git clone https://github.com/ctpbee/ctpbee 
     2. pip3 install sphinx
     3. cd ./ctpbee/docs && make html
     4. 你可以在docs/build/html 下面看到index.html, 浏览器打开即可
     
 在线:
-    即将推出
+    [文档](https://docs.ctpbee.com)
+    
     
     
 ## 功能支持

@@ -53,7 +53,6 @@ class RiskMe(RiskLevel):
 
     def realtime_check(self):
         """ 一秒一次的扫描 """
-        print("实时扫描")
 
     def before_send_order(self) -> bool:
         """ 返回True不阻止任何操作 """
@@ -96,19 +95,6 @@ class DataRecorder(CtpbeeApi):
         """tick process function"""
         pass
 
-    def on_init(self, init):
-        if init:
-            print("初始化完成")
-            # 获取主力合约
-            main_contract = self.app.recorder.get_main_contract_by_code("ap")
-
-            # 获取合约的价格 ##  如果你需要该合约的最新的行情价格 你可能需要通过self.app.trader.request_market_data() 来更新最新的深度行情，回调函数会自动更新行情数据，
-            # 也许在风控那边一直发送请求数据或者在start()之后开个单独线程来请求是个不错的选择
-            print(self.app.recorder.get_contract_last_price("AP910.CZCE"))
-
-            # 获取主力合约列表
-            print(self.app.recorder.main_contract_list)
-
     def on_bar(self, bar):
         """bar process function"""
 
@@ -133,13 +119,25 @@ class DataRecorder(CtpbeeApi):
         pass
 
     def on_realtime(self, timed: datetime):
-        """ 处理数据 """
-        print(f"current time: {str(timed)}")
+        """  """
 
+
+    def on_init(self, init):
+        if init:
+            print("初始化完成")
+            # 获取主力合约
+            main_contract = self.app.recorder.get_main_contract_by_code("ap")
+
+            # 获取合约的价格 ##  如果你需要该合约的最新的行情价格 你可能需要通过self.app.trader.request_market_data() 来更新最新的深度行情，回调函数会自动更新行情数据，
+            # 也许在风控那边一直发送请求数据或者在start()之后开个单独线程来请求是个不错的选择
+            print(self.app.recorder.get_contract_last_price("AP910.CZCE"))
+
+            # 获取主力合约列表
+            print(self.app.recorder.main_contract_list)
 
 
 def go():
-    app = CtpBee("last", __name__)
+    app = CtpBee("last", __name__, work_mode="forever")
 
     info = {
         "CONNECT_INFO": {

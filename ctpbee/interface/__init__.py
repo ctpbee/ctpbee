@@ -29,6 +29,7 @@ class Interface:
         if interface == "ctp":
             from ctpbee.interface.ctp import BeeTdApi, BeeMdApi
             return (BeeMdApi, BeeTdApi)
+            pass
         if interface == "ctp_se":
             from ctpbee.interface.ctp import BeeTdApiApp, BeeMdApi
             return (BeeMdApi, BeeTdApiApp)
