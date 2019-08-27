@@ -7,3 +7,4 @@ from ctpbee.jsond import dumps, loads
 from ctpbee.signals import send_monitor, cancel_monitor
 
 from ctpbee.util import RiskLevel
+from ctpbee.trade_time import TradingDay
