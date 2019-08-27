@@ -28,6 +28,14 @@ ctpbee界面主要依赖于flask, 文档请移步
 
 
 
+.. toctree::
+    :maxdepth: 2
+    :caption: 相关
+
+    github <https://github.com/ctpbee/ctpbee>
+    社区支持 <http://community.ctpbee.com>
+    加入讨论 <https://jq.qq.com/?_wv=1027&k=5xWbIq3>
+
 
 
 API支持
