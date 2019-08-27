@@ -143,11 +143,18 @@ class TradingDay:
         return False
 
     @classmethod
-    def is_weekend(cls, data_time: datetime.datetime):
-        weekday = data_time.weekday()
+    def is_weekend(cls, date: datetime.datetime or datetime.date):
+        weekday = date.weekday()
         if weekday == 5 or weekday == 6:
             return True
         return False
+
+    @classmethod
+    def is_trading_day(cls, date: datetime.datetime or datetime.date):
+        """ 判断是否为交易日 """
+        if cls.is_weekend(date) or cls.is_weekend(date):
+            return False
+        return True
 
 
 if __name__ == '__main__':
