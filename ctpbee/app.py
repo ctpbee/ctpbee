@@ -14,7 +14,7 @@ from ctpbee.context import _app_context_ctx
 from ctpbee.event_engine import EventEngine, AsyncEngine
 from ctpbee.exceptions import ConfigError
 from ctpbee.func import CtpbeeApi, send_monitor, cancel_monitor
-from ctpbee.helpers import locked_cached_property, find_package, check, run_forever
+from ctpbee.helpers import locked_cached_property, find_package, check, run_forever, refresh_query
 from ctpbee.interface import Interface
 from ctpbee.record import Recorder, AsyncRecorder
 
@@ -49,7 +49,8 @@ class CtpBee(object):
     }
     default_config = ImmutableDict(
         dict(LOG_OUTPUT=True, TD_FUNC=False, INTERFACE="ctp", MD_FUNC=True, XMIN=[], ALL_SUBSCRIBE=False,
-             SHARE_MD=False, ENGINE_METHOD="thread", LOOPER_SETTING=default_params, SHARED_FUNC=False))
+             SHARE_MD=False, ENGINE_METHOD="thread", LOOPER_SETTING=default_params, SHARED_FUNC=False,
+             REFRESH_INTERVAL=1.5))
     config_class = Config
     import_name = None
 
@@ -66,10 +67,13 @@ class CtpBee(object):
     tools = {}
 
     def __init__(self, name: Text, import_name, engine_method: str = "thread", work_mode="limit_time",
+                 refresh: bool = False,
                  instance_path=None):
         """ 初始化 """
         self.name = name
         self.import_name = import_name
+        self.engine_method = engine_method
+        self.refresh = refresh
         if engine_method == "thread":
             self.event_engine = EventEngine()
             self.recorder = Recorder(self, self.event_engine)
@@ -91,6 +95,9 @@ class CtpBee(object):
         self.init_finished = False
         self.p = None
         self.p_flag = True
+
+        self.r = None
+        self.r_flag = True
         self.work_mode = work_mode
 
         _app_context_ctx.push(self.name, self)
@@ -141,7 +148,6 @@ class CtpBee(object):
             else:
                 self.trader = TdApi(self.event_engine)
             self.trader.connect(info)
-            # 显式指定休息1.5 秒 ，等待所有数据回传
 
         show_me = \
             f"""
@@ -149,8 +155,9 @@ class CtpBee(object):
 *                                                          *
 *          -------------------------------------           *
 *          |                                   |           *
-*          |      ctpbee:   {__version__.center(16, " ")}   |           *
-*          |      work_mode:{self.work_mode.center(16, " ")}   |           *
+*          |      ctpbee:    {__version__.ljust(16, " ")}  |           *
+*          |      work_mode: {self.work_mode.ljust(16, " ")}  |           *
+*          |      engine:    {self.engine_method.ljust(16, " ")}  |           *
 *          |                                   |           *
 *          -------------------------------------           *
 *                                                          *
@@ -175,6 +182,18 @@ class CtpBee(object):
             self.p_flag = True
         else:
             pass
+
+        if self.refresh:
+            if self.r is not None:
+                self.r_flag = False
+                sleep(self.config['REFRESH_INTERVAL'] + 1.5)
+                self.r = Thread(target=refresh_query, args=(self,))
+                self.r.start()
+            else:
+                self.r = Thread(target=refresh_query, args=(self,))
+                self.r.start()
+            self.r_flag = True
+        self.p_flag = True
 
     @locked_cached_property
     def name(self):

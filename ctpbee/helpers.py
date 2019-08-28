@@ -133,9 +133,9 @@ def auth_check_time(timed: datetime):
     if not isinstance(data_time, time):
         raise TypeError("参数类型错误, 期望为datatime.time}")
     DAY_START = time(8, 45)  # 日盘启动和停止时间
-    DAY_END = time(15, 0)
+    DAY_END = time(15, 5)
     NIGHT_START = time(20, 45)  # 夜盘启动和停止时间
-    NIGHT_END = time(2, 30)
+    NIGHT_END = time(2, 35)
     if data_time <= DAY_END and data_time >= DAY_START:
         return True
     if data_time >= NIGHT_START:
@@ -190,3 +190,17 @@ def run_forever(app):
             """  非交易日 并且不运行 """
 
         sleep(1)
+
+
+def refresh_query(app):
+    """ 循环查询 """
+    while True:
+        sleep(1)
+        cur = datetime.now()
+        if not TradingDay.is_trading_day(cur) or not auth_check_time(cur):
+            continue
+        app.query_position()
+        sleep(app.config['REFRESH_INTERVAL'])
+        app.query_account()
+        if not app.r_flag:
+            break

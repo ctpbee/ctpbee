@@ -1,3 +1,8 @@
+"""
+exception  存放了基础自定义的异常模块
+
+"""
+
 import ctpbee.helpers as helpers
 
 
