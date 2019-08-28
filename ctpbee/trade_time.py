@@ -103,7 +103,7 @@ class Papa:
     @classmethod
     def read(cls):
         path = os.path.dirname(__file__)
-        with open(f'{path}/holiday.json', 'r+')as f:
+        with open(f'{path}/holiday.json', 'r+', encoding="utf-8")as f:
             s = json.load(f)
         return s
 
