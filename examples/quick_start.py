@@ -147,12 +147,12 @@ def go():
             "brokerid": "9999",
             # "md_address": "tcp://180.168.146.187:10131",
             # "td_address": "tcp://180.168.146.187:10130",
-            # "md_address": "tcp://218.202.237.33:10112",
-            # "td_address": "tcp://218.202.237.33:10102",
+            "md_address": "tcp://218.202.237.33:10112",
+            "td_address": "tcp://218.202.237.33:10102",
             # "md_address": "tcp://180.168.146.187:10110",
             # "td_address": "tcp://180.168.146.187:10100",
-            "md_address": "tcp://180.168.146.187:10111",
-            "td_address": "tcp://180.168.146.187:10101",
+            # "md_address": "tcp://180.168.146.187:10111",
+            # "td_address": "tcp://180.168.146.187:10101",
             "product_info": "",
             "appid": "simnow_client_test",
             "auth_code": "0000000000000000",
@@ -178,7 +178,7 @@ def go():
     """ 添加自定义的风控 """
 
     """ 启动 """
-    app.start(log_output=False)
+    app.start(log_output=True)
 
 
 if __name__ == '__main__':

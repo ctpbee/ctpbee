@@ -66,7 +66,7 @@ def letsgo():
     # 添加对象, 你可以继承多个类 然后实例化不同的插件 再载入它, 这些都是极其自由化的操作
     app.add_extension(demo)
     app.config.from_json("config.json")
-    app.start()
+    app.start(log_output=True)
 
     def query(time=1):
         nonlocal app
