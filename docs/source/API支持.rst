@@ -53,7 +53,7 @@ API支持
 基于同步的队列操作可能会带来一些性能上的消耗?， 所以ctpbee开发了异步模式，用于快速解决任务，提高性能。不过这项选择仍然可能会带来 ``风险`` ， 尤其是对于策略的执行
 我们不是很推荐这种模式， 但是你仍然可以进行尝试,快速食用::
 
-     app = CtpBee("ctpbee", __name__, engine_method="forever")`
+     app = CtpBee("ctpbee", __name__, engine_method="async")`
 
 同时你不再需要 ``CtpbeeApi`` 而是 ``AsyncApi``::
 
