@@ -106,7 +106,7 @@ class Papa:
     @classmethod
     def read(cls):
         if os.path.getsize(cls.path):
-            with open(cls.path, 'r',encoding='utf8')as f:
+            with open(cls.path, 'r', encoding='utf8')as f:
                 s = json.load(f)
         else:
             with open(cls.path, 'w') as f:

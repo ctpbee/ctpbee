@@ -115,8 +115,8 @@ else:
     ext_modules = [vnctptd, vnctpmd, vnctptd_se, vnctpmd_se]
 
 pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.interface',
-        'ctpbee.event_engine', 'ctpbee.interface.ctp', 'ctpbee.json']
-install_requires = ['flask>=1.1.1', "blinker", "dataclasses"]
+        'ctpbee.event_engine', 'ctpbee.interface.ctp', 'ctpbee.jsond']
+install_requires = ['flask>=1.1.1', "blinker", "dataclasses", "requests", "simplejson", "lxml"]
 setup(
     name='ctpbee',
     version='0.28',
@@ -129,7 +129,7 @@ setup(
     install_requires=install_requires,
     platforms=["Windows", "Linux", "Mac OS-X"],
     package_dir={'ctpbee': 'ctpbee'},
-    package_data={'ctpbee': ['api/ctp/*', ]},
+    package_data={'ctpbee': ['api/ctp/*', 'holiday.json']},
     ext_modules=ext_modules,
     classifiers=[
         'Development Status :: 4 - Beta',
