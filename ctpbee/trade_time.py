@@ -64,6 +64,9 @@ class Papa:
     """
     url = "https://fangjia.51240.com/{year}__fangjia/"
     last = {}
+    path = os.path.join(os.path.dirname(__file__), 'holiday.json')
+    if not os.path.exists(path):
+        open(path, 'w')
 
     @classmethod
     def parse(cls, year):
@@ -102,10 +105,25 @@ class Papa:
 
     @classmethod
     def read(cls):
-        path = os.path.dirname(__file__)
-        with open(f'{path}/holiday.json', 'r+')as f:
-            s = json.load(f)
+        if os.path.getsize(cls.path):
+            with open(cls.path, 'r',encoding='utf8')as f:
+                s = json.load(f)
+        else:
+            with open(cls.path, 'w') as f:
+                s = {"2019": {"元旦": [], "春节": [], "清明节": [], "劳动节": [], "端午节": [], "国庆节": [], "中秋节": [], }}
+                f.write(json.dumps(s, ensure_ascii=False))
         return s
+
+    @classmethod
+    def write(cls):
+        if os.path.getsize(cls.path):
+            data = cls.read()
+            data.update(cls.last)
+            with open(cls.path, 'w')as f:
+                f.write(json.dumps(data, ensure_ascii=False))
+        else:
+            with open(cls.path, 'w')as f:
+                f.write(json.dumps(cls.last, ensure_ascii=False))
 
     @classmethod
     def get_holiday(cls):
@@ -118,11 +136,6 @@ class Papa:
                     temp.append(datetime.datetime.strptime(i, "%Y-%m-%d"))
             result[year] = temp
         return result
-
-    @classmethod
-    def write(cls):
-        with open('holiday.json', 'w')as f:
-            f.write(json.dumps(cls.last, ensure_ascii=False))
 
 
 class TradingDay:
