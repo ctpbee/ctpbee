@@ -21,19 +21,38 @@ flask的微核心设计结构的来了无限的可能性, 能够让你快速上�
 
 
     class DataRecorder(CtpbeeApi):
-        """ap"""
+        """"""
         def __init__(self, extension_name): # 你可以在这里自定义扩展参数
-            super().__init__(extension_name, api_type="data")
+            super().__init__(extension_name,app=None)
 
         def on_tick(self, tick):
-            """ process tick in here """
+            """ 处理tick """
             pass
 
         def on_bar(self, bar):
-            """ process bar in here """
+            """ 处理bar线 """
             pass
 
+        def on_init(self, init):
+            """ 初始化回调 """
 
+        def on_contract(self, contract):
+            """ 处理合约信息 """
+
+        def on_trade(self, trade):
+            """ 处理成交回报 """
+
+        def on_realtime(self, date):
+            """ 一秒运行一次的检查函数 """"
+
+        def on_order(self, order):
+            """ 报单回报 """
+
+        def on_position(self, position):
+            """ 持仓信息回报 """
+
+        def on_account(self, account):
+            """  账户信息回报 """"
 
     app = CtpBee("ctpbee", __name__)
     info = {

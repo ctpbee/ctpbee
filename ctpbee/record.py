@@ -22,7 +22,7 @@ class Recorder(object):
         self.orders = {}
         self.trades = {}
         self.positions = {}
-        self.accounts = {}
+        self.account = None
         self.contracts = {}
         self.logs = {}
         self.errors = []
@@ -192,7 +192,8 @@ class Recorder(object):
     def process_account_event(self, event: Event):
         """"""
         account = event.data
-        self.accounts[account.local_account_id] = account
+        self.account = account
+
         for value in self.app.extensions.values():
             value(deepcopy(event))
 
@@ -227,8 +228,8 @@ class Recorder(object):
     def get_position(self, local_position_id):
         return self.positions.get(local_position_id, None)
 
-    def get_account(self, local_account_id):
-        return self.accounts.get(local_account_id, None)
+    def get_account(self):
+        return self.account
 
     def get_contract(self, local_symbol):
         return self.contracts.get(local_symbol, None)
@@ -264,12 +265,6 @@ class Recorder(object):
     def get_new_error(self):
         return self.errors[-1]
 
-    def get_all_accounts(self):
-        """
-        Get all account data.
-        """
-        return list(self.accounts.values())
-
     def get_all_contracts(self):
         """
         Get all contract data.
@@ -301,7 +296,7 @@ class AsyncRecorder(object):
         self.orders = {}
         self.trades = {}
         self.positions = {}
-        self.accounts = {}
+        self.account = None
         self.contracts = {}
         self.logs = {}
         self.errors = []
@@ -464,7 +459,7 @@ class AsyncRecorder(object):
     async def process_account_event(self, event: Event):
         """"""
         account = event.data
-        self.accounts[account.local_account_id] = account
+        self.account = account
         for value in self.app.extensions.values():
             await value(deepcopy(event))
 
@@ -499,8 +494,8 @@ class AsyncRecorder(object):
     def get_position(self, local_position_id):
         return self.positions.get(local_position_id, None)
 
-    def get_account(self, local_account_id):
-        return self.accounts.get(local_account_id, None)
+    def get_account(self):
+        return self.account
 
     def get_contract(self, local_symbol):
         return self.contracts.get(local_symbol, None)
@@ -535,12 +530,6 @@ class AsyncRecorder(object):
 
     def get_new_error(self):
         return self.errors[-1]
-
-    def get_all_accounts(self):
-        """
-        Get all account data.
-        """
-        return list(self.accounts.values())
 
     def get_all_contracts(self):
         """

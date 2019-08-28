@@ -1,4 +1,5 @@
 from datetime import datetime
+from time import sleep
 
 from ctpbee import CtpBee, helper
 from ctpbee import CtpbeeApi
@@ -89,7 +90,7 @@ class DataRecorder(CtpbeeApi):
         pass
 
     def on_account(self, account: AccountData) -> None:
-        pass
+        print(account)
 
     def on_tick(self, tick):
         """tick process function"""
@@ -179,6 +180,13 @@ def go():
 
     """ 启动 """
     app.start(log_output=True)
+
+
+    while True:
+        app.query_account()
+        sleep(1)
+        app.query_position()
+        sleep(1)
 
 
 if __name__ == '__main__':

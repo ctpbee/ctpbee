@@ -59,9 +59,11 @@ docker run -p 5000:5000 yutiansut/ctpbee:latest
 - [x] 快速下单助手
 - [x] 风控层建立
 - [x] 跟单信号
-- [x] 多路行情对比 --> [looper_me](https://github.com/somewheve/looper_me)
-- [ ] 策略层对接CTA  --> 即将以[ctpbee_cta](https://github.com/somewheve/ctpbee_cta) 
+- [x] 多路行情对比 --> [looper_me](https://github.com/ctpbee/looper_me)
+- [x] 数据快速支持 --> [ctpbee_converter](https://github.com/ctpbee/data_converter)
+- [ ] 策略层对接CTA  --> 即将以[ctpbee_cta](https://github.com/ctpbee/ctpbee_cta) 
 - [ ] 回测系统搭建  --> interface/looper
+
 
 ## Maybe 
 - [ ] 性能优化 --> julia支持 ？
