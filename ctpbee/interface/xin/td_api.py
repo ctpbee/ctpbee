@@ -40,6 +40,7 @@ class XinTdApi(TdApi):
         self.trade_data = []
         self.positions = {}
         self.sysid_orderid_map = {}
+        self.symbol_exchange_mapping = {}
         self.open_cost_dict = defaultdict(dict)
 
     @property
@@ -218,6 +219,7 @@ class XinTdApi(TdApi):
                 pricetick=data["PriceTick"],
                 gateway_name=self.gateway_name
             )
+            self.symbol_exchange_mapping[data["InstrumentID"]] = EXCHANGE_CTP2VT[data["ExchangeID"]]
 
             # For option only
             if contract.product == Product.OPTION:
@@ -432,9 +434,13 @@ class XinTdApi(TdApi):
         self.reqUserLogin(req, self.reqid)
 
     def onRspQryDepthMarketData(self, data, error, reqid, last):
+        try:
+            exchange = self.symbol_exchange_mapping[data['InstrumentID']]
+        except KeyError:
+            return
         market = LastData(
             symbol=data['InstrumentID'],
-            exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
+            exchange=exchange,
             pre_open_interest=data['PreOpenInterest'],
             open_interest=data['OpenInterest'],
             volume=data['Volume'],

@@ -468,10 +468,7 @@ class LastData(BaseData):
     last_price: float
 
     def __post_init__(self):
-        try:
-            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
-        except AttributeError:
-            self.local_symbol = f"{self.symbol}.{self.exchange}"
+        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
 class ContractData(BaseData):

@@ -56,6 +56,8 @@ class BeeTdApi(TdApi):
         self.order_data = []
         self.trade_data = []
         self.positions = {}
+
+        self.symbol_exchange_mapping = {}
         self.sysid_orderid_map = {}
         self.open_cost_dict = defaultdict(dict)
 
@@ -235,6 +237,7 @@ class BeeTdApi(TdApi):
                 pricetick=data["PriceTick"],
                 gateway_name=self.gateway_name
             )
+            self.symbol_exchange_mapping[data["InstrumentID"]] = EXCHANGE_CTP2VT[data["ExchangeID"]]
 
             # For option only
             if contract.product == Product.OPTION:
@@ -450,9 +453,9 @@ class BeeTdApi(TdApi):
 
     def onRspQryDepthMarketData(self, data, error, reqid, last):
         try:
-            exchange = EXCHANGE_CTP2VT[data["ExchangeID"]],
+            exchange = self.symbol_exchange_mapping[data['InstrumentID']]
         except KeyError:
-            exchange = "None"
+            return
         market = LastData(
             symbol=data['InstrumentID'],
             exchange=exchange,
@@ -590,6 +593,7 @@ class BeeTdApiApp(TdApiApp):
         self.order_data = []
         self.trade_data = []
         self.positions = {}
+        self.symbol_exchange_mapping = {}
         self.sysid_orderid_map = {}
 
     def on_event(self, type, data):
@@ -757,7 +761,7 @@ class BeeTdApiApp(TdApiApp):
                 pricetick=data["PriceTick"],
                 gateway_name=self.gateway_name
             )
-
+            self.symbol_exchange_mapping[data["InstrumentID"]] = EXCHANGE_CTP2VT[data["ExchangeID"]]
             # For option only
             if contract.product == Product.OPTION:
                 contract.option_underlying = data["UnderlyingInstrID"],
@@ -783,7 +787,6 @@ class BeeTdApiApp(TdApiApp):
             for data in self.trade_data:
                 self.onRtnTrade(data)
             self.trade_data.clear()
-
 
     def onRtnOrder(self, data: dict):
         """
@@ -884,9 +887,13 @@ class BeeTdApiApp(TdApiApp):
         self.reqAuthenticate(req, self.reqid)
 
     def onRspQryDepthMarketData(self, data, error, reqid, last):
+        try:
+            exchange = self.symbol_exchange_mapping[data['InstrumentID']]
+        except KeyError:
+            return
         market = LastData(
             symbol=data['InstrumentID'],
-            exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
+            exchange=exchange,
             pre_open_interest=data['PreOpenInterest'],
             open_interest=data['OpenInterest'],
             volume=data['Volume'],
