@@ -121,7 +121,6 @@ class DataRecorder(CtpbeeApi):
     def on_realtime(self, timed: datetime):
         """  """
 
-
     def on_init(self, init):
         if init:
             pass
@@ -137,6 +136,7 @@ class DataRecorder(CtpbeeApi):
             # print(self.app.recorder.main_contract_list)
             #
 
+
 def go():
     app = CtpBee("last", __name__, work_mode="forever")
 
@@ -145,10 +145,14 @@ def go():
             "userid": "089131",
             "password": "350888",
             "brokerid": "9999",
-            "md_address": "tcp://180.168.146.187:10131",
-            "td_address": "tcp://180.168.146.187:10130",
+            # "md_address": "tcp://180.168.146.187:10131",
+            # "td_address": "tcp://180.168.146.187:10130",
             # "md_address": "tcp://218.202.237.33:10112",
             # "td_address": "tcp://218.202.237.33:10102",
+            # "md_address": "tcp://180.168.146.187:10110",
+            # "td_address": "tcp://180.168.146.187:10100",
+            "md_address": "tcp://180.168.146.187:10111",
+            "td_address": "tcp://180.168.146.187:10101",
             "product_info": "",
             "appid": "simnow_client_test",
             "auth_code": "0000000000000000",

@@ -283,6 +283,9 @@ class Helper():
         "CZCE": Exchange.CZCE,
         "CFFEX": Exchange.CFFEX,
         "DCE": Exchange.DCE,
+        "SSE": Exchange.SSE,
+        "SZSE": Exchange.SZSE,
+        "SGE": Exchange.SGE
     }
 
     offset_map = {

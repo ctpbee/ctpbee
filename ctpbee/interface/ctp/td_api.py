@@ -449,10 +449,13 @@ class BeeTdApi(TdApi):
         self.reqUserLogin(req, self.reqid)
 
     def onRspQryDepthMarketData(self, data, error, reqid, last):
-
+        try:
+            exchange = EXCHANGE_CTP2VT[data["ExchangeID"]],
+        except KeyError:
+            exchange = "None"
         market = LastData(
             symbol=data['InstrumentID'],
-            exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
+            exchange=exchange,
             pre_open_interest=data['PreOpenInterest'],
             open_interest=data['OpenInterest'],
             volume=data['Volume'],
