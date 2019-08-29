@@ -116,7 +116,7 @@ else:
 
 pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.interface',
         'ctpbee.event_engine', 'ctpbee.interface.ctp', 'ctpbee.jsond']
-install_requires = ['flask>=1.1.1', "blinker", "dataclasses", "requests", "simplejson", "lxml"]
+install_requires = ['flask>=1.1.1', "blinker", "dataclasses", "requests", "simplejson", "lxml", "pandas"]
 setup(
     name='ctpbee',
     version='0.28',

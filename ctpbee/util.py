@@ -37,10 +37,8 @@ class RiskLevel:
 
         # clean the action
         af_func = getattr(self, f"after_{self.__wrapped__.__name__}", None)
-        if not af_func:
-            return af_func(result)
-        else:
-            return None
+        af_func(result)
+        return result
 
     def __get__(self, instance, cls):
         if instance is None:

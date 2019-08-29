@@ -2,10 +2,9 @@ import collections
 import random
 from copy import deepcopy
 from functools import lru_cache
-from typing import Dict
 
 from ctpbee.constant import OrderRequest, CancelRequest, EVENT_TICK, TickData, EVENT_ORDER, EVENT_TRADE, \
-    OrderData, Status, TradeData
+    OrderData, Status, TradeData, EVENT_INIT_FINISHED
 from ctpbee.event_engine import Event
 from ctpbee.interface.looper.me import Account
 
@@ -226,11 +225,12 @@ class LocalLooperApi():
     def query_account(self):
         return 0
 
-    def update_account(self):
-        """ 更新账户资金信息 """
-        # todo 更新账户资金信息到账户
+    def request_market_data(self):
+        """ 请求市场行情 """
+        return True
 
-    def calculate_result(self) -> Dict:
-        """ 计算每日结果输出信息 """
-        result = dict()
-        return result
+    def connect(self, info):
+        self.userid = info.get("userid")
+        # 初始化策略
+        event = Event(EVENT_INIT_FINISHED, True)
+        self.event_engine.put(event)
