@@ -24,6 +24,10 @@ class LocalLooperApi():
     """
     本地化回测的服务端 ---> this will be a very interesting thing!
     尽量模拟交易所成交
+
+    -----> 应该推出在线回测与本地回测两种模式
+    在线: tick和bar的接收应该与协议保持一致----> 对接开源的looper_me服务器
+    本地 : 读取本地数据库的数据进行回测
     """
 
     def __init__(self, event_engine, app):
@@ -54,6 +58,7 @@ class LocalLooperApi():
 
         # 根据外部配置覆盖配置
         self.init_config(app)
+        self.account.update_attr(app.config['LOOPER_SETTING'])
         self.event_engine.register(EVENT_TICK, self._process_tick)
 
     def _push_order(self, order: OrderData):
@@ -102,9 +107,16 @@ class LocalLooperApi():
 
         # 然后立即处理未成交的单子或者部分成交的单子
         for _ in self.pending:
+            # 行情能够发生成交
             result = self._cal_whether_traded(_, event.data)
             if result:
-                self._update_trading(result)
+                # 判断当前成交单是否能由账户支撑起
+                if self.account.is_traded(result):
+                    # 如果账户能够进行交易 那么更新账户数据
+                    self._update_trading(result)
+                else:
+                    # 无法交易 直接进行下一个的成交
+                    continue
                 self.traded_order_mapping[_.order_id] = result
                 self._push_order_callback(_, is_traded=False)
                 self.pending.remove(_)
@@ -119,7 +131,21 @@ class LocalLooperApi():
         :param tick:当前行情
         :return: 成交单或者空
         """
-        return
+        if tick.ask_price_1 and tick.bid_price_1:
+            pass
+        if tick.ask_price_1 >= tick.bid_price_1:
+            # 撮合成交
+            return TradeData(
+                direction=order.direction,
+                price=order.price,
+                symbol=order.symbol,
+                offset=order.offset,
+                type=order.type,
+                time=order.time,
+            )
+            pass
+        else:
+            return None
 
     def _convert_req_to_data(self, order: OrderRequest):
         # 随机生成一个order_ref
@@ -135,7 +161,7 @@ class LocalLooperApi():
     def __accept_order(self, order: OrderRequest):
         """
 
-        :param order:
+        :param order:报单
         :return:
         """
         order = self._convert_req_to_data(order)
@@ -164,16 +190,20 @@ class LocalLooperApi():
         """
         result = self._cal_whether_traded(order, self.current_tick)
         if result:
-            self._update_trading(result)
+            # 判断当前成交单是否能由账户支撑起
+            if self.account.is_traded(result):
+                # 如果账户能够进行交易 那么更新账户数据
+                self._update_trading(result)
+            else:
+                # 无法交易 直接推出并过滤此次成交
+                # todo： 是否此处应该将order添加为未成交
+                return
             self.traded_order_mapping[order.order_id] = result
             self._push_order_callback(order, is_traded=False)
 
     def _update_trading(self, trade):
         """ 根据成交单进行系统更新 """
-
-        # todo  需要更新本地持仓 ？
-
-        pass
+        self.account.trading(trade)
 
     def set_attribute(self, **attr):
         """ 通过外部设置参数 """
@@ -182,8 +212,7 @@ class LocalLooperApi():
 
     def init_config(self, app):
         """ 初始化设置 """
-        for idx, value in app.config['LOOPER']:
-            setattr(self, idx, value)
+        {setattr(self, idx, value) for idx, value in app.config['LOOPER'] if hasattr(self, idx)}
 
     def send_order(self, order: OrderRequest):
         """ 发单, 可以被外部进行调用
@@ -207,7 +236,6 @@ class LocalLooperApi():
             # 将撤单推送回去
             order.status = Status.CANCELLED
             self._push_order(order)
-
             # 删除挂单映射
             # todo 回撤单是否可以存起来 ？
             del self.order_id_pending_mapping[order.order_id]

@@ -25,7 +25,6 @@ class CtpBee(object):
     I hope it will help you !
 
     """
-
     # 默认回测配置参数
     default_params = {
         'cash': 10000.0,

@@ -1,5 +1,6 @@
 import types
 from functools import wraps
+from types import MethodType
 
 from ctpbee.constant import EVENT_LOG
 from ctpbee.event_engine import Event
@@ -15,13 +16,18 @@ class RiskLevel:
     app = None
     mapping = {}
 
-    def __init__(self, func):
-        wraps(func)(self)
+    def __init__(self, func=None):
+        if func:
+            wraps(func)(self)
 
     @classmethod
     def update_app(cls, app):
+        """ 将app更新到类变量里面"""
         cls.app = app
-        cls.app.event_engine.register(EVENT_TIMER, cls.realtime_check)
+
+        func = getattr(cls, "realtime_check")
+        realtime_check = MethodType(func, cls)
+        cls.app.event_engine.register(EVENT_TIMER, realtime_check)
 
     def __call__(self, *args, **kwargs):
         # check before execute
@@ -31,25 +37,29 @@ class RiskLevel:
             result = fr_func()
         if not result:
             self.log("事前检查失败, 放弃此次操作")
-            return
-        # execute func
-        result = self.__wrapped__(*args, **kwargs)
+        else:
+            # execute func
+            result = self.__wrapped__(*args, **kwargs)
+            # clean the action
 
-        # clean the action
-        af_func = getattr(self, f"after_{self.__wrapped__.__name__}", None)
-        af_func(result)
+            af_func = getattr(self, f"after_{self.__wrapped__.__name__}", None)
+            af_func(result)
         return result
 
     def __get__(self, instance, cls):
+        res = None
         if instance is None:
-            return self
+            res = self
         else:
-            return types.MethodType(self, instance)
+            res = types.MethodType(self, instance)
+        print(id(res))
+        return res
 
     def log(self, log):
         event = Event(EVENT_LOG, data=log)
         self.app.event_engine.put(event)
 
-    def realtime_check(self):
+    @classmethod
+    def realtime_check(self, cur):
         """ 一直检查 """
         pass

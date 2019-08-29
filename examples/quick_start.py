@@ -51,14 +51,14 @@ class RiskMe(RiskLevel):
 
     """
 
-    def realtime_check(self):
-        """ 一秒一次的扫描 """
+    def realtime_check(self, cur):
+        print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
 
     def before_send_order(self) -> bool:
         """ 返回True不阻止任何操作 """
         return True
 
-    def before_cancel_cancel(self) -> bool:
+    def before_cancel_order(self) -> bool:
         """ 返回True不阻止任何操作 """
         return True
 
@@ -72,7 +72,7 @@ class RiskMe(RiskLevel):
 class DataRecorder(CtpbeeApi):
     def __init__(self, name, app=None):
         super().__init__(name, app)
-        self.subscribe_set = set(["UR2001"])
+        self.subscribe_set = set(["zn1910"])
 
     def on_trade(self, trade):
         pass
@@ -89,7 +89,7 @@ class DataRecorder(CtpbeeApi):
         pass
 
     def on_account(self, account: AccountData) -> None:
-        print(account)
+        """ """
 
     def on_tick(self, tick):
         """tick process function"""
@@ -120,6 +120,7 @@ class DataRecorder(CtpbeeApi):
 
     def on_realtime(self, timed: datetime):
         """  """
+        # print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
 
     def on_init(self, init):
         if init:
@@ -140,28 +141,46 @@ class DataRecorder(CtpbeeApi):
 def go():
     app = CtpBee("last", __name__, refresh=True)
 
+    # info = {
+    #     "CONNECT_INFO": {
+    #         "userid": "089131",
+    #         "password": "350888",
+    #         "brokerid": "9999",
+    #         "md_address": "tcp://180.168.146.187:10131",
+    #         "td_address": "tcp://180.168.146.187:10130",
+    #         # "md_address": "tcp://218.202.237.33:10112",
+    #         # "td_address": "tcp://218.202.237.33:10102",
+    #         # "md_address": "tcp://180.168.146.187:10110",
+    #         # "td_address": "tcp://180.168.146.187:10100",
+    #         # "md_address": "tcp://180.168.146.187:10111",
+    #         # "td_address": "tcp://180.168.146.187:10101",
+    #         "product_info": "",
+    #         "appid": "simnow_client_test",
+    #         "auth_code": "0000000000000000",
+    #     },
+    #     "INTERFACE": "ctp",
+    #     "TD_FUNC": True,
+    #     "MD_FUNC": True,
+    #     "REFRESH_INTERVAL": 3
+    # }
+
     info = {
         "CONNECT_INFO": {
-            "userid": "089131",
-            "password": "350888",
+            "userid": "129842",
+            "password": "skyjay88",
             "brokerid": "9999",
-            # "md_address": "tcp://180.168.146.187:10131",
-            # "td_address": "tcp://180.168.146.187:10130",
             "md_address": "tcp://218.202.237.33:10112",
             "td_address": "tcp://218.202.237.33:10102",
-            # "md_address": "tcp://180.168.146.187:10110",
-            # "td_address": "tcp://180.168.146.187:10100",
-            # "md_address": "tcp://180.168.146.187:10111",
-            # "td_address": "tcp://180.168.146.187:10101",
             "product_info": "",
             "appid": "simnow_client_test",
-            "auth_code": "0000000000000000",
+            "auth_code": "0000000000000000"
         },
         "INTERFACE": "ctp",
         "TD_FUNC": True,
         "MD_FUNC": True,
-        "REFRESH_INTERVAL": 3
+        "REFRESH_INTERVAL": 1.5
     }
+
     """ 
         载入配置信息 
     """

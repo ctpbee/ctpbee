@@ -108,7 +108,7 @@ def check(type: AnyStr):
     return midlle
 
 
-def dynamic_loading_api(f):
+def dynamic_loading_api(f1):
     """
     f 是文件流
     主要是用来通过文件动态载入策略。 返回策略类的实例， 应该通过Ctpbee.add_extension() 加以载入
