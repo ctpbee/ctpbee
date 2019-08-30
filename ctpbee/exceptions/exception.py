@@ -46,6 +46,12 @@ class MarketError(BaseException):
         self.code = code
 
 
+class DataError(BaseException):
+    def __init__(self, **kwargs):
+        for i, _ in kwargs.values():
+            setattr(self, i, _)
+
+
 class ImportStringError(ImportError):
     """Provides information about a failed :func:`import_string` attempt."""
 

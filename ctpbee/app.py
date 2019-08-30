@@ -49,7 +49,7 @@ class CtpBee(object):
     default_config = ImmutableDict(
         dict(LOG_OUTPUT=True, TD_FUNC=False, INTERFACE="ctp", MD_FUNC=True, XMIN=[], ALL_SUBSCRIBE=False,
              SHARE_MD=False, ENGINE_METHOD="thread", LOOPER_SETTING=default_params, SHARED_FUNC=False,
-             REFRESH_INTERVAL=1.5))
+             REFRESH_INTERVAL=1.5, INSTRUMENT_INDEPEND=False))
     config_class = Config
     import_name = None
 
@@ -231,7 +231,7 @@ class CtpBee(object):
     def subscribe(self, symbol: AnyStr):
         """订阅行情"""
         if "." in symbol:
-            symbol = symbol.split(".")[1]
+            symbol = symbol.split(".")[0]
         return self.market.subscribe(symbol)
 
     @check(type="trader")

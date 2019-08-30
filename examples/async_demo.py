@@ -8,7 +8,7 @@ from ctpbee.func import AsyncApi
 class DataRecorder(AsyncApi):
     def __init__(self, name, app=None):
         super().__init__(name, app)
-        self.subscribe_set = set(["rb1910"])
+        self.instrument_set = set(["rb1910"])
 
     async def on_trade(self, trade):
         pass

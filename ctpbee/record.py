@@ -1,3 +1,4 @@
+import warnings
 from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime
@@ -77,39 +78,16 @@ class Recorder(object):
         key = "".join([x for x in data.symbol if not x.isdigit()])
         self.main_contract_mapping[key.upper()].append(data)
 
-    def get_contract_last_price(self, local_symbol):
-        """ 获取合约的最新价格 """
-        return self.local_contract_price_mapping.get(local_symbol)
-
-    @property
-    def main_contract_list(self):
-        """ 返回主力合约列表 """
-        result = []
-        for _ in self.main_contract_mapping.values():
-            x = sorted(_, key=lambda x: x.open_interest, reverse=True)[0]
-            result.append(x.local_symbol)
-        return result
-
-    def get_main_contract_by_code(self, code: str):
-        """ 根据code取相应的主力合约 """
-        d = self.main_contract_mapping.get(code.upper(), None)
-        if not d:
-            return None
-        else:
-            now = sorted(d, key=lambda x: x.open_interest, reverse=True)[0]
-            pre = sorted(d, key=lambda x: x.pre_open_interest, reverse=True)[0]
-            if pre.local_symbol == now.local_symbol:
-                return pre
-            else:
-                return now
-
     def process_shared_event(self, event):
-        if self.shared.get(event.data.local_symbol, None) is not None:
-            self.shared[event.data.local_symbol].append(event.data)
-        else:
-            self.shared[event.data.local_symbol] = []
+        self.shared.setdefault(event.data.local_symbol, []).append(event.data)
         for value in self.app.extensions.values():
-            value(deepcopy(event))
+            if self.app.config['INSTRUMENT_INDEPEND']:
+                if len(value.instrument_set) == 0:
+                    warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
+                if event.data.local_symbol in value.instrument_set:
+                    value(deepcopy(event))
+            else:
+                value(deepcopy(event))
 
     def process_error_event(self, event: Event):
         self.errors.append({"time": self.get_local_time(), "data": event.data})
@@ -133,10 +111,17 @@ class Recorder(object):
         self.bar[bar.local_symbol][bar.interval].append(bar)
 
         for value in self.app.extensions.values():
-            value(deepcopy(event))
+            if self.app.config['INSTRUMENT_INDEPEND']:
+                if len(value.instrument_set) == 0:
+                    warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
+                if event.data.local_symbol in value.instrument_set:
+                    value(deepcopy(event))
+            else:
+                value(deepcopy(event))
 
     def process_tick_event(self, event: Event):
         """"""
+        print(event)
         tick = event.data
         self.ticks[tick.local_symbol] = tick
         symbol = tick.symbol
@@ -154,11 +139,16 @@ class Recorder(object):
             self.generators[symbol] = generator(self.event_engine, self.app)
 
         for value in self.app.extensions.values():
-            value(deepcopy(event))
+            if self.app.config['INSTRUMENT_INDEPEND']:
+                if len(value.instrument_set) == 0:
+                    warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
+                if event.data.local_symbol in value.instrument_set:
+                    value(deepcopy(event))
+            else:
+                value(deepcopy(event))
 
     def process_order_event(self, event: Event):
         """"""
-
         order = event.data
         self.orders[order.local_order_id] = order
         # If order is active, then update data in dict.
@@ -169,7 +159,13 @@ class Recorder(object):
             self.active_orders.pop(order.local_order_id)
         self.position_manager.update_order(order)
         for value in self.app.extensions.values():
-            value(deepcopy(event))
+            if self.app.config['INSTRUMENT_INDEPEND']:
+                if len(value.instrument_set) == 0:
+                    warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
+                if event.data.local_symbol in value.instrument_set:
+                    value(deepcopy(event))
+            else:
+                value(deepcopy(event))
 
     def process_trade_event(self, event: Event):
         """"""
@@ -178,7 +174,13 @@ class Recorder(object):
 
         self.position_manager.update_trade(trade)
         for value in self.app.extensions.values():
-            value(deepcopy(event))
+            if self.app.config['INSTRUMENT_INDEPEND']:
+                if len(value.instrument_set) == 0:
+                    warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
+                if event.data.local_symbol in value.instrument_set:
+                    value(deepcopy(event))
+            else:
+                value(deepcopy(event))
 
     def process_position_event(self, event: Event):
         """"""
@@ -187,7 +189,13 @@ class Recorder(object):
         # 本地实时计算 --> todo :优化
         self.position_manager.update_position(position)
         for value in self.app.extensions.values():
-            value(deepcopy(event))
+            if self.app.config['INSTRUMENT_INDEPEND']:
+                if len(value.instrument_set) == 0:
+                    warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
+                if event.data.local_symbol in value.instrument_set:
+                    value(deepcopy(event))
+            else:
+                value(deepcopy(event))
 
     def process_account_event(self, event: Event):
         """"""
@@ -281,6 +289,32 @@ class Recorder(object):
                 if order.local_symbol == local_symbol
             ]
             return active_orders
+
+    @property
+    def main_contract_list(self):
+        """ 返回主力合约列表 """
+        result = []
+        for _ in self.main_contract_mapping.values():
+            x = sorted(_, key=lambda x: x.open_interest, reverse=True)[0]
+            result.append(x.local_symbol)
+        return result
+
+    def get_contract_last_price(self, local_symbol):
+        """ 获取合约的最新价格 """
+        return self.local_contract_price_mapping.get(local_symbol)
+
+    def get_main_contract_by_code(self, code: str):
+        """ 根据code取相应的主力合约 """
+        d = self.main_contract_mapping.get(code.upper(), None)
+        if not d:
+            return None
+        else:
+            now = sorted(d, key=lambda x: x.open_interest, reverse=True)[0]
+            pre = sorted(d, key=lambda x: x.pre_open_interest, reverse=True)[0]
+            if pre.local_symbol == now.local_symbol:
+                return pre
+            else:
+                return now
 
 
 class AsyncRecorder(object):

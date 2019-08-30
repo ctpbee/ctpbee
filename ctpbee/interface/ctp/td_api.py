@@ -475,7 +475,7 @@ class BeeTdApi(TdApi):
         self.reqid += 1
         self.reqQryDepthMarketData({}, self.reqid)
 
-    def send_order(self, req: OrderRequest):
+    def send_order(self, req: OrderRequest, **kwargs):
         """
         Send new order.
         """
@@ -519,7 +519,7 @@ class BeeTdApi(TdApi):
 
         return order.local_order_id
 
-    def cancel_order(self, req: CancelRequest):
+    def cancel_order(self, req: CancelRequest, **kwargs):
         """
         Cancel existing order.
         """
@@ -930,7 +930,7 @@ class BeeTdApiApp(TdApiApp):
         self.reqid += 1
         self.reqUserLogin(req, self.reqid)
 
-    def send_order(self, req: OrderRequest):
+    def send_order(self, req: OrderRequest, **kwargs):
         """
         Send new order.
         """
@@ -974,7 +974,7 @@ class BeeTdApiApp(TdApiApp):
 
         return order.vt_orderid
 
-    def cancel_order(self, req: CancelRequest):
+    def cancel_order(self, req: CancelRequest, **kwargs):
         """
         Cancel existing order.
         """

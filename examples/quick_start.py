@@ -1,4 +1,5 @@
 from datetime import datetime
+from time import sleep
 
 from ctpbee import CtpBee, helper
 from ctpbee import CtpbeeApi
@@ -52,7 +53,8 @@ class RiskMe(RiskLevel):
     """
 
     def realtime_check(self, cur):
-        print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
+        # print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
+        pass
 
     def before_send_order(self) -> bool:
         """ 返回True不阻止任何操作 """
@@ -72,15 +74,16 @@ class RiskMe(RiskLevel):
 class DataRecorder(CtpbeeApi):
     def __init__(self, name, app=None):
         super().__init__(name, app)
-        self.subscribe_set = set(["zn1910"])
+        self.instrument_set = set(["ag1912.SHFE"])
 
     def on_trade(self, trade):
         pass
 
     def on_contract(self, contract):
-        # 订阅单个
-        if contract.symbol in self.subscribe_set:
-            self.app.subscribe(contract.symbol)
+        # 通过本地的
+        if contract.local_symbol in self.instrument_set:
+            self.app.subscribe(contract.local_symbol)
+
 
     def on_order(self, order):
         pass
@@ -90,10 +93,11 @@ class DataRecorder(CtpbeeApi):
 
     def on_account(self, account: AccountData) -> None:
         """ """
+        print(account)
 
     def on_tick(self, tick):
         """tick process function"""
-        pass
+        print(tick)
 
     def on_bar(self, bar):
         """bar process function"""
@@ -141,44 +145,28 @@ class DataRecorder(CtpbeeApi):
 def go():
     app = CtpBee("last", __name__, refresh=True)
 
-    # info = {
-    #     "CONNECT_INFO": {
-    #         "userid": "089131",
-    #         "password": "350888",
-    #         "brokerid": "9999",
-    #         "md_address": "tcp://180.168.146.187:10131",
-    #         "td_address": "tcp://180.168.146.187:10130",
-    #         # "md_address": "tcp://218.202.237.33:10112",
-    #         # "td_address": "tcp://218.202.237.33:10102",
-    #         # "md_address": "tcp://180.168.146.187:10110",
-    #         # "td_address": "tcp://180.168.146.187:10100",
-    #         # "md_address": "tcp://180.168.146.187:10111",
-    #         # "td_address": "tcp://180.168.146.187:10101",
-    #         "product_info": "",
-    #         "appid": "simnow_client_test",
-    #         "auth_code": "0000000000000000",
-    #     },
-    #     "INTERFACE": "ctp",
-    #     "TD_FUNC": True,
-    #     "MD_FUNC": True,
-    #     "REFRESH_INTERVAL": 3
-    # }
-
     info = {
         "CONNECT_INFO": {
-            "userid": "129842",
-            "password": "skyjay88",
+            "userid": "089131",
+            "password": "350888",
             "brokerid": "9999",
+            # "md_address": "tcp://180.168.146.187:10131",
+            # "td_address": "tcp://180.168.146.187:10130",
             "md_address": "tcp://218.202.237.33:10112",
             "td_address": "tcp://218.202.237.33:10102",
+            # "md_address": "tcp://180.168.146.187:10110",
+            # "td_address": "tcp://180.168.146.187:10100",
+            # "md_address": "tcp://180.168.146.187:10111",
+            # "td_address": "tcp://180.168.146.187:10101",
             "product_info": "",
             "appid": "simnow_client_test",
-            "auth_code": "0000000000000000"
+            "auth_code": "0000000000000000",
         },
         "INTERFACE": "ctp",
         "TD_FUNC": True,
         "MD_FUNC": True,
-        "REFRESH_INTERVAL": 1.5
+        "REFRESH_INTERVAL": 3,
+        "INSTRUMENT_INDEPEND": True
     }
 
     """ 
@@ -199,6 +187,10 @@ def go():
 
     """ 启动 """
     app.start(log_output=True)
+
+    while True:
+        app.query_account()
+        sleep(1)
 
 
 if __name__ == '__main__':

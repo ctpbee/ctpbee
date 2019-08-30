@@ -4,7 +4,7 @@
 
 """
 from datetime import time, datetime
-from typing import Text, Any
+from typing import Text, Any, List, Set
 
 from ctpbee.constant import \
     (OrderRequest, CancelRequest, EVENT_TRADE, EVENT_SHARED, EVENT_ORDER,
@@ -92,6 +92,7 @@ class CtpbeeApi(object):
         :param app: CtpBee 实例
         :param api_type 针对几种API实行不同的优化措施
         """
+        self.instrument_set: List or Set = set()
         self.extension_name = extension_name
         self.app = app
         if self.app is not None:
@@ -190,6 +191,7 @@ class AsyncApi(object):
         :param api_type 针对几种API实行不同的优化措施
         """
         self.extension_name = extension_name
+        self.instrument_set: List or Set = set()
         self.app = app
         if self.app is not None:
             self.init_app(self.app)

@@ -1,3 +1,3 @@
-from .exception import (DatabaseError, ConfigError, ContextError, TraderError, MarketError)
+from .exception import (DatabaseError, ConfigError, ContextError, TraderError, MarketError, DataError)
 
-__all__ = [DatabaseError, ConfigError, ContextError, TraderError, MarketError]
+__all__ = [DatabaseError, ConfigError, ContextError, TraderError, MarketError, DataError]

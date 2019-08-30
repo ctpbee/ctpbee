@@ -214,12 +214,12 @@ class LocalLooperApi():
         """ 初始化设置 """
         {setattr(self, idx, value) for idx, value in app.config['LOOPER'] if hasattr(self, idx)}
 
-    def send_order(self, order: OrderRequest):
+    def send_order(self, order: OrderRequest, **kwargs):
         """ 发单, 可以被外部进行调用
         """
         self._accept_order(order)
 
-    def cancel_order(self, cancel_req: CancelRequest):
+    def cancel_order(self, cancel_req: CancelRequest, **kwargs):
         """
         根据撤单请求找到order，然后在
         可以被外部进行调用

@@ -61,11 +61,14 @@ docker run -p 5000:5000 yutiansut/ctpbee:latest
 - [x] 跟单信号
 - [x] 多路行情对比 --> [looper_me](https://github.com/ctpbee/looper_me)
 - [x] 数据快速支持 --> [ctpbee_converter](https://github.com/ctpbee/data_converter)
-- [ ] 策略层对接CTA  --> 即将以[ctpbee_cta](https://github.com/ctpbee/ctpbee_cta) 
+- [ ] 策略层对接CTA  --> 即将以[ctpbee_cta](https://github.com/ctpbee/ctpbee_cta)
 - [ ] 回测系统搭建  --> interface/looper
 
 
-## Maybe 
+## 一些可能会减少你工作量的工作
+- [x] 7×24小时无人值守 (可选)
+- [x] 定时查持仓和账户信息  (可选)
+- [x] 策略对应订阅行情 (可选)
 - [ ] 性能优化 --> julia支持 ？
 - [ ] 对接多种指标计算                     
 - [ ] 优化代码
