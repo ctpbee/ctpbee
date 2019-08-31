@@ -63,7 +63,8 @@ class RiskMe(RiskLevel):
     """
 
     def realtime_check(self, cur):
-        print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
+        print(f"\r {self.app.recorder.get_all_positions()}", end="")
+        # print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
 
     def before_send_order(self) -> bool:
         """ 返回True不阻止任何操作 """
@@ -108,12 +109,11 @@ class DataRecorder(CtpbeeApi):
 
     def on_bar(self, bar):
         """bar process function"""
-
         # self.app.recorder.get_all_positions()
         #
         # interval = bar.interval
-        self.action.buy(bar.high_price, 1, bar)
-        self.action.sell(bar.high_price, 1, bar)
+        # self.action.buy(bar.high_price, 1, bar)
+        self.action.cover(bar.high_price, 1, bar)
 
     def on_shared(self, shared):
         """ 处理分时图数据 """
@@ -150,8 +150,8 @@ def go():
 
     info = {
         "CONNECT_INFO": {
-            "userid": "089131",
-            "password": "350888",
+            "userid": "129842",
+            "password": "skyjay88",
             "brokerid": "9999",
             "md_address": "tcp://180.168.146.187:10131",
             "td_address": "tcp://180.168.146.187:10130",

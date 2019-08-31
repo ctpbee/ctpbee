@@ -54,7 +54,7 @@ class Action(object):
         """ 平空头 """
         # todo 根据exchange和symbol找到仓位， 判断当前仓位是否满足可以平仓，同时判断平今和平昨，优先平今
 
-        req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.SHORT,
+        req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.LONG,
                                                      type=OrderType.LIMIT, exchange=origin.exchange,
                                                      symbol=origin.symbol) for x in
                     self.get_req(origin.symbol, Direction.SHORT, volume, self.app)]
@@ -66,8 +66,7 @@ class Action(object):
         """
         平多头
         """
-
-        req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.LONG,
+        req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.SHORT,
                                                      type=OrderType.LIMIT, exchange=origin.exchange,
                                                      symbol=origin.symbol) for x in
                     self.get_req(origin.local_symbol, Direction.LONG, volume, self.app)]

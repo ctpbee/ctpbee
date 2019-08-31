@@ -93,6 +93,8 @@ class Account:
 
         # 建立持仓 / make position
 
+    # 需要买多卖空进行反向解析,从而更改回测的时候的属性
+
     def sell(self, trade):
         pass
 

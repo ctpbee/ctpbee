@@ -26,7 +26,7 @@ from typing import Text
 from copy import copy
 
 from ctpbee.constant import PositionData, Offset, Direction, OrderRequest, OrderData, \
-    Exchange, TickData
+    Exchange, TickData, EXCHANGE_MAPPING
 
 
 class LocalVariable:
@@ -385,7 +385,7 @@ class PositionHolding:
             return PositionData(
                 symbol=self.symbol,
                 volume=self.long_pos,
-                exchange=self.exchange,
+                exchange=EXCHANGE_MAPPING[self.exchange],
                 direction=direction,
                 pnl=self.long_pnl,
                 price=self.long_price,
@@ -396,7 +396,7 @@ class PositionHolding:
             return PositionData(
                 symbol=self.symbol,
                 volume=self.short_pos,
-                exchange=self.exchange,
+                exchange=EXCHANGE_MAPPING[self.exchange],
                 direction=direction,
                 pnl=self.short_pnl,
                 price=self.short_price,
