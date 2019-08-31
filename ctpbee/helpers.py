@@ -4,6 +4,8 @@ import os
 import pkgutil
 import sys
 import types
+import warnings
+from copy import deepcopy
 from datetime import datetime, time
 from functools import wraps
 from threading import RLock
@@ -204,3 +206,39 @@ def refresh_query(app):
         app.query_account()
         if not app.r_flag:
             break
+
+
+def value_call(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        d = func(*args, **kwargs)
+        self, event = args
+        for value in self.app.extensions.values():
+            if self.app.config['INSTRUMENT_INDEPEND']:
+                if len(value.instrument_set) == 0:
+                    warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
+                if event.data.local_symbol in value.instrument_set:
+                    value(deepcopy(event))
+            else:
+                value(deepcopy(event))
+        return d
+
+    return wrapper
+
+
+async def async_value_call(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        d = func(*args, **kwargs)
+        self, event = args
+        for value in self.app.extensions.values():
+            if self.app.config['INSTRUMENT_INDEPEND']:
+                if len(value.instrument_set) == 0:
+                    warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
+                if event.data.local_symbol in value.instrument_set:
+                    await value(deepcopy(event))
+            else:
+                await value(deepcopy(event))
+        return d
+
+    return wrapper

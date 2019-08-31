@@ -285,7 +285,7 @@ class TickData(BaseData):
     limit_down: float = 0
     open_interest: int = 0
     average_price: float = 0
-    preSettlementPrice: float = 0
+    pre_settlement_price: float = 0
     open_price: float = 0
     high_price: float = 0
     low_price: float = 0

@@ -76,6 +76,7 @@ class DataRecorder(CtpbeeApi):
         super().__init__(name, app)
         self.instrument_set = set(["ag1912.SHFE"])
 
+
     def on_trade(self, trade):
         pass
 
@@ -93,7 +94,7 @@ class DataRecorder(CtpbeeApi):
 
     def on_account(self, account: AccountData) -> None:
         """ """
-        print(account)
+        # print(account)
 
     def on_tick(self, tick):
         """tick process function"""
@@ -140,20 +141,21 @@ class DataRecorder(CtpbeeApi):
             # # 获取主力合约列表
             # print(self.app.recorder.main_contract_list)
             #
-
+            main_contract = self.app.recorder.get_main_contract_by_code("ap")
+            self.instrument_set.add(main_contract.local_symbol)
 
 def go():
-    app = CtpBee("last", __name__, refresh=True)
+    app = CtpBee("last", __name__)
 
     info = {
         "CONNECT_INFO": {
             "userid": "089131",
             "password": "350888",
             "brokerid": "9999",
-            # "md_address": "tcp://180.168.146.187:10131",
-            # "td_address": "tcp://180.168.146.187:10130",
-            "md_address": "tcp://218.202.237.33:10112",
-            "td_address": "tcp://218.202.237.33:10102",
+            "md_address": "tcp://180.168.146.187:10131",
+            "td_address": "tcp://180.168.146.187:10130",
+            # "md_address": "tcp://218.202.237.33:10112",
+            # "td_address": "tcp://218.202.237.33:10102",
             # "md_address": "tcp://180.168.146.187:10110",
             # "td_address": "tcp://180.168.146.187:10100",
             # "md_address": "tcp://180.168.146.187:10111",
@@ -166,7 +168,7 @@ def go():
         "TD_FUNC": True,
         "MD_FUNC": True,
         "REFRESH_INTERVAL": 3,
-        "INSTRUMENT_INDEPEND": True
+        "INSTRUMENT_INDEPEND": False
     }
 
     """ 
@@ -188,9 +190,6 @@ def go():
     """ 启动 """
     app.start(log_output=True)
 
-    while True:
-        app.query_account()
-        sleep(1)
 
 
 if __name__ == '__main__':

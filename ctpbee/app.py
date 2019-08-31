@@ -13,9 +13,10 @@ from ctpbee.constant import OrderRequest, CancelRequest
 from ctpbee.context import _app_context_ctx
 from ctpbee.event_engine import EventEngine, AsyncEngine
 from ctpbee.exceptions import ConfigError
-from ctpbee.func import CtpbeeApi, send_monitor, cancel_monitor
+from ctpbee.func import send_monitor, cancel_monitor
 from ctpbee.helpers import locked_cached_property, find_package, check, run_forever, refresh_query
 from ctpbee.interface import Interface
+from ctpbee.level import CtpbeeApi
 from ctpbee.record import Recorder, AsyncRecorder
 
 

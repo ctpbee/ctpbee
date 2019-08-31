@@ -2,6 +2,7 @@ import warnings
 from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime
+from functools import wraps
 
 from ctpbee.constant import EVENT_TICK, EVENT_ORDER, EVENT_TRADE, EVENT_POSITION, EVENT_ACCOUNT, \
     EVENT_CONTRACT, EVENT_BAR, EVENT_LOG, EVENT_ERROR, EVENT_SHARED, EVENT_LAST, EVENT_INIT_FINISHED
@@ -9,6 +10,9 @@ from ctpbee.data_handle import generator
 from ctpbee.data_handle.local_position import LocalPositionManager
 from ctpbee.event_engine import Event
 from ctpbee.event_engine.engine import EVENT_TIMER
+from ctpbee.helpers import value_call, async_value_call
+
+
 
 
 class Recorder(object):
@@ -100,6 +104,7 @@ class Recorder(object):
         for value in self.app.extensions.values():
             value(deepcopy(event))
 
+    @value_call
     def process_bar_event(self, event: Event):
         bar = event.data
         local = self.bar.get(bar.local_symbol)
@@ -110,18 +115,9 @@ class Recorder(object):
                 self.bar[bar.local_symbol] = {bar.interval: []}
         self.bar[bar.local_symbol][bar.interval].append(bar)
 
-        for value in self.app.extensions.values():
-            if self.app.config['INSTRUMENT_INDEPEND']:
-                if len(value.instrument_set) == 0:
-                    warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
-                if event.data.local_symbol in value.instrument_set:
-                    value(deepcopy(event))
-            else:
-                value(deepcopy(event))
-
+    @value_call
     def process_tick_event(self, event: Event):
         """"""
-        print(event)
         tick = event.data
         self.ticks[tick.local_symbol] = tick
         symbol = tick.symbol
@@ -138,15 +134,7 @@ class Recorder(object):
         if not bm:
             self.generators[symbol] = generator(self.event_engine, self.app)
 
-        for value in self.app.extensions.values():
-            if self.app.config['INSTRUMENT_INDEPEND']:
-                if len(value.instrument_set) == 0:
-                    warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
-                if event.data.local_symbol in value.instrument_set:
-                    value(deepcopy(event))
-            else:
-                value(deepcopy(event))
-
+    @value_call
     def process_order_event(self, event: Event):
         """"""
         order = event.data
@@ -158,15 +146,8 @@ class Recorder(object):
         elif order.local_order_id in self.active_orders:
             self.active_orders.pop(order.local_order_id)
         self.position_manager.update_order(order)
-        for value in self.app.extensions.values():
-            if self.app.config['INSTRUMENT_INDEPEND']:
-                if len(value.instrument_set) == 0:
-                    warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
-                if event.data.local_symbol in value.instrument_set:
-                    value(deepcopy(event))
-            else:
-                value(deepcopy(event))
 
+    @value_call
     def process_trade_event(self, event: Event):
         """"""
         trade = event.data
@@ -182,6 +163,7 @@ class Recorder(object):
             else:
                 value(deepcopy(event))
 
+    @value_call
     def process_position_event(self, event: Event):
         """"""
         position = event.data
@@ -405,13 +387,12 @@ class AsyncRecorder(object):
             else:
                 return now
 
+    @async_value_call
     async def process_shared_event(self, event):
         if self.shared.get(event.data.local_symbol, None) is not None:
             self.shared[event.data.local_symbol].append(event.data)
         else:
             self.shared[event.data.local_symbol] = []
-        for value in self.app.extensions.values():
-            await value(deepcopy(event))
 
     async def process_error_event(self, event: Event):
         self.errors.append({"time": self.get_local_time(), "data": event.data})
@@ -424,6 +405,7 @@ class AsyncRecorder(object):
         for value in self.app.extensions.values():
             await value(deepcopy(event))
 
+    @async_value_call
     async def process_bar_event(self, event: Event):
         bar = event.data
         local = self.bar.get(bar.local_symbol)
@@ -434,9 +416,7 @@ class AsyncRecorder(object):
                 self.bar[bar.local_symbol] = {bar.interval: []}
         self.bar[bar.local_symbol][bar.interval].append(bar)
 
-        for value in self.app.extensions.values():
-            await value(deepcopy(event))
-
+    @async_value_call
     async def process_tick_event(self, event: Event):
         """"""
         tick = event.data
@@ -455,9 +435,7 @@ class AsyncRecorder(object):
         if not bm:
             self.generators[symbol] = generator(self.event_engine, self.app)
 
-        for value in self.app.extensions.values():
-            await value(deepcopy(event))
-
+    @async_value_call
     async def process_order_event(self, event: Event):
         """"""
 
@@ -470,25 +448,20 @@ class AsyncRecorder(object):
         elif order.local_order_id in self.active_orders:
             self.active_orders.pop(order.local_order_id)
         self.position_manager.update_order(order)
-        for value in self.app.extensions.values():
-            await value(deepcopy(event))
 
+    @async_value_call
     async def process_trade_event(self, event: Event):
         """"""
         trade = event.data
         self.trades[trade.local_trade_id] = trade
-
         self.position_manager.update_trade(trade)
-        for value in self.app.extensions.values():
-            await value(deepcopy(event))
 
+    @async_value_call
     async def process_position_event(self, event: Event):
         """"""
         position = event.data
         self.positions[position.local_position_id] = position
         self.position_manager.update_position(position)
-        for value in self.app.extensions.values():
-            await value(deepcopy(event))
 
     async def process_account_event(self, event: Event):
         """"""
