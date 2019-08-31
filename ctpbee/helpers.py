@@ -90,16 +90,16 @@ def _matching_loader_thinks_module_is_package(loader, mod_name):
 
 
 def check(type: AnyStr):
-    """ 检查API是否存在 """
+    """ 检查接口是否存在 """
 
     def midlle(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             if type == "market":
-                if args[0].market is None:
+                if args[0].app.market is None:
                     raise ValueError("当前账户行情api未连接")
             elif type == "trader":
-                if args[0].market is None:
+                if args[0].app.market is None:
                     raise ValueError("当前账户交易api未连接")
             else:
                 raise ValueError("非法字符串")

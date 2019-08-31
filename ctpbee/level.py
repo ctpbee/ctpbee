@@ -1,11 +1,156 @@
 from datetime import datetime
-from typing import Set, List
+from typing import Set, List, AnyStr
+from warnings import warn
 
 from ctpbee.constant import EVENT_INIT_FINISHED, EVENT_TICK, EVENT_BAR, EVENT_ORDER, EVENT_SHARED, EVENT_TRADE, \
     EVENT_POSITION, EVENT_ACCOUNT, EVENT_CONTRACT, EVENT_LOG, OrderData, SharedData, BarData, TickData, TradeData, \
-    PositionData, AccountData, ContractData, LogData
-
+    PositionData, AccountData, ContractData, LogData, Offset, Direction, OrderType
 from ctpbee.event_engine.engine import EVENT_TIMER, Event
+from ctpbee.func import helper
+from ctpbee.helpers import check
+
+
+class Action(object):
+    """
+    自定义的操作模板
+    此动作应该被CtpBee, CtpbeeApi, AsyncApi, RiskLevel调用
+    """
+
+    def __new__(cls, *args, **kwargs):
+        instance = object.__new__(cls)
+        setattr(instance, "__name__", cls.__name__)
+        return instance
+
+    def __getattr__(self, item):
+        message = f"尝试在{self.__name__}中调用一个不存在的属性{item}"
+        warn(message)
+        return None
+
+    def __init__(self, app):
+        self.app = app
+
+    def buy(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
+            price_type: OrderType = "LIMIT", stop: bool = False, lock: bool = False):
+        """
+        开仓 多头
+        """
+        req = helper.generate_order_req_by_var(volume=volume, price=price, offset=Offset.OPEN, direction=Direction.LONG,
+                                               type=OrderType.LIMIT, exchange=origin.exchange, symbol=origin.symbol)
+        return self.send_order(req)
+
+    def short(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
+              stop: bool = False, lock: bool = False, **kwargs):
+        """
+         开仓 空头
+        """
+
+        req = helper.generate_order_req_by_var(volume=volume, price=price, offset=Offset.OPEN,
+                                               direction=Direction.SHORT,
+                                               type=OrderType.LIMIT, exchange=origin.exchange, symbol=origin.symbol)
+        return self.send_order(req)
+
+    def sell(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData] = None,
+             stop: bool = False, lock: bool = False, **kwargs):
+        """ 平空头 """
+        # todo 根据exchange和symbol找到仓位， 判断当前仓位是否满足可以平仓，同时判断平今和平昨，优先平今
+
+        req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.SHORT,
+                                                     type=OrderType.LIMIT, exchange=origin.exchange,
+                                                     symbol=origin.symbol) for x in
+                    self.get_req(origin.symbol, Direction.SHORT, volume, self.app)]
+
+        return [self.send_order(req) for req in req_list]
+
+    def cover(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
+              stop: bool = False, lock: bool = False, **kwargs):
+        """
+        平多头
+        """
+
+        req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.LONG,
+                                                     type=OrderType.LIMIT, exchange=origin.exchange,
+                                                     symbol=origin.symbol) for x in
+                    self.get_req(origin.local_symbol, Direction.LONG, volume, self.app)]
+
+        return [self.send_order(req) for req in req_list]
+
+    @staticmethod
+    def get_req(local_symbol, direction, volume: int, app):
+        """
+        generate the offset and volume
+        生成平仓所需要的offset和volume
+         """
+        position: PositionData = app.recorder.position_manager.get_position_by_ld(local_symbol, direction)
+        if not position:
+            warn(f"{local_symbol}在{direction.value}上无仓位")
+            return []
+        if position.volume < volume:
+            warn(f"{local_symbol}在{direction.value}上仓位不足")
+            return []
+        else:
+            # 判断是否为上期所 / whether the exchange is SHFE
+            if position.exchange.value != "SHFE":
+                return [[Offset.CLOSE, volume]]
+            # 那么先判断今仓数量是否满足volume /
+            td_volume = position.volume - position.yd_volume
+            if td_volume >= volume:
+                return [[Offset.CLOSETODAY, volume]]
+            else:
+                return [[Offset.CLOSETODAY, td_volume], [Offset.CLOSEYESTERDAY, volume - td_volume]]
+
+    # 默认四个提供API的封装, 买多卖空等快速函数应该基于send_order进行封装 / default to provide four function
+    @check(type="trader")
+    def send_order(self, order, **kwargs):
+        return self.app.trader.send_order(order, **kwargs)
+
+    @check(type="trader")
+    def cancel_order(self, cancel_req, **kwargs):
+        return self.app.trader.cancel_order(cancel_req, **kwargs)
+
+    @check(type="trader")
+    def query_position(self):
+        return self.app.trader.query_position()
+
+    @check(type="trader")
+    def query_account(self):
+        return self.app.trader.query_accont()
+
+    @check(type="trader")
+    def transfer(self, req, type):
+        """
+        req currency attribute
+        ["USD", "HKD", "CNY"]
+        :param req:
+        :param type:
+        :return:
+        """
+        return self.app.trader.transfer(req, type=type)
+
+    @check(type="trader")
+    def query_account_register(self, req):
+        self.app.trader.query_account_register(req)
+
+    @check(type="trader")
+    def query_bank_account_money(self, req):
+        self.app.trader.query_bank_account_money(req)
+
+    @check(type="trader")
+    def query_transfer_serial(self, req):
+        self.trader.query_transfer_serial(req)
+
+    @check(type="trader")
+    def query_bank(self):
+        pass
+
+    @check(type="market")
+    def subscribe(self, local_symbol: AnyStr):
+        """订阅行情"""
+        if "." in local_symbol:
+            local_symbol = local_symbol.split(".")[0]
+        return self.app.market.subscribe(local_symbol)
+
+    def __repr__(self):
+        return f"{self.__name__} "
 
 
 class CtpbeeApi(object):
@@ -37,7 +182,13 @@ class CtpbeeApi(object):
         if self.app is not None:
             self.init_app(self.app)
         # 是否冻结
-        self.fronzen = False
+        self.frozen = False
+
+    @property
+    def action(self) -> Action:
+        if self.app is None:
+            raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
+        return self.app.action
 
     def on_order(self, order: OrderData) -> None:
         raise NotImplemented
@@ -79,7 +230,7 @@ class CtpbeeApi(object):
 
     def __call__(self, event: Event):
         func = self.map[event.type]
-        if not self.fronzen:
+        if not self.frozen:
             func(self, event.data)
 
     def __init_subclass__(cls, **kwargs):
@@ -136,6 +287,12 @@ class AsyncApi(object):
             self.init_app(self.app)
         # 是否冻结
         self.fronzen = False
+
+    @property
+    def action(self):
+        if self.app is None:
+            raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
+        return self.app.action
 
     async def on_order(self, order: OrderData) -> None:
         raise NotImplemented
@@ -210,14 +367,3 @@ class AsyncApi(object):
         }
         setattr(cls, "map", map)
         setattr(cls, "parmeter", parmeter)
-
-
-class Action:
-    """
-    自定义的Action动作模板
-    此动作应该被ctpbee
-    """
-
-    print("")
-
-

@@ -1,22 +1,21 @@
 # coding:utf-8
 import os
 import sys
+from inspect import ismethod
 from threading import Thread
 from time import sleep
-from typing import Text, AnyStr
+from typing import Text
 
 from werkzeug.datastructures import ImmutableDict
 
 from ctpbee import __version__
 from ctpbee.config import Config
-from ctpbee.constant import OrderRequest, CancelRequest
 from ctpbee.context import _app_context_ctx
 from ctpbee.event_engine import EventEngine, AsyncEngine
 from ctpbee.exceptions import ConfigError
-from ctpbee.func import send_monitor, cancel_monitor
-from ctpbee.helpers import locked_cached_property, find_package, check, run_forever, refresh_query
+from ctpbee.helpers import locked_cached_property, find_package, run_forever, refresh_query
 from ctpbee.interface import Interface
-from ctpbee.level import CtpbeeApi
+from ctpbee.level import CtpbeeApi, Action
 from ctpbee.record import Recorder, AsyncRecorder
 
 
@@ -56,17 +55,18 @@ class CtpBee(object):
 
     __active = False
 
-    # 交易api与行情api
+    # 交易api与行情api / trade api and market api
     market = None
     trader = None
 
-    # 插件Api系统
+    # 插件Api系统 /Extension system
     extensions = {}
 
-    # 工具, 用于提供一些比较优秀的工具
+    # 工具, 用于提供一些比较优秀的工具/ Toolbox, using by providing some good tools
     tools = {}
 
-    def __init__(self, name: Text, import_name, engine_method: str = "thread", work_mode="limit_time",
+    def __init__(self, name: Text, import_name, action_class: Action = None, engine_method: str = "thread",
+                 work_mode="limit_time",
                  refresh: bool = False,
                  instance_path=None):
         """ 初始化 """
@@ -74,6 +74,28 @@ class CtpBee(object):
         self.import_name = import_name
         self.engine_method = engine_method
         self.refresh = refresh
+        """
+        If no action is specified by default, use the default Action class
+        如果默认不指定action参数， 那么使用默认的Action类 
+        """
+        if action_class is None:
+            self.action = Action(self)
+        else:
+            self.action = action_class(self)
+        """
+        根据action里面的函数更新到CtpBee上面来
+        bind the function of action to CtpBee
+        """
+        for x in dir(self.action):
+            func = getattr(self.action, x)
+            if x.startswith("__"):
+                continue
+            if ismethod(func):
+                setattr(self, func.__name__, func)
+        """
+        If engine_method is specified by default, use the default EventEngine and Recorder or use the engine and recorder according to your choice
+        如果不指定engine_method参数，那么使用默认的事件引擎 或者根据你的参数使用不同的引擎和记录器
+        """
         if engine_method == "thread":
             self.event_engine = EventEngine()
             self.recorder = Recorder(self, self.event_engine)
@@ -93,6 +115,8 @@ class CtpBee(object):
         self.instance_path = instance_path
         self.config = self.make_config()
         self.init_finished = False
+
+        # default monitor and flag
         self.p = None
         self.p_flag = True
 
@@ -102,12 +126,17 @@ class CtpBee(object):
 
         _app_context_ctx.push(self.name, self)
 
+    def update_action_class(self, action_class):
+        if isinstance(action_class, Action):
+            raise TypeError(f"更新action_class出现错误, 你传入的action_class类型为{type(action_class)}")
+        self.action = action_class()
+
     def add_risk_gateway(self, gateway_class, risk=True):
         self.risk_gateway_class = gateway_class
         self.risk_gateway_class.update_app(self)
         if risk:
-            self.send_order = self.risk_gateway_class(self.send_order)
-            self.cancel_order = self.risk_gateway_class(self.cancel_order)
+            self.send_order = self.risk_gateway_class(self.action.send_order)
+            self.cancel_order = self.risk_gateway_class(self.action.cancel_order)
 
     def make_config(self):
         """ 生成class类"""
@@ -215,62 +244,6 @@ class CtpBee(object):
         """ 停止运行 """
         if self.event_engine.status:
             self.event_engine.stop()
-
-    @check(type="trader")
-    def send_order(self, order_req: OrderRequest) -> AnyStr:
-        """发单"""
-        send_monitor.send(order_req)
-        return self.trader.send_order(order_req)
-
-    @check(type="trader")
-    def cancel_order(self, cancle_req: CancelRequest):
-        """撤单"""
-        cancel_monitor.send(cancle_req)
-        return self.trader.cancel_order(cancle_req)
-
-    @check(type="market")
-    def subscribe(self, symbol: AnyStr):
-        """订阅行情"""
-        if "." in symbol:
-            symbol = symbol.split(".")[0]
-        return self.market.subscribe(symbol)
-
-    @check(type="trader")
-    def query_position(self):
-        """查询持仓"""
-        return self.trader.query_position()
-
-    @check(type="trader")
-    def transfer(self, req, type):
-        """
-        req currency attribute
-        ["USD", "HKD", "CNY"]
-        :param req:
-        :param type:
-        :return:
-        """
-        self.trader.transfer(req, type=type)
-
-    @check(type="trader")
-    def query_account_register(self, req):
-        self.trader.query_account_register(req)
-
-    @check(type="trader")
-    def query_bank_account_money(self, req):
-        self.trader.query_bank_account_money(req)
-
-    @check(type="trader")
-    def query_transfer_serial(self, req):
-        self.trader.query_transfer_serial(req)
-
-    @check(type="trader")
-    def query_bank(self):
-        pass
-
-    @check(type="trader")
-    def query_account(self):
-        """查询账户"""
-        return self.trader.query_account()
 
     def remove_extension(self, extension_name: Text) -> None:
         """移除插件"""

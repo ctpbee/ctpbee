@@ -47,12 +47,10 @@ class RiskLevel:
         return result
 
     def __get__(self, instance, cls):
-        res = None
         if instance is None:
             res = self
         else:
             res = types.MethodType(self, instance)
-        print(id(res))
         return res
 
     def log(self, log):

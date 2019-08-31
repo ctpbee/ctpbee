@@ -99,7 +99,7 @@ class Helper():
 
     @classmethod
     def generate_order_req_by_str(cls, symbol: str, exchange: str, direction: str, offset: str, type: str, volume,
-                                  price):
+                                  price:float):
         """ 手动构造发单请求"""
         if "." in symbol:
             symbol = symbol.split(".")[1]
@@ -111,7 +111,7 @@ class Helper():
 
     @classmethod
     def generate_order_req_by_var(cls, symbol: str, exchange: Exchange, direction: Direction, offset: Offset,
-                                  type: OrderType, volume, price):
+                                  type: OrderType, volume, price:float):
         if "." in symbol:
             symbol = symbol.split(".")[1]
         return OrderRequest(symbol=symbol, exchange=exchange, direction=direction, offset=offset, type=type,

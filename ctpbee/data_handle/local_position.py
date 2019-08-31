@@ -19,6 +19,7 @@ Notice : 神兽保佑 ，测试一次通过
 //          ┗━┻━┛   ┗━┻━┛
 //
 """
+from typing import Text
 
 """ 本地持仓对象 """
 
@@ -379,6 +380,31 @@ class PositionHolding:
                 else:
                     self.short_price = 0
 
+    def get_position_by_direction(self, direction):
+        if direction == Direction.LONG:
+            return PositionData(
+                symbol=self.symbol,
+                volume=self.long_pos,
+                exchange=self.exchange,
+                direction=direction,
+                pnl=self.long_pnl,
+                price=self.long_price,
+                frozen=self.long_pos_frozen,
+                yd_volume=self.long_yd
+            )
+        elif direction == Direction.SHORT:
+            return PositionData(
+                symbol=self.symbol,
+                volume=self.short_pos,
+                exchange=self.exchange,
+                direction=direction,
+                pnl=self.short_pnl,
+                price=self.short_price,
+                frozen=self.short_pos_frozen,
+                yd_volume=self.short_yd
+            )
+        return None
+
 
 class LocalPositionManager(dict):
     """ 用于管理持仓信息 只提供向外的接口 """
@@ -457,6 +483,15 @@ class LocalPositionManager(dict):
     def get_position(self, local_symbol):
         """ 根据local_symbol 获取持仓信息 """
         return self.get(local_symbol, None)
+
+    def get_position_by_ld(self, local_symbol: Text, direction: Direction) -> PositionData:
+        """
+        ld means local_symbol and direction
+        ld意味着local_symbol和direction
+        """
+        if local_symbol not in self:
+            return None
+        return self[local_symbol].get_position_by_direction(direction)
 
     def get_all_positions(self):
         """ 返回所有的持仓信息 """

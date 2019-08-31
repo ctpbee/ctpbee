@@ -1,10 +1,20 @@
 from datetime import datetime
-from time import sleep
 
-from ctpbee import CtpBee, helper
+from ctpbee import Action
+from ctpbee import CtpBee
 from ctpbee import CtpbeeApi
 from ctpbee import RiskLevel
-from ctpbee.constant import PositionData, AccountData, LogData, Direction, Offset, OrderType
+from ctpbee.constant import PositionData, AccountData, LogData
+
+
+class ActionMe(Action):
+    pass
+    # def buy(self, **kwargs):
+    #     print("我执行了买多操作")
+    #
+    # def sell(self):
+    #     print("我执行了卖空操作")
+    #     pass
 
 
 class RiskMe(RiskLevel):
@@ -53,8 +63,7 @@ class RiskMe(RiskLevel):
     """
 
     def realtime_check(self, cur):
-        # print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
-        pass
+        print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
 
     def before_send_order(self) -> bool:
         """ 返回True不阻止任何操作 """
@@ -76,7 +85,6 @@ class DataRecorder(CtpbeeApi):
         super().__init__(name, app)
         self.instrument_set = set(["ag1912.SHFE"])
 
-
     def on_trade(self, trade):
         pass
 
@@ -84,7 +92,6 @@ class DataRecorder(CtpbeeApi):
         # 通过本地的
         if contract.local_symbol in self.instrument_set:
             self.app.subscribe(contract.local_symbol)
-
 
     def on_order(self, order):
         pass
@@ -98,7 +105,6 @@ class DataRecorder(CtpbeeApi):
 
     def on_tick(self, tick):
         """tick process function"""
-        print(tick)
 
     def on_bar(self, bar):
         """bar process function"""
@@ -106,14 +112,8 @@ class DataRecorder(CtpbeeApi):
         # self.app.recorder.get_all_positions()
         #
         # interval = bar.interval
-        #
-        req = helper.generate_order_req_by_var(symbol=bar.symbol, exchange=bar.exchange, price=bar.high_price,
-                                               direction=Direction.LONG, type=OrderType.LIMIT, volume=3,
-                                               offset=Offset.OPEN)
-        # # 调用绑定的app进行发单
-        id = self.app.send_order(req)
-
-        # print("返回id", id)
+        self.action.buy(bar.high_price, 1, bar)
+        self.action.sell(bar.high_price, 1, bar)
 
     def on_shared(self, shared):
         """ 处理分时图数据 """
@@ -144,8 +144,9 @@ class DataRecorder(CtpbeeApi):
             main_contract = self.app.recorder.get_main_contract_by_code("ap")
             self.instrument_set.add(main_contract.local_symbol)
 
+
 def go():
-    app = CtpBee("last", __name__)
+    app = CtpBee("last", __name__, action_class=ActionMe)
 
     info = {
         "CONNECT_INFO": {
@@ -189,7 +190,6 @@ def go():
 
     """ 启动 """
     app.start(log_output=True)
-
 
 
 if __name__ == '__main__':
