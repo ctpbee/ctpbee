@@ -296,6 +296,24 @@ class Recorder(object):
             else:
                 return now
 
+    def clear_all(self):
+        """
+        为了避免数据越来越大，需要清空数据
+        :return:
+        """
+        self.ticks.clear()
+        self.orders.clear()
+        self.trades.clear()
+        self.positions.clear()
+        self.contracts.clear()
+        self.errors.clear()
+        self.shared.clear()
+        self.generators.clear()
+        self.active_orders.clear()
+
+
+
+
 
 class AsyncRecorder(object):
     """

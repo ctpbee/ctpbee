@@ -111,28 +111,31 @@ class Exchange(Enum):
     HUOBI = "HUOBI"
     BITFINEX = "BITFINEX"
 
+
+TODAY_EXCHANGE = [Exchange.INE, Exchange.SHFE]
 EXCHANGE_MAPPING = {
-    "CFFEX":Exchange.CFFEX,
-    "SHFE":Exchange.SHFE,
-    "CZCE":Exchange.CZCE,
-    "DCE":Exchange.DCE,
-    "INE":Exchange.INE,
-    "SSE":Exchange.SSE,
-    "SZSE":Exchange.SZSE,
-    "SGE":Exchange.SGE,
-    "SMART":Exchange.SMART,
-    "NYMEX":Exchange.NYMEX,
-    "GLOBEX":Exchange.GLOBEX,
-    "IDEALPRO":Exchange.IDEALPRO,
-    "CME":Exchange.CME,
-    "ICE":Exchange.ICE,
-    "SEHK":Exchange.SEHK,
-    "HKFE":Exchange.HKFE,
-    "BITMEX":Exchange.BITMEX,
-    "OKEX":Exchange.OKEX,
-    "HUOBI":Exchange.HUOBI,
-    "BITFINEX":Exchange.BITFINEX
+    "CFFEX": Exchange.CFFEX,
+    "SHFE": Exchange.SHFE,
+    "CZCE": Exchange.CZCE,
+    "DCE": Exchange.DCE,
+    "INE": Exchange.INE,
+    "SSE": Exchange.SSE,
+    "SZSE": Exchange.SZSE,
+    "SGE": Exchange.SGE,
+    "SMART": Exchange.SMART,
+    "NYMEX": Exchange.NYMEX,
+    "GLOBEX": Exchange.GLOBEX,
+    "IDEALPRO": Exchange.IDEALPRO,
+    "CME": Exchange.CME,
+    "ICE": Exchange.ICE,
+    "SEHK": Exchange.SEHK,
+    "HKFE": Exchange.HKFE,
+    "BITMEX": Exchange.BITMEX,
+    "OKEX": Exchange.OKEX,
+    "HUOBI": Exchange.HUOBI,
+    "BITFINEX": Exchange.BITFINEX
 }
+
 
 class Currency(Enum):
     """

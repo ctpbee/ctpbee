@@ -87,19 +87,32 @@ class Action(object):
             warn(f"{local_symbol}在{direction.value}上仓位不足")
             return []
         else:
-            # 判断是否为上期所 / whether the exchange is SHFE
-            if position.exchange.value != "SHFE":
+            # 判断是否为上期所或者能源交易所 / whether the exchange is SHFE or INE
+            if position.exchange.value not in app.config["TODAY_EXCHANGE"]:
                 return [[Offset.CLOSE, volume]]
-            # 那么先判断今仓数量是否满足volume /
-            td_volume = position.volume - position.yd_volume
-            if td_volume >= volume:
-                return [[Offset.CLOSETODAY, volume]]
-            else:
-                return [[Offset.CLOSETODAY, td_volume], [Offset.CLOSEYESTERDAY, volume - td_volume]]
+
+            if app.config["CLOSE_PATTERN"] == "today":
+                # 那么先判断今仓数量是否满足volume /
+                td_volume = position.volume - position.yd_volume
+                if td_volume >= volume:
+                    return [[Offset.CLOSETODAY, volume]]
+                else:
+                    return [[Offset.CLOSETODAY, td_volume], [Offset.CLOSEYESTERDAY, volume - td_volume]]
+            elif app.config["CLOSE_PATTERN"] == "yesterday":
+                if position.yd_volume >= volume:
+                    """如果昨仓数量要大于或者等于需要平仓数目 那么直接平昨"""
+                    return [[Offset.CLOSEYESTERDAY, volume]]
+                else:
+                    """如果昨仓数量要小于需要平仓数目 那么优先平昨再平今"""
+                    return [[Offset.CLOSETODAY, position.yd_volume],
+                            [Offset.CLOSEYESTERDAY, volume - position.yd_volume]]
 
     # 默认四个提供API的封装, 买多卖空等快速函数应该基于send_order进行封装 / default to provide four function
     @check(type="trader")
     def send_order(self, order, **kwargs):
+        # 发单 同时添加滑点
+        # todo:可能对于多种基础操作 需要自定义各种滑点---->
+        order.price = order.price + self.app.config['SLIPPAGE']
         return self.app.trader.send_order(order, **kwargs)
 
     @check(type="trader")
@@ -154,18 +167,19 @@ class Action(object):
 
 class CtpbeeApi(object):
     """
-    数据模块
-    策略模块
+    数据模块/策略模块 都是基于此实现的
         如果你要开发上述插件需要继承此抽象demo
         usage:
         ## coding:
-            class Processor(ApiAbstract):
+            class Processor(CtpbeeApi):
                 ...
 
             data_processor = Processor("data_processor", app)
                         or
             data_processor = Processor("data_processor")
             data_processor.init_app(app)
+                        or
+            app.add_extension(Process("data_processor"))
     """
 
     def __init__(self, extension_name, app=None):
@@ -173,7 +187,6 @@ class CtpbeeApi(object):
         init function
         :param name: extension name , 插件名字
         :param app: CtpBee 实例
-        :param api_type 针对几种API实行不同的优化措施
         """
         self.instrument_set: List or Set = set()
         self.extension_name = extension_name

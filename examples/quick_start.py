@@ -65,6 +65,7 @@ class RiskMe(RiskLevel):
     def realtime_check(self, cur):
         print(f"\r {self.app.recorder.get_all_positions()}", end="")
         # print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
+        self.action.cover
 
     def before_send_order(self) -> bool:
         """ 返回True不阻止任何操作 """

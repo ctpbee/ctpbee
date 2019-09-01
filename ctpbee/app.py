@@ -10,6 +10,7 @@ from werkzeug.datastructures import ImmutableDict
 
 from ctpbee import __version__
 from ctpbee.config import Config
+from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
 from ctpbee.event_engine import EventEngine, AsyncEngine
 from ctpbee.exceptions import ConfigError
@@ -47,9 +48,22 @@ class CtpBee(object):
         'fund_mode': False
     }
     default_config = ImmutableDict(
-        dict(LOG_OUTPUT=True, TD_FUNC=False, INTERFACE="ctp", MD_FUNC=True, XMIN=[], ALL_SUBSCRIBE=False,
-             SHARE_MD=False, ENGINE_METHOD="thread", LOOPER_SETTING=default_params, SHARED_FUNC=False,
-             REFRESH_INTERVAL=1.5, INSTRUMENT_INDEPEND=False))
+        dict(LOG_OUTPUT=True,  # 是否开启输出模式
+             TD_FUNC=False,  # 是否开启交易功能
+             INTERFACE="ctp",  # 接口参数，默认指定国内期货ctp
+             MD_FUNC=True,  # 是否开启行情功能
+             XMIN=[],  # k线序列周期， 支持一小时以内的k线任意生成
+             ALL_SUBSCRIBE=False,
+             SHARE_MD=False,  # 是否多账户之间共享行情，---> 等待完成
+             SLIPPAGE=0,  # 滑点设置
+             LOOPER_SETTING=default_params,  # 回测需要设置的参数
+             SHARED_FUNC=False,  # 分时图数据 --> 等待优化
+             REFRESH_INTERVAL=1.5,  # 定时刷新秒数， 需要在CtpBee实例化的时候将refresh设置为True才会生效
+             INSTRUMENT_INDEPEND=False,  # 是否开启独立行情，策略对应相应的行情
+             CLOSE_PATTERN="today",  # 面对支持平今的交易所，优先平今或者平昨 ---> today: 平今, yesterday: 平昨， 其他:处罚异常
+             TODAY_EXCHANGE=[Exchange.SHFE.value, Exchange.INE.value],  # 需要支持平今的交易所代码列表
+             ))
+
     config_class = Config
     import_name = None
 
@@ -233,8 +247,13 @@ class CtpBee(object):
             return os.path.splitext(os.path.basename(fn))[0]
         return self.import_name
 
-    def start(self, log_output=True):
-        """开始"""
+    def start(self, log_output=True, debug=False):
+        """
+        开启处理
+        :param log_output: 是否输出log信息
+        :param debug: 是否开启调试模式 ----> 等待完成
+        :return:
+        """
         if not self.event_engine.status:
             self.event_engine.start()
         self.config["LOG_OUTPUT"] = log_output
