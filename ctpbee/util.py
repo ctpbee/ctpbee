@@ -14,7 +14,6 @@ class RiskLevel:
 
     """
     app = None
-    mapping = {}
 
     def __init__(self, func=None):
         if func:
@@ -28,6 +27,10 @@ class RiskLevel:
         func = getattr(cls, "realtime_check")
         realtime_check = MethodType(func, cls)
         cls.app.event_engine.register(EVENT_TIMER, realtime_check)
+
+    @property
+    def action(self):
+        return self.app.action
 
     def __call__(self, *args, **kwargs):
         # check before execute

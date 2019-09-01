@@ -2,7 +2,6 @@ import warnings
 from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime
-from functools import wraps
 
 from ctpbee.constant import EVENT_TICK, EVENT_ORDER, EVENT_TRADE, EVENT_POSITION, EVENT_ACCOUNT, \
     EVENT_CONTRACT, EVENT_BAR, EVENT_LOG, EVENT_ERROR, EVENT_SHARED, EVENT_LAST, EVENT_INIT_FINISHED
@@ -11,8 +10,6 @@ from ctpbee.data_handle.local_position import LocalPositionManager
 from ctpbee.event_engine import Event
 from ctpbee.event_engine.engine import EVENT_TIMER
 from ctpbee.helpers import value_call, async_value_call
-
-
 
 
 class Recorder(object):
@@ -280,6 +277,7 @@ class Recorder(object):
             x = sorted(_, key=lambda x: x.open_interest, reverse=True)[0]
             result.append(x.local_symbol)
         return result
+
 
     def get_contract_last_price(self, local_symbol):
         """ 获取合约的最新价格 """
