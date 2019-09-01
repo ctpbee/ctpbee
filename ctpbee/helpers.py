@@ -172,7 +172,7 @@ def run_forever(app):
             running_me = False
         if running_me and not running_status:
             """ 到了该启动的时间但是没运行 """
-            app.recorder.clear()  # 清空记录器中所有的数据
+            app.recorder.clear_all()  # 清空记录器中所有的数据
             app.reload()   # 重载接口
             for x in app.extensions.keys():
                 app.enable_extension(x)
