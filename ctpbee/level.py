@@ -125,7 +125,7 @@ class Action(object):
 
     @check(type="trader")
     def query_account(self):
-        return self.app.trader.query_accont()
+        return self.app.trader.query_account()
 
     @check(type="trader")
     def transfer(self, req, type):
