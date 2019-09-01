@@ -145,12 +145,9 @@ class CtpBee(object):
             raise TypeError(f"更新action_class出现错误, 你传入的action_class类型为{type(action_class)}")
         self.action = action_class()
 
-    def add_risk_gateway(self, gateway_class, risk=True):
+    def add_risk_gateway(self, gateway_class):
         self.risk_gateway_class = gateway_class
         self.risk_gateway_class.update_app(self)
-        if risk:
-            self.send_order = self.risk_gateway_class(self.action.send_order)
-            self.cancel_order = self.risk_gateway_class(self.action.cancel_order)
 
     def make_config(self):
         """ 生成class类"""
