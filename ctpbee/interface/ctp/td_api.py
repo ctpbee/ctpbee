@@ -19,6 +19,7 @@ Notice : 神兽保佑 ，测试一次通过
 //          ┗━┻━┛   ┗━┻━┛
 //
 """
+import random
 from collections import defaultdict
 
 from ctpbee.constant import *
@@ -36,7 +37,6 @@ class BeeTdApi(TdApi):
         self.gateway_name = "ctp"
 
         self.reqid = 0
-        self.order_ref = 0
 
         self.connect_status = False
         self.login_status = False
@@ -56,6 +56,8 @@ class BeeTdApi(TdApi):
         self.order_data = []
         self.trade_data = []
         self.positions = {}
+
+        self.choices = list(range(50000, 1000000))
 
         self.symbol_exchange_mapping = {}
         self.sysid_orderid_map = {}
@@ -119,7 +121,6 @@ class BeeTdApi(TdApi):
         """"""
         order_ref = data["OrderRef"]
         order_id = f"{self.frontid}_{self.sessionid}_{order_ref}"
-
         symbol = data["InstrumentID"]
         exchange = symbol_exchange_map[symbol]
         order = OrderData(
@@ -475,11 +476,16 @@ class BeeTdApi(TdApi):
         self.reqid += 1
         self.reqQryDepthMarketData({}, self.reqid)
 
+    @property
+    def order_ref(self):
+        choice = random.choice(self.choices)
+        self.choices.remove(choice)
+        return choice
+
     def send_order(self, req: OrderRequest, **kwargs):
         """
         Send new order.
         """
-        self.order_ref += 1
 
         ctp_req = {
             "InstrumentID": req.symbol,

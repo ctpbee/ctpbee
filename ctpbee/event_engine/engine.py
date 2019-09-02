@@ -202,8 +202,9 @@ class AsyncEngine:
             await func(event)
 
     def register(self, type, func):
-        if not iscoroutinefunction(func):
-            raise TypeError("注册处理函数错误， 不是一个协程对象")
+        # print(func.__name__)
+        # if not iscoroutinefunction(func):
+        #     raise TypeError("注册处理函数错误， 不是一个协程对象")
         if func not in self._func[type]:
             self._func[type].append(func)
 

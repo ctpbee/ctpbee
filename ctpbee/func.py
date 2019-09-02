@@ -102,7 +102,7 @@ class Helper():
                                   price:float):
         """ 手动构造发单请求"""
         if "." in symbol:
-            symbol = symbol.split(".")[1]
+            symbol = symbol.split(".")[0]
 
         return OrderRequest(exchange=cls.exchange_map.get(exchange.upper()), symbol=symbol,
                             direction=cls.direction_map.get(direction.upper()),
@@ -113,20 +113,20 @@ class Helper():
     def generate_order_req_by_var(cls, symbol: str, exchange: Exchange, direction: Direction, offset: Offset,
                                   type: OrderType, volume, price:float):
         if "." in symbol:
-            symbol = symbol.split(".")[1]
+            symbol = symbol.split(".")[0]
         return OrderRequest(symbol=symbol, exchange=exchange, direction=direction, offset=offset, type=type,
                             volume=volume, price=price)
 
     @classmethod
     def generate_cancel_req_by_str(cls, symbol: str, exchange: str, order_id: str):
         if "." in symbol:
-            symbol = symbol.split(".")[1]
+            symbol = symbol.split(".")[0]
         return CancelRequest(symbol=symbol, exchange=cls.exchange_map.get(exchange), order_id=order_id)
 
     @classmethod
     def generate_cancel_req_by_var(cls, symbol: str, exchange: Exchange, order_id: str):
         if "." in symbol:
-            symbol = symbol.split(".")[1]
+            symbol = symbol.split(".")[0]
         return CancelRequest(symbol=symbol, exchange=exchange, order_id=order_id)
 
     @classmethod

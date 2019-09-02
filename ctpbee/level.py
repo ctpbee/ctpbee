@@ -107,7 +107,9 @@ class Action(object):
                     return [[Offset.CLOSETODAY, position.yd_volume],
                             [Offset.CLOSEYESTERDAY, volume - position.yd_volume]]
 
-    def cancel(self, order_id: Text, origin: [BarData, TickData, TradeData, OrderData, PositionData] = None, **kwargs):
+    def cancel(self, id: Text, origin: [BarData, TickData, TradeData, OrderData, PositionData] = None, **kwargs):
+        if "." in id:
+            orderid = id.split(".")[1]
         if origin is None:
             exchange = kwargs.get("exchange")
             if isinstance(exchange, Exchange):
@@ -116,8 +118,18 @@ class Action(object):
         elif origin:
             exchange = origin.exchange.value
             local_symbol = origin.local_symbol
-        return self.cancel_order(
-            helper.generate_cancel_req_by_str(order_id=order_id, exchange=exchange, symbol=local_symbol))
+
+        if origin is None and len(kwargs) == 0:
+            """ 如果两个都不传"""
+            order = self.app.recorder.get_order(id)
+            if not order:
+                print("找不到订单啦... 撤不了哦")
+                return None
+            exchange = order.exchange.value
+            local_symbol = order.local_symbol
+
+        req = helper.generate_cancel_req_by_str(order_id=orderid, exchange=exchange, symbol=local_symbol)
+        return self.cancel_order(req)
 
     # 默认四个提供API的封装, 买多卖空等快速函数应该基于send_order进行封装 / default to provide four function
     @check(type="trader")

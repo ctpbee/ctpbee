@@ -1,5 +1,6 @@
 # coding:utf-8
 import os
+import random
 import sys
 from inspect import ismethod
 from threading import Thread
@@ -18,6 +19,57 @@ from ctpbee.helpers import locked_cached_property, find_package, run_forever, re
 from ctpbee.interface import Interface
 from ctpbee.level import CtpbeeApi, Action
 from ctpbee.record import Recorder, AsyncRecorder
+
+
+def graphic_pattern(version, work_mode, engine_method):
+    first = f"""                                                            
+               @             @                           
+                )           (                                 
+            #####################                               
+          ##                     ##                            
+         ##                       ##                                                  
+        ##   ctpbee   :{version.ljust(12, ' ')}##                          
+        ##   work_mode:{work_mode.ljust(12, ' ')}##                          
+        ##   engine   :{engine_method.ljust(12, ' ')}##                          
+         ##                       ##                          
+          ++++++++    +    ++++++++                      
+       (|||||||||| + +++ + ||||||||||)                          
+          +++++++ +++++++++ +++++++                            
+                   +++++++
+                      T                                        
+        """
+
+    second = f"""             
+         @@@                     @@@                             
+            @@                 @@                              
+              @               @                                 
+          +#######################+                            
+         ##                       ##                                                  
+         ##  ctpbee:    {version.ljust(10, ' ')}##                          
+         ##  work_mode: {work_mode.ljust(10, ' ')}##                          
+         ##  engine:    {engine_method.ljust(10, ' ')}##                          
+         ##                       ##                          
+          ++++++++    +    ++++++++                      
+       (|||||||||| + +++ + ||||||||||)                          
+          +++++++ +++++++++ +++++++                            
+                   +++++++
+                      T                                        
+        """
+    three = f"""
+    {"*" * 60}                                                               
+    *                                                          *
+    *          -------------------------------------           *
+    *          |                                   |           *
+    *          |      ctpbee:    {version.ljust(16, " ")}  |           *
+    *          |      work_mode: {work_mode.ljust(16, " ")}  |           *
+    *          |      engine:    {engine_method.ljust(16, " ")}  |           *
+    *          |                                   |           *
+    *          -------------------------------------           *
+    *                                                          *
+    {"*" * 60}                       
+             """
+
+    return random.choice([first, second, three])
 
 
 class CtpBee(object):
@@ -189,20 +241,7 @@ class CtpBee(object):
                 self.trader = TdApi(self.event_engine)
             self.trader.connect(info)
 
-        show_me = \
-            f"""
-{"*" * 60}                                                               
-*                                                          *
-*          -------------------------------------           *
-*          |                                   |           *
-*          |      ctpbee:    {__version__.ljust(16, " ")}  |           *
-*          |      work_mode: {self.work_mode.ljust(16, " ")}  |           *
-*          |      engine:    {self.engine_method.ljust(16, " ")}  |           *
-*          |                                   |           *
-*          -------------------------------------           *
-*                                                          *
-{"*" * 60}                       
-         """
+        show_me = graphic_pattern(__version__, self.work_mode, self.engine_method)
         print(show_me)
 
         # 检查work_mode

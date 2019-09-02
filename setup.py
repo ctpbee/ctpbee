@@ -119,7 +119,7 @@ pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.d
 install_requires = ['flask>=1.1.1', "blinker", "dataclasses", "requests", "simplejson", "lxml", "pandas"]
 setup(
     name='ctpbee',
-    version='0.28',
+    version='0.29',
     description="Easy ctp trade and market support",
     author='somewheve',
     author_email='somewheve@gmail.com',

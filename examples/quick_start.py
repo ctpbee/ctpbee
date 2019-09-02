@@ -1,4 +1,5 @@
 from datetime import datetime
+from time import sleep
 
 from ctpbee import Action
 from ctpbee import CtpBee
@@ -63,9 +64,10 @@ class RiskMe(RiskLevel):
     """
 
     def realtime_check(self, cur):
-        print(f"\r {self.app.recorder.get_all_positions()}", end="")
         # print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
-        self.action.cover
+        # print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
+        # self.action.cover
+        pass
 
     def before_send_order(self) -> bool:
         """ 返回True不阻止任何操作 """
@@ -87,6 +89,8 @@ class DataRecorder(CtpbeeApi):
         super().__init__(name, app)
         self.instrument_set = set(["ag1912.SHFE"])
 
+        self.comming_in = None
+
     def on_trade(self, trade):
         pass
 
@@ -96,7 +100,7 @@ class DataRecorder(CtpbeeApi):
             self.app.subscribe(contract.local_symbol)
 
     def on_order(self, order):
-        pass
+        """ """
 
     def on_position(self, position: PositionData) -> None:
         pass
@@ -111,8 +115,13 @@ class DataRecorder(CtpbeeApi):
 
     def on_bar(self, bar):
         """bar process function"""
-        print("执行平仓操作")
-        self.action.cover(bar.high_price, 5, bar)
+        if not self.flag:
+            ids = self.action.short(bar.high_price + 10, 1, bar)
+            print(f"我发单了 单号{ids}")
+            self.comming_in = ids
+            self.flag = True
+
+        # self.action.cancel("ctp.1_-623574207_936559")
 
     def on_shared(self, shared):
         """ 处理分时图数据 """
@@ -124,11 +133,11 @@ class DataRecorder(CtpbeeApi):
 
     def on_realtime(self, timed: datetime):
         """  """
-        # print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
 
     def on_init(self, init):
+        print("初始化")
         if init:
-            pass
+            self.flag = False
             # print("初始化完成")
             # 获取主力合约
             # main_contract = self.app.recorder.get_main_contract_by_code("ap")
@@ -152,10 +161,10 @@ def go():
             "userid": "089131",
             "password": "350888",
             "brokerid": "9999",
-            "md_address": "tcp://180.168.146.187:10131",
-            "td_address": "tcp://180.168.146.187:10130",
-            # "md_address": "tcp://218.202.237.33:10112",
-            # "td_address": "tcp://218.202.237.33:10102",
+            # "md_address": "tcp://180.168.146.187:10131",
+            # "td_address": "tcp://180.168.146.187:10130",
+            "md_address": "tcp://218.202.237.33:10112",
+            "td_address": "tcp://218.202.237.33:10102",
             # "md_address": "tcp://180.168.146.187:10110",
             # "td_address": "tcp://180.168.146.187:10100",
             # "md_address": "tcp://180.168.146.187:10111",

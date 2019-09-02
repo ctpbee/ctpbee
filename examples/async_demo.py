@@ -1,8 +1,77 @@
 import asyncio
 
-from ctpbee import CtpBee
+from ctpbee import AsyncApi
+from ctpbee import CtpBee, RiskLevel
 from ctpbee.constant import PositionData, AccountData, LogData
-from ctpbee.func import AsyncApi
+
+
+class RiskMe(RiskLevel):
+    """
+        约定 1. before_** 函数中 都需要返回True/False, 用于是否阻断操作
+            2. 被装饰的函数必须返回一个结果  -->这个值会被传入到after_**函数中
+            3. after_** 函数必须接受一个参数， 用于知晓执行函数的结果
+
+        你在任何你想要操作的层中 通过func = self.app.risk_gateway_class(func) 执行主动添加事前和事后风控, 但是前提是你需要写好对应的处理函数
+
+        for example:
+        在你策略代码中
+        class MyStrategy(CtpbeeApi):
+
+            def __init__(self, name, app=None):
+                super().__init__(name, app)
+                # 主动对buy操作添加一个风控
+                self.buy = self.app.risk_gateway_class(self.buy)
+
+            def buy(self, *args, **kwargs)
+                # 函数最后需要返回一个结果
+                return True
+
+
+        在你风控代码中与此同时也要实现对bug的两个操作
+        class Risk(RiskLevel):
+            def before_buy(self):
+                pass
+
+            def after_buy(self, result):
+                pass
+
+        在你的启动代码中
+            ....
+        app.add_risk_gateway(Risk)
+        strategy = MyStrategy("fly_into_sky", app)
+        app.start()
+
+        特别注意：
+            1, 如果你想在你的策略代码想使用风控， 在你载入策略之前必须先通过app.add_risk_gateway(Risk， risk=False) 将风控代码载入进去，风控在运行的时候能够通过
+                self.app 访问所有你想要的数据
+            2, add_risk_gateway的参数risk默认为True将对发单和撤单进行风控检查, 你需要在Risk里面实现before_send_order, before_cancel_order,
+                                                                    after_cancel_order, after_send_order等四个方法.反之不用
+            3. realtime_check(self): 是一直在运行的函数, 一秒一次
+
+    """
+
+    def realtime_check(self, cur):
+        # print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
+        # print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
+        # self.action.cover
+        x = self.app.recorder.get_all_active_orders()
+        for i in x:
+            print(f"我要发起撤单了 单号:{i.local_order_id}")
+            self.action.cancel(i.local_order_id)
+
+    def before_send_order(self) -> bool:
+        """ 返回True不阻止任何操作 """
+        return True
+
+    def before_cancel_order(self) -> bool:
+        """ 返回True不阻止任何操作 """
+        return True
+
+    def after_cancel_order(self, result):
+        """ 撤单之后 """
+
+    def after_send_order(self, result):
+        """ 发单之后 """
 
 
 class DataRecorder(AsyncApi):
@@ -18,7 +87,7 @@ class DataRecorder(AsyncApi):
         # self.app.subscribe(contract.symbol)
 
         # 或者 单独制定
-        if contract.symbol in self.subscribe_set:
+        if contract.symbol in self.instrument_set:
             self.app.subscribe(contract.symbol)
             # 或者
             # current_app.subscribe(contract.symbol)
@@ -56,7 +125,7 @@ class DataRecorder(AsyncApi):
 
 
 def go():
-    app = CtpBee("last", __name__, "async")
+    app = CtpBee("last", __name__, engine_method="async")
     info = {
         "CONNECT_INFO": {
             "userid": "089131",
@@ -81,6 +150,7 @@ def go():
 
     """
     app.config.from_mapping(info)
+    app.add_risk_gateway(RiskMe)
 
     """ 
         载入用户层定义层 你可以编写多个继承CtpbeeApi ,然后实例化它, 记得传入app, 当然你可以通过app.remove_extension("data_recorder")
@@ -91,7 +161,6 @@ def go():
 
     """ 启动 """
     app.start()
-
 
 if __name__ == '__main__':
     go()

@@ -1,5 +1,5 @@
 """ 工具函数 """
-
+import asyncio
 import os
 import pkgutil
 import sys
@@ -173,7 +173,7 @@ def run_forever(app):
         if running_me and not running_status:
             """ 到了该启动的时间但是没运行 """
             app.recorder.clear_all()  # 清空记录器中所有的数据
-            app.reload()   # 重载接口
+            app.reload()  # 重载接口
             for x in app.extensions.keys():
                 app.enable_extension(x)
             print(f"重新进行自动登录， 时间: {str(current_time)}")
