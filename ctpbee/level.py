@@ -57,7 +57,7 @@ class Action(object):
         req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.LONG,
                                                      type=OrderType.LIMIT, exchange=origin.exchange,
                                                      symbol=origin.symbol) for x in
-                    self.get_req(origin.symbol, Direction.SHORT, volume, self.app)]
+                    self.get_req(origin.local_symbol, Direction.SHORT, volume, self.app)]
 
         return [self.send_order(req) for req in req_list]
 
