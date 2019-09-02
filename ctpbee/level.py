@@ -1,10 +1,10 @@
 from datetime import datetime
-from typing import Set, List, AnyStr
+from typing import Set, List, AnyStr, Text
 from warnings import warn
 
 from ctpbee.constant import EVENT_INIT_FINISHED, EVENT_TICK, EVENT_BAR, EVENT_ORDER, EVENT_SHARED, EVENT_TRADE, \
     EVENT_POSITION, EVENT_ACCOUNT, EVENT_CONTRACT, EVENT_LOG, OrderData, SharedData, BarData, TickData, TradeData, \
-    PositionData, AccountData, ContractData, LogData, Offset, Direction, OrderType
+    PositionData, AccountData, ContractData, LogData, Offset, Direction, OrderType, Exchange
 from ctpbee.event_engine.engine import EVENT_TIMER, Event
 from ctpbee.func import helper
 from ctpbee.helpers import check
@@ -106,6 +106,18 @@ class Action(object):
                     """如果昨仓数量要小于需要平仓数目 那么优先平昨再平今"""
                     return [[Offset.CLOSETODAY, position.yd_volume],
                             [Offset.CLOSEYESTERDAY, volume - position.yd_volume]]
+
+    def cancel(self, order_id: Text, origin: [BarData, TickData, TradeData, OrderData, PositionData] = None, **kwargs):
+        if origin is None:
+            exchange = kwargs.get("exchange")
+            if isinstance(exchange, Exchange):
+                exchange = exchange.value
+            local_symbol = kwargs.get("local_symbol")
+        elif origin:
+            exchange = origin.exchange.value
+            local_symbol = origin.local_symbol
+        return self.cancel_order(
+            helper.generate_cancel_req_by_str(order_id=order_id, exchange=exchange, symbol=local_symbol))
 
     # 默认四个提供API的封装, 买多卖空等快速函数应该基于send_order进行封装 / default to provide four function
     @check(type="trader")
