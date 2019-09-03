@@ -78,7 +78,7 @@ class PositionHolding:
         self.short_stare_pnl = 0
         self.short_price = 0
 
-        self.long_pos_froze = 0
+        self.long_pos_frozen = 0
         self.long_yd_frozen = 0
         self.long_td_frozen = 0
 
