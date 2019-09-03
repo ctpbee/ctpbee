@@ -118,7 +118,7 @@ class DataRecorder(CtpbeeApi):
 
     def on_bar(self, bar):
         """bar process function"""
-        ids = self.action.short(bar.high_price, 1, bar)
+        ids = self.action.sell(bar.high_price, 1, bar)
         print(ids)
         self.id = ids
 
@@ -132,8 +132,8 @@ class DataRecorder(CtpbeeApi):
 
     def on_realtime(self, timed: datetime):
         """  """
-        for x in self.app.recorder.get_all_active_orders():
-            self.action.cancel(x.local_order_id)
+        # for x in self.app.recorder.get_all_active_orders():
+        #     self.action.cancel(x.local_order_id)
 
     def on_init(self, init):
         print("初始化")
