@@ -2,7 +2,6 @@ import types
 from functools import wraps
 from types import MethodType
 
-from ctpbee import Action
 from ctpbee.constant import EVENT_LOG
 from ctpbee.event_engine import Event
 from ctpbee.event_engine.engine import EVENT_TIMER
@@ -16,9 +15,9 @@ class RiskLevel:
     """
     app = None
     action = None
-    def __init__(self, func=None):
-        if func:
-            wraps(func)(self)
+
+    def __init__(self, func):
+        wraps(func)(self)
 
     @classmethod
     def update_app(cls, app):
@@ -29,13 +28,13 @@ class RiskLevel:
         realtime_check = MethodType(func, cls)
         cls.app.event_engine.register(EVENT_TIMER, realtime_check)
 
-
     def __call__(self, *args, **kwargs):
         # check before execute
+        print("调用了", self.__wrapped__.__name__)
         result = None
         fr_func = getattr(self, f"before_{self.__wrapped__.__name__}", None)
         if fr_func:
-            result = fr_func()
+            result = fr_func(*args, **kwargs)
         if not result:
             self.log("事前检查失败, 放弃此次操作")
         else:

@@ -1,6 +1,5 @@
 # coding:utf-8
 import os
-import random
 import sys
 from inspect import ismethod
 from threading import Thread
@@ -15,61 +14,10 @@ from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
 from ctpbee.event_engine import EventEngine, AsyncEngine
 from ctpbee.exceptions import ConfigError
-from ctpbee.helpers import locked_cached_property, find_package, run_forever, refresh_query
+from ctpbee.helpers import locked_cached_property, find_package, run_forever, refresh_query, graphic_pattern
 from ctpbee.interface import Interface
 from ctpbee.level import CtpbeeApi, Action
 from ctpbee.record import Recorder, AsyncRecorder
-
-
-def graphic_pattern(version, work_mode, engine_method):
-    first = f"""                                                            
-               @             @                           
-                )           (                                 
-            #####################                               
-          ##                     ##                            
-         ##                       ##                                                  
-        ##   ctpbee   :{version.ljust(12, ' ')}##                          
-        ##   work_mode:{work_mode.ljust(12, ' ')}##                          
-        ##   engine   :{engine_method.ljust(12, ' ')}##                          
-         ##                       ##                          
-          ++++++++    +    ++++++++                      
-       (|||||||||| + +++ + ||||||||||)                          
-          +++++++ +++++++++ +++++++                            
-                   +++++++
-                      T                                        
-        """
-
-    second = f"""             
-         @@@                     @@@                             
-            @@                 @@                              
-              @               @                                 
-          +#######################+                            
-         ##                       ##                                                  
-         ##  ctpbee:    {version.ljust(10, ' ')}##                          
-         ##  work_mode: {work_mode.ljust(10, ' ')}##                          
-         ##  engine:    {engine_method.ljust(10, ' ')}##                          
-         ##                       ##                          
-          ++++++++    +    ++++++++                      
-       (|||||||||| + +++ + ||||||||||)                          
-          +++++++ +++++++++ +++++++                            
-                   +++++++
-                      T                                        
-        """
-    three = f"""
-    {"*" * 60}                                                               
-    *                                                          *
-    *          -------------------------------------           *
-    *          |                                   |           *
-    *          |      ctpbee:    {version.ljust(16, " ")}  |           *
-    *          |      work_mode: {work_mode.ljust(16, " ")}  |           *
-    *          |      engine:    {engine_method.ljust(16, " ")}  |           *
-    *          |                                   |           *
-    *          -------------------------------------           *
-    *                                                          *
-    {"*" * 60}                       
-             """
-
-    return random.choice([first, second, three])
 
 
 class CtpBee(object):
@@ -136,13 +84,30 @@ class CtpBee(object):
 
     def __init__(self, name: Text, import_name, action_class: Action = None, engine_method: str = "thread",
                  work_mode="limit_time",
-                 refresh: bool = False,
+                 refresh: bool = False, risk=None,
                  instance_path=None):
         """ 初始化 """
         self.name = name
         self.import_name = import_name
         self.engine_method = engine_method
         self.refresh = refresh
+        if engine_method == "thread":
+            self.event_engine = EventEngine()
+            self.recorder = Recorder(self, self.event_engine)
+        elif engine_method == "async":
+            self.event_engine = AsyncEngine()
+            self.recorder = AsyncRecorder(self, self.event_engine)
+        else:
+            raise TypeError("引擎参数错误，只支持 thread 和 async，请检查代码")
+
+        """
+              If no risk is specified by default, set the risk_decorator to None
+              如果默认不指定action参数， 那么使用设置风控装饰器为空
+              """
+        if risk is None:
+            self.risk_decorator = None
+        else:
+            self.risk_decorator = risk
         """
         If no action is specified by default, use the default Action class
         如果默认不指定action参数， 那么使用默认的Action类 
@@ -155,6 +120,12 @@ class CtpBee(object):
         根据action里面的函数更新到CtpBee上面来
         bind the function of action to CtpBee
         """
+
+        """ update """
+        if self.risk_decorator is not None:
+            print(self.risk_decorator)
+            self.risk_decorator.update_app(self)
+
         for x in dir(self.action):
             func = getattr(self.action, x)
             if x.startswith("__"):
@@ -162,17 +133,11 @@ class CtpBee(object):
             if ismethod(func):
                 setattr(self, func.__name__, func)
         """
-        If engine_method is specified by default, use the default EventEngine and Recorder or use the engine and recorder according to your choice
+        If engine_method is specified by default, use the default EventEngine and Recorder or use the engine
+            and recorder basis on your choice
         如果不指定engine_method参数，那么使用默认的事件引擎 或者根据你的参数使用不同的引擎和记录器
         """
-        if engine_method == "thread":
-            self.event_engine = EventEngine()
-            self.recorder = Recorder(self, self.event_engine)
-        elif engine_method == "async":
-            self.event_engine = AsyncEngine()
-            self.recorder = AsyncRecorder(self, self.event_engine)
-        else:
-            raise TypeError("引擎参数错误，只支持 thread 和 async，请检查代码")
+
         if instance_path is None:
             instance_path = self.auto_find_instance_path()
         elif not os.path.isabs(instance_path):
@@ -180,7 +145,6 @@ class CtpBee(object):
                 'If an instance path is provided it must be absolute.'
                 ' A relative path was given instead.'
             )
-        self.risk_gateway_class = None
         self.instance_path = instance_path
         self.config = self.make_config()
         self.init_finished = False
@@ -200,9 +164,9 @@ class CtpBee(object):
             raise TypeError(f"更新action_class出现错误, 你传入的action_class类型为{type(action_class)}")
         self.action = action_class()
 
-    def add_risk_gateway(self, gateway_class):
-        self.risk_gateway_class = gateway_class
-        self.risk_gateway_class.update_app(self)
+    def update_risk_gateway(self, gateway_class):
+        self.risk_decorator = gateway_class
+        self.risk_decorator.update_app(self)
 
     def make_config(self):
         """ 生成class类"""

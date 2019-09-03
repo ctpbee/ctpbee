@@ -150,7 +150,7 @@ def go():
 
     """
     app.config.from_mapping(info)
-    app.add_risk_gateway(RiskMe)
+    app.update_risk_gateway(RiskMe)
 
     """ 
         载入用户层定义层 你可以编写多个继承CtpbeeApi ,然后实例化它, 记得传入app, 当然你可以通过app.remove_extension("data_recorder")

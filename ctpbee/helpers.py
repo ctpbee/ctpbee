@@ -1,7 +1,7 @@
 """ 工具函数 """
-import asyncio
 import os
 import pkgutil
+import random
 import sys
 import types
 import warnings
@@ -110,7 +110,58 @@ def check(type: AnyStr):
     return midlle
 
 
-def dynamic_loading_api(f1):
+def graphic_pattern(version, work_mode, engine_method):
+    first = f"""                                                            
+               @             @                           
+                )           (                                 
+            #####################                               
+          ##                     ##                            
+         ##                       ##                                                  
+        ##   ctpbee   :{version.ljust(12, ' ')}##                          
+        ##   work_mode:{work_mode.ljust(12, ' ')}##                          
+        ##   engine   :{engine_method.ljust(12, ' ')}##                          
+         ##                       ##                          
+          ++++++++    +    ++++++++                      
+       (|||||||||| + +++ + ||||||||||)                          
+          +++++++ +++++++++ +++++++                            
+                   +++++++
+                      T                                        
+        """
+
+    second = f"""             
+         @@@                     @@@                             
+            @@                 @@                              
+              @               @                                 
+          +#######################+                            
+         ##                       ##                                                  
+         ##  ctpbee:    {version.ljust(10, ' ')}##                          
+         ##  work_mode: {work_mode.ljust(10, ' ')}##                          
+         ##  engine:    {engine_method.ljust(10, ' ')}##                          
+         ##                       ##                          
+          ++++++++    +    ++++++++                      
+       (|||||||||| + +++ + ||||||||||)                          
+          +++++++ +++++++++ +++++++                            
+                   +++++++
+                      T                                        
+        """
+    three = f"""
+    {"*" * 60}                                                               
+    *                                                          *
+    *          -------------------------------------           *
+    *          |                                   |           *
+    *          |      ctpbee:    {version.ljust(16, " ")}  |           *
+    *          |      work_mode: {work_mode.ljust(16, " ")}  |           *
+    *          |      engine:    {engine_method.ljust(16, " ")}  |           *
+    *          |                                   |           *
+    *          -------------------------------------           *
+    *                                                          *
+    {"*" * 60}                       
+             """
+
+    return random.choice([first, second, three])
+
+
+def dynamic_loading_api(f):
     """
     f 是文件流
     主要是用来通过文件动态载入策略。 返回策略类的实例， 应该通过Ctpbee.add_extension() 加以载入

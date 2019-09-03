@@ -8,13 +8,10 @@ from ctpbee.constant import PositionData, AccountData, LogData
 
 
 class ActionMe(Action):
-    pass
-    # def buy(self, **kwargs):
-    #     print("我执行了买多操作")
-    #
-    # def sell(self):
-    #     print("我执行了卖空操作")
-    #     pass
+
+    def __init__(self, app):
+        super().__init__(app)
+        self.add_risk_check(self.short)
 
 
 class RiskMe(RiskLevel):
@@ -63,9 +60,6 @@ class RiskMe(RiskLevel):
     """
 
     def realtime_check(self, cur):
-        # print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
-        # print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
-        # self.action.cover
         pass
 
     def before_send_order(self) -> bool:
@@ -81,6 +75,15 @@ class RiskMe(RiskLevel):
 
     def after_send_order(self, result):
         """ 发单之后 """
+
+    def before_short(self, *args, **kwargs):
+        """"""
+        print("发单")
+        return True
+
+    def after_short(self, result):
+        # print(result)
+        pass
 
 
 class DataRecorder(CtpbeeApi):
@@ -118,7 +121,7 @@ class DataRecorder(CtpbeeApi):
 
     def on_bar(self, bar):
         """bar process function"""
-        ids = self.action.sell(bar.high_price, 1, bar)
+        ids = self.action.short(bar.high_price, 1, bar)
         print(ids)
         self.id = ids
 
@@ -132,8 +135,8 @@ class DataRecorder(CtpbeeApi):
 
     def on_realtime(self, timed: datetime):
         """  """
-        # for x in self.app.recorder.get_all_active_orders():
-        #     self.action.cancel(x.local_order_id)
+        for x in self.app.recorder.get_all_active_orders():
+            self.action.cancel(x.local_order_id)
 
     def on_init(self, init):
         print("初始化")
@@ -155,7 +158,7 @@ class DataRecorder(CtpbeeApi):
 
 
 def go():
-    app = CtpBee("last", __name__, action_class=ActionMe)
+    app = CtpBee("last", __name__, action_class=ActionMe, risk=RiskMe)
 
     """ 
         载入配置信息 
@@ -167,9 +170,10 @@ def go():
         data_recorder 就是下面传入的插件名字
       
     """
-    app.add_risk_gateway(RiskMe)
+    app.update_risk_gateway(RiskMe)
 
-    data_recorder = DataRecorder("data_recorder", app)
+    data_recorder = DataRecorder("data_recorder")
+    app.add_extension(data_recorder)
 
     """ 添加自定义的风控 """
 
