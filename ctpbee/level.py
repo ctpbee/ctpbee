@@ -6,6 +6,7 @@ from ctpbee.constant import EVENT_INIT_FINISHED, EVENT_TICK, EVENT_BAR, EVENT_OR
     EVENT_POSITION, EVENT_ACCOUNT, EVENT_CONTRACT, EVENT_LOG, OrderData, SharedData, BarData, TickData, TradeData, \
     PositionData, AccountData, ContractData, LogData, Offset, Direction, OrderType, Exchange
 from ctpbee.event_engine.engine import EVENT_TIMER, Event
+from ctpbee.exceptions import ConfigError
 from ctpbee.func import helper
 from ctpbee.helpers import check
 
@@ -34,6 +35,11 @@ class Action(object):
         """
         开仓 多头
         """
+
+        if not isinstance(self.app.config['SLIPPAGE_BUY'], float) and not isinstance(
+                self.app.config['SLIPPAGE_BUY'], int):
+            raise ConfigError(message="滑点配置应为浮点小数或者整数")
+        price = price + self.app.config['SLIPPAGE_BUY']
         req = helper.generate_order_req_by_var(volume=volume, price=price, offset=Offset.OPEN, direction=Direction.LONG,
                                                type=OrderType.LIMIT, exchange=origin.exchange, symbol=origin.symbol)
         return self.send_order(req)
@@ -44,6 +50,10 @@ class Action(object):
          开仓 空头
         """
 
+        if not isinstance(self.app.config['SLIPPAGE_SHORT'], float) and not isinstance(
+                self.app.config['SLIPPAGE_SHORT'], int):
+            raise ConfigError(message="滑点配置应为浮点小数")
+        price = price + self.app.config['SLIPPAGE_SHORT']
         req = helper.generate_order_req_by_var(volume=volume, price=price, offset=Offset.OPEN,
                                                direction=Direction.SHORT,
                                                type=OrderType.LIMIT, exchange=origin.exchange, symbol=origin.symbol)
@@ -52,8 +62,10 @@ class Action(object):
     def sell(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData] = None,
              stop: bool = False, lock: bool = False, **kwargs):
         """ 平空头 """
-        # todo 根据exchange和symbol找到仓位， 判断当前仓位是否满足可以平仓，同时判断平今和平昨，优先平今
-
+        if not isinstance(self.app.config['SLIPPAGE_SELL'], float) and not isinstance(
+                self.app.config['SLIPPAGE_SELL'], int):
+            raise ConfigError(message="滑点配置应为浮点小数")
+        price = price + self.app.config['SLIPPAGE_SELL']
         req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.LONG,
                                                      type=OrderType.LIMIT, exchange=origin.exchange,
                                                      symbol=origin.symbol) for x in
@@ -66,6 +78,10 @@ class Action(object):
         """
         平多头
         """
+        if not isinstance(self.app.config['SLIPPAGE_COVER'], float) and not isinstance(
+                self.app.config['SLIPPAGE_COVER'], int):
+            raise ConfigError(message="滑点配置应为浮点小数")
+        price = price + self.app.config['SLIPPAGE_COVER']
         req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.SHORT,
                                                      type=OrderType.LIMIT, exchange=origin.exchange,
                                                      symbol=origin.symbol) for x in
@@ -134,9 +150,6 @@ class Action(object):
     # 默认四个提供API的封装, 买多卖空等快速函数应该基于send_order进行封装 / default to provide four function
     @check(type="trader")
     def send_order(self, order, **kwargs):
-        # 发单 同时添加滑点
-        # todo:可能对于多种基础操作 需要自定义各种滑点---->
-        order.price = order.price + self.app.config['SLIPPAGE']
         return self.app.trader.send_order(order, **kwargs)
 
     @check(type="trader")

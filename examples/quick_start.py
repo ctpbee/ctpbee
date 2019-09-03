@@ -4,7 +4,7 @@ from ctpbee import Action
 from ctpbee import CtpBee
 from ctpbee import CtpbeeApi
 from ctpbee import RiskLevel
-from ctpbee.constant import PositionData, AccountData, LogData, Status
+from ctpbee.constant import PositionData, AccountData, LogData
 
 
 class ActionMe(Action):
@@ -103,7 +103,7 @@ class DataRecorder(CtpbeeApi):
     def on_order(self, order):
         """ """
         # if order.status == Status.CANCELLED or order.status == Status.ALLTRADED:
-            # assert self.id == order.local_order_id
+        # assert self.id == order.local_order_id
 
     def on_position(self, position: PositionData) -> None:
         pass
@@ -118,7 +118,7 @@ class DataRecorder(CtpbeeApi):
 
     def on_bar(self, bar):
         """bar process function"""
-        ids = self.action.short(bar.high_price + 10, 1, bar)
+        ids = self.action.short(bar.high_price, 1, bar)
         print(ids)
         self.id = ids
 
@@ -132,9 +132,8 @@ class DataRecorder(CtpbeeApi):
 
     def on_realtime(self, timed: datetime):
         """  """
-        # for x in
-        print(f"\r{self.app.recorder.get_all_active_orders()}", end="")
-
+        for x in self.app.recorder.get_all_active_orders():
+            self.action.cancel(x.local_order_id)
 
     def on_init(self, init):
         print("初始化")
@@ -179,7 +178,8 @@ def go():
         "TD_FUNC": True,
         "MD_FUNC": True,
         "REFRESH_INTERVAL": 3,
-        "INSTRUMENT_INDEPEND": False
+        "INSTRUMENT_INDEPEND": False,
+        "SLIPPAGE_SHORT": 1
     }
 
     """ 

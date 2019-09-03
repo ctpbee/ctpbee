@@ -107,7 +107,10 @@ class CtpBee(object):
              XMIN=[],  # k线序列周期， 支持一小时以内的k线任意生成
              ALL_SUBSCRIBE=False,
              SHARE_MD=False,  # 是否多账户之间共享行情，---> 等待完成
-             SLIPPAGE=0,  # 滑点设置
+             SLIPPAGE_COVER=0,  # 平多头滑点设置
+             SLIPPAGE_SELL=0,  # 平空头滑点设置
+             SLIPPAGE_SHORT=0,  # 卖空滑点设置
+             SLIPPAGE_BUY=0,  # 买多滑点设置
              LOOPER_SETTING=default_params,  # 回测需要设置的参数
              SHARED_FUNC=False,  # 分时图数据 --> 等待优化
              REFRESH_INTERVAL=1.5,  # 定时刷新秒数， 需要在CtpBee实例化的时候将refresh设置为True才会生效
