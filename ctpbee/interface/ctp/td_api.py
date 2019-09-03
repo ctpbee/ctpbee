@@ -111,6 +111,7 @@ class BeeTdApi(TdApi):
                 "InvestorID": self.userid
             }
             self.reqid += 1
+
             self.reqSettlementInfoConfirm(req, self.reqid)
         else:
             self.login_failed = True
@@ -152,7 +153,6 @@ class BeeTdApi(TdApi):
         Callback of settlment info confimation.
         """
         self.on_event(type=EVENT_LOG, data="结算信息确认成功")
-
         self.reqid += 1
         self.reqQryInstrument({}, self.reqid)
 
@@ -297,6 +297,7 @@ class BeeTdApi(TdApi):
             gateway_name=self.gateway_name
         )
         self.on_event(type=EVENT_ORDER, data=order)
+        print(order)
 
         self.sysid_orderid_map[data["OrderSysID"]] = order_id
 
@@ -340,7 +341,7 @@ class BeeTdApi(TdApi):
         if not self.connect_status:
             path = get_folder_path(self.gateway_name.lower() + f"/{self.userid}")
             self.createFtdcTraderApi(str(path) + "\\Td")
-            self.subscribePrivateTopic(0)
+            self.subscribePrivateTopic(1)
             self.subscribePublicTopic(0)
             self.registerFront(info.get("td_address"))
             self.init()
@@ -521,8 +522,7 @@ class BeeTdApi(TdApi):
         self.reqOrderInsert(ctp_req, self.reqid)
         order_id = f"{self.frontid}_{self.sessionid}_{self.order_ref}"
         order = req._create_order_data(order_id, self.gateway_name)
-        self.on_event(type=EVENT_ORDER, data=order)
-
+        # self.on_event(type=EVENT_ORDER, data=order)
         return order.local_order_id
 
     def cancel_order(self, req: CancelRequest, **kwargs):
@@ -976,7 +976,7 @@ class BeeTdApiApp(TdApiApp):
 
         order_id = f"{self.frontid}_{self.sessionid}_{self.order_ref}"
         order = req._create_order_data(order_id, self.gateway_name)
-        self.on_event(type=EVENT_ORDER, data=order)
+        # self.on_event(type=EVENT_ORDER, data=order)
 
         return order.vt_orderid
 
