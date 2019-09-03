@@ -19,7 +19,6 @@ Notice : 神兽保佑 ，测试一次通过
 //          ┗━┻━┛   ┗━┻━┛
 //
 """
-import random
 from collections import defaultdict
 
 from ctpbee.constant import *
@@ -58,6 +57,7 @@ class BeeTdApi(TdApi):
         self.positions = {}
 
         self.choices = list(range(50000, 1000000))
+        self.order_ref = 0
 
         self.symbol_exchange_mapping = {}
         self.sysid_orderid_map = {}
@@ -280,6 +280,9 @@ class BeeTdApi(TdApi):
         frontid = data["FrontID"]
         sessionid = data["SessionID"]
         order_ref = data["OrderRef"]
+        if int(order_ref) > self.order_ref:
+            self.order_ref = int(order_ref) + 1
+
         order_id = f"{frontid}_{sessionid}_{order_ref}"
 
         order = OrderData(
@@ -475,17 +478,11 @@ class BeeTdApi(TdApi):
         self.reqid += 1
         self.reqQryDepthMarketData({}, self.reqid)
 
-    @property
-    def order_ref(self):
-        choice = random.choice(self.choices)
-        self.choices.remove(choice)
-        return choice
-
     def send_order(self, req: OrderRequest, **kwargs):
         """
         Send new order.
         """
-
+        self.order_ref += 1
         ctp_req = {
             "InstrumentID": req.symbol,
             "LimitPrice": req.price,
@@ -806,7 +803,6 @@ class BeeTdApiApp(TdApiApp):
         sessionid = data["SessionID"]
         order_ref = data["OrderRef"]
         order_id = f"{frontid}_{sessionid}_{order_ref}"
-
         order = OrderData(
             symbol=symbol,
             exchange=exchange,
@@ -821,6 +817,7 @@ class BeeTdApiApp(TdApiApp):
             time=data["InsertTime"],
             gateway_name=self.gateway_name
         )
+
         self.on_event(EVENT_ORDER, data=order)
 
         self.sysid_orderid_map[data["OrderSysID"]] = order_id

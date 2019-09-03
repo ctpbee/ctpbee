@@ -33,7 +33,6 @@ class Action(object):
         if self.app is None or self.app.risk_decorator is None:
             raise AttributeError("app为None, 不可添加风控函数")
         if inspect.ismethod(func) or inspect.isfunction(func):
-            print(func.__name__)
             setattr(self, func.__name__, self.app.risk_decorator(func))
             return
         raise ValueError(f"请确保传入的func 类型为函数, 当前传入参数类型为{type(func)}")

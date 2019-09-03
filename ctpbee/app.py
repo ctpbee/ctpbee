@@ -123,7 +123,6 @@ class CtpBee(object):
 
         """ update """
         if self.risk_decorator is not None:
-            print(self.risk_decorator)
             self.risk_decorator.update_app(self)
 
         for x in dir(self.action):
