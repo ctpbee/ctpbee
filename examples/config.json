@@ -12,5 +12,13 @@
   "INTERFACE": "ctp",
   "TD_FUNC": true,
   "MD_FUNC": true,
-  "REFRESH_INTERVAL": 1.5
+  "REFRESH_INTERVAL": 1.5,
+  "INSTRUMENT_INDEPEND":false,
+  "SLIPPAGE_SHORT": 0,
+  "SLIPPAGE_BUY": 0,
+  "SLIPPAGE_COVER": 0,
+  "SLIPPAGE_SELL": 0,
+  "CLOSE_PATTERN": "yesterday",
+  "SHARED_FUNC": false
+
 }

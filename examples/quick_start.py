@@ -157,35 +157,10 @@ class DataRecorder(CtpbeeApi):
 def go():
     app = CtpBee("last", __name__, action_class=ActionMe)
 
-    info = {
-        "CONNECT_INFO": {
-            "userid": "089131",
-            "password": "350888",
-            "brokerid": "9999",
-            # "md_address": "tcp://180.168.146.187:10131",
-            # "td_address": "tcp://180.168.146.187:10130",
-            "md_address": "tcp://218.202.237.33:10112",
-            "td_address": "tcp://218.202.237.33:10102",
-            # "md_address": "tcp://180.168.146.187:10110",
-            # "td_address": "tcp://180.168.146.187:10100",
-            # "md_address": "tcp://180.168.146.187:10111",
-            # "td_address": "tcp://180.168.146.187:10101",
-            "product_info": "",
-            "appid": "simnow_client_test",
-            "auth_code": "0000000000000000",
-        },
-        "INTERFACE": "ctp",
-        "TD_FUNC": True,
-        "MD_FUNC": True,
-        "REFRESH_INTERVAL": 3,
-        "INSTRUMENT_INDEPEND": False,
-        "SLIPPAGE_SHORT": 1
-    }
-
     """ 
         载入配置信息 
     """
-    app.config.from_mapping(info)
+    app.config.from_json("config.json")
 
     """ 
         载入用户层定义层 你可以编写多个继承CtpbeeApi ,然后实例化它, 记得传入app, 当然你可以通过app.remove_extension("data_recorder")
