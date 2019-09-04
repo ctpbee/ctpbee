@@ -84,8 +84,7 @@ class Action(object):
                                                      type=OrderType.LIMIT, exchange=origin.exchange,
                                                      symbol=origin.symbol) for x in
                     self.get_req(origin.local_symbol, Direction.SHORT, volume, self.app)]
-
-        return [self.send_order(req) for req in req_list]
+        return [self.send_order(req) for req in req_list if req.volume != 0]
 
     def cover(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
               stop: bool = False, lock: bool = False, **kwargs):
@@ -151,7 +150,8 @@ class Action(object):
                 if td_volume >= volume:
                     return [[Offset.CLOSETODAY, volume]]
                 else:
-                    return [[Offset.CLOSETODAY, td_volume], [Offset.CLOSEYESTERDAY, volume - td_volume]]
+                    return [[Offset.CLOSETODAY, td_volume], [Offset.CLOSEYESTERDAY, volume - td_volume]] if td_volume != 0 else [[Offset.CLOSEYESTERDAY, volume]]
+
             elif app.config["CLOSE_PATTERN"] == "yesterday":
                 if position.yd_volume >= volume:
                     """如果昨仓数量要大于或者等于需要平仓数目 那么直接平昨"""
@@ -159,7 +159,10 @@ class Action(object):
                 else:
                     """如果昨仓数量要小于需要平仓数目 那么优先平昨再平今"""
                     return [[Offset.CLOSETODAY, position.yd_volume],
-                            [Offset.CLOSEYESTERDAY, volume - position.yd_volume]]
+                            [Offset.CLOSEYESTERDAY, volume - position.yd_volume]] if position.yd_volume != 0 else [
+                        [Offset.CLOSETODAY, volume]]
+            else:
+                raise ValueError("异常配置, ctpbee只支持today和yesterday两种优先模式")
 
     # 默认四个提供API的封装, 买多卖空等快速函数应该基于send_order进行封装 / default to provide four function
     @check(type="trader")
