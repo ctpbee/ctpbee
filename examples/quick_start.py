@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from ctpbee import Action
+from ctpbee import Action, del_app
 from ctpbee import CtpBee
 from ctpbee import CtpbeeApi
 from ctpbee import RiskLevel
@@ -157,7 +157,7 @@ class DataRecorder(CtpbeeApi):
             self.instrument_set.add(main_contract.local_symbol)
 
 
-def go():
+def create_app():
     app = CtpBee("last", __name__, action_class=ActionMe, risk=RiskMe)
 
     """ 
@@ -179,7 +179,10 @@ def go():
 
     """ 启动 """
     app.start(log_output=True)
+    return app
+    # print(current_app.name)
 
 
 if __name__ == '__main__':
-    go()
+    app = create_app()
+    # del_app(app.name)

@@ -2,7 +2,6 @@
 Event-driven framework of vn.py framework.
 """
 import asyncio
-from asyncio import iscoroutinefunction
 from collections import defaultdict
 from datetime import datetime
 from queue import Empty, Queue
@@ -227,3 +226,11 @@ class AsyncEngine:
     def start(self):
         p = Thread(target=self.loop.run_until_complete, args=(self.main(),))
         p.start()
+
+    def stop(self):
+        """
+        Stop event engine.
+        """
+        self._active = False
+        self._timer.join()
+        self.loop.close()

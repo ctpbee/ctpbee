@@ -300,13 +300,15 @@ class CtpBee(object):
             self.trader.close()
         self._load_ext()
 
-    def __del__(self):
+    def release(self):
         """释放账户 安全退出"""
-        print("注销")
-        if self.market is not None:
-            self.market.close()
-        if self.trader is not None:
-            self.trader.close()
-        self.market, self.trader = None, None
-
-        del self.event_engine
+        try:
+            if self.market is not None:
+                self.market.close()
+            if self.trader is not None:
+                self.trader.close()
+            self.market, self.trader = None, None
+            self.event_engine.stop()
+            del self.event_engine
+        except AttributeError:
+            pass

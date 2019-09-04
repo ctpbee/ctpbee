@@ -40,6 +40,15 @@ class LocalStack(object):
                 return True
             return False
 
+    def del_app(self, name):
+        with self.lock:
+            if name in self._simple.keys():
+                index = self._local.index(self._simple.get(name))
+                self._simple[name].release()
+                del self._simple[name]
+                self._local[index].release()
+                del self._local[index]
+
     def pop(self):
         """Removes the topmost item from the stack, will return the
         old value or `None` if the stack was already empty.
@@ -80,6 +89,11 @@ def _get_app(name):
     return _app_context_ctx.get_app(name)
 
 
+def _del_app(name):
+    _app_context_ctx.del_app(name)
+
+
 current_app = LocalProxy(_find_app)
 switch_app = _app_context_ctx.switch
 get_app = _app_context_ctx.get_app
+del_app = _del_app
