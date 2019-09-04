@@ -162,10 +162,12 @@ class Action(object):
 
         position: PositionData = app.recorder.position_manager.get_position_by_ld(local_symbol, direction)
         if not position:
-            warn(f"{local_symbol}在{direction.value}上无仓位")
+            msg = f"{local_symbol}在{direction.value}上无仓位"
+            warn(msg)
             return []
         if position.volume < volume:
-            warn(f"{local_symbol}在{direction.value}上仓位不足, 平掉当前 {direction.value} 的所有持仓, 平仓数量: {position.volume}")
+            msg = f"{local_symbol}在{direction.value}上仓位不足, 平掉当前 {direction.value} 的所有持仓, 平仓数量: {position.volume}"
+            warn(msg)
             return cal_req(position, position.volume, app)
         else:
             return cal_req(position, volume, app)
