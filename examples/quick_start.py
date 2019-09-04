@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from ctpbee import Action, del_app
+from ctpbee import Action
 from ctpbee import CtpBee
 from ctpbee import CtpbeeApi
 from ctpbee import RiskLevel
@@ -12,6 +12,22 @@ class ActionMe(Action):
     def __init__(self, app):
         super().__init__(app)
         self.add_risk_check(self.short)
+        self.add_risk_check(self.cancel)
+
+    def before_cancel(self, *args, **kwargs):
+        id = args[0]
+        return True
+
+    def after_cancel(self, result):
+        pass
+
+    def before_short(self, *args, **kwargs):
+        price, volume, origin = args
+        return True
+
+    def after_cancel(self, result):
+        pass
+
 
 
 class RiskMe(RiskLevel):
