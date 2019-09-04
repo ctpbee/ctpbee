@@ -973,7 +973,7 @@ class BeeTdApiApp(TdApiApp):
         order = req._create_order_data(order_id, self.gateway_name)
         self.on_event(type=EVENT_ORDER, data=order)
 
-        return order.vt_orderid
+        return order.local_order_id
 
     def cancel_order(self, req: CancelRequest, **kwargs):
         """

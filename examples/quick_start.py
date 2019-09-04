@@ -170,7 +170,6 @@ def create_app():
         data_recorder 就是下面传入的插件名字
       
     """
-    app.update_risk_gateway(RiskMe)
 
     data_recorder = DataRecorder("data_recorder")
     app.add_extension(data_recorder)
