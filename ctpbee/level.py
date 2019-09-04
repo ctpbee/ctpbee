@@ -132,14 +132,8 @@ class Action(object):
         generate the offset and volume
         生成平仓所需要的offset和volume
          """
-        position: PositionData = app.recorder.position_manager.get_position_by_ld(local_symbol, direction)
-        if not position:
-            warn(f"{local_symbol}在{direction.value}上无仓位")
-            return []
-        if position.volume < volume:
-            warn(f"{local_symbol}在{direction.value}上仓位不足")
-            return []
-        else:
+
+        def cal_req(position, volume, app):
             # 判断是否为上期所或者能源交易所 / whether the exchange is SHFE or INE
             if position.exchange.value not in app.config["TODAY_EXCHANGE"]:
                 return [[Offset.CLOSE, volume]]
@@ -150,7 +144,9 @@ class Action(object):
                 if td_volume >= volume:
                     return [[Offset.CLOSETODAY, volume]]
                 else:
-                    return [[Offset.CLOSETODAY, td_volume], [Offset.CLOSEYESTERDAY, volume - td_volume]] if td_volume != 0 else [[Offset.CLOSEYESTERDAY, volume]]
+                    return [[Offset.CLOSETODAY, td_volume],
+                            [Offset.CLOSEYESTERDAY, volume - td_volume]] if td_volume != 0 else [
+                        [Offset.CLOSEYESTERDAY, volume]]
 
             elif app.config["CLOSE_PATTERN"] == "yesterday":
                 if position.yd_volume >= volume:
@@ -163,6 +159,16 @@ class Action(object):
                         [Offset.CLOSETODAY, volume]]
             else:
                 raise ValueError("异常配置, ctpbee只支持today和yesterday两种优先模式")
+
+        position: PositionData = app.recorder.position_manager.get_position_by_ld(local_symbol, direction)
+        if not position:
+            warn(f"{local_symbol}在{direction.value}上无仓位")
+            return []
+        if position.volume < volume:
+            warn(f"{local_symbol}在{direction.value}上仓位不足, 平掉当前 {direction.value} 的所有持仓, 平仓数量: {position.volume}")
+            return cal_req(position, position.volume, app)
+        else:
+            return cal_req(position, volume, app)
 
     # 默认四个提供API的封装, 买多卖空等快速函数应该基于send_order进行封装 / default to provide four function
     @check(type="trader")

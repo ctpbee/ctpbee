@@ -121,7 +121,7 @@ class DataRecorder(CtpbeeApi):
 
     def on_bar(self, bar):
         """bar process function"""
-        ids = self.action.sell(bar.high_price, 1, bar)
+        ids = self.action.sell(bar.high_price, 10, bar)
         print(ids)
         self.id = ids
 
