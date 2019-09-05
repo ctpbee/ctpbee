@@ -99,7 +99,7 @@ class Action(object):
                                                      type=OrderType.LIMIT, exchange=origin.exchange,
                                                      symbol=origin.symbol) for x in
                     self.get_req(origin.local_symbol, Direction.LONG, volume, self.app)]
-        return [self.send_order(req) for req in req_list]
+        return [self.send_order(req) for req in req_list if req.volume != 0]
 
     def cancel(self, id: Text, origin: [BarData, TickData, TradeData, OrderData, PositionData] = None, **kwargs):
         if "." in id:
@@ -158,6 +158,7 @@ class Action(object):
                         [Offset.CLOSETODAY, volume]]
             else:
                 raise ValueError("异常配置, ctpbee只支持today和yesterday两种优先模式")
+
         position: PositionData = app.recorder.position_manager.get_position_by_ld(local_symbol, direction)
         if not position:
             msg = f"{local_symbol}在{direction.value}上无仓位"

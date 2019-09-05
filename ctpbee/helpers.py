@@ -11,6 +11,7 @@ from functools import wraps
 from threading import RLock
 from time import sleep
 from typing import AnyStr, Tuple, IO
+from io import TextIOWrapper
 
 from ctpbee.trade_time import TradingDay
 
