@@ -16,7 +16,9 @@ class ActionMe(Action):
 
     def before_cancel(self, *args, **kwargs):
         id = args[0]
-        return True
+        if id in self.app.recorder.get_all_active_orders():
+            return True
+        return False
 
     def after_cancel(self, result):
         pass
@@ -27,7 +29,6 @@ class ActionMe(Action):
 
     def after_cancel(self, result):
         pass
-
 
 
 class RiskMe(RiskLevel):
@@ -102,10 +103,12 @@ class RiskMe(RiskLevel):
         pass
 
 
+# 启动过程  --- strategy/ .py  --- app.add_extension(ext)
+
 class DataRecorder(CtpbeeApi):
     def __init__(self, name, app=None):
         super().__init__(name, app)
-        self.instrument_set = set(["ag1912.SHFE"])
+        self.instrument_set = set(["rb2001.SHFE"])
 
         self.comming_in = None
 
@@ -137,9 +140,9 @@ class DataRecorder(CtpbeeApi):
 
     def on_bar(self, bar):
         """bar process function"""
-        ids = self.action.sell(bar.high_price, 10, bar)
+        ids = self.action.sell(bar.high_price, 20, bar)
         print(ids)
-        self.id = ids
+        # self.action.sell(ids)
 
     def on_shared(self, shared):
         """ 处理分时图数据 """
@@ -173,8 +176,10 @@ class DataRecorder(CtpbeeApi):
             self.instrument_set.add(main_contract.local_symbol)
 
 
+
+
 def create_app():
-    app = CtpBee("last", __name__, action_class=ActionMe, risk=RiskMe)
+    app = CtpBee("last", __name__, action_class=ActionMe,refresh=True, risk=RiskMe)
 
     """ 
         载入配置信息 

@@ -99,7 +99,6 @@ class Action(object):
                                                      type=OrderType.LIMIT, exchange=origin.exchange,
                                                      symbol=origin.symbol) for x in
                     self.get_req(origin.local_symbol, Direction.LONG, volume, self.app)]
-
         return [self.send_order(req) for req in req_list]
 
     def cancel(self, id: Text, origin: [BarData, TickData, TradeData, OrderData, PositionData] = None, **kwargs):
@@ -127,13 +126,13 @@ class Action(object):
         return self.cancel_order(req)
 
     @staticmethod
-    def get_req(local_symbol, direction, volume: int, app):
+    def get_req(local_symbol, direction, volume: int, app) -> List:
         """
         generate the offset and volume
         生成平仓所需要的offset和volume
          """
 
-        def cal_req(position, volume, app):
+        def cal_req(position, volume, app) -> List:
             # 判断是否为上期所或者能源交易所 / whether the exchange is SHFE or INE
             if position.exchange.value not in app.config["TODAY_EXCHANGE"]:
                 return [[Offset.CLOSE, volume]]
@@ -154,12 +153,11 @@ class Action(object):
                     return [[Offset.CLOSEYESTERDAY, volume]]
                 else:
                     """如果昨仓数量要小于需要平仓数目 那么优先平昨再平今"""
-                    return [[Offset.CLOSETODAY, position.yd_volume],
-                            [Offset.CLOSEYESTERDAY, volume - position.yd_volume]] if position.yd_volume != 0 else [
+                    return [[Offset.CLOSEYESTERDAY, position.yd_volume],
+                            [Offset.CLOSETODAY, volume - position.yd_volume]] if position.yd_volume != 0 else [
                         [Offset.CLOSETODAY, volume]]
             else:
                 raise ValueError("异常配置, ctpbee只支持today和yesterday两种优先模式")
-
         position: PositionData = app.recorder.position_manager.get_position_by_ld(local_symbol, direction)
         if not position:
             msg = f"{local_symbol}在{direction.value}上无仓位"

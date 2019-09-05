@@ -227,15 +227,64 @@ class BeeTdApi(TdApi):
         """
         Callback of instrument query.
         """
+
+        p = {
+
+             'ExchangeInstID': 'SM008',
+             'ProductID': 'SM',
+             'ProductClass': '1',
+             'DeliveryYear': 2020,
+             'DeliveryMonth': 8,
+             'MaxMarketOrderVolume': 200,
+             'MinMarketOrderVolume': 1,
+             'MaxLimitOrderVolume': 1000,
+             'MinLimitOrderVolume': 1,
+             'VolumeMultiple': 5,
+             'PriceTick': 2.0,
+             'CreateDate': '20190716',
+             'OpenDate': '20190815',
+             'ExpireDate': '20200814',
+             'StartDelivDate': '20200817',
+             'EndDelivDate': '20200818',
+             'InstLifePhase': '1',
+             'IsTrading': 1,
+             'PositionType': '2',
+             'PositionDateType': '2',
+             'LongMarginRatio': 0.05,
+             'ShortMarginRatio': 0.05,
+             'MaxMarginSideAlgorithm': '0',
+             'UnderlyingInstrID': '',
+             'StrikePrice': 0.0,
+             'OptionsType': '\x00',
+             'UnderlyingMultiple': 0.0,
+             'CombinationType': '0'}
+
+        #
+        # inst_life_phase: str
+        # is_trading: bool
+        #
+        # position_type: str
+        # position_date_type: str
+        # long_margin_ratio: float
+        # short_margin_ratio: float
+        # max_margin_side_algorithm: bool
+
         product = PRODUCT_CTP2VT.get(data["ProductClass"], None)
         if product:
             contract = ContractData(
                 symbol=data["InstrumentID"],
                 exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
                 name=data["InstrumentName"],
+
                 product=product,
                 size=data["VolumeMultiple"],
                 pricetick=data["PriceTick"],
+                long_margin_ratio=data['LongMarginRatio'],
+                start_delivery_date=data['StartDelivDate'],
+                end_delivery_date=data['EndDelivDate'],
+                expire_date=data['ExpireDate'],
+                open_date=data['OpenDate'],
+                create_date=data['CreateDate'],
                 gateway_name=self.gateway_name
             )
             self.symbol_exchange_mapping[data["InstrumentID"]] = EXCHANGE_CTP2VT[data["ExchangeID"]]

@@ -3,7 +3,7 @@ Basic data structure used for general trading function in VN Trader.
 """
 
 from dataclasses import dataclass, asdict
-from datetime import datetime
+from datetime import datetime, date
 from enum import Enum
 from logging import INFO
 from typing import Any
@@ -516,6 +516,22 @@ class ContractData(BaseData):
     option_underlying: str = ""
     option_type: OptionType = None
     option_expiry: datetime = None
+
+    create_date: date
+    open_date: date
+    expire_date: date
+    start_delivery_date: date
+    end_delivery_date: date
+
+    inst_life_phase: str
+    is_trading: bool
+
+    position_type: str
+    position_date_type: str
+    long_margin_ratio: float
+    short_margin_ratio: float
+    max_margin_side_algorithm: bool
+
 
     def __post_init__(self):
         """"""

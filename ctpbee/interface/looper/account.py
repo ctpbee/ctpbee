@@ -1,8 +1,16 @@
+"""
+* 账户模块, 存储资金修改, 负责对外部的成交单进行成交撮合 并扣除手续费 等操作
+* 需要向外提供API
+    trading: 发起交易
+    is_traded: 是否可以进行交易
+    result: 回测结果
+"""
+
 from collections import defaultdict
 
 from pandas import DataFrame
 
-from ctpbee.constant import TradeData, Offset, Direction
+from ctpbee.constant import TradeData, Offset, Direction, PositionData
 from ctpbee.exceptions import DataError
 
 
@@ -42,6 +50,10 @@ class Account:
         self.slip_match: bool = True
         self.slip_limit: bool = True
         self.slip_out: bool = False
+
+        # 账户持有持仓信息 ----->
+        self.ServberPosition = defaultdict(defaultdict(PositionData))
+        # 存储数据结构应该为 {"AP901":{""long:[PositionData, ], "short":[ PositionData, ]}}
 
     def update_attr(self, **kwargs):
         """ 从外部更新资金等相关情况 """
