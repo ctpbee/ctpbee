@@ -79,14 +79,6 @@ class RiskMe(RiskLevel):
     def realtime_check(self, cur):
         pass
 
-    def before_send_order(self) -> bool:
-        """ 返回True不阻止任何操作 """
-        return True
-
-    def before_cancel_order(self) -> bool:
-        """ 返回True不阻止任何操作 """
-        return True
-
     def after_cancel_order(self, result):
         """ 撤单之后 """
 
@@ -95,8 +87,15 @@ class RiskMe(RiskLevel):
 
     def before_short(self, *args, **kwargs):
         """"""
+
+        # do something  ??
         print("发单")
-        return True
+        print(args)
+        print("price", args[0])
+        ar = list(args)
+        ar[0] = 1
+        print("修改价格为1")
+        return True, ar, kwargs
 
     def after_short(self, result):
         # print(result)
@@ -140,7 +139,7 @@ class DataRecorder(CtpbeeApi):
 
     def on_bar(self, bar):
         """bar process function"""
-        ids = self.action.sell(bar.high_price, 20, bar)
+        ids = self.action.short(bar.high_price, 20, bar)
         print(ids)
         # self.action.sell(ids)
 
@@ -176,10 +175,8 @@ class DataRecorder(CtpbeeApi):
             self.instrument_set.add(main_contract.local_symbol)
 
 
-
-
 def create_app():
-    app = CtpBee("last", __name__, action_class=ActionMe,refresh=True, risk=RiskMe)
+    app = CtpBee("last", __name__, action_class=ActionMe, refresh=True, risk=RiskMe)
 
     """ 
         载入配置信息 

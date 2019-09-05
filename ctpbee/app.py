@@ -290,6 +290,9 @@ class CtpBee(object):
         extension.frozen = False
         return True
 
+    def del_extension(self, extension_name):
+        self.extensions.pop(extension_name, None)
+
     def reload(self):
         """ 重新载入接口 """
         if self.market is not None:
@@ -299,7 +302,7 @@ class CtpBee(object):
         self._load_ext()
 
     def release(self):
-        """释放账户 安全退出"""
+        """ 释放账户,安全退出 """
         try:
             if self.market is not None:
                 self.market.close()

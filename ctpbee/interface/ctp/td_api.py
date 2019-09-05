@@ -275,7 +275,6 @@ class BeeTdApi(TdApi):
                 symbol=data["InstrumentID"],
                 exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
                 name=data["InstrumentName"],
-
                 product=product,
                 size=data["VolumeMultiple"],
                 pricetick=data["PriceTick"],

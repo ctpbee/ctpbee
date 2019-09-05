@@ -169,15 +169,13 @@ def dynamic_loading_api(f):
     你需要在策略代码文件中显式指定ext
     返回元组
     """
-    if not isinstance(f, IO):
+    if not isinstance(f, IO) and not isinstance(f, TextIOWrapper):
         raise ValueError(f"请确保你传入的是文件流(IO)，而不是{str(type(f))}")
     d = types.ModuleType("object")
     d.__file__ = f.name
     exec(compile(f.read(), f.name, 'exec'), d.__dict__)
     if not hasattr(d, "ext"):
         raise AttributeError("请检查你的策略中是否包含ext变量")
-    if not isinstance(d.ext, Tuple):
-        raise ValueError("错误变量")
     return d.ext
 
 

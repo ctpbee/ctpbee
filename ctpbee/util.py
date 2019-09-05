@@ -34,12 +34,12 @@ class RiskLevel:
         result = None
         fr_func = getattr(self, f"before_{self.__wrapped__.__name__}", None)
         if fr_func:
-            result = fr_func(*args, **kwargs)
+            result, new_args, new_kwargs = fr_func(*args, **kwargs)
         if not result:
             self.log("事前检查失败, 放弃此次操作")
         else:
             # execute func
-            result = self.__wrapped__(*args, **kwargs)
+            result = self.__wrapped__(*new_args, **new_kwargs)
             # clean the action
 
             af_func = getattr(self, f"after_{self.__wrapped__.__name__}", None)
