@@ -1,10 +1,19 @@
 import types
+from datetime import datetime
 from functools import wraps
+from threading import Thread
 from types import MethodType
 
 from ctpbee.constant import EVENT_LOG
 from ctpbee.event_engine import Event
 from ctpbee.event_engine.engine import EVENT_TIMER
+from ctpbee.helpers import end_thread
+
+
+class ThreadMe(Thread):
+    def __init__(self, *args, **kwargs):
+        self.count = 0
+        super().__init__(*args, **kwargs)
 
 
 class RiskLevel:
@@ -15,6 +24,7 @@ class RiskLevel:
     """
     app = None
     action = None
+    thread_pool = []
 
     def __init__(self, func):
         wraps(func)(self)
@@ -24,13 +34,31 @@ class RiskLevel:
         """ 将app更新到类变量里面"""
         cls.app = app
         cls.action = app.action
-        func = getattr(cls, "realtime_check")
-        realtime_check = MethodType(func, cls)
-        cls.app.event_engine.register(EVENT_TIMER, realtime_check)
+
+        update_list = ["realtime_check", "mimo_thread"]
+        for _ in update_list:
+            func = getattr(cls, _)
+            funcd = MethodType(func, cls)
+            cls.app.event_engine.register(EVENT_TIMER, funcd)
+
+    def mimo_thread(self, cur):
+        for thread in self.thread_pool:
+            # 判断线程的数量是否超过超时数
+            if not isinstance(self.app.config['AFTER_TIMEOUT'], int):
+                raise AttributeError("请检查你的配置中项 AFTER_TIMEOUT的值是否为整数")
+            if thread.count >= self.app.config['AFTER_TIMEOUT']:
+                end_thread(thread)
+                self.thread_pool.remove(thread)
+            thread.count += 1
+
+    def run(self, func, args):
+        # 你需要在此处实现超时设置, 避免最后的线程最后无限积累
+        p = ThreadMe(target=func, args=(args,))
+        p.start()
+        self.thread_pool.append(p)
 
     def __call__(self, *args, **kwargs):
         # check before execute
-        print("调用了", self.__wrapped__.__name__)
         result = None
         fr_func = getattr(self, f"before_{self.__wrapped__.__name__}", None)
         if fr_func:
@@ -43,7 +71,7 @@ class RiskLevel:
             # clean the action
 
             af_func = getattr(self, f"after_{self.__wrapped__.__name__}", None)
-            af_func(result)
+            self.run(af_func, result)
         return result
 
     def __get__(self, instance, cls):

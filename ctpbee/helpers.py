@@ -1,17 +1,20 @@
 """ 工具函数 """
+import ctypes
+import inspect
 import os
 import pkgutil
 import random
 import sys
+import time
 import types
 import warnings
 from copy import deepcopy
 from datetime import datetime, time
 from functools import wraps
+from io import TextIOWrapper
 from threading import RLock
 from time import sleep
-from typing import AnyStr, Tuple, IO
-from io import TextIOWrapper
+from typing import AnyStr, IO
 
 from ctpbee.trade_time import TradingDay
 
@@ -293,3 +296,25 @@ async def async_value_call(func):
         return d
 
     return wrapper
+
+
+def _async_raise(tid, exctype):
+    """raises the exception, performs cleanup if needed"""
+    tid = ctypes.c_long(tid)
+    if not inspect.isclass(exctype):
+        exctype = type(exctype)
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
+    if res == 0:
+        raise ValueError("invalid thread id")
+    elif res != 1:
+        # """if it returns a number greater than one, you're in trouble,
+        # and you should call it again with exc=NULL to revert the effect"""
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
+        raise SystemError("PyThreadState_SetAsyncExc failed")
+
+
+def end_thread(thread):
+    """
+    which used to kill thread !
+    """
+    _async_raise(thread.ident, SystemExit)

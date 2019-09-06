@@ -17,7 +17,6 @@ class Action(object):
     自定义的操作模板
     此动作应该被CtpBee, CtpbeeApi, AsyncApi, RiskLevel调用
     """
-
     def __new__(cls, *args, **kwargs):
         instance = object.__new__(cls)
         setattr(instance, "__name__", cls.__name__)

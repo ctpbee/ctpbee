@@ -1,4 +1,5 @@
 from datetime import datetime
+from time import sleep
 
 from ctpbee import Action
 from ctpbee import CtpBee
@@ -90,16 +91,16 @@ class RiskMe(RiskLevel):
 
         # do something  ??
         print("发单")
-        print(args)
-        print("price", args[0])
-        ar = list(args)
-        ar[0] = 1
-        print("修改价格为1")
-        return True, ar, kwargs
+        return True, args, kwargs
 
     def after_short(self, result):
         # print(result)
-        pass
+        cal = 0
+        while True:
+            sleep(1)
+            if cal > 3: break
+            cal += 1
+            # do something
 
 
 # 启动过程  --- strategy/ .py  --- app.add_extension(ext)
@@ -107,7 +108,7 @@ class RiskMe(RiskLevel):
 class DataRecorder(CtpbeeApi):
     def __init__(self, name, app=None):
         super().__init__(name, app)
-        self.instrument_set = set(["rb2001.SHFE"])
+        self.instrument_set = set(["ag1912.SHFE"])
 
         self.comming_in = None
 
@@ -153,8 +154,8 @@ class DataRecorder(CtpbeeApi):
 
     def on_realtime(self, timed: datetime):
         """  """
-        for x in self.app.recorder.get_all_active_orders():
-            self.action.cancel(x.local_order_id)
+        # for x in self.app.recorder.get_all_active_orders():
+        #     self.action.cancel(x.local_order_id)
 
     def on_init(self, init):
         print("初始化")
@@ -164,7 +165,8 @@ class DataRecorder(CtpbeeApi):
             # 获取主力合约
             # main_contract = self.app.recorder.get_main_contract_by_code("ap")
             #
-            # # 获取合约的价格 ##  如果你需要该合约的最新的行情价格 你可能需要通过self.app.trader.request_market_data() 来更新最新的深度行情，回调函数会自动更新行情数据，
+            # # 获取合约的价格
+            # # #  如果你需要该合约的最新的行情价格 你可能需要通过self.app.trader.request_market_data() 来更新最新的深度行情，回调函数会自动更新行情数据，
             # # 也许在风控那边一直发送请求数据或者在start()之后开个单独线程来请求是个不错的选择
             # print(self.app.recorder.get_contract_last_price("AP910.CZCE"))
             #
@@ -191,7 +193,6 @@ def create_app():
 
     data_recorder = DataRecorder("data_recorder")
     app.add_extension(data_recorder)
-
     """ 添加自定义的风控 """
 
     """ 启动 """

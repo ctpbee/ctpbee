@@ -65,6 +65,7 @@ class CtpBee(object):
              INSTRUMENT_INDEPEND=False,  # 是否开启独立行情，策略对应相应的行情
              CLOSE_PATTERN="today",  # 面对支持平今的交易所，优先平今或者平昨 ---> today: 平今, yesterday: 平昨， 其他:处罚异常
              TODAY_EXCHANGE=[Exchange.SHFE.value, Exchange.INE.value],  # 需要支持平今的交易所代码列表
+             AFTER_TIMEOUT=3,  # 设置after线程执行超时
              ))
 
     config_class = Config
