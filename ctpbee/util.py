@@ -1,5 +1,4 @@
 import types
-from datetime import datetime
 from functools import wraps
 from threading import Thread
 from types import MethodType
@@ -47,7 +46,10 @@ class RiskLevel:
             if not isinstance(self.app.config['AFTER_TIMEOUT'], int):
                 raise AttributeError("请检查你的配置中项 AFTER_TIMEOUT的值是否为整数")
             if thread.count >= self.app.config['AFTER_TIMEOUT']:
-                end_thread(thread)
+                try:
+                    end_thread(thread)
+                except ValueError:
+                    pass
                 self.thread_pool.remove(thread)
             thread.count += 1
 
