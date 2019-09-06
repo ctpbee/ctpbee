@@ -109,9 +109,7 @@ class DataRecorder(CtpbeeApi):
     def __init__(self, name, app=None):
         super().__init__(name, app)
         self.instrument_set = set(["ag1912.SHFE"])
-
         self.comming_in = None
-
         self.id = None
 
     def on_trade(self, trade):
@@ -176,6 +174,8 @@ class DataRecorder(CtpbeeApi):
             main_contract = self.app.recorder.get_main_contract_by_code("ap")
             self.instrument_set.add(main_contract.local_symbol)
 
+            print(app.recorder.get_contract("ag1912.SHFE"))
+
 
 def create_app():
     app = CtpBee("last", __name__, action_class=ActionMe, refresh=True, risk=RiskMe)
@@ -204,3 +204,4 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     # del_app(app.name)
+
