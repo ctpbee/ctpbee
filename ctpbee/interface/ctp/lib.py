@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from ctpbee.api.ctp import *
@@ -18,19 +19,14 @@ def _get_trader_dir(temp_name: str):
     """
     cwd = Path.cwd()
     temp_path = cwd.joinpath(temp_name)
-
-    # If .vntrader folder exists in current working directory,
-    # then use it as trader running path.
     if temp_path.exists():
         return cwd, temp_path
-
     # Otherwise use home path of system.
     home_path = Path.home()
-    temp_path = home_path.joinpath(temp_name)
 
+    temp_path = home_path.joinpath(temp_name)
     if not temp_path.exists():
         temp_path.mkdir()
-
     return home_path, temp_path
 
 
@@ -41,7 +37,8 @@ def get_folder_path(folder_name: str):
     TRADER_DIR, TEMP_DIR = _get_trader_dir(".ctpbee")
     folder_path = TEMP_DIR.joinpath(folder_name)
     if not folder_path.exists():
-        folder_path.mkdir()
+        print(folder_path)
+        os.makedirs(folder_path)
     return folder_path
 
 
