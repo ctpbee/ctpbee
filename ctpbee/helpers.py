@@ -318,3 +318,10 @@ def end_thread(thread):
     which used to kill thread !
     """
     _async_raise(thread.ident, SystemExit)
+
+
+
+def exec_wrapper(func):
+    """ 错误装饰器 """
+    
+

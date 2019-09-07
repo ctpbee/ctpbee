@@ -5,6 +5,13 @@ from setuptools import Extension, setup
 
 runtime_library_dir = []
 
+try:
+    import pypandoc
+
+    long_description = pypandoc.convert_file('README.md', 'rst')
+except Exception:
+    long_description = ""
+
 if platform.uname().system == "Windows":
     compiler_flags = [
         "/MP", "/std:c++17",  # standard
@@ -119,9 +126,10 @@ pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.d
 install_requires = ['flask>=1.1.1', "blinker", "dataclasses", "requests", "simplejson", "lxml", "pandas"]
 setup(
     name='ctpbee',
-    version='0.29',
+    version='0.30',
     description="Easy ctp trade and market support",
     author='somewheve',
+    long_description=long_description,
     author_email='somewheve@gmail.com',
     url='https://github.com/ctpbee/ctpbee',
     license="MIT",
@@ -129,6 +137,8 @@ setup(
     install_requires=install_requires,
     platforms=["Windows", "Linux", "Mac OS-X"],
     package_dir={'ctpbee': 'ctpbee'},
+    # zip_safe=True,
+    include_package_data=True,
     package_data={'ctpbee': ['api/ctp/*', 'holiday.json']},
     ext_modules=ext_modules,
     classifiers=[
