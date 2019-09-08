@@ -15,8 +15,9 @@ from ctpbee.helpers import check
 class Action(object):
     """
     自定义的操作模板
-    此动作应该被CtpBee, CtpbeeApi, AsyncApi, RiskLevel调用
+    此动作应该被CtpBee, CtpbeeApi, AsyncAp i, RiskLevel调用
     """
+
     def __new__(cls, *args, **kwargs):
         instance = object.__new__(cls)
         setattr(instance, "__name__", cls.__name__)
@@ -39,6 +40,26 @@ class Action(object):
     @property
     def action(self):
         return self.app.action
+
+    @property
+    def recorder(self):
+        return self.app.recorder
+
+    @property
+    def logger(self):
+        return self.app.logger
+
+    def warning(self, msg, **kwargs):
+        self.logger.warning(msg, owner=self.__name__, **kwargs)
+
+    def info(self, msg, **kwargs):
+        self.logger.info(msg, owner=self.__name__, **kwargs)
+
+    def error(self, msg, **kwargs):
+        self.logger.error(msg, owner=self.__name__, **kwargs)
+
+    def debug(self, msg, **kwargs):
+        self.logger.debug(msg, owner=self.__name__, **kwargs)
 
     def __init__(self, app=None):
         self.app = app
@@ -262,6 +283,28 @@ class CtpbeeApi(object):
             raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
         return self.app.action
 
+    @property
+    def logger(self):
+        return self.app.logger
+
+    def warning(self, msg, **kwargs):
+        self.logger.warning(msg, owner="API: " + self.extension_name, **kwargs)
+
+    def info(self, msg, **kwargs):
+        self.logger.info(msg, owner="API: " + self.extension_name, **kwargs)
+
+    def error(self, msg, **kwargs):
+        self.logger.error(msg, owner="API: " + self.extension_name, **kwargs)
+
+    def debug(self, msg, **kwargs):
+        self.logger.debug(msg, owner="API: " + self.extension_name, **kwargs)
+
+    @property
+    def recorder(self):
+        if self.app is None:
+            raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
+        return self.app.recorder
+
     def on_order(self, order: OrderData) -> None:
         raise NotImplemented
 
@@ -365,6 +408,30 @@ class AsyncApi(object):
         if self.app is None:
             raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
         return self.app.action
+
+    @property
+    def recorder(self):
+        if self.app is None:
+            raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
+        return self.app.recorder
+
+    @property
+    def logger(self):
+        if self.app is None:
+            raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
+        return self.app.logger
+
+    def warning(self, msg, **kwargs):
+        self.logger.warning(msg, owner="API: " + self.extension_name, **kwargs)
+
+    def info(self, msg, **kwargs):
+        self.logger.info(msg, owner="API: " + self.extension_name, **kwargs)
+
+    def error(self, msg, **kwargs):
+        self.logger.error(msg, owner="API: " + self.extension_name, **kwargs)
+
+    def debug(self, msg, **kwargs):
+        self.logger.debug(msg, owner="API: " + self.extension_name, **kwargs)
 
     async def on_order(self, order: OrderData) -> None:
         raise NotImplemented

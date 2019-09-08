@@ -2,8 +2,8 @@
     for the future of  life
 """
 
-__version__ = '0.30'
-__status__ = 'release'
+__version__ = '0.30.1'
+__status__ = '0.30修复版本'
 
 from ctpbee.app import CtpBee
 from ctpbee.context import current_app, switch_app, get_app, del_app
@@ -11,6 +11,7 @@ from ctpbee.func import cancel_order, send_order, subscribe, query_func, auth_ti
 from ctpbee.helpers import dynamic_loading_api
 from ctpbee.jsond import dumps, loads
 from ctpbee.level import CtpbeeApi, AsyncApi, Action
+from ctpbee.log import VLogger
 from ctpbee.signals import send_monitor, cancel_monitor
 from ctpbee.trade_time import TradingDay
 from ctpbee.util import RiskLevel
