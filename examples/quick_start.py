@@ -15,22 +15,6 @@ class ActionMe(Action):
         self.add_risk_check(self.short)
         self.add_risk_check(self.cancel)
 
-    def before_cancel(self, *args, **kwargs):
-        id = args[0]
-        if id in self.app.recorder.get_all_active_orders():
-            return True
-        return False
-
-    def after_cancel(self, result):
-        pass
-
-    def before_short(self, *args, **kwargs):
-        price, volume, origin = args
-        return True
-
-    def after_cancel(self, result):
-        pass
-
 
 class RiskMe(RiskLevel):
     """
@@ -90,7 +74,7 @@ class RiskMe(RiskLevel):
         """"""
 
         # do something  ??
-        print("发单")
+        self.debug("发单")
         return True, args, kwargs
 
     def after_short(self, result):
@@ -156,7 +140,7 @@ class DataRecorder(CtpbeeApi):
         #     self.action.cancel(x.local_order_id)
 
     def on_init(self, init):
-        print("初始化")
+        self.info("初始化")
         if init:
             self.flag = False
             # print("初始化完成")

@@ -17,6 +17,7 @@ from ctpbee.exceptions import ConfigError
 from ctpbee.helpers import locked_cached_property, find_package, run_forever, refresh_query, graphic_pattern
 from ctpbee.interface import Interface
 from ctpbee.level import CtpbeeApi, Action
+from ctpbee.log import VLogger
 from ctpbee.record import Recorder, AsyncRecorder
 
 
@@ -84,7 +85,7 @@ class CtpBee(object):
     tools = {}
 
     def __init__(self, name: Text, import_name, action_class: Action = None, engine_method: str = "thread",
-                 work_mode="limit_time",
+                 work_mode="limit_time", logger_class=None,
                  refresh: bool = False, risk=None,
                  instance_path=None):
         """ 初始化 """
@@ -92,6 +93,12 @@ class CtpBee(object):
         self.import_name = import_name
         self.engine_method = engine_method
         self.refresh = refresh
+
+        # 是否加载以使用默认的logger类/ choose if use the default logging class
+        if logger_class is None:
+            self.logger = VLogger(self.name)
+        else:
+            self.logger = logger_class(self.name)
         if engine_method == "thread":
             self.event_engine = EventEngine()
             self.recorder = Recorder(self, self.event_engine)

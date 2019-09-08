@@ -3,8 +3,6 @@ from functools import wraps
 from threading import Thread
 from types import MethodType
 
-from ctpbee.constant import EVENT_LOG
-from ctpbee.event_engine import Event
 from ctpbee.event_engine.engine import EVENT_TIMER
 from ctpbee.helpers import end_thread
 
@@ -39,6 +37,23 @@ class RiskLevel:
             func = getattr(cls, _)
             funcd = MethodType(func, cls)
             cls.app.event_engine.register(EVENT_TIMER, funcd)
+
+    @property
+    def logger(self):
+        return self.app.logger
+
+    def warning(self, msg, **kwargs):
+        self.logger.warning(msg, owner="Risk", **kwargs)
+
+    def info(self, msg, **kwargs):
+        self.logger.info(msg, owner="Risk", **kwargs)
+
+    def error(self, msg, **kwargs):
+        self.logger.error(msg, owner="Risk", **kwargs)
+
+    def debug(self, msg, **kwargs):
+        self.logger.debug(msg, owner="Risk", **kwargs)
+
 
     def mimo_thread(self, cur):
         for thread in self.thread_pool:
@@ -83,11 +98,15 @@ class RiskLevel:
             res = types.MethodType(self, instance)
         return res
 
-    def log(self, log):
-        event = Event(EVENT_LOG, data=log)
-        self.app.event_engine.put(event)
-
     @classmethod
     def realtime_check(self, cur):
         """ 一直检查 """
         pass
+
+    @property
+    def recorder(self):
+        return self.app.recorder
+
+    @property
+    def action(self):
+        return self.app.action

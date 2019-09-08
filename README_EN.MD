@@ -4,8 +4,8 @@ bee bee .... created for secondary development ~~
 
 ctpbee just provide a micro framework, you can extent the function by this tiny core. of course your programm
 
+![ctpbee](https://github.com/ctpbee/ctpbee/blob/master/docs/source/ctpbee.jpg)
 
->  Using Old Interface
 # Before you start
 ```bash
 # just for linux 

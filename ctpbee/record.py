@@ -92,12 +92,12 @@ class Recorder(object):
 
     def process_error_event(self, event: Event):
         self.errors.append({"time": self.get_local_time(), "data": event.data})
-        print(self.get_local_time() + ": ", event.data)
+        self.app.logger.error(event.data)
 
     def process_log_event(self, event: Event):
         self.logs[self.get_local_time()] = event.data
         if self.app.config.get("LOG_OUTPUT"):
-            print(self.get_local_time() + ": ", event.data)
+            self.app.logger.info(event.data)
         for value in self.app.extensions.values():
             value(deepcopy(event))
 
@@ -278,7 +278,6 @@ class Recorder(object):
             result.append(x.local_symbol)
         return result
 
-
     def get_contract_last_price(self, local_symbol):
         """ 获取合约的最新价格 """
         return self.local_contract_price_mapping.get(local_symbol)
@@ -310,9 +309,6 @@ class Recorder(object):
         self.shared.clear()
         self.generators.clear()
         self.active_orders.clear()
-
-
-
 
 
 class AsyncRecorder(object):
@@ -412,12 +408,12 @@ class AsyncRecorder(object):
 
     async def process_error_event(self, event: Event):
         self.errors.append({"time": self.get_local_time(), "data": event.data})
-        print(self.get_local_time() + ": ", event.data)
+        self.app.logger.error(event.data)
 
     async def process_log_event(self, event: Event):
         self.logs[self.get_local_time()] = event.data
         if self.app.config.get("LOG_OUTPUT"):
-            print(self.get_local_time() + ": ", event.data)
+            self.app.logger.info(event.data)
         for value in self.app.extensions.values():
             await value(deepcopy(event))
 
