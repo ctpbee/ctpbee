@@ -408,12 +408,12 @@ class AsyncRecorder(object):
 
     async def process_error_event(self, event: Event):
         self.errors.append({"time": self.get_local_time(), "data": event.data})
-        print(self.get_local_time() + ": ", event.data)
+        self.app.logger.error(event.data)
 
     async def process_log_event(self, event: Event):
         self.logs[self.get_local_time()] = event.data
         if self.app.config.get("LOG_OUTPUT"):
-            print(self.get_local_time() + ": ", event.data)
+            self.app.logger.info(event.data)
         for value in self.app.extensions.values():
             await value(deepcopy(event))
 
