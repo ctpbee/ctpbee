@@ -54,7 +54,6 @@ class RiskLevel:
     def debug(self, msg, **kwargs):
         self.logger.debug(msg, owner="Risk", **kwargs)
 
-
     def mimo_thread(self, cur):
         for thread in self.thread_pool:
             # 判断线程的数量是否超过超时数

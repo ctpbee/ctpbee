@@ -2,7 +2,7 @@
     for the future of  life
 """
 
-__version__ = '0.30.1'
+__version__ = '0.30.2'
 __status__ = '0.30修复版本'
 
 from ctpbee.app import CtpBee
