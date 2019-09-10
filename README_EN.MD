@@ -45,7 +45,7 @@ local generated:
     2. pip3 install sphinx
     3. cd ./ctpbee/docs && make html
     4. you can see the index.html at /build/html, just use web browser to open it  
-
+  [Online docs](http://docs.ctpbee.com)
 
 ## Function
 

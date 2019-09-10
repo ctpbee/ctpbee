@@ -1,10 +1,12 @@
 import platform
+import sys
 import warnings
 
 from setuptools import Extension, setup
-
+from ctpbee import __version__
+if sys.version_info < (3, 6):
+    raise RuntimeError('当前ctpbee只支持python36以及更高版本/ ctpbee only support python36 and highly only ')
 runtime_library_dir = []
-
 try:
     import pypandoc
 
@@ -126,7 +128,7 @@ pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.d
 install_requires = ['flask>=1.1.1', "blinker", "dataclasses", "requests", "simplejson", "lxml", "pandas"]
 setup(
     name='ctpbee',
-    version='0.30.1',
+    version=__version__,
     description="Easy ctp trade and market support",
     author='somewheve',
     long_description=long_description,

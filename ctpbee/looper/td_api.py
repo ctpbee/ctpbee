@@ -6,7 +6,7 @@ from functools import lru_cache
 from ctpbee.constant import OrderRequest, CancelRequest, EVENT_TICK, TickData, EVENT_ORDER, EVENT_TRADE, \
     OrderData, Status, TradeData, EVENT_INIT_FINISHED
 from ctpbee.event_engine import Event
-from ctpbee.interface.looper.account import Account
+from ctpbee.looper.account import Account
 
 
 class AliasDayResult:

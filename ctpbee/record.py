@@ -98,8 +98,6 @@ class Recorder(object):
         self.logs[self.get_local_time()] = event.data
         if self.app.config.get("LOG_OUTPUT"):
             self.app.logger.info(event.data)
-        for value in self.app.extensions.values():
-            value(deepcopy(event))
 
     @value_call
     def process_bar_event(self, event: Event):
@@ -414,8 +412,6 @@ class AsyncRecorder(object):
         self.logs[self.get_local_time()] = event.data
         if self.app.config.get("LOG_OUTPUT"):
             self.app.logger.info(event.data)
-        for value in self.app.extensions.values():
-            await value(deepcopy(event))
 
     @async_value_call
     async def process_bar_event(self, event: Event):

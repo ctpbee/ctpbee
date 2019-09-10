@@ -157,12 +157,11 @@ class DataRecorder(CtpbeeApi):
             #
             main_contract = self.app.recorder.get_main_contract_by_code("ap")
             self.instrument_set.add(main_contract.local_symbol)
-
             # print(app.recorder.get_contract("ag1912.SHFE"))
 
 
 def create_app():
-    app = CtpBee("last", __name__, action_class=ActionMe, refresh=True, risk=RiskMe)
+    app = CtpBee("last", __name__, action_class=ActionMe, work_mode="limit_time", refresh=True, risk=RiskMe)
 
     """ 
         载入配置信息 

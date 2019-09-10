@@ -329,11 +329,8 @@ class CtpbeeApi(object):
     def on_contract(self, contract: ContractData):
         raise NotImplemented
 
-    def on_log(self, log: LogData):
-        raise NotImplemented
-
     def on_init(self, init: bool):
-        raise NotImplemented
+        pass
 
     def on_realtime(self, timed: datetime):
         pass
@@ -360,8 +357,6 @@ class CtpbeeApi(object):
             EVENT_POSITION: cls.on_position,
             EVENT_ACCOUNT: cls.on_account,
             EVENT_CONTRACT: cls.on_contract,
-            EVENT_LOG: cls.on_log
-
         }
         parmeter = {
             EVENT_TIMER: EVENT_TIMER,
@@ -374,7 +369,6 @@ class CtpbeeApi(object):
             EVENT_SHARED: EVENT_SHARED,
             EVENT_ACCOUNT: EVENT_ACCOUNT,
             EVENT_CONTRACT: EVENT_CONTRACT,
-            EVENT_LOG: EVENT_LOG
         }
         setattr(cls, "map", map)
         setattr(cls, "parmeter", parmeter)
@@ -457,11 +451,8 @@ class AsyncApi(object):
     async def on_contract(self, contract: ContractData):
         raise NotImplemented
 
-    async def on_log(self, log: LogData):
-        raise NotImplemented
-
     async def on_init(self, init: bool):
-        raise NotImplemented
+        pass
 
     async def on_realtime(self, timed: datetime):
         pass
@@ -488,8 +479,6 @@ class AsyncApi(object):
             EVENT_POSITION: cls.on_position,
             EVENT_ACCOUNT: cls.on_account,
             EVENT_CONTRACT: cls.on_contract,
-            EVENT_LOG: cls.on_log
-
         }
         parmeter = {
             EVENT_TIMER: EVENT_TIMER,
@@ -502,7 +491,6 @@ class AsyncApi(object):
             EVENT_SHARED: EVENT_SHARED,
             EVENT_ACCOUNT: EVENT_ACCOUNT,
             EVENT_CONTRACT: EVENT_CONTRACT,
-            EVENT_LOG: EVENT_LOG
         }
         setattr(cls, "map", map)
         setattr(cls, "parmeter", parmeter)
