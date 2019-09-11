@@ -156,7 +156,8 @@ class DataRecorder(CtpbeeApi):
             # print(self.app.recorder.main_contract_list)
             #
             main_contract = self.app.recorder.get_main_contract_by_code("ap")
-            self.instrument_set.add(main_contract.local_symbol)
+            if main_contract:
+                self.instrument_set.add(main_contract.local_symbol)
             # print(app.recorder.get_contract("ag1912.SHFE"))
 
 

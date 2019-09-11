@@ -62,7 +62,7 @@ DIRECTION_CTP2VT[THOST_FTDC_PD_Short] = Direction.SHORT
 
 ORDERTYPE_VT2CTP = {
     OrderType.LIMIT: THOST_FTDC_OPT_LimitPrice,
-    OrderType.MARKET: THOST_FTDC_OPT_AnyPrice
+    OrderType.MARKET: THOST_FTDC_OPT_AnyPrice,
 }
 ORDERTYPE_CTP2VT = {v: k for k, v in ORDERTYPE_VT2CTP.items()}
 
