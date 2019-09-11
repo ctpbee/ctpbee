@@ -9,7 +9,7 @@
     "appid": "client_antquant_1.0",
     "auth_code": "M9G902YXWFO3IL4R"
   },
-  "INTERFACE": "ctp",
+  "INTERFACE": "ctp_se",
   "TD_FUNC": true,
   "MD_FUNC": true,
   "REFRESH_INTERVAL": 1.5,

@@ -285,7 +285,6 @@ class BeeTdApi(TdApi):
             # 请求计算所有合约所用到的具体数据
             self.reqid += 1
             self.reqQryDepthMarketData({}, self.reqid)
-
             self.on_event(EVENT_LOG, data="合约信息查询成功")
 
             for data in self.order_data:
@@ -834,11 +833,15 @@ class BeeTdApiApp(TdApiApp):
         sessionid = data["SessionID"]
         order_ref = data["OrderRef"]
         order_id = f"{frontid}_{sessionid}_{order_ref}"
+        if data['OrderPriceType'] in ORDERTYPE_VT2CTP.values():
+            ordertype = ORDERTYPE_CTP2VT[data["OrderPriceType"]]
+        else:
+            ordertype = "non_support"
         order = OrderData(
             symbol=symbol,
             exchange=exchange,
             order_id=order_id,
-            type=ORDERTYPE_CTP2VT[data["OrderPriceType"]],
+            type=ordertype,
             direction=DIRECTION_CTP2VT[data["Direction"]],
             offset=OFFSET_CTP2VT[data["CombOffsetFlag"]],
             price=data["LimitPrice"],
