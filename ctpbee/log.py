@@ -52,7 +52,12 @@ class VLogger():
                 color = self.normal
             temp_record.levelname = (self.fuchsin + str(temp_record.levelname).ljust(8) + '\x1b[0m')
             temp_record.msg = color + str(temp_record.msg) + '\x1b[0m'
-            temp_record.owner = self.cyan + str(temp_record.owner).ljust(10) + '\x1b[0m'
+            """ I don't know why this will be called by other framework """
+            try:
+                temp_record.owner = self.cyan + str(temp_record.owner).ljust(10) + '\x1b[0m'
+            except Exception as e:
+                setattr(temp_record, "owner", "Unknown")
+
             temp_record.name = self.white + str(temp_record.name).ljust(10) + '\x1b[0m'
             for x in VLogger.extra_attributes:
                 setattr(temp_record, x, self.white + str(getattr(temp_record, x)) + '\x1b[0m')
@@ -93,6 +98,7 @@ class VLogger():
             handle_me: logging.Handler = getattr(self, handler)
         else:
             raise ValueError(f"无此处理器对象, 当前只支持[debug_handler, error_handler, warn_handler, info_handler]")
+
         p = "%(asctime)s %(name)s %(levelname)s %(owner)s {fmt} %(message)s".format(
             fmt="".join([f"%({p})s " for p in attribute]))
 

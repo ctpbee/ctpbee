@@ -1,14 +1,14 @@
 {
-  "CONNECT_INFO": {
+  "CONNECT_INFO":  {
     "userid": "2001726",
     "password": "skyjay88",
     "brokerid": "9099",
-    "md_address": "tcp://220.248.1.67:51213",
-    "td_address": "tcp://220.248.1.67:51205",
+    "md_address": "tcp://220.248.1.66:51213",
+    "td_address": "tcp://220.248.1.66:51205",
     "product_info": "",
     "appid": "client_antquant_1.0",
     "auth_code": "M9G902YXWFO3IL4R"
-  },
+},
   "INTERFACE": "ctp_se",
   "TD_FUNC": true,
   "MD_FUNC": true,
