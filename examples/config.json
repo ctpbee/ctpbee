@@ -1,15 +1,15 @@
 {
-  "CONNECT_INFO":  {
-    "userid": "2001726",
-    "password": "skyjay88",
-    "brokerid": "9099",
-    "md_address": "tcp://220.248.1.66:51213",
-    "td_address": "tcp://220.248.1.66:51205",
+  "CONNECT_INFO": {
+    "userid": "089131",
+    "password": "350888",
+    "brokerid": "9999",
+    "md_address": "tcp://180.168.146.187:10131",
+    "td_address": "tcp://180.168.146.187:10130",
     "product_info": "",
-    "appid": "client_antquant_1.0",
-    "auth_code": "M9G902YXWFO3IL4R"
-},
-  "INTERFACE": "ctp_se",
+    "appid": "simnow_client_test",
+    "auth_code": "0000000000000000"
+  },
+  "INTERFACE": "ctp",
   "TD_FUNC": true,
   "MD_FUNC": true,
   "REFRESH_INTERVAL": 1.5,

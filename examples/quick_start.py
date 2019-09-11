@@ -118,7 +118,7 @@ class DataRecorder(CtpbeeApi):
 
     def on_tick(self, tick):
         """tick process function"""
-        print(tick)
+        # print(tick)
 
     def on_bar(self, bar):
         """bar process function"""
