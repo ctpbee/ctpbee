@@ -227,31 +227,20 @@ class BeeTdApi(TdApi):
         """
         Callback of instrument query.
         """
-
-        p = {
-
-            'InstLifePhase': '1',
-            'PositionType': '2',
-            'PositionDateType': '2',
-            'LongMarginRatio': 0.05,
-            'ShortMarginRatio': 0.05,
-            'MaxMarginSideAlgorithm': '0',
-            'UnderlyingInstrID': '',
-            'OptionsType': '\x00',
-            'UnderlyingMultiple': 0.0,
-            'CombinationType': '0'}
-
-        #
-        # inst_life_phase: str
-        # is_trading: bool
-        #
-        # position_type: str
-        # position_date_type: str
-        # long_margin_ratio: float
-        # short_margin_ratio: float
-        # max_margin_side_algorithm: bool
-
         product = PRODUCT_CTP2VT.get(data["ProductClass"], None)
+        try:
+            end_delivery_date = datetime.strptime(data["EndDelivDate"], "%Y%m%d"),
+            start_delivery_date = datetime.strptime(data["StartDelivDate"], "%Y%m%d"),
+            open_date = datetime.strptime(data['OpenDate'], "%Y%m%d"),
+            is_trading = bool(data["IsTrading"]),
+            create_date = datetime.strptime(data['CreateDate'], "%Y%m%d")
+        except ValueError:
+            end_delivery_date = None
+            start_delivery_date = None
+            open_date = None
+            is_trading = None
+            create_date = None
+
         if product:
             contract = ContractData(
                 symbol=data["InstrumentID"],
@@ -269,12 +258,13 @@ class BeeTdApi(TdApi):
                 long_margin_ratio=data['LongMarginRatio'],
                 short_margin_ratio=data['ShortMarginRatio'],
                 combination_type=data['CombinationType'],
-                end_delivery_date=datetime.strptime(data["EndDelivDate"], "%Y%m%d"),
-                start_delivery_date=datetime.strptime(data["StartDelivDate"], "%Y%m%d"),
-                open_date=datetime.strptime(data['OpenDate'], "%Y%m%d"),
-                is_trading=bool(data["IsTrading"]),
-                create_date=datetime.strptime(data['CreateDate'], "%Y%m%d"),
-                gateway_name=self.gateway_name
+                gateway_name=self.gateway_name,
+                end_delivery_date=end_delivery_date,
+                start_delivery_date=start_delivery_date,
+                open_date=open_date,
+                is_trading=is_trading,
+                create_date=create_date
+
             )
             self.symbol_exchange_mapping[data["InstrumentID"]] = EXCHANGE_CTP2VT[data["ExchangeID"]]
 
@@ -300,7 +290,6 @@ class BeeTdApi(TdApi):
             for data in self.order_data:
                 self.onRtnOrder(data)
             self.order_data.clear()
-
             for data in self.trade_data:
                 self.onRtnTrade(data)
             self.trade_data.clear()
@@ -322,12 +311,15 @@ class BeeTdApi(TdApi):
             self.order_ref = int(order_ref) + 1
 
         order_id = f"{frontid}_{sessionid}_{order_ref}"
-
+        if data['OrderPriceType'] in ORDERTYPE_VT2CTP.values():
+            ordertype = ORDERTYPE_CTP2VT[data["OrderPriceType"]]
+        else:
+            ordertype = "non_support"
         order = OrderData(
             symbol=symbol,
             exchange=exchange,
             order_id=order_id,
-            type=ORDERTYPE_CTP2VT[data["OrderPriceType"]],
+            type=ordertype,
             direction=DIRECTION_CTP2VT[data["Direction"]],
             offset=OFFSET_CTP2VT[data["CombOffsetFlag"]],
             price=data["LimitPrice"],
@@ -841,11 +833,15 @@ class BeeTdApiApp(TdApiApp):
         sessionid = data["SessionID"]
         order_ref = data["OrderRef"]
         order_id = f"{frontid}_{sessionid}_{order_ref}"
+        if data['OrderPriceType'] in ORDERTYPE_VT2CTP.values():
+            ordertype = ORDERTYPE_CTP2VT[data["OrderPriceType"]]
+        else:
+            ordertype = "non_support"
         order = OrderData(
             symbol=symbol,
             exchange=exchange,
             order_id=order_id,
-            type=ORDERTYPE_CTP2VT[data["OrderPriceType"]],
+            type=ordertype,
             direction=DIRECTION_CTP2VT[data["Direction"]],
             offset=OFFSET_CTP2VT[data["CombOffsetFlag"]],
             price=data["LimitPrice"],
