@@ -56,7 +56,7 @@ class VLogger():
             try:
                 temp_record.owner = self.cyan + str(temp_record.owner).ljust(10) + '\x1b[0m'
             except Exception as e:
-                setattr(temp_record.owner, "Unknown")
+                setattr(temp_record, "owner", "Unknown")
 
             temp_record.name = self.white + str(temp_record.name).ljust(10) + '\x1b[0m'
             for x in VLogger.extra_attributes:
@@ -98,6 +98,7 @@ class VLogger():
             handle_me: logging.Handler = getattr(self, handler)
         else:
             raise ValueError(f"无此处理器对象, 当前只支持[debug_handler, error_handler, warn_handler, info_handler]")
+
         p = "%(asctime)s %(name)s %(levelname)s %(owner)s {fmt} %(message)s".format(
             fmt="".join([f"%({p})s " for p in attribute]))
 

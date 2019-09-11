@@ -92,7 +92,7 @@ class RiskMe(RiskLevel):
 class DataRecorder(CtpbeeApi):
     def __init__(self, name, app=None):
         super().__init__(name, app)
-        self.instrument_set = set(["ag1912.SHFE"])
+        self.instrument_set = set(["jd1910.DCE"])
         self.comming_in = None
         self.id = None
 
@@ -118,7 +118,7 @@ class DataRecorder(CtpbeeApi):
 
     def on_tick(self, tick):
         """tick process function"""
-        # print(tick)
+        print(tick)
 
     def on_bar(self, bar):
         """bar process function"""
@@ -174,7 +174,6 @@ def create_app():
         data_recorder 就是下面传入的插件名字
       
     """
-
     data_recorder = DataRecorder("data_recorder")
     app.add_extension(data_recorder)
     """ 添加自定义的风控 """

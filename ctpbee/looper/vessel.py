@@ -1,7 +1,5 @@
 """
-回测容器模块, 此
-
-
+回测容器模块, 回测
 """
 
 
@@ -18,7 +16,7 @@ class Vessel:
         pass
 
     def add_data(self, data):
-        """ 添加data到本容器, 如果没有经过处理  """
+        """ 添加data到本容器, 如果没有经过处理 """
 
     def add_risk(self, risk):
         """ 添加风控 """

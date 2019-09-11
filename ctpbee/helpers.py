@@ -170,7 +170,7 @@ def dynamic_loading_api(f):
     f 是文件流
     主要是用来通过文件动态载入策略。 返回策略类的实例， 应该通过Ctpbee.add_extension() 加以载入
     你需要在策略代码文件中显式指定ext
-    返回元组
+    返回
     """
     if not isinstance(f, IO) and not isinstance(f, TextIOWrapper):
         raise ValueError(f"请确保你传入的是文件流(IO)，而不是{str(type(f))}")
