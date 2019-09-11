@@ -169,7 +169,7 @@ class BeeMdApiApp(MdApiApp):
 
     def __init__(self, event_engine):
         """Constructor"""
-        super(BeeMdApi, self).__init__()
+        super(BeeMdApiApp, self).__init__()
 
         self.gateway_name = "ctp"
 
