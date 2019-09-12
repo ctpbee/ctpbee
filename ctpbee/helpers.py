@@ -223,6 +223,7 @@ def run_forever(app):
             pass
         else:
             running_me = False
+
         if running_me and not running_status:
             """ 到了该启动的时间但是没运行 """
             app.recorder.clear_all()  # 清空记录器中所有的数据
@@ -231,7 +232,6 @@ def run_forever(app):
                 app.enable_extension(x)
             print(f"重新进行自动登录， 时间: {str(current_time)}")
             running_status = True
-
         elif running_me and running_status:
             """ 到了该启动的时间已经在运行 """
 
@@ -320,8 +320,5 @@ def end_thread(thread):
     _async_raise(thread.ident, SystemExit)
 
 
-
 def exec_wrapper(func):
     """ 错误装饰器 """
-    
-

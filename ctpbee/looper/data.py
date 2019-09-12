@@ -7,6 +7,7 @@
 from itertools import chain
 
 # todo: 将各家数据转化为从ctpbee数据包 ^_^ alse it will be a good idea to
+from time import time
 from typing import Iterable
 
 
@@ -28,7 +29,7 @@ class VessData:
         如果数据想接进来, 请提交pr
 
     """
-    support_cn = ["ctpbee", "rick_quant", "vnpy", "jq"]
+    support_cn = ["ctpbee", "rice_quant", "vnpy", "jq"]
 
     def __init__(self, data):
         self.init_flag = False
@@ -105,3 +106,36 @@ class VessData:
     def product(self):
         """ 产品类型 """
         return self.product_type
+
+
+if __name__ == '__main__':
+    # data = [{"local_symbol": x * 1} for x in range(5000000)]
+    # App = VessData(data)
+    # App.convert_data_to_inner()
+    # start_time = time()
+    # for x in App:
+    #     pass
+    # end_time = time()
+    # print(f"for循环遍历耗时{(end_time - start_time)*1000}ms")
+    # App = VessData(data)
+    # App.convert_data_to_inner()
+    # start = time()
+    # while True:
+    #     try:
+    #         next(App)
+    #     except StopIteration:
+    #         break
+    # end = time()
+    # print(f"next遍历耗时{(end - start)*1000}ms")
+    a = Bumblebee(**{"last_price": 1})
+    start_time = time()
+    print(a.last_price)
+    end_time = time()
+    print(f"属性访问耗时{(end_time - start_time) * 1000}ms")
+
+
+    a = {"last_price": 1}
+    start_time = time()
+    print(a['last_price'])
+    end_time = time()
+    print(f"字典访问耗时{(end_time - start_time) * 1000}ms")

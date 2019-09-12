@@ -20,7 +20,7 @@ class AliasDayResult:
             setattr(self, i, v)
 
 
-class LocalLooperApi():
+class LocalLooper():
     """
     本地化回测的服务端 ---> this will be a very interesting thing!
     尽量模拟交易所成交
@@ -30,11 +30,9 @@ class LocalLooperApi():
     本地 : 读取本地数据库的数据进行回测
     """
 
-    def __init__(self, event_engine, app):
+    def __init__(self, strtegy, risk, account):
         super().__init__()
-
         # 接入事件引擎
-        self.event_engine = event_engine
         self.pending = collections.deque()
         self.account = Account()
 
@@ -56,10 +54,6 @@ class LocalLooperApi():
         self._ocos = dict()
         self._ocol = collections.defaultdict(list)
 
-        # 根据外部配置覆盖配置
-        self.init_config(app)
-        self.account.update_attr(app.config['LOOPER_SETTING'])
-        self.event_engine.register(EVENT_TICK, self._process_tick)
 
     def _push_order(self, order: OrderData):
         """
@@ -262,3 +256,6 @@ class LocalLooperApi():
         # 初始化策略
         event = Event(EVENT_INIT_FINISHED, True)
         self.event_engine.put(event)
+
+    def __call__(self, *args, **kwargs):
+        """ todo: 如何实现判断"""

@@ -7,6 +7,13 @@ from ctpbee import CtpbeeApi
 from ctpbee import RiskLevel
 from ctpbee.constant import PositionData, AccountData, LogData
 
+from ctpbee import VLogger
+class Vlog(VLogger):
+
+    def handler_record(self, record):
+        """ 处理日志信息代码 """
+
+
 
 class ActionMe(Action):
 
@@ -154,7 +161,6 @@ class DataRecorder(CtpbeeApi):
             #
             # # 获取主力合约列表
             # print(self.app.recorder.main_contract_list)
-            #
             main_contract = self.app.recorder.get_main_contract_by_code("ap")
             if main_contract:
                 self.instrument_set.add(main_contract.local_symbol)
@@ -162,7 +168,7 @@ class DataRecorder(CtpbeeApi):
 
 
 def create_app():
-    app = CtpBee("last", __name__, action_class=ActionMe, work_mode="limit_time", refresh=True, risk=RiskMe)
+    app = CtpBee("last", __name__, action_class=ActionMe, logger_class=Vlog, work_mode="limit_time", refresh=True, risk=RiskMe)
 
     """ 
         载入配置信息 
@@ -179,7 +185,6 @@ def create_app():
     """ 添加自定义的风控 """
 
     """ 启动 """
-    app.start(log_output=True)
     return app
     # print(current_app.name)
 
@@ -187,3 +192,4 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     # del_app(app.name)
+    app.start(log_output=True)
