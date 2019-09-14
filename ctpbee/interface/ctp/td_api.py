@@ -925,7 +925,7 @@ class BeeTdApiApp(TdApiApp):
         try:
             exchange = self.symbol_exchange_mapping[data['InstrumentID']]
         except KeyError:
-            return
+            return分钟
         market = LastData(
             symbol=data['InstrumentID'],
             exchange=exchange,
