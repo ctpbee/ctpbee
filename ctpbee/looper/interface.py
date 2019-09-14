@@ -69,6 +69,11 @@ class LocalLooper():
         """ 撤单机制 """
 
     def gateway(self):
+        """ 拦截网关 """
+        pass
+
+    def match_deal(self, data):
+        """ 撮合成交 """
 
     def init_params(self, params):
         """ 回测参数设置 """
