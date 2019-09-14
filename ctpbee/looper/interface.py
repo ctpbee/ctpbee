@@ -3,10 +3,11 @@ import random
 from copy import deepcopy
 from functools import lru_cache
 
-from ctpbee.constant import OrderRequest, CancelRequest, EVENT_TICK, TickData, EVENT_ORDER, EVENT_TRADE, \
+from ctpbee.constant import OrderRequest, CancelRequest, TickData, EVENT_ORDER, EVENT_TRADE, \
     OrderData, Status, TradeData, EVENT_INIT_FINISHED
 from ctpbee.event_engine import Event
 from ctpbee.looper.account import Account
+from ctpbee.looper.data import Bumblebee
 
 
 class AliasDayResult:
@@ -20,16 +21,24 @@ class AliasDayResult:
             setattr(self, i, v)
 
 
+class Action():
+    def __init__(self):
+        pass
+
+    def buy(self, price, volume, origin, **kwargs):
+        pass
+
+    def short(self, price, volume, origin, **kwargs):
+        pass
+
+    def sell(self, price, volume, origin, **kwargs):
+        pass
+
+    def cover(self, price, volume, origin, **kwargs):
+        pass
+
+
 class LocalLooper():
-    """
-    本地化回测的服务端 ---> this will be a very interesting thing!
-    尽量模拟交易所成交
-
-    -----> 应该推出在线回测与本地回测两种模式
-    在线: tick和bar的接收应该与协议保持一致----> 对接开源的looper_me服务器
-    本地 : 读取本地数据库的数据进行回测
-    """
-
     def __init__(self, strtegy, risk, account):
         super().__init__()
         # 接入事件引擎
@@ -38,6 +47,7 @@ class LocalLooper():
 
         self.sessionid = random.randint(1000, 10000)
         self.frontid = random.randint(10001, 500000)
+
 
         # 发单的ref集合
         self.order_ref_set = set()
@@ -53,7 +63,6 @@ class LocalLooper():
         self.p = collections.defaultdict(collections.deque)
         self._ocos = dict()
         self._ocol = collections.defaultdict(list)
-
 
     def _push_order(self, order: OrderData):
         """
@@ -258,4 +267,11 @@ class LocalLooper():
         self.event_engine.put(event)
 
     def __call__(self, *args, **kwargs):
-        """ todo: 如何实现判断"""
+        """ 回测周期 """
+        p_data: Bumblebee = args[0]
+        if p_data.type == "tick":
+            self.strategy.on_tick(tick=)
+
+            pass
+        if p_data == "bar":
+            pass
