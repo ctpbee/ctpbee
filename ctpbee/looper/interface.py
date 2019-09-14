@@ -6,7 +6,6 @@ from functools import lru_cache
 from ctpbee.constant import OrderRequest, CancelRequest, TickData, EVENT_ORDER, EVENT_TRADE, \
     OrderData, Status, TradeData, EVENT_INIT_FINISHED
 from ctpbee.event_engine import Event
-from ctpbee.looper.account import Account
 from ctpbee.looper.data import Bumblebee
 
 
@@ -39,15 +38,16 @@ class Action():
 
 
 class LocalLooper():
-    def __init__(self, strtegy, risk, account):
+    def __init__(self, strategy, risk, account):
         super().__init__()
         # 接入事件引擎
         self.pending = collections.deque()
-        self.account = Account()
-
         self.sessionid = random.randint(1000, 10000)
         self.frontid = random.randint(10001, 500000)
 
+        self.strategy = strategy
+        self.risk = risk
+        self.account = account
 
         # 发单的ref集合
         self.order_ref_set = set()
