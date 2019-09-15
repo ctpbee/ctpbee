@@ -5,16 +5,6 @@ from ctpbee.constant import OrderRequest, Offset, Direction, OrderType, OrderDat
 from ctpbee.looper.data import Bumblebee
 
 
-class AliasDayResult:
-    """
-    每天的结果
-    """
-
-    def __init__(self, **kwargs):
-        """ 实例化进行调用 """
-        for i, v in kwargs:
-            setattr(self, i, v)
-
 
 class Action():
     def __init__(self, looper):
