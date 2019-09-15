@@ -13,17 +13,22 @@ from typing import Iterable
 
 class Bumblebee(dict):
     """  """
-    __slots__ = ['last_price', 'datetime', 'open_price', "high_price", "low_price", "close_price", "type"]
-    __getattr__ = dict.get
+    __slots__ = ['last_price', 'datetime', 'open_price', "high_price", "low_price", "close_price", "volume", "type"]
+    __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
+    __getattribute__ = dict.get
+
+    # def __getattribute__(self, item):
+    #     return dict.get(item)
 
     def __init__(self, **kwargs):
         if "last_price" in kwargs:
-            self.type = "tick"
+            self['type'] = "tick"
         else:
-            self.type = "bar"
-        [setattr(self, key, kwargs.get(key)) for key in kwargs if key in self.__slots__]
+            self['type'] = "bar"
+        super().__init__(**kwargs)
+        # [setattr(self, key, kwargs.get(key)) for key in kwargs if key in self.__slots__]
 
 
 class VessData:
@@ -112,32 +117,16 @@ class VessData:
 
 
 if __name__ == '__main__':
-    # data = [{"local_symbol": x * 1} for x in range(5000000)]
-    # App = VessData(data)
-    # App.convert_data_to_inner()
-    # start_time = time()
-    # for x in App:
-    #     pass
-    # end_time = time()
-    # print(f"for循环遍历耗时{(end_time - start_time)*1000}ms")
-    # App = VessData(data)
-    # App.convert_data_to_inner()
-    # start = time()
-    # while True:
-    #     try:
-    #         next(App)
-    #     except StopIteration:
-    #         break
-    # end = time()
-    # print(f"next遍历耗时{(end - start)*1000}ms")
     a = Bumblebee(**{"last_price": 1})
+
     start_time = time()
-    print(a.last_price)
+    print("price: ", a.last_price)
+    a.last_price = 2
     end_time = time()
     print(f"属性访问耗时{(end_time - start_time) * 1000}ms")
 
-    a = {"last_price": 1}
+    b = dict(last_price=1)
     start_time = time()
-    print(a['last_price'])
+    print("price: ", b.get('last_price'))
     end_time = time()
     print(f"字典访问耗时{(end_time - start_time) * 1000}ms")
