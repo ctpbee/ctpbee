@@ -5,14 +5,14 @@ from ctpbee import Action
 from ctpbee import CtpBee
 from ctpbee import CtpbeeApi
 from ctpbee import RiskLevel
+from ctpbee import VLogger
 from ctpbee.constant import PositionData, AccountData, LogData
 
-from ctpbee import VLogger
+
 class Vlog(VLogger):
 
     def handler_record(self, record):
         """ 处理日志信息代码 """
-
 
 
 class ActionMe(Action):
@@ -167,8 +167,32 @@ class DataRecorder(CtpbeeApi):
             # print(app.recorder.get_contract("ag1912.SHFE"))
 
 
+api = CtpbeeApi(extension_name="hi")
+
+
+@api.route(handler="bar")
+def handle_bar(self, bar):
+    print(bar)
+
+
+@api.route(handler="tick")
+def handle_tick(self, tick):
+    """ """
+
+
+@api.route(handler="contract")
+def handle_contract(self, contract):
+    self.app.subscribe(contract.local_symbol)
+
+
+@api.route(handler="timer")
+def realtime(self, cur):
+    print("hhh")
+
+
 def create_app():
-    app = CtpBee("last", __name__, action_class=ActionMe, logger_class=Vlog, work_mode="limit_time", refresh=True, risk=RiskMe)
+    app = CtpBee("last", __name__, action_class=ActionMe, logger_class=Vlog, work_mode="limit_time", refresh=True,
+                 risk=RiskMe)
 
     """ 
         载入配置信息 
@@ -181,7 +205,7 @@ def create_app():
       
     """
     data_recorder = DataRecorder("data_recorder")
-    app.add_extension(data_recorder)
+    app.add_extension(api)
     """ 添加自定义的风控 """
 
     """ 启动 """

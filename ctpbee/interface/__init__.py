@@ -29,13 +29,9 @@ class Interface:
         if interface == "ctp":
             from ctpbee.interface.ctp import BeeTdApi, BeeMdApi
             return (BeeMdApi, BeeTdApi)
-            pass
         if interface == "ctp_se":
             from ctpbee.interface.ctp import BeeTdApiApp, BeeMdApiApp
             return (BeeMdApiApp, BeeTdApiApp)
-        if interface == "looper":
-            from ctpbee.interface.looper import LocalLooperApi, MdLooperApi
-            return (MdLooperApi, LocalLooperApi)
         if interface == "xin":
             from ctpbee.interface.xin import XinTdApi, XinMdApi
             return (XinMdApi, XinTdApi)

@@ -58,7 +58,6 @@ class Vessel:
         d = VessData(data)
         d.convert_data_to_inner()
         self.looper_data = d
-        # todo: 根据添加的数据类型来知晓回测类型 以及产品
 
     def add_risk(self, risk):
         """ 添加风控 """

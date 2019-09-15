@@ -11,9 +11,12 @@ from time import time
 from typing import Iterable
 
 
-class Bumblebee:
+class Bumblebee(dict):
     """  """
     __slots__ = ['last_price', 'datetime', 'open_price', "high_price", "low_price", "close_price", "type"]
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
 
     def __init__(self, **kwargs):
         if "last_price" in kwargs:
@@ -132,7 +135,6 @@ if __name__ == '__main__':
     print(a.last_price)
     end_time = time()
     print(f"属性访问耗时{(end_time - start_time) * 1000}ms")
-
 
     a = {"last_price": 1}
     start_time = time()

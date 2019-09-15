@@ -1,6 +1,7 @@
 import collections
 import random
 
+from ctpbee.constant import OrderRequest, Offset, Direction, OrderType
 from ctpbee.looper.data import Bumblebee
 
 
@@ -16,14 +17,23 @@ class AliasDayResult:
 
 
 class Action():
-    def __init__(self):
+    def __init__(self, looper):
         """ 将action这边报单 """
+        self.looper = looper
 
     def buy(self, price, volume, origin, **kwargs):
-        pass
+        req = OrderRequest(price=price, volume=volume, exchange=origin.exchange, offset=Offset.OPEN,
+                             direction=Direction.LONG, type=OrderType.LIMIT)
+        return self.looper.send_order(req)
 
     def short(self, price, volume, origin, **kwargs):
-        pass
+        req = OrderRequest(price=price, volume=volume, exchange=origin.exchange, offset=Offset.OPEN,
+                             direction=Direction.SHORT, type=OrderType.LIMIT)
+        return self.looper.send_order(req)
+
+    @property
+    def position(self):
+        return self.looper.account.positions
 
     def sell(self, price, volume, origin, **kwargs):
         pass
@@ -34,7 +44,10 @@ class Action():
 
 class LocalLooper():
     def __init__(self, strategy, risk, account, logger):
+        """ 需要构建完整的成交回报以及发单报告,在account里面需要存储大量的存储 """
+
         self.pending = collections.deque()
+
         self.sessionid = random.randint(1000, 10000)
         self.frontid = random.randint(10001, 500000)
         # 日志输出器
@@ -54,6 +67,7 @@ class LocalLooper():
 
         # 账户属性
         self.account = account
+        self.order_ref = 0
 
         # 发单的ref集合
         self.order_ref_set = set()
@@ -61,6 +75,12 @@ class LocalLooper():
         self.traded_order_mapping = {}
         # 已经order_id --- 报单
         self.order_id_pending_mapping = {}
+
+    def _generate_order_data_from_req(self, req: OrderRequest):
+        """ 将发单请求转换为发单数据 """
+        self.order_ref += 1
+        order_id = f"{self.frontid}-{self.sessionid}-{self.order_ref}"
+        return req._create_order_data(gateway_name="looper", order_id=order_id)
 
     def send_order(self, order_req):
         """ 发单的操作"""

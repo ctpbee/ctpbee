@@ -9,7 +9,7 @@ from threading import Thread
 from time import sleep
 from typing import Any, Callable
 
-EVENT_TIMER = "eTimer"
+EVENT_TIMER = "timer"
 
 
 class Event:

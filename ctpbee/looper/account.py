@@ -55,9 +55,6 @@ class Account:
         self.ServberPosition = defaultdict(defaultdict(PositionData))
         # 存储数据结构应该为 {"AP901":{""long:[PositionData, ], "short":[ PositionData, ]}}
 
-    def update_attr(self, **kwargs):
-        """ 从外部更新资金等相关情况 """
-        {setattr(self, i.lower(), v) for i, v in kwargs.items() if hasattr(self, i)}
 
     def is_traded(self, trade: TradeData) -> bool:
         """ 当前账户是否足以支撑成交 """
