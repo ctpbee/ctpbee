@@ -8,6 +8,8 @@ from enum import Enum
 from logging import INFO
 from typing import Any
 
+from pandas import DataFrame
+
 
 class Missing:
     value = "属性缺失"
@@ -232,8 +234,18 @@ class BaseData:
             temp[x] = getattr(self, x)
         return temp
 
-    def _to_df(self) :
+    def _to_df(self):
         # todo: df support
+        temp = {}
+        for x in dir(self):
+            if x.startswith("_") or x.startswith("create"):
+                continue
+            if isinstance(getattr(self, x), Enum):
+                temp[x] = getattr(self, x).value
+                continue
+            temp[x] = getattr(self, x)
+
+        return DataFrame([temp], columns=list(temp.keys()).remove("datetime")).set_index(['datetime']) if temp.get("datetime", None) is not None else DataFrame([temp], columns=list(temp.keys()))
 
     def _asdict(self):
         """ 转换为字典 里面会有enum """
@@ -534,7 +546,6 @@ class ContractData(BaseData):
     long_margin_ratio: float
     short_margin_ratio: float
     max_margin_side_algorithm: bool
-
 
     def __post_init__(self):
         """"""
