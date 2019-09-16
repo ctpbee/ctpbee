@@ -24,6 +24,8 @@ ctpbee界面主要依赖于flask, 文档请移步
     数据载体
     函数
     策略以及数据录入
+    风控
+    Action模块
     回测系统
     日志模块
 
@@ -37,14 +39,19 @@ ctpbee界面主要依赖于flask, 文档请移步
     社区支持 <http://community.ctpbee.com>
     加入讨论 <https://jq.qq.com/?_wv=1027&k=5xWbIq3>
 
+.. toctree::
+    :maxdepth: 2
+    :caption: 相关
+
 
 
 API支持
-------------------
-如果你正在寻找特殊函数,类或者类函数的相关信息, 这部分的文档对你可能有用
+---------------------
+如果你正在寻找一些有趣的实现, 这部分的文档对你可能有用
 
 ..  toctree::
     :maxdepth: 2
+
     API支持
 
 
@@ -59,12 +66,12 @@ API支持
 ------------------
 
 
-`web客户端 <https://github.com/somewheve/ctpbee_client>`_
+`web客户端 <https://github.com/ctpbee/ctpbee_client>`_
 
 
 开源贡献与准则
 ------------------
-ctpbee主要面对开发者, 策略以及指标等工具都以ctpbee_** 形式发布. ctpbee只提供最小的内核. 本人崇尚开源, 无论你是交易者还是程序员, 只要你有新的想法以及对开源感兴趣, 基于ctpbee 开发出新的可用工具后. 请联系我, 我会加入上述工具列表.
+ctpbee主要面对开发者, 策略以及指标等工具都以ctpbee_** 形式发布. 地址在  `https://github.com/ctpbee <https://github.com/ctpbee>`_  ctpbee只提供最小的内核. 本人崇尚开源, 无论你是交易者还是程序员, 只要你有新的想法以及对开源感兴趣, 基于ctpbee 开发出新的可用工具后. 请联系我, 我会加入上述工具列表.
 
 
 搜索

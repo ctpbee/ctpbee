@@ -65,7 +65,7 @@ class Action(object):
         self.app = app
 
     def buy(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
-            price_type: OrderType = "LIMIT", stop: bool = False, lock: bool = False):
+            price_type: OrderType = "LIMIT", stop: bool = False, lock: bool = False, **kwargs):
         """
         开仓 多头
         """
