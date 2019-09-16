@@ -113,6 +113,7 @@ class DataRecorder(CtpbeeApi):
 
     def on_contract(self, contract):
         # 通过本地的
+        print(contract)
         if contract.local_symbol in self.instrument_set:
             self.app.subscribe(contract.local_symbol)
 
@@ -194,6 +195,7 @@ def handle_contract(self, contract):
 @api.route(handler="timer")
 def realtime(self):
     """ """
+    self.warning("bug")
 
 
 @api.route(handler="position")

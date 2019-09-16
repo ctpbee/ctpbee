@@ -232,6 +232,9 @@ class BaseData:
             temp[x] = getattr(self, x)
         return temp
 
+    def _to_df(self) :
+        # todo: df support
+
     def _asdict(self):
         """ 转换为字典 里面会有enum """
         return asdict(self)

@@ -44,7 +44,9 @@ docker run -p 5000:5000 yutiansut/ctpbee:latest
     
 在线:
     [文档](http://docs.ctpbee.com)
-    
+
+## 社区支持
+[地址](http://community.ctpbee.com)
     
     
 ## 功能支持
@@ -107,4 +109,5 @@ ctpbee主要面对开发者, 希望能得到各位大佬的支持. 后续不再�
 
 如果你希望贡献代码, 欢迎加群一起讨论和或者提交PR  QQ群号(: 756319143) [点进加入群聊以了解更多](https://jq.qq.com/?_wv=1027&k=5xWbIq3)
 
+如果你有遇到问题请发邮件给我 邮箱: somewheve@gmail.com 我会及时回复! 
 最后一句 ----> 祝各位大佬都能赚钱 ！
