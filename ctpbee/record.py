@@ -60,9 +60,9 @@ class Recorder(object):
         self.event_engine.register(EVENT_INIT_FINISHED, self.process_init_event)
         self.event_engine.register(EVENT_TIMER, self.process_timer_event)
 
-    def process_timer_event(self, event):
+    def process_timer_event(self):
         for x in self.app.extensions.values():
-            x(deepcopy(event))
+            x()
 
     def process_init_event(self, event):
         """ 处理初始化完成事件 """
@@ -210,6 +210,7 @@ class Recorder(object):
     def get_trade(self, local_trade_id):
         return self.trades.get(local_trade_id, None)
 
+
     def get_position(self, local_position_id):
         return self.positions.get(local_position_id, None)
 
@@ -356,9 +357,9 @@ class AsyncRecorder(object):
         self.event_engine.register(EVENT_INIT_FINISHED, self.process_init_event)
         self.event_engine.register(EVENT_TIMER, self.process_timer_event)
 
-    async def process_timer_event(self, event):
+    async def process_timer_event(self):
         for x in self.app.extensions.values():
-            await x(deepcopy(event))
+            await x()
 
     async def process_init_event(self, event):
         """ 处理初始化完成事件 """

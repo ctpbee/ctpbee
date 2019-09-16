@@ -7,7 +7,6 @@
 from itertools import chain
 
 # todo: 将各家数据转化为从ctpbee数据包 ^_^ alse it will be a good idea to
-from time import time
 from typing import Iterable
 
 
@@ -114,19 +113,3 @@ class VessData:
     def product(self):
         """ 产品类型 """
         return self.product_type
-
-
-if __name__ == '__main__':
-    a = Bumblebee(**{"last_price": 1})
-
-    start_time = time()
-    print("price: ", a.last_price)
-    a.last_price = 2
-    end_time = time()
-    print(f"属性访问耗时{(end_time - start_time) * 1000}ms")
-
-    b = dict(last_price=1)
-    start_time = time()
-    print("price: ", b.get('last_price'))
-    end_time = time()
-    print(f"字典访问耗时{(end_time - start_time) * 1000}ms")

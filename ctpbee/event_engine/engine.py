@@ -3,7 +3,6 @@ Event-driven framework of vn.py framework.
 """
 import asyncio
 from collections import defaultdict
-from datetime import datetime
 from queue import Empty, Queue
 from threading import Thread
 from time import sleep
@@ -77,7 +76,7 @@ class EventEngine:
         to all types.
         """
         if event.type in self._handlers:
-            [handler(event) for handler in self._handlers[event.type]]
+            [handler(event) if event.type != EVENT_TIMER else handler() for handler in self._handlers[event.type]]
 
         if self._general_handlers:
             [handler(event) for handler in self._general_handlers]
@@ -88,7 +87,7 @@ class EventEngine:
         """
         while self._active:
             sleep(self._interval)
-            event = Event(EVENT_TIMER, data=datetime.now())
+            event = Event(EVENT_TIMER)
             self.put(event)
 
     def start(self):

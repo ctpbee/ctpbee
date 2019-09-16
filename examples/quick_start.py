@@ -1,4 +1,3 @@
-from datetime import datetime
 from time import sleep
 
 from ctpbee import Action
@@ -81,17 +80,22 @@ class RiskMe(RiskLevel):
         """"""
 
         # do something  ??
-        self.debug("发单")
+        self.info("发单")
         return True, args, kwargs
 
     def after_short(self, result):
-        # print(result)
+
         cal = 0
+        self.info("我在执行short后的事后检查")
         while True:
             sleep(1)
             if cal > 3: break
             cal += 1
+            self.info("正在检查呢 ")
             # do something
+
+    def realtime_check(self):
+        """ """
 
 
 # 启动过程  --- strategy/ .py  --- app.add_extension(ext)
@@ -124,7 +128,7 @@ class DataRecorder(CtpbeeApi):
         # print(account)
 
     def on_tick(self, tick):
-        """tick process function"""
+        """tick processself-control  && kill your  function"""
         # print(tick)
 
     def on_bar(self, bar):
@@ -141,7 +145,7 @@ class DataRecorder(CtpbeeApi):
         """ 可以用于将log信息推送到外部 """
         pass
 
-    def on_realtime(self, timed: datetime):
+    def on_realtime(self):
         """  """
         # for x in self.app.recorder.get_all_active_orders():
         #     self.action.cancel(x.local_order_id)
@@ -172,7 +176,7 @@ api = CtpbeeApi(extension_name="hi")
 
 @api.route(handler="bar")
 def handle_bar(self, bar):
-    print(bar)
+    self.action.short(bar.high_price, 1, bar)
 
 
 @api.route(handler="tick")
@@ -182,12 +186,33 @@ def handle_tick(self, tick):
 
 @api.route(handler="contract")
 def handle_contract(self, contract):
-    self.app.subscribe(contract.local_symbol)
+    if contract.local_symbol == "zn1911.SHFE":
+        self.app.subscribe(contract.local_symbol)
 
 
 @api.route(handler="timer")
-def realtime(self, cur):
-    print("hhh")
+def realtime(self):
+    """ """
+
+
+@api.route(handler="position")
+def handld_position(self, position):
+    """ """
+
+
+@api.route(handler="account")
+def handle_account(self, account):
+    """ """
+
+
+@api.route(handler="order")
+def handle_order(self, order):
+    """ """
+
+
+@api.route(handler="trade")
+def handle_trade(self, trade):
+    """ """
 
 
 def create_app():
@@ -206,7 +231,6 @@ def create_app():
     """
     data_recorder = DataRecorder("data_recorder")
     app.add_extension(api)
-    """ 添加自定义的风控 """
 
     """ 启动 """
     return app

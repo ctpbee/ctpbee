@@ -361,7 +361,7 @@ class CtpbeeApi(object):
     def on_init(self, init: bool):
         pass
 
-    def on_realtime(self, timed: datetime):
+    def on_realtime(self):
         pass
 
     def init_app(self, app):
@@ -380,10 +380,14 @@ class CtpbeeApi(object):
 
         return converter
 
-    def __call__(self, event: Event):
-        func = self.map[event.type]
-        if not self.frozen:
-            func(self, event.data)
+    def __call__(self, event: Event = None):
+        if not event:
+            if not self.frozen:
+                self.map[EVENT_TIMER](self)
+        else:
+            func = self.map[event.type]
+            if not self.frozen:
+                func(self, event.data)
 
 
 class AsyncApi(object):
