@@ -22,6 +22,7 @@ class RiskLevel:
     app = None
     logger = None
     action = None
+    recorder = None
     thread_pool = []
 
     def __init__(self, func):
@@ -33,6 +34,7 @@ class RiskLevel:
         cls.app = app
         cls.action = app.action
         cls.logger = app.logger
+        cls.recorder = app.recorder
 
         update_list = ["realtime_check", "mimo_thread"]
         for _ in update_list:
@@ -102,11 +104,3 @@ class RiskLevel:
     @classmethod
     def realtime_check(self):
         """ 一直检查 """
-
-    @property
-    def recorder(self):
-        return self.app.recorder
-
-    @property
-    def action(self):
-        return self.app.action

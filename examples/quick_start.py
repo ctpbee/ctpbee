@@ -106,6 +106,7 @@ class DataRecorder(CtpbeeApi):
         self.instrument_set = set(["jd1910.DCE"])
         self.comming_in = None
         self.id = None
+        self.f_init = False
 
     def on_trade(self, trade):
         pass

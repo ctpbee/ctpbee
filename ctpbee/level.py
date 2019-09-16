@@ -519,6 +519,10 @@ class AsyncApi(object):
             self.app.extensions[self.extension_name] = self
 
     async def __call__(self, event: Event):
-        func = self.map[event.type]
-        if not self.fronzen:
-            await func(self, event.data)
+        if not event:
+            if not self.frozen:
+                await self.map[EVENT_TIMER](self)
+        else:
+            func = self.map[event.type]
+            if not self.frozen:
+                await (self, event.data)
