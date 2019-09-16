@@ -1,11 +1,17 @@
-from datetime import datetime
 from time import sleep
 
 from ctpbee import Action
 from ctpbee import CtpBee
 from ctpbee import CtpbeeApi
 from ctpbee import RiskLevel
+from ctpbee import VLogger
 from ctpbee.constant import PositionData, AccountData, LogData
+
+
+class Vlog(VLogger):
+
+    def handler_record(self, record):
+        """ 处理日志信息代码 """
 
 
 class ActionMe(Action):
@@ -74,17 +80,22 @@ class RiskMe(RiskLevel):
         """"""
 
         # do something  ??
-        self.debug("发单")
+        self.info("发单")
         return True, args, kwargs
 
     def after_short(self, result):
-        # print(result)
+
         cal = 0
+        self.info("我在执行short后的事后检查")
         while True:
             sleep(1)
             if cal > 3: break
             cal += 1
+            self.info("正在检查呢 ")
             # do something
+
+    def realtime_check(self):
+        """ """
 
 
 # 启动过程  --- strategy/ .py  --- app.add_extension(ext)
@@ -95,6 +106,7 @@ class DataRecorder(CtpbeeApi):
         self.instrument_set = set(["jd1910.DCE"])
         self.comming_in = None
         self.id = None
+        self.f_init = False
 
     def on_trade(self, trade):
         pass
@@ -117,8 +129,8 @@ class DataRecorder(CtpbeeApi):
         # print(account)
 
     def on_tick(self, tick):
-        """tick process function"""
-        print(tick)
+        """tick processself-control  && kill your  function"""
+        # print(tick)
 
     def on_bar(self, bar):
         """bar process function"""
@@ -134,7 +146,7 @@ class DataRecorder(CtpbeeApi):
         """ 可以用于将log信息推送到外部 """
         pass
 
-    def on_realtime(self, timed: datetime):
+    def on_realtime(self):
         """  """
         # for x in self.app.recorder.get_all_active_orders():
         #     self.action.cancel(x.local_order_id)
@@ -154,15 +166,59 @@ class DataRecorder(CtpbeeApi):
             #
             # # 获取主力合约列表
             # print(self.app.recorder.main_contract_list)
-            #
             main_contract = self.app.recorder.get_main_contract_by_code("ap")
             if main_contract:
                 self.instrument_set.add(main_contract.local_symbol)
             # print(app.recorder.get_contract("ag1912.SHFE"))
 
 
+api = CtpbeeApi(extension_name="hi")
+
+
+@api.route(handler="bar")
+def handle_bar(self, bar):
+    self.action.short(bar.high_price, 1, bar)
+
+
+@api.route(handler="tick")
+def handle_tick(self, tick):
+    """ """
+
+
+@api.route(handler="contract")
+def handle_contract(self, contract):
+    if contract.local_symbol == "zn1911.SHFE":
+        self.app.subscribe(contract.local_symbol)
+
+
+@api.route(handler="timer")
+def realtime(self):
+    """ """
+
+
+@api.route(handler="position")
+def handld_position(self, position):
+    """ """
+
+
+@api.route(handler="account")
+def handle_account(self, account):
+    """ """
+
+
+@api.route(handler="order")
+def handle_order(self, order):
+    """ """
+
+
+@api.route(handler="trade")
+def handle_trade(self, trade):
+    """ """
+
+
 def create_app():
-    app = CtpBee("last", __name__, action_class=ActionMe, work_mode="limit_time", refresh=True, risk=RiskMe)
+    app = CtpBee("last", __name__, action_class=ActionMe, logger_class=Vlog, work_mode="limit_time", refresh=True,
+                 risk=RiskMe)
 
     """ 
         载入配置信息 
@@ -175,11 +231,9 @@ def create_app():
       
     """
     data_recorder = DataRecorder("data_recorder")
-    app.add_extension(data_recorder)
-    """ 添加自定义的风控 """
+    app.add_extension(api)
 
     """ 启动 """
-    app.start(log_output=True)
     return app
     # print(current_app.name)
 
@@ -187,3 +241,4 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     # del_app(app.name)
+    app.start(log_output=True)

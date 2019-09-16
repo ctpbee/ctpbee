@@ -10,8 +10,19 @@ from collections import defaultdict
 
 from pandas import DataFrame
 
-from ctpbee.constant import TradeData, Offset, Direction, PositionData
-from ctpbee.exceptions import DataError
+from ctpbee.constant import TradeData, PositionData
+from ctpbee.data_handle.local_position import LocalPositionManager
+
+
+class AliasDayResult:
+    """
+    每天的结果
+    """
+
+    def __init__(self, **kwargs):
+        """ 实例化进行调用 """
+        for i, v in kwargs:
+            setattr(self, i, v)
 
 
 class Account:
@@ -23,9 +34,15 @@ class Account:
     """
 
     def __init__(self):
-        self.positions = defaultdict(dict)
+        self.positions = LocalPositionManager(app=None)
         # 每日资金情况
         self.daily_life = defaultdict(list)
+
+        {
+            "12-8": AliasDayResult(),
+            "12-9": AliasDayResult(),
+
+        }
 
         # 回测模式
         self.pattern = "t+0"
@@ -39,7 +56,7 @@ class Account:
 
         self.daily_limit = 20
 
-        # 佣金
+        # 手续费
         self.commission: float = 0
 
         # 滑点相关设置
@@ -50,14 +67,10 @@ class Account:
         self.slip_match: bool = True
         self.slip_limit: bool = True
         self.slip_out: bool = False
-
+        self.cu = None
         # 账户持有持仓信息 ----->
         self.ServberPosition = defaultdict(defaultdict(PositionData))
         # 存储数据结构应该为 {"AP901":{""long:[PositionData, ], "short":[ PositionData, ]}}
-
-    def update_attr(self, **kwargs):
-        """ 从外部更新资金等相关情况 """
-        {setattr(self, i.lower(), v) for i, v in kwargs.items() if hasattr(self, i)}
 
     def is_traded(self, trade: TradeData) -> bool:
         """ 当前账户是否足以支撑成交 """
@@ -77,51 +90,13 @@ class Account:
         :return:
         """
         # 根据单子 更新当前的持仓和----->
-        #  according to the trade to update position and account
-        if trade.offset == Offset.OPEN:
-            if trade.direction == Direction.LONG:
-                self.buy(trade)
-            elif trade.direction == Direction.SHORT:
-                self.sell(trade)
-            else:
-                raise DataError(message=f"数据异常， TradeData direction表现为 {trade.direction.value}, 请检查你的发单代码")
-        elif trade.offset == Offset.CLOSETODAY:
-            # 处理平今/solve the close_today
-            self.close_today(trade)
-        elif trade.offset == Offset.CLOSEYESTERDAY:
-            self.close_yesterday(trade)
+        if trade.time.date != self.cu.date:
+            p = AliasDayResult({"balance": self.balance, "frozen": self.frozen, "avaiable": self.balance - self.frozen})
+            self.daily_life[str(p.time.date)] = p
+            self.cu = p
+        # todo : 更新本地账户数据， 如果是隔天数据， 那么统计战绩， -----> 生成一个dayresult，然后推送到字典 。 以日期为key
 
-        elif trade.offset == Offset.CLOSE:
-            self.close(trade)
-        else:
-            raise DataError(message=f"数据异常， TradeData offset表现为 {trade.offset.value}, 请检查你的发单代码")
-
-    def buy(self, trade: TradeData):
-        """ 处理买/buy """
-        # 扣除手续费/deduct the commission
-
-        # todo: 如果成交了是否需要归还冻结的资金
-        self.balance = self.balance - self.trade.price * trade.volume * self.commission
-
-        # 建立持仓 / make position
-
-    # 需要买多卖空进行反向解析,从而更改回测的时候的属性
-
-    def sell(self, trade):
-        pass
-
-    def close(self, trade):
-        pass
-
-    def close_today(self, trade):
-        """ 平今 """
-
-    def close_yesterday(self, trade):
-        """ 平昨"""
-
-    def close(self, trade):
-
-        """ 平 """
+        self.position_manager.update_trade(trade=trade)
 
     @property
     def result(self):

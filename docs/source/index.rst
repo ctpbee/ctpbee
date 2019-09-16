@@ -25,6 +25,7 @@ ctpbee界面主要依赖于flask, 文档请移步
     函数
     策略以及数据录入
     回测系统
+    日志模块
 
 
 
@@ -44,7 +45,6 @@ API支持
 
 ..  toctree::
     :maxdepth: 2
-
     API支持
 
 
@@ -58,9 +58,8 @@ API支持
 维护的可用工具名单
 ------------------
 
-`CTA策略 <https://github.com/somewheve/ctpbee_cta>`_   cta策略实现 即将上线
 
-`web客户端 <#>`_    即将上线
+`web客户端 <https://github.com/somewheve/ctpbee_client>`_
 
 
 开源贡献与准则

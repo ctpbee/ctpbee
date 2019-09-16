@@ -209,9 +209,7 @@ def run_forever(app):
 
     running_me = False
     running_status = True
-
     while True:
-
         if not app.p_flag:
             break
         current_time = datetime.now()
@@ -239,6 +237,8 @@ def run_forever(app):
             """ 非交易日 并且在运行 """
             for x in app.extensions.keys():
                 app.suspend_extension(x)
+                if hasattr(app.extensions[x], "f_init"):
+                    app.extensions[x].f_init = False
             print(f"当前时间不允许， 时间: {str(current_time)}, 即将阻断运行")
             running_status = False
 
@@ -320,8 +320,5 @@ def end_thread(thread):
     _async_raise(thread.ident, SystemExit)
 
 
-
 def exec_wrapper(func):
     """ 错误装饰器 """
-    
-

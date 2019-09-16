@@ -4,8 +4,8 @@ from typing import Set, List, AnyStr, Text
 from warnings import warn
 
 from ctpbee.constant import EVENT_INIT_FINISHED, EVENT_TICK, EVENT_BAR, EVENT_ORDER, EVENT_SHARED, EVENT_TRADE, \
-    EVENT_POSITION, EVENT_ACCOUNT, EVENT_CONTRACT, EVENT_LOG, OrderData, SharedData, BarData, TickData, TradeData, \
-    PositionData, AccountData, ContractData, LogData, Offset, Direction, OrderType, Exchange
+    EVENT_POSITION, EVENT_ACCOUNT, EVENT_CONTRACT, OrderData, SharedData, BarData, TickData, TradeData, \
+    PositionData, AccountData, ContractData, Offset, Direction, OrderType, Exchange
 from ctpbee.event_engine.engine import EVENT_TIMER, Event
 from ctpbee.exceptions import ConfigError
 from ctpbee.func import helper
@@ -263,6 +263,35 @@ class CtpbeeApi(object):
             app.add_extension(Process("data_processor"))
     """
 
+    def __new__(cls, *args, **kwargs):
+        map = {
+            EVENT_TIMER: cls.on_realtime,
+            EVENT_INIT_FINISHED: cls.on_init,
+            EVENT_TICK: cls.on_tick,
+            EVENT_BAR: cls.on_bar,
+            EVENT_ORDER: cls.on_order,
+            EVENT_SHARED: cls.on_shared,
+            EVENT_TRADE: cls.on_trade,
+            EVENT_POSITION: cls.on_position,
+            EVENT_ACCOUNT: cls.on_account,
+            EVENT_CONTRACT: cls.on_contract,
+        }
+        parmeter = {
+            EVENT_TIMER: EVENT_TIMER,
+            EVENT_INIT_FINISHED: EVENT_INIT_FINISHED,
+            EVENT_POSITION: EVENT_POSITION,
+            EVENT_TRADE: EVENT_TRADE,
+            EVENT_BAR: EVENT_BAR,
+            EVENT_TICK: EVENT_TICK,
+            EVENT_ORDER: EVENT_ORDER,
+            EVENT_SHARED: EVENT_SHARED,
+            EVENT_ACCOUNT: EVENT_ACCOUNT,
+            EVENT_CONTRACT: EVENT_CONTRACT,
+        }
+        setattr(cls, "map", map)
+        setattr(cls, "parmeter", parmeter)
+        return super().__new__(cls)
+
     def __init__(self, extension_name, app=None):
         """
         init function
@@ -332,7 +361,7 @@ class CtpbeeApi(object):
     def on_init(self, init: bool):
         pass
 
-    def on_realtime(self, timed: datetime):
+    def on_realtime(self):
         pass
 
     def init_app(self, app):
@@ -340,12 +369,36 @@ class CtpbeeApi(object):
             self.app = app
             self.app.extensions[self.extension_name] = self
 
-    def __call__(self, event: Event):
-        func = self.map[event.type]
-        if not self.frozen:
-            func(self, event.data)
+    def route(self, handler):
+        """ """
+        if handler not in self.map:
+            raise TypeError(f"呀， ctpbee暂不支持此函数类型 {handler}, 当前仅支持 {self.map.keys()}")
 
-    def __init_subclass__(cls, **kwargs):
+        def converter(func):
+            self.map[handler] = func
+            return func
+
+        return converter
+
+    def __call__(self, event: Event = None):
+        if not event:
+            if not self.frozen:
+                self.map[EVENT_TIMER](self)
+        else:
+            func = self.map[event.type]
+            if not self.frozen:
+                func(self, event.data)
+
+
+class AsyncApi(object):
+    """
+    数据模块
+    策略模块
+        如果你要开发上述插件需要继承此抽象demo
+    AsyncApi ---> 性能优化
+    """
+
+    def __new__(cls, *args, **kwargs):
         map = {
             EVENT_TIMER: cls.on_realtime,
             EVENT_INIT_FINISHED: cls.on_init,
@@ -372,15 +425,7 @@ class CtpbeeApi(object):
         }
         setattr(cls, "map", map)
         setattr(cls, "parmeter", parmeter)
-
-
-class AsyncApi(object):
-    """
-    数据模块
-    策略模块
-        如果你要开发上述插件需要继承此抽象demo
-    AsyncApi ---> 性能优化
-    """
+        return super().__new__(cls)
 
     def __init__(self, extension_name, app=None):
         """
@@ -457,40 +502,27 @@ class AsyncApi(object):
     async def on_realtime(self, timed: datetime):
         pass
 
+    def route(self, handler):
+        """ """
+        if handler not in self.map:
+            raise TypeError(f"呀， ctpbee暂不支持此函数类型 {handler}")
+
+        def converter(func):
+            self.map[handler] = func
+            return func
+
+        return converter
+
     def init_app(self, app):
         if app is not None:
             self.app = app
             self.app.extensions[self.extension_name] = self
 
     async def __call__(self, event: Event):
-        func = self.map[event.type]
-        if not self.fronzen:
-            await func(self, event.data)
-
-    def __init_subclass__(cls, **kwargs):
-        map = {
-            EVENT_TIMER: cls.on_realtime,
-            EVENT_INIT_FINISHED: cls.on_init,
-            EVENT_TICK: cls.on_tick,
-            EVENT_BAR: cls.on_bar,
-            EVENT_ORDER: cls.on_order,
-            EVENT_SHARED: cls.on_shared,
-            EVENT_TRADE: cls.on_trade,
-            EVENT_POSITION: cls.on_position,
-            EVENT_ACCOUNT: cls.on_account,
-            EVENT_CONTRACT: cls.on_contract,
-        }
-        parmeter = {
-            EVENT_TIMER: EVENT_TIMER,
-            EVENT_INIT_FINISHED: EVENT_INIT_FINISHED,
-            EVENT_POSITION: EVENT_POSITION,
-            EVENT_TRADE: EVENT_TRADE,
-            EVENT_BAR: EVENT_BAR,
-            EVENT_TICK: EVENT_TICK,
-            EVENT_ORDER: EVENT_ORDER,
-            EVENT_SHARED: EVENT_SHARED,
-            EVENT_ACCOUNT: EVENT_ACCOUNT,
-            EVENT_CONTRACT: EVENT_CONTRACT,
-        }
-        setattr(cls, "map", map)
-        setattr(cls, "parmeter", parmeter)
+        if not event:
+            if not self.frozen:
+                await self.map[EVENT_TIMER](self)
+        else:
+            func = self.map[event.type]
+            if not self.frozen:
+                await (self, event.data)
