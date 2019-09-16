@@ -2,8 +2,8 @@
     for the future of  life
 """
 
-__version__ = '0.30.3'
-__status__ = '0.30修复版本'
+__version__ = '0.31'
+__status__ = 'beta'
 
 from ctpbee.app import CtpBee
 from ctpbee.context import current_app, switch_app, get_app, del_app
