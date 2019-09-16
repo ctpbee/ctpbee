@@ -199,7 +199,6 @@ def realtime(self):
 @api.route(handler="position")
 def handld_position(self, position):
     """ """
-    print('===>', position)
 
 
 @api.route(handler="account")
@@ -215,7 +214,6 @@ def handle_order(self, order):
 @api.route(handler="trade")
 def handle_trade(self, trade):
     """ """
-    print('----->', trade)
 
 
 def create_app():
