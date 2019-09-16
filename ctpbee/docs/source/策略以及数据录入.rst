@@ -1,0 +1,95 @@
+.. _策略以及数据录入:
+
+策略以及数据录入
+======================
+两者核心都来自于CtpbeeApi
+继承此类::
+
+    from ctpbee import CtpbeeApi
+    from ctpbee import CtpBee
+
+
+    class HelloWorld(CtpbeeApi):
+        def __init__(self, name, app=None):
+            super().__init__(name, app, type="data")  # 无论你做啥,记得执行这一句
+            # 你可以扩充参数,但是请记得name和app是必须要的
+
+        def on_tick(self, tick):
+            """ tick回报 """
+
+        def on_account(self, account):
+            """ 账户信息回报 """
+            pass
+
+        def on_bar(self, bar):
+            """ bar线回报 """
+            pass
+
+        def on_trade(self, trade):
+            """ 成交回报 """
+            pass
+
+        def on_position(self, position):
+            """ 持仓信息回报 """
+            pass
+
+        def on_order(self, order):
+            """订单回报 """
+            pass
+
+        def on_init(self):
+            """初始化回调"""
+
+    app = CtpBee("world", __name__)
+
+    hello = HelloWord("hello", app)
+    info = {
+        "CONNECT_INFO": {
+            "userid": "",
+            "password": "",
+            "brokerid": "",
+            "md_address": "",
+            "td_address": "",
+            "appid": "",
+            "auth_code": "",
+            "product_info":""
+        },
+        "TD_FUNC": True,  # 开启交易功能
+    }
+    app.config.from_mapping(info) # 载入配置文件
+    strategy = HelloWorld("hello")
+    app.add_extension(strategy)
+    app.start()  # 开始执行
+
+
+
+
+
+
+``书读百变 代码自现``
+
+
+
+数据录入
+-------------------
+根据上面的所展示的层, 一切变得自由与简单,你可以通过在on_tick和on_bar下面编写相关代码将数据写入数据库即可
+
+值得注意的是ctpbee提供了 ``dumps`` 和 ``loads`` 两个函数让你方便的将 字符串与对象之间进行互转,让你快速复盘数据
+
+
+
+
+
+
+策略开发准则
+-------------------
+这里是开发策略准则
+每个插件都是相互独立的,  可以实现多个策略的互相计算, 在HelloWord内你可以使用self.app来调用CtpBee对象进行操作。
+
+--- >详细请参阅ctpbee_cta
+
+
+最后一章:
+    :ref:`回测系统`
+
+
