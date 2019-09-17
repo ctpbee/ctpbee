@@ -12,7 +12,7 @@ class Vlog(VLogger):
 
     def handler_record(self, record):
         """ 处理日志信息代码 """
-        print(record)
+        pass
 
 
 class ActionMe(Action):
