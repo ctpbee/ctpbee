@@ -26,8 +26,7 @@ class JustUse(CtpbeeApi):
     def on_bar(self, bar: BarData) -> None:
         pass
         dict_bar = bar._to_dict()
-        self.action.short(bar.high_price, 1, bar)]
-
+        self.action.short(bar.high_price, 1, bar)
 
     def on_contract(self, contract: ContractData):
         if contract.local_symbol in self.instrument_set:

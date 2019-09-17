@@ -116,14 +116,14 @@ class VLogger():
 
     def covert_record(self, record: logging.LogRecord):
         """ 将record里面的数据提取出来然后转换为正常的字符串 """
-        result = []
+        result = {}
         for x in self.attributes:
             p = getattr(record, x)
             if isinstance(p, float) and p > 1000000000:
                 time_local = time.localtime(p)
                 p = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
-            result.append(str(p))
-        return " ".join(result)
+            result[x] = str(p)
+        return result
 
     def add_logger(self, name, level):
         temp_logger = logging.getLogger(name)
