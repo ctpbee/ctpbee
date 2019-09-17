@@ -185,7 +185,6 @@ def handle_bar(self, bar):
 @api.route(handler="tick")
 def handle_tick(self, tick):
     """ """
-    print(tick._to_df())
 
 
 @api.route(handler="contract")

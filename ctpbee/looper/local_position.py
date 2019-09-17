@@ -48,7 +48,7 @@ class LocalVariable:
 class PositionHolding:
     """ 单个合约的持仓 """
 
-    def __init__(self, local_symbol, app):
+    def __init__(self, local_symbol, size, **kwargs):
         """"""
         self.local_symbol = local_symbol
         try:
@@ -57,13 +57,8 @@ class PositionHolding:
         except Exception:
             raise ValueError("invalid local_symbol")
         self.active_orders = {}
-        self.size = 1
-        if app.recorder.get_contract(self.local_symbol) is not None:
-            self.size = app.recorder.get_contract(self.local_symbol).size
-        else:
-            raise ValueError("获取合约信息失败")
+        self.size = size
 
-        self.app = app
         self.long_pos = 0
         self.long_yd = 0
         self.long_td = 0
@@ -305,11 +300,11 @@ class PositionHolding:
 
     def calculate_pnl(self):
         """ 计算浮动盈亏 """
-        try:
-            open_cost = self.app.trader.open_cost_dict.get(self.symbol)
-            single = LocalVariable(open_cost)
-        except AttributeError as e:
-            single = None
+        # try:
+        #     open_cost = self.app.trader.open_cost_dict.get(self.symbol)
+        #     single = LocalVariable(open_cost)
+        # except AttributeError as e:
+        #     single = None
         try:
             # if self.long_pos == self.long_yd:
             #     self.long_pnl = self.long_pos * (
@@ -409,9 +404,9 @@ class PositionHolding:
 class LocalPositionManager(dict):
     """ 用于管理持仓信息 只提供向外的接口 """
 
-    def __init__(self, app):
-        super().__init__({})
-        self.app = app
+    # def __init__(self, app):
+    #     super().__init__({})
+    #     self.app = app
 
     def update_tick(self, tick: TickData):
         """ 更新tick  """
@@ -423,15 +418,6 @@ class LocalPositionManager(dict):
         """
         Check if the contract needs offset convert.
         """
-        contract = self.app.recorder.get_contract(local_symbol)
-
-        # Only contracts with long-short position mode requires convert
-        if not contract:
-            return False
-        elif contract.net_position:
-            return False
-        else:
-            return True
 
     def update_order_request(self, req: OrderRequest, local_orderid: str):
         """"""
@@ -440,7 +426,7 @@ class LocalPositionManager(dict):
 
         holding = self.get(req.local_symbol, None)
         if not holding:
-            self[req.local_symbol] = PositionHolding(req.local_symbol, self.app)
+            self[req.local_symbol] = PositionHolding(req.local_symbol)
         self[req.local_symbol].update_order_request(req, local_orderid)
 
     def convert_order_request(self, req: OrderRequest, lock: bool):
@@ -450,7 +436,7 @@ class LocalPositionManager(dict):
 
         holding = self.get(req.local_symbol, None)
         if not holding:
-            self[req.local_symbol] = PositionHolding(req.local_symbol, self.app)
+            self[req.local_symbol] = PositionHolding(req.local_symbol)
         if lock:
             return self[req.local_symbol].convert_order_request_lock(req)
         elif req.exchange == Exchange.SHFE:
@@ -461,21 +447,21 @@ class LocalPositionManager(dict):
     def update_order(self, order):
         """ 更新order """
         if order.local_symbol not in self:
-            self[order.local_symbol] = PositionHolding(order.local_symbol, self.app)
+            self[order.local_symbol] = PositionHolding(order.local_symbol)
         else:
             self.get(order.local_symbol).update_order(order)
 
-    def update_trade(self, trade):
+    def update_trade(self, trade, size, **kwargs):
         """ 更新成交  """
         if trade.local_symbol not in self:
-            self[trade.local_symbol] = PositionHolding(trade.local_symbol, self.app)
+            self[trade.local_symbol] = PositionHolding(trade.local_symbol)
             self[trade.local_symbol].update_trade(trade)
         self.get(trade.local_symbol).update_trade(trade)
 
     def update_position(self, position):
         """ 更新持仓 """
         if position.local_symbol not in self.keys():
-            self[position.local_symbol] = PositionHolding(position.local_symbol, self.app)
+            self[position.local_symbol] = PositionHolding(position.local_symbol)
             self[position.local_symbol].update_position(position)
         else:
             self.get(position.local_symbol).update_position(position)
