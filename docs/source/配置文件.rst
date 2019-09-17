@@ -57,6 +57,36 @@
     - 用途: 开启分时图数据推送
     - 默认: False
 
++ ``SLIPPAGE_SHORT``
+    - 类型: float/int
+    - 用途: 设置卖空的滑点
+    - 默认: 0
+
++ ``SLIPPAGE_BUY``
+    - 类型: float/int
+    - 用途: 设置买多的滑点
+    - 默认: 0
+
++ ``SLIPPAGE_SELL``
+    - 类型: float/int
+    - 用途: 设置平空头的滑点
+    - 默认: 0
+
++ ``SLIPPAGE_COVER``
+    - 类型: float/int
+    - 用途: 设置平多头的滑点
+    - 默认: 0
+
++ ``SLIPPAGE_COVER``
+    - 类型: float/int
+    - 用途: 设置平多头的滑点
+    - 默认: 0
+
++ ``INSTRUMENT_INDEPEND``
+    - 类型: bool
+    - 用途: 是否为策略开启单独行情 , 此项功能要求你的必须要将订阅的合约的local_symbol写入在instrument_set中去.
+    - 默认: False
+
 
 配置类
 -----------------

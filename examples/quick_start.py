@@ -113,6 +113,7 @@ class DataRecorder(CtpbeeApi):
 
     def on_contract(self, contract):
         # 通过本地的
+        print(contract)
         if contract.local_symbol in self.instrument_set:
             self.app.subscribe(contract.local_symbol)
 
@@ -130,12 +131,12 @@ class DataRecorder(CtpbeeApi):
 
     def on_tick(self, tick):
         """tick processself-control  && kill your  function"""
-        # print(tick)
+        print(tick)
+        print(tick._to_df())
 
     def on_bar(self, bar):
         """bar process function"""
-        ids = self.action.short(bar.high_price, 20, bar)
-        print(ids)
+
         # self.action.sell(ids)
 
     def on_shared(self, shared):
@@ -177,12 +178,14 @@ api = CtpbeeApi(extension_name="hi")
 
 @api.route(handler="bar")
 def handle_bar(self, bar):
-    self.action.short(bar.high_price, 1, bar)
+    """ """
+    # self.action.short(bar.high_price, 1, bar)
 
 
 @api.route(handler="tick")
 def handle_tick(self, tick):
     """ """
+    print(tick._to_df())
 
 
 @api.route(handler="contract")
