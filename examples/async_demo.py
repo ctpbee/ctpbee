@@ -162,5 +162,7 @@ def go():
     """ 启动 """
     app.start()
 
+
 if __name__ == '__main__':
     go()
+

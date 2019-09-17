@@ -74,6 +74,12 @@ class LocalLooper():
         # 当日成交笔数, 需要如果是第二天的数据，那么需要被清空
         self.today_volume = 0
 
+    def update_strategy(self, strategy):
+        self.strategy = strategy
+
+    def update_risk(self, risk):
+        self.risk = risk
+
     def _generate_order_data_from_req(self, req: OrderRequest):
         """ 将发单请求转换为发单数据 """
         self.order_ref += 1
