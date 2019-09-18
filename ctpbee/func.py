@@ -239,7 +239,12 @@ class Hickey(object):
             if not status and p is not None:
                 self.logger.info("查杀子进程")
                 import os
-                os.kill(p.pid)
+                import platform
+                if platform.uname().system == "Windows":
+                    os.popen('taskkill.exe /pid:' + str(p.pid))
+                else:
+                    import signal
+                    os.kill(p.pid, signal.SIGKILL)
                 self.logger.info("关闭成功")
                 p = None
             sleep(30)
