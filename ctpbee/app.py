@@ -281,6 +281,7 @@ class CtpBee(object):
 
     def add_extension(self, extension: CtpbeeApi):
         """添加插件"""
+        self.extensions.pop(extension.extension_name, None)
         extension.init_app(self)
         self.extensions[extension.extension_name] = extension
 
@@ -307,6 +308,9 @@ class CtpBee(object):
             self.market.close()
         if self.trader is not None:
             self.trader.close()
+        # 清空处理队列
+        self.event_engine._queue.empty()
+        self.market, self.trader = None, None
         self._load_ext()
 
     def release(self):
