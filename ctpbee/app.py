@@ -72,8 +72,6 @@ class CtpBee(object):
     config_class = Config
     import_name = None
 
-    __active = False
-
     # 交易api与行情api / trade api and market api
     market = None
     trader = None
@@ -93,7 +91,7 @@ class CtpBee(object):
         self.import_name = import_name
         self.engine_method = engine_method
         self.refresh = refresh
-
+        self.active = False
         # 是否加载以使用默认的logger类/ choose if use the default logging class
         if logger_class is None:
             self.logger = VLogger(self.name)
@@ -198,7 +196,7 @@ class CtpBee(object):
 
     def _load_ext(self):
         """根据当前配置文件下的信息载入行情api和交易api,记住这个api的选项是可选的"""
-        self.__active = True
+        self.active = True
         if "CONNECT_INFO" in self.config.keys():
             info = self.config.get("CONNECT_INFO")
         else:
@@ -310,6 +308,7 @@ class CtpBee(object):
             self.trader.close()
         # 清空处理队列
         self.event_engine._queue.empty()
+        sleep(3)
         self.market, self.trader = None, None
         self._load_ext()
 
@@ -324,4 +323,4 @@ class CtpBee(object):
             self.event_engine.stop()
             del self.event_engine
         except AttributeError:
-            pass
+            print(1)

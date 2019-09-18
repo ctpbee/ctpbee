@@ -249,38 +249,9 @@ def create_app():
 
     """ 启动 """
     return app
-    # print(current_app.name)
 
 
-#
-# if __name__ == '__main__':
-#     app = create_app()
-#     # del_app(app.name)
-#     app.start(log_output=True)
-#
-
-class Mex:
-    def register(self):
-        """ 用于注册函数 """
-
-        def attribute(func):
-            funcd = MethodType(func, self)
-            setattr(self, func.__name__, funcd)
-            return funcd
-
-        return attribute
-
-    def want_tp(self):
-        print(self.get_it)
-
-
-mex = Mex()
-
-
-@mex.register()
-def get_it(self, ok):
-    print(self)
-    print(ok)
-
-
-mex.want_tp()
+if __name__ == '__main__':
+    app = create_app()
+    from ctpbee import hickey
+    hickey.start_all()

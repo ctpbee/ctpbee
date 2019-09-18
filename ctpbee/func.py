@@ -3,7 +3,10 @@
 面向用户的函数 ,提供极其便捷的体验
 
 """
-from datetime import time
+import logging
+from datetime import time, datetime
+from multiprocessing import Process
+from time import sleep
 from typing import Text, Any
 
 from ctpbee.constant import \
@@ -99,7 +102,7 @@ class Helper():
 
     @classmethod
     def generate_order_req_by_str(cls, symbol: str, exchange: str, direction: str, offset: str, type: str, volume,
-                                  price:float):
+                                  price: float):
         """ 手动构造发单请求"""
         if "." in symbol:
             symbol = symbol.split(".")[0]
@@ -111,7 +114,7 @@ class Helper():
 
     @classmethod
     def generate_order_req_by_var(cls, symbol: str, exchange: Exchange, direction: Direction, offset: Offset,
-                                  type: OrderType, volume, price:float):
+                                  type: OrderType, volume, price: float):
         if "." in symbol:
             symbol = symbol.split(".")[0]
         return OrderRequest(symbol=symbol, exchange=exchange, direction=direction, offset=offset, type=type,
@@ -183,3 +186,66 @@ def auth_time(data_time: time):
     if data_time <= NIGHT_END:
         return True
     return False
+
+
+class Hickey(object):
+    """ ctpbee进程调度 """
+
+    logger = logging.getLogger("ctpbee")
+
+    def __init__(self):
+        self.names = []
+
+    def auth_time(self, current: datetime):
+        from datetime import time
+        DAY_START = time(8, 57)  # 日盘启动和停止时间
+        DAY_END = time(15, 5)
+        NIGHT_START = time(20, 57)  # 夜盘启动和停止时间
+        NIGHT_END = time(2, 35)
+        if ((current.today().weekday() == 6) or
+                (current.today().weekday() == 5 and current.time() > NIGHT_END) or
+                (current.today().weekday() == 0 and current.time() < DAY_START)):
+            return False
+        if current.time() <= DAY_END and current.time() >= DAY_START:
+            return True
+        if current.time() >= NIGHT_START:
+            return True
+        if current.time() <= NIGHT_END:
+            return True
+        return False
+
+    def run_all_app(self):
+
+        from ctpbee.context.proxy import _app_context_ctx
+        for x in _app_context_ctx._simple.values():
+            active = getattr(x, "active")
+            if not active and x.name not in self.names:
+                x.start()
+                self.names.append(x.name)
+            else:
+                continue
+
+    def start_all(self):
+        """ 开始进程管理 """
+        p = None
+        while True:
+            """ """
+            current = datetime.now()
+            status = self.auth_time(current)
+            if p is None and status == True:
+                p = Process(target=self.run_all_app)
+                p.start()
+                self.logger.info("启动程序")
+            if not status and p is not None:
+                self.logger.info("查杀子进程")
+                import os
+                os.kill(p.pid)
+                self.logger.info("关闭成功")
+                p = None
+            sleep(30)
+
+    def __repr__(self):
+        return "ctpbee 7*24 manager "
+
+
+hickey = Hickey()

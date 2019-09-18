@@ -15,3 +15,4 @@ from ctpbee.log import VLogger
 from ctpbee.signals import send_monitor, cancel_monitor
 from ctpbee.trade_time import TradingDay
 from ctpbee.util import RiskLevel
+from ctpbee.func import hickey
