@@ -1,5 +1,6 @@
 import inspect
 from datetime import datetime
+from types import MethodType
 from typing import Set, List, AnyStr, Text
 from warnings import warn
 
@@ -380,6 +381,16 @@ class CtpbeeApi(object):
 
         return converter
 
+    def register(self):
+        """ 用于注册函数 """
+
+        def attribute(func):
+            funcd = MethodType(func, self)
+            setattr(self, func.__name__, funcd)
+            return funcd
+
+        return attribute
+
     def __call__(self, event: Event = None):
         if not event:
             if not self.frozen:
@@ -513,6 +524,16 @@ class AsyncApi(object):
 
         return converter
 
+    def register(self):
+        """ 用于注册函数 """
+
+        def attribute(func):
+            funcd = MethodType(func, self)
+            setattr(self, func.__name__, funcd)
+            return funcd
+
+        return attribute
+
     def init_app(self, app):
         if app is not None:
             self.app = app
@@ -525,4 +546,4 @@ class AsyncApi(object):
         else:
             func = self.map[event.type]
             if not self.frozen:
-                await (self, event.data)
+                await func(self, event.data)

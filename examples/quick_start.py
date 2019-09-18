@@ -1,4 +1,6 @@
+from datetime import datetime
 from time import sleep
+from types import MethodType
 
 from ctpbee import Action
 from ctpbee import CtpBee
@@ -177,6 +179,12 @@ class DataRecorder(CtpbeeApi):
 api = CtpbeeApi(extension_name="hi")
 
 
+
+@api.register()
+def get_it(self, hel):
+    print(hel)
+
+
 @api.route(handler="bar")
 def handle_bar(self, bar):
     """ """
@@ -186,6 +194,9 @@ def handle_bar(self, bar):
 @api.route(handler="tick")
 def handle_tick(self, tick):
     """ """
+    self.get_it("hhhh")
+    print("当前时间: ", str(datetime.now()))
+    print("tick时间: ", str(tick.datetime))
 
 
 @api.route(handler="contract")
@@ -241,7 +252,35 @@ def create_app():
     # print(current_app.name)
 
 
-if __name__ == '__main__':
-    app = create_app()
-    # del_app(app.name)
-    app.start(log_output=True)
+#
+# if __name__ == '__main__':
+#     app = create_app()
+#     # del_app(app.name)
+#     app.start(log_output=True)
+#
+
+class Mex:
+    def register(self):
+        """ 用于注册函数 """
+
+        def attribute(func):
+            funcd = MethodType(func, self)
+            setattr(self, func.__name__, funcd)
+            return funcd
+
+        return attribute
+
+    def want_tp(self):
+        print(self.get_it)
+
+
+mex = Mex()
+
+
+@mex.register()
+def get_it(self, ok):
+    print(self)
+    print(ok)
+
+
+mex.want_tp()

@@ -484,7 +484,7 @@ class LocalPositionManager(dict):
         position_list = []
         for x in self.values():
             if x.symbol == "":
-                continueapp
+                continue
             if x.long_pos != 0:
                 temp = {}
                 temp['exchange'] = x.exchange
