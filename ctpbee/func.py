@@ -252,7 +252,7 @@ class Hickey(object):
                 import os
                 import platform
                 if platform.uname().system == "Windows":
-                    os.popen('taskkill.exe /pid:' + str(p.pid))
+                    os.popen('taskkill /F /pid ' + str(p.pid))
                 else:
                     import signal
                     os.kill(p.pid, signal.SIGKILL)
