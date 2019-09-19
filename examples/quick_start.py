@@ -1,12 +1,12 @@
 from datetime import datetime
 from time import sleep
-from types import MethodType
 
 from ctpbee import Action
 from ctpbee import CtpBee
 from ctpbee import CtpbeeApi
 from ctpbee import RiskLevel
 from ctpbee import VLogger
+from ctpbee import hickey
 from ctpbee.constant import PositionData, AccountData, LogData
 
 
@@ -179,7 +179,6 @@ class DataRecorder(CtpbeeApi):
 api = CtpbeeApi(extension_name="hi")
 
 
-
 @api.register()
 def get_it(self, hel):
     print(hel)
@@ -248,10 +247,8 @@ def create_app():
     app.add_extension(api)
 
     """ 启动 """
-    return app
+    return [app]
 
 
 if __name__ == '__main__':
-    app = create_app()
-    from ctpbee import hickey
-    hickey.start_all()
+    hickey.start_all(app_func=create_app)

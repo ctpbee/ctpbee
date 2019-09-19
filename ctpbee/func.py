@@ -5,10 +5,12 @@
 """
 import logging
 from datetime import time, datetime
+from inspect import isfunction
 from multiprocessing import Process
 from time import sleep
-from typing import Text, Any
+from typing import Text, Any, List
 
+import ctpbee.app as ap
 from ctpbee.constant import \
     (OrderRequest, CancelRequest, Direction, Exchange,
      Offset, OrderType, AccountRegisterRequest, AccountBanlanceRequest, TransferRequest, TransferSerialRequest,
@@ -214,26 +216,35 @@ class Hickey(object):
             return True
         return False
 
-    def run_all_app(self):
-
-        from ctpbee.context.proxy import _app_context_ctx
-        for x in _app_context_ctx._simple.values():
-            active = getattr(x, "active")
-            if not active and x.name not in self.names:
-                x.start()
-                self.names.append(x.name)
+    def run_all_app(self, app_func):
+        apps = app_func()
+        if isinstance(apps, ap.CtpBee):
+            if not apps.active:
+                apps.start()
             else:
-                continue
+                raise ValueError("你选择的app已经在函数中启动")
 
-    def start_all(self):
+        elif isinstance(apps, List) and isinstance(apps[0], ap.CtpBee):
+            for app in apps:
+                if app.name not in self.names and not app.active:
+                    app.start()
+                    self.names.append(app.name)
+                else:
+                    continue
+        else:
+            raise ValueError("你传入的创建的func无法创建CtpBee变量, 请检查返回值")
+
+    def start_all(self, app_func):
         """ 开始进程管理 """
+        if not isfunction(app_func):
+            raise TypeError(f"请检查你传入的app_func是否是创建app的函数,  而不是{type(app_func)}")
         p = None
         while True:
             """ """
             current = datetime.now()
             status = self.auth_time(current)
             if p is None and status == True:
-                p = Process(target=self.run_all_app)
+                p = Process(target=self.run_all_app, args=(app_func,))
                 p.start()
                 self.logger.info("启动程序")
             if not status and p is not None:
