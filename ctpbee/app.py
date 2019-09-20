@@ -87,20 +87,21 @@ class CtpBee(object):
                  refresh: bool = False, risk=None,
                  instance_path=None):
         """ 初始化 """
-        self.name = name
+        self.name = name if name else 'ctpbee'
         self.import_name = import_name
         self.engine_method = engine_method
         self.refresh = refresh
         self.active = False
         # 是否加载以使用默认的logger类/ choose if use the default logging class
         if logger_class is None:
-            self.logger = VLogger(self.name)
+            self.logger = VLogger(app_name=self.name)
         else:
             self.logger = logger_class(app_name=self.name)
             if logger_config_path:
                 self.logger.config.from_pyfile(logger_config_path)
             else:
                 self.logger.config.from_pyfile(os.path.join(os.path.split(__file__)[0], 'cprint_config.py'))
+            self.logger.set_default(name=self.logger.app_name, owner='App')
         if engine_method == "thread":
             self.event_engine = EventEngine()
             self.recorder = Recorder(self, self.event_engine)

@@ -51,16 +51,20 @@ class Action(object):
         return self.app.logger
 
     def warning(self, msg, **kwargs):
-        self.logger.warning(msg, owner=self.__name__, **kwargs)
+        kwargs.update(dict(owner=self.__name__))
+        self.logger.warning(msg, **kwargs)
 
     def info(self, msg, **kwargs):
-        self.logger.info(msg, owner=self.__name__, **kwargs)
+        kwargs.update(dict(owner=self.__name__))
+        self.logger.info(msg, **kwargs)
 
     def error(self, msg, **kwargs):
-        self.logger.error(msg, owner=self.__name__, **kwargs)
+        kwargs.update(dict(owner=self.__name__))
+        self.logger.error(msg, **kwargs)
 
     def debug(self, msg, **kwargs):
-        self.logger.debug(msg, owner=self.__name__, **kwargs)
+        kwargs.update(dict(owner=self.__name__))
+        self.logger.debug(msg, **kwargs)
 
     def __init__(self, app=None):
         self.app = app
@@ -318,16 +322,20 @@ class CtpbeeApi(object):
         return self.app.logger
 
     def warning(self, msg, **kwargs):
-        self.logger.warning(msg, owner="API: " + self.extension_name, **kwargs)
+        kwargs.update(dict(owner="API: " + self.extension_name))
+        self.logger.warning(msg, **kwargs)
 
     def info(self, msg, **kwargs):
-        self.logger.info(msg, owner="API: " + self.extension_name, **kwargs)
+        kwargs.update(dict(owner="API: " + self.extension_name))
+        self.logger.info(msg, **kwargs)
 
     def error(self, msg, **kwargs):
-        self.logger.error(msg, owner="API: " + self.extension_name, **kwargs)
+        kwargs.update(dict(owner="API: " + self.extension_name))
+        self.logger.error(msg, **kwargs)
 
     def debug(self, msg, **kwargs):
-        self.logger.debug(msg, owner="API: " + self.extension_name, **kwargs)
+        kwargs.update(dict(owner="API: " + self.extension_name))
+        self.logger.debug(msg, **kwargs)
 
     @property
     def recorder(self):
@@ -472,16 +480,20 @@ class AsyncApi(object):
         return self.app.logger
 
     def warning(self, msg, **kwargs):
-        self.logger.warning(msg, owner="API: " + self.extension_name, **kwargs)
+        kwargs.update(dict(owner="API: " + self.extension_name))
+        self.logger.warning(msg, **kwargs)
 
     def info(self, msg, **kwargs):
-        self.logger.info(msg, owner="API: " + self.extension_name, **kwargs)
+        kwargs.update(dict(owner="API: " + self.extension_name))
+        self.logger.info(msg, **kwargs)
 
     def error(self, msg, **kwargs):
-        self.logger.error(msg, owner="API: " + self.extension_name, **kwargs)
+        kwargs.update(dict(owner="API: " + self.extension_name))
+        self.logger.error(msg, **kwargs)
 
     def debug(self, msg, **kwargs):
-        self.logger.debug(msg, owner="API: " + self.extension_name, **kwargs)
+        kwargs.update(dict(owner="API: " + self.extension_name))
+        self.logger.debug(msg, **kwargs)
 
     async def on_order(self, order: OrderData) -> None:
         raise NotImplemented
