@@ -88,7 +88,6 @@ class Vessel:
             else:
                 """ 如果处于未就绪状态 那么暂停回测 """
                 sleep(1)
-
         self.logger.info("回测结束,正在生成回测报告")
         result = self.cal_result()
         return result
