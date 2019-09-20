@@ -521,7 +521,7 @@ class LocalPositionManager(dict):
                 temp['direction'] = "short"
                 temp['position_profit'] = x.short_pnl
                 temp['symbol'] = x.symbol
-                temp['locpositionsal_symbol'] = x.local_symbol
+                temp['local_symbol'] = x.local_symbol
                 temp['price'] = x.short_price
                 temp['volume'] = x.short_pos
                 temp['yd_volume'] = x.short_yd
