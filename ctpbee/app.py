@@ -83,7 +83,7 @@ class CtpBee(object):
     tools = {}
 
     def __init__(self, name: Text, import_name, action_class: Action = None, engine_method: str = "thread",
-                 work_mode="limit_time", logger_class=None, logger_config_path=None,
+                 logger_class=None, logger_config_path=None,
                  refresh: bool = False, risk=None,
                  instance_path=None):
         """ 初始化 """
@@ -167,7 +167,6 @@ class CtpBee(object):
 
         self.r = None
         self.r_flag = True
-        self.work_mode = work_mode
 
         _app_context_ctx.push(self.name, self)
 
@@ -220,27 +219,8 @@ class CtpBee(object):
                 self.trader = TdApi(self.event_engine)
             self.trader.connect(info)
 
-        show_me = graphic_pattern(__version__, self.work_mode, self.engine_method)
+        show_me = graphic_pattern(__version__, self.engine_method)
         print(show_me)
-
-        # 检查work_mode
-        if self.work_mode == "forever":
-            """ 7×24小时 """
-            # 启动监视器
-
-            if self.p is not None:
-                self.p_flag = False
-                sleep(1.5)
-                self.p = Thread(target=run_forever, args=(self,))
-                self.p.start()
-
-            else:
-                self.p = Thread(target=run_forever, args=(self,))
-                self.p.start()
-            self.p_flag = True
-        else:
-            pass
-
         if self.refresh:
             if self.r is not None:
                 self.r_flag = False

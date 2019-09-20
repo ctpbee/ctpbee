@@ -229,7 +229,7 @@ def handle_trade(self, trade):
 
 
 def create_app():
-    app = CtpBee("last", __name__, action_class=ActionMe, logger_class=Vlog, work_mode="limit_time", refresh=True,
+    app = CtpBee("last", __name__, action_class=ActionMe, logger_class=Vlog, refresh=True,
                  risk=RiskMe)
 
     """ 
