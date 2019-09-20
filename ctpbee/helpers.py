@@ -280,10 +280,10 @@ def value_call(func):
     return wrapper
 
 
-async def async_value_call(func):
+def async_value_call(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        d = func(*args, **kwargs)
+        d = await func(*args, **kwargs)
         self, event = args
         for value in self.app.extensions.values():
             if self.app.config['INSTRUMENT_INDEPEND']:

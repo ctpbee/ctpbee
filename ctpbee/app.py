@@ -95,6 +95,8 @@ class CtpBee(object):
         # 是否加载以使用默认的logger类/ choose if use the default logging class
         if logger_class is None:
             self.logger = VLogger(app_name=self.name)
+            self.logger.config.from_pyfile(os.path.join(os.path.split(__file__)[0], 'cprint_config.py'))
+            self.logger.set_default(name=self.logger.app_name, owner='App')
         else:
             self.logger = logger_class(app_name=self.name)
             if logger_config_path:

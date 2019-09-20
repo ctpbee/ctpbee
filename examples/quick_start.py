@@ -1,16 +1,15 @@
 from datetime import datetime
 from time import sleep
-from colour_printing.custom import PrintMe
+from ctpbee import VLogger
 from ctpbee import Action
 from ctpbee import CtpBee
 from ctpbee import CtpbeeApi
 from ctpbee import RiskLevel
-from ctpbee import VLogger
 from ctpbee import hickey
 from ctpbee.constant import PositionData, AccountData, LogData
 
 
-class Vlog(PrintMe):
+class Vlog(VLogger):
 
     def handler_record(self, record):
         """ 处理日志信息代码 """
@@ -47,7 +46,7 @@ class RiskMe(RiskLevel):
                 return True
 
 
-        在你风控代码中与此同时也要实现对bug的两个操作
+        在你风控代码中与此custom import PrintMe同时也要实现对bug的两个操作
         class Risk(RiskLevel):
             def before_buy(self):
                 pass
@@ -164,7 +163,7 @@ class DataRecorder(CtpbeeApi):
             # main_contract = self.app.recorder.get_main_contract_by_code("ap")
             #
             # # 获取合约的价格
-            # # #  如果你需要该合约的最新的行情价格 你可能需要通过self.app.trader.request_market_data() 来更新最新的深度行情，回调函数会自动更新行情数据，
+            # # #  如果你需要该合约的handlerevent最新的行情价格 你可能需要通过self.app.trader.request_market_data() 来更新最新的深度行情，回调函数会自动更新行情数据，
             # # 也许在风控那边一直发送请求数据或者在start()之后开个单独线程来请求是个不错的选择
             # print(self.app.recorder.get_contract_last_price("AP910.CZCE"))
             #
@@ -251,4 +250,6 @@ def create_app():
 
 
 if __name__ == '__main__':
-    hickey.start_all(app_func=create_app)
+    app = create_app()
+    app[0].start()
+    # hickey.start_all(app_func=create_app)

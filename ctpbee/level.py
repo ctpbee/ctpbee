@@ -459,7 +459,7 @@ class AsyncApi(object):
         if self.app is not None:
             self.init_app(self.app)
         # 是否冻结
-        self.fronzen = False
+        self.frozen = False
 
     @property
     def action(self):
@@ -522,7 +522,7 @@ class AsyncApi(object):
     async def on_init(self, init: bool):
         pass
 
-    async def on_realtime(self, timed: datetime):
+    async def on_realtime(self):
         pass
 
     def route(self, handler):
@@ -551,7 +551,7 @@ class AsyncApi(object):
             self.app = app
             self.app.extensions[self.extension_name] = self
 
-    async def __call__(self, event: Event):
+    async def __call__(self, event: Event=None):
         if not event:
             if not self.frozen:
                 await self.map[EVENT_TIMER](self)
