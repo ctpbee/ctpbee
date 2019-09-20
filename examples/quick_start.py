@@ -1,17 +1,20 @@
+from datetime import datetime
 from time import sleep
-
+from colour_printing.custom import PrintMe
 from ctpbee import Action
 from ctpbee import CtpBee
 from ctpbee import CtpbeeApi
 from ctpbee import RiskLevel
 from ctpbee import VLogger
+from ctpbee import hickey
 from ctpbee.constant import PositionData, AccountData, LogData
 
 
-class Vlog(VLogger):
+class Vlog(PrintMe):
 
     def handler_record(self, record):
         """ 处理日志信息代码 """
+        pass
 
 
 class ActionMe(Action):
@@ -176,6 +179,11 @@ class DataRecorder(CtpbeeApi):
 api = CtpbeeApi(extension_name="hi")
 
 
+@api.register()
+def get_it(self, hel):
+    print(hel)
+
+
 @api.route(handler="bar")
 def handle_bar(self, bar):
     """ """
@@ -185,7 +193,9 @@ def handle_bar(self, bar):
 @api.route(handler="tick")
 def handle_tick(self, tick):
     """ """
-    print(tick._to_df())
+    self.get_it("hhhh")
+    print("当前时间: ", str(datetime.now()))
+    print("tick时间: ", str(tick.datetime))
 
 
 @api.route(handler="contract")
@@ -237,11 +247,8 @@ def create_app():
     app.add_extension(api)
 
     """ 启动 """
-    return app
-    # print(current_app.name)
+    return [app]
 
 
 if __name__ == '__main__':
-    app = create_app()
-    # del_app(app.name)
-    app.start(log_output=True)
+    hickey.start_all(app_func=create_app)

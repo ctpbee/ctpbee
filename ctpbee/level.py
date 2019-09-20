@@ -1,5 +1,6 @@
 import inspect
 from datetime import datetime
+from types import MethodType
 from typing import Set, List, AnyStr, Text
 from warnings import warn
 
@@ -50,16 +51,20 @@ class Action(object):
         return self.app.logger
 
     def warning(self, msg, **kwargs):
-        self.logger.warning(msg, owner=self.__name__, **kwargs)
+        kwargs.update(dict(owner=self.__name__))
+        self.logger.warning(msg, **kwargs)
 
     def info(self, msg, **kwargs):
-        self.logger.info(msg, owner=self.__name__, **kwargs)
+        kwargs.update(dict(owner=self.__name__))
+        self.logger.info(msg, **kwargs)
 
     def error(self, msg, **kwargs):
-        self.logger.error(msg, owner=self.__name__, **kwargs)
+        kwargs.update(dict(owner=self.__name__))
+        self.logger.error(msg, **kwargs)
 
     def debug(self, msg, **kwargs):
-        self.logger.debug(msg, owner=self.__name__, **kwargs)
+        kwargs.update(dict(owner=self.__name__))
+        self.logger.debug(msg, **kwargs)
 
     def __init__(self, app=None):
         self.app = app
@@ -317,16 +322,20 @@ class CtpbeeApi(object):
         return self.app.logger
 
     def warning(self, msg, **kwargs):
-        self.logger.warning(msg, owner="API: " + self.extension_name, **kwargs)
+        kwargs.update(dict(owner="API: " + self.extension_name))
+        self.logger.warning(msg, **kwargs)
 
     def info(self, msg, **kwargs):
-        self.logger.info(msg, owner="API: " + self.extension_name, **kwargs)
+        kwargs.update(dict(owner="API: " + self.extension_name))
+        self.logger.info(msg, **kwargs)
 
     def error(self, msg, **kwargs):
-        self.logger.error(msg, owner="API: " + self.extension_name, **kwargs)
+        kwargs.update(dict(owner="API: " + self.extension_name))
+        self.logger.error(msg, **kwargs)
 
     def debug(self, msg, **kwargs):
-        self.logger.debug(msg, owner="API: " + self.extension_name, **kwargs)
+        kwargs.update(dict(owner="API: " + self.extension_name))
+        self.logger.debug(msg, **kwargs)
 
     @property
     def recorder(self):
@@ -379,6 +388,16 @@ class CtpbeeApi(object):
             return func
 
         return converter
+
+    def register(self):
+        """ 用于注册函数 """
+
+        def attribute(func):
+            funcd = MethodType(func, self)
+            setattr(self, func.__name__, funcd)
+            return funcd
+
+        return attribute
 
     def __call__(self, event: Event = None):
         if not event:
@@ -461,16 +480,20 @@ class AsyncApi(object):
         return self.app.logger
 
     def warning(self, msg, **kwargs):
-        self.logger.warning(msg, owner="API: " + self.extension_name, **kwargs)
+        kwargs.update(dict(owner="API: " + self.extension_name))
+        self.logger.warning(msg, **kwargs)
 
     def info(self, msg, **kwargs):
-        self.logger.info(msg, owner="API: " + self.extension_name, **kwargs)
+        kwargs.update(dict(owner="API: " + self.extension_name))
+        self.logger.info(msg, **kwargs)
 
     def error(self, msg, **kwargs):
-        self.logger.error(msg, owner="API: " + self.extension_name, **kwargs)
+        kwargs.update(dict(owner="API: " + self.extension_name))
+        self.logger.error(msg, **kwargs)
 
     def debug(self, msg, **kwargs):
-        self.logger.debug(msg, owner="API: " + self.extension_name, **kwargs)
+        kwargs.update(dict(owner="API: " + self.extension_name))
+        self.logger.debug(msg, **kwargs)
 
     async def on_order(self, order: OrderData) -> None:
         raise NotImplemented
@@ -513,6 +536,16 @@ class AsyncApi(object):
 
         return converter
 
+    def register(self):
+        """ 用于注册函数 """
+
+        def attribute(func):
+            funcd = MethodType(func, self)
+            setattr(self, func.__name__, funcd)
+            return funcd
+
+        return attribute
+
     def init_app(self, app):
         if app is not None:
             self.app = app
@@ -525,4 +558,4 @@ class AsyncApi(object):
         else:
             func = self.map[event.type]
             if not self.frozen:
-                await (self, event.data)
+                await func(self, event.data)

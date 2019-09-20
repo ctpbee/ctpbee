@@ -72,8 +72,6 @@ class CtpBee(object):
     config_class = Config
     import_name = None
 
-    __active = False
-
     # 交易api与行情api / trade api and market api
     market = None
     trader = None
@@ -85,20 +83,25 @@ class CtpBee(object):
     tools = {}
 
     def __init__(self, name: Text, import_name, action_class: Action = None, engine_method: str = "thread",
-                 work_mode="limit_time", logger_class=None,
+                 work_mode="limit_time", logger_class=None, logger_config_path=None,
                  refresh: bool = False, risk=None,
                  instance_path=None):
         """ 初始化 """
-        self.name = name
+        self.name = name if name else 'ctpbee'
         self.import_name = import_name
         self.engine_method = engine_method
         self.refresh = refresh
-
+        self.active = False
         # 是否加载以使用默认的logger类/ choose if use the default logging class
         if logger_class is None:
-            self.logger = VLogger(self.name)
+            self.logger = VLogger(app_name=self.name)
         else:
-            self.logger = logger_class(self.name)
+            self.logger = logger_class(app_name=self.name)
+            if logger_config_path:
+                self.logger.config.from_pyfile(logger_config_path)
+            else:
+                self.logger.config.from_pyfile(os.path.join(os.path.split(__file__)[0], 'cprint_config.py'))
+            self.logger.set_default(name=self.logger.app_name, owner='App')
         if engine_method == "thread":
             self.event_engine = EventEngine()
             self.recorder = Recorder(self, self.event_engine)
@@ -198,7 +201,7 @@ class CtpBee(object):
 
     def _load_ext(self):
         """根据当前配置文件下的信息载入行情api和交易api,记住这个api的选项是可选的"""
-        self.__active = True
+        self.active = True
         if "CONNECT_INFO" in self.config.keys():
             info = self.config.get("CONNECT_INFO")
         else:
@@ -281,6 +284,7 @@ class CtpBee(object):
 
     def add_extension(self, extension: CtpbeeApi):
         """添加插件"""
+        self.extensions.pop(extension.extension_name, None)
         extension.init_app(self)
         self.extensions[extension.extension_name] = extension
 
@@ -307,6 +311,10 @@ class CtpBee(object):
             self.market.close()
         if self.trader is not None:
             self.trader.close()
+        # 清空处理队列
+        self.event_engine._queue.empty()
+        sleep(3)
+        self.market, self.trader = None, None
         self._load_ext()
 
     def release(self):
@@ -320,4 +328,4 @@ class CtpBee(object):
             self.event_engine.stop()
             del self.event_engine
         except AttributeError:
-            pass
+            print(1)

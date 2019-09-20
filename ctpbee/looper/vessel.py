@@ -36,6 +36,10 @@ class LooperLogger:
 class Vessel:
     """
     策略运行容器
+
+    本地回测与在线数据回测
+    >> 基于在线数据推送的模式 是否可以减少本机器的内存使用量
+
     """
 
     def __init__(self, pattern="T0"):
@@ -51,7 +55,8 @@ class Vessel:
 
     def add_strategy(self, strategy):
         """ 添加策略到本容器 """
-        pass
+        self.strategy = strategy
+        self.interface
 
     def add_data(self, data):
         """ 添加data到本容器, 如果没有经过处理 """
@@ -83,7 +88,6 @@ class Vessel:
             else:
                 """ 如果处于未就绪状态 那么暂停回测 """
                 sleep(1)
-
         self.logger.info("回测结束,正在生成回测报告")
         result = self.cal_result()
         return result

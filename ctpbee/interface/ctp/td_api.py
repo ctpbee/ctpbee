@@ -593,7 +593,9 @@ class BeeTdApi(TdApi):
     def close(self):
         """"""
         if self.connect_status:
-            self.exit()
+            print("我在释放交易接口")
+            p = self.exit()
+
 
 
 class BeeTdApiApp(TdApiApp):

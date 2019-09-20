@@ -1,9 +1,9 @@
 import collections
 import random
+import uuid
 
 from ctpbee.constant import OrderRequest, Offset, Direction, OrderType, OrderData, CancelRequest, TradeData
 from ctpbee.looper.data import Bumblebee
-
 
 
 class Action():
@@ -37,7 +37,6 @@ class LocalLooper():
         """ 需要构建完整的成交回报以及发单报告,在account里面需要存储大量的存储 """
 
         self.pending = collections.deque()
-
         self.sessionid = random.randint(1000, 10000)
         self.frontid = random.randint(10001, 500000)
         # 日志输出器
@@ -51,6 +50,9 @@ class LocalLooper():
         setattr(self.strategy, "debug", self.logger.debug)
         setattr(self.strategy, "error", self.logger.error)
         setattr(self.strategy, "warning", self.logger.warning)
+        # 涨跌停价格
+        self.upper_price = 9999
+        self.drop_price = 0
 
         # 风控/risk control todo:完善
         self.risk = risk
@@ -74,6 +76,12 @@ class LocalLooper():
         # 当日成交笔数, 需要如果是第二天的数据，那么需要被清空
         self.today_volume = 0
 
+    def update_strategy(self, strategy):
+        self.strategy = strategy
+
+    def update_risk(self, risk):
+        self.risk = risk
+
     def _generate_order_data_from_req(self, req: OrderRequest):
         """ 将发单请求转换为发单数据 """
         self.order_ref += 1
@@ -95,6 +103,7 @@ class LocalLooper():
         """ 拦截网关 """
         if isinstance(data, OrderRequest):
             """ 发单请求处理 """
+            self.match_deal(self._generate_order_data_from_req(data))
 
         if isinstance(data, CancelRequest):
             """ 撤单请求处理 """
@@ -112,24 +121,25 @@ class LocalLooper():
                     "single_day_limit"):
                 """ 超出限制 直接返回不允许成交 """
                 return
-            if data.price < 0 or data.price > 9999:
+            if data.price < self.drop_price or data.price > self.upper_price:
                 """ 超出涨跌价格 """
                 return
 
             """ 判断账户资金是否足以支撑成交 """
             if self.account.is_traded(data):
                 """ 生成成交单 """
-                p = TradeData(price=data.price, istraded=data.volume, volume=data.volume,
-                              gateway_name=data.gateway_name,
+                p = TradeData(price=data.price, istraded=data.volume, volume=data.volume, trade_id=uuid.uuid1(),
+                              gateway_name=data.gateway_name, time=data.time,
                               order_id=data.order_id)
-                self.account.trading(p)
 
+                self.account.update_trade(p)
                 # 调用strategy的on_trade
-                self.strategy.on_trade(p)
 
+                self.strategy.on_trade(p)
                 self.today_volume += data.volume
             else:
                 """ 当前账户不足以支撑成交 """
+                self.logger.error("资金不足啦!")
                 return
 
         else:

@@ -2,7 +2,6 @@ from ctpbee.constant import AccountData, EVENT_ACCOUNT
 from ctpbee.constant import EVENT_LOG, EVENT_POSITION
 from ctpbee.event_engine import EventEngine, Event
 
-
 class PuppetApi(object):
     def __init__(self, event_engine: EventEngine):
         self.event_engine = event_engine
