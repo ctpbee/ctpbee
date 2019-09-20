@@ -43,9 +43,14 @@ API支持
 
 为了给ctpbee的用户解决难以无人监管的问题， 特别在ctpbee内置了无人监管模式，同时为了简化使用， 下面是简单使用::
 
-    app = CtpBee("ctpbee", __name__, work_mode="forever")`
+    def create_app():
+        app = CtpBee("ctpbee", __name__)
+        return app
 
-你只需要在CtpBee里面显式传入 ``work_mode="forever"`` 参数即可，这样你就可以享用到无人监管的快感了，当然你需要知道的是， ctpbee默认指定的是 ``work_mode="limit_time"`` ，
+    from ctpbee import hickey
+    # 将ctpbee的创建函数注入到hickey中, 运行返回app 或者[app1, app2, app3] 两种格式
+    hickey.start_all(create_app)
+
 
 
 异步支持
