@@ -1,9 +1,16 @@
+import io
 import platform
+import re
 import sys
 import warnings
 
-from setuptools import Extension, setup
-from ctpbee import __version__
+from setuptools import Extension
+from setuptools import setup
+
+with io.open('ctpbee/__init__.py', 'rt', encoding='utf8') as f:
+    context = f.read()
+    version = re.search(r'__version__ = \'(.*?)\'', context).group(1)
+
 if sys.version_info < (3, 6):
     raise RuntimeError('当前ctpbee只支持python36以及更高版本/ ctpbee only support python36 and highly only ')
 runtime_library_dir = []
@@ -128,7 +135,7 @@ pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.d
 install_requires = ['flask>=1.1.1', "blinker", "dataclasses", "requests", "simplejson", "lxml", "pandas"]
 setup(
     name='ctpbee',
-    version=__version__,
+    version=version,
     description="Easy ctp trade and market support",
     author='somewheve',
     long_description=long_description,
