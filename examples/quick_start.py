@@ -1,6 +1,6 @@
 from datetime import datetime
 from time import sleep
-
+from colour_printing.custom import PrintMe
 from ctpbee import Action
 from ctpbee import CtpBee
 from ctpbee import CtpbeeApi
@@ -10,7 +10,7 @@ from ctpbee import hickey
 from ctpbee.constant import PositionData, AccountData, LogData
 
 
-class Vlog(VLogger):
+class Vlog(PrintMe):
 
     def handler_record(self, record):
         """ 处理日志信息代码 """

@@ -83,7 +83,7 @@ class CtpBee(object):
     tools = {}
 
     def __init__(self, name: Text, import_name, action_class: Action = None, engine_method: str = "thread",
-                 work_mode="limit_time", logger_class=None,
+                 work_mode="limit_time", logger_class=None, logger_config_path=None,
                  refresh: bool = False, risk=None,
                  instance_path=None):
         """ 初始化 """
@@ -96,7 +96,11 @@ class CtpBee(object):
         if logger_class is None:
             self.logger = VLogger(self.name)
         else:
-            self.logger = logger_class(self.name)
+            self.logger = logger_class(app_name=self.name)
+            if logger_config_path:
+                self.logger.config.from_pyfile(logger_config_path)
+            else:
+                self.logger.config.from_pyfile(os.path.join(os.getcwd(),''))
         if engine_method == "thread":
             self.event_engine = EventEngine()
             self.recorder = Recorder(self, self.event_engine)
