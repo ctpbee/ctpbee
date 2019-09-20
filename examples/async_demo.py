@@ -50,7 +50,7 @@ class RiskMe(RiskLevel):
 
     """
 
-    def realtime_check(self, cur):
+    def realtime_check(self):
         # print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
         # print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
         # self.action.cover

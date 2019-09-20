@@ -196,8 +196,19 @@ class AsyncEngine:
         self.loop.create_task(self._put(event))
 
     async def future_finish(self, event: Event):
-        for func in self._func[event.type]:
-            await func(event)
+        for handler in self._func[event.type]:
+
+            if event.type != EVENT_TIMER:
+                await handler(event)
+
+            else:
+                if handler.__name__ in ["realtime_check", "mimo_thread"]:
+                    handler()
+                else:
+                    await handler()
+        # [await handler(event) if event.type != EVENT_TIMER else await handler() for handler in self._func[event.type]]
+        # for func in self._func[event.type]:
+        #     await func(event)
 
     def register(self, type, func):
         # print(func.__name__)
