@@ -8,14 +8,13 @@ from colour_printing.custom import PrintMe
 
 VLogger = PrintMe
 """
-实现一个默认的LoggerClass
+实现一个默认的LoggerClass<<<<<<< dev
 
 log格式
 
 时间 ---- 执行者 ---- 等级 ---- 信息
 
 """
-
 
 # class VLogger():
 #     attributes = ["created", "levelname", "name", "owner", "msg"]
@@ -53,7 +52,7 @@ log格式
 #             else:  # normal
 #                 color = self.normal
 #             temp_record.levelname = (self.fuchsin + str(temp_record.levelname).ljust(8) + '\x1b[0m')
-#             temp_record.msg = color + str(temp_record.msg) + '\x1b[0m'
+#             temp_record.msg = color + str(temp_record.msg) + '\x1b[0m'>>>>>>> master
 #             """ I don't know why this will be called by other framework """
 #             try:
 #                 temp_record.owner = self.cyan + str(temp_record.owner).ljust(10) + '\x1b[0m'
@@ -75,7 +74,7 @@ log格式
 #     def update_log_file(self, filename):
 #         logging.config.fileConfig(filename)
 #
-#     def _init(self):
+#     def _init(self):>>>>>>> master
 #         """ 分别添加相应的处理器 """
 #         self.handler.setLevel(logging.DEBUG)
 #         self.logger.addHandler(self.handler)
