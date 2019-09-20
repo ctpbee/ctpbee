@@ -100,7 +100,7 @@ class CtpBee(object):
             if logger_config_path:
                 self.logger.config.from_pyfile(logger_config_path)
             else:
-                self.logger.config.from_pyfile(os.path.join(os.getcwd(),''))
+                self.logger.config.from_pyfile(os.path.join(os.path.split(__file__)[0], 'cprint_config.py'))
         if engine_method == "thread":
             self.event_engine = EventEngine()
             self.recorder = Recorder(self, self.event_engine)
