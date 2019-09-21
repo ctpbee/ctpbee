@@ -53,20 +53,47 @@ class Vessel:
         self.params = dict()
         self.looper_pattern = pattern
 
+        """
+        _data_status : 数据状态, 准备就绪时候应该被修改为True
+        _looper_status: 回测状态, 分为五个
+            "unready": 未就绪
+            "ready":就绪
+            "running": 运行中
+            "stopped":暂停
+            "finished":结束
+        _strategy_status: 策略状态, 载入后应该被修改True
+        _risk_status: "风控状态"
+        """
+        self._data_status = False
+        self._looper_status = "unready"
+        self._strategy_status = False
+        self._risk_status = False
+
     def add_strategy(self, strategy):
         """ 添加策略到本容器 """
         self.strategy = strategy
-        self.interface
+        try:
+            self.interface.update_strategy(strategy)
+            self._strategy_status = True
+        except Exception:
+            self._strategy_status = False
+        self.check_if_ready()
 
     def add_data(self, data):
         """ 添加data到本容器, 如果没有经过处理 """
         d = VessData(data)
-        d.convert_data_to_inner()
         self.looper_data = d
+        self._data_status = True
+        self.check_if_ready()
+
+    def check_if_ready(self):
+        if self._data_status and self._strategy_status and self._risk_status:
+            self._looper_status = "ready"
 
     def add_risk(self, risk):
         """ 添加风控 """
-        pass
+        self._risk_status = True
+        self.check_if_ready()
 
     def cal_result(self):
         """ 计算回测结果，生成回测报告 """
@@ -95,10 +122,28 @@ class Vessel:
     def suspend_looper(self):
         """ 暂停回测 """
         self.ready = False
+        self._looper_status = "stopped"
 
     def enable_looper(self):
         """ 继续回测 """
         self.ready = True
+        self._looper_status = "running"
+
+    @property
+    def looper_status(self):
+        return self._looper_status
+
+    @property
+    def risk_status(self):
+        return self._risk_status
+
+    @property
+    def data_status(self):
+        return self._data_status
+
+    @property
+    def strategy_status(self):
+        return self._strategy_status
 
     def run(self):
         """ 开始运行回测 """
