@@ -15,7 +15,7 @@ class LooperLogger:
         if v_logger:
             self.logger = v_logger
         else:
-            self.logger = VLogger("Vessel")
+            self.logger = VLogger(app_name="Vessel")
 
     def info(self, msg, **kwargs):
         self.logger.info(msg=msg, extra={"owner": "Looper"}, **kwargs)
@@ -93,6 +93,7 @@ class Vessel:
     def add_risk(self, risk):
         """ 添加风控 """
         self._risk_status = True
+        self.interface.update_risk(risk)
         self.check_if_ready()
 
     def cal_result(self):
@@ -111,6 +112,7 @@ class Vessel:
                     p = next(self.looper_data)
                     self.interface(p, parmas)
                 except StopIteration:
+                    self._looper_status = "finished"
                     break
             else:
                 """ 如果处于未就绪状态 那么暂停回测 """
@@ -145,7 +147,15 @@ class Vessel:
     def strategy_status(self):
         return self._strategy_status
 
+    @property
+    def status(self):
+        return (self._looper_status, self._risk_status, self._strategy_status, self._data_status)
+
     def run(self):
         """ 开始运行回测 """
         p = Process(name="looper", target=self.letsgo, args=(self.params, self.ready,))
         p.start()
+
+
+if __name__ == '__main__':
+    main = Vessel()
