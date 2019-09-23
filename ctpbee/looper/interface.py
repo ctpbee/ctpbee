@@ -2,62 +2,60 @@ import collections
 import random
 import uuid
 
-from ctpbee.constant import OrderRequest, Offset, Direction, OrderType, OrderData, CancelRequest, TradeData
+from ctpbee.constant import OrderRequest, Offset, Direction, OrderType, OrderData, CancelRequest, TradeData, BarData, \
+    TickData, PositionData
+from ctpbee.jsond import dumps
 from ctpbee.looper.data import Bumblebee
 
 
-class Action():
+class Action:
     def __init__(self, looper):
         """ 将action这边报单 """
         self.looper = looper
 
-    def buy(self, price, volume, origin, **kwargs):
+    def buy(self, price, volume, origin, price_type: OrderType = OrderType.LIMIT, **kwargs):
         req = OrderRequest(price=price, volume=volume, exchange=origin.exchange, offset=Offset.OPEN,
-                           direction=Direction.LONG, type=OrderType.LIMIT)
+                           direction=Direction.LONG, type=price_type)
         return self.looper.send_order(req)
 
-    def short(self, price, volume, origin, **kwargs):
+    def short(self, price, volume, origin, price_type: OrderType = OrderType.LIMIT, **kwargs):
         req = OrderRequest(price=price, volume=volume, exchange=origin.exchange, offset=Offset.OPEN,
-                           direction=Direction.SHORT, type=OrderType.LIMIT)
+                           direction=Direction.SHORT, type=price_type)
         return self.looper.send_order(req)
 
     @property
     def position(self):
         return self.looper.account.positions
 
-    def sell(self, price, volume, origin, **kwargs):
+    def sell(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData] = None,
+             price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
         pass
 
-    def cover(self, price, volume, origin, **kwargs):
+    def cover(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
+              price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
         pass
 
 
 class LocalLooper():
-    def __init__(self, strategy, risk, account, logger):
+    def __init__(self, logger, strategy=None, risk=None, account=None):
         """ 需要构建完整的成交回报以及发单报告,在account里面需要存储大量的存储 """
 
         self.pending = collections.deque()
         self.sessionid = random.randint(1000, 10000)
         self.frontid = random.randint(10001, 500000)
+
         # 日志输出器
         self.logger = logger
 
         self.strategy = strategy
         # 覆盖里面的action和logger属性
-        setattr(self.strategy, "action", Action(self))
-        setattr(self.strategy, "logger", self.logger)
-        setattr(self.strategy, "info", self.logger.info)
-        setattr(self.strategy, "debug", self.logger.debug)
-        setattr(self.strategy, "error", self.logger.error)
-        setattr(self.strategy, "warning", self.logger.warning)
         # 涨跌停价格
         self.upper_price = 9999
         self.drop_price = 0
 
         # 风控/risk control todo:完善
         self.risk = risk
-
-        self.parmas = dict(
+        self.params = dict(
             deal_pattern="match",
             single_order_limit=10,
             single_day_limit=100,
@@ -76,8 +74,17 @@ class LocalLooper():
         # 当日成交笔数, 需要如果是第二天的数据，那么需要被清空
         self.today_volume = 0
 
+        # 所有的报单数量
+        self.order_buffer = dict()
+
     def update_strategy(self, strategy):
         self.strategy = strategy
+        setattr(self.strategy, "action", Action(self))
+        setattr(self.strategy, "logger", self.logger)
+        setattr(self.strategy, "info", self.logger.info)
+        setattr(self.strategy, "debug", self.logger.debug)
+        setattr(self.strategy, "error", self.logger.error)
+        setattr(self.strategy, "warning", self.logger.warning)
 
     def update_risk(self, risk):
         self.risk = risk
@@ -90,6 +97,11 @@ class LocalLooper():
 
     def _generate_trade_data_from_order(self, order_data: OrderData):
         """ 将orderdata转换成成交单 """
+        p = TradeData(price=order_data.price, istraded=order_data.volume, volume=order_data.volume,
+                      trade_id=uuid.uuid1(),
+                      gateway_name=order_data.gateway_name, time=order_data.time,
+                      order_id=order_data.order_id)
+        return p
 
     def send_order(self, order_req):
         """ 发单的操作"""
@@ -100,48 +112,47 @@ class LocalLooper():
         self.intercept_gateway(cancel_req)
 
     def intercept_gateway(self, data):
-        """ 拦截网关 """
+        """ 拦截网关 同时这里应该返回相应的水平"""
         if isinstance(data, OrderRequest):
             """ 发单请求处理 """
-            self.match_deal(self._generate_order_data_from_req(data))
-
+            result = self.match_deal(self._generate_order_data_from_req(data))
+            if result:
+                """ 将成交单通过日志接口暴露出去"""
+                self.logger.info(dumps(result))
         if isinstance(data, CancelRequest):
             """ 撤单请求处理 """
+            # todo: 处理日志接口
 
     def match_deal(self, data: OrderData):
         """ 撮合成交 """
-        if self.parmas.get("deal_pattern") == "match":
+        if self.params.get("deal_pattern") == "match":
             """ 撮合成交 """
             # todo: 是否可以模拟一定量的市场冲击响应？ 以靠近更加逼真的回测效果 ？？？？
 
-        elif self.parmas.get("deal_pattern") == "price":
+        elif self.params.get("deal_pattern") == "price":
             """ 见价成交 """
             # 先判断价格和手数是否满足限制条件
-            if data.volume > self.parmas.get("single_order_limit") or self.today_volume > self.parmas.get(
+            if data.volume > self.params.get("single_order_limit") or self.today_volume > self.params.get(
                     "single_day_limit"):
                 """ 超出限制 直接返回不允许成交 """
-                return
+                return None
             if data.price < self.drop_price or data.price > self.upper_price:
                 """ 超出涨跌价格 """
-                return
+                return None
 
             """ 判断账户资金是否足以支撑成交 """
             if self.account.is_traded(data):
-                """ 生成成交单 """
-                p = TradeData(price=data.price, istraded=data.volume, volume=data.volume, trade_id=uuid.uuid1(),
-                              gateway_name=data.gateway_name, time=data.time,
-                              order_id=data.order_id)
-
+                """ 调用API生成成交单 """
+                p = self._generate_trade_data_from_order(data)
                 self.account.update_trade(p)
-                # 调用strategy的on_trade
-
+                """ 调用strategy的on_trade """
                 self.strategy.on_trade(p)
                 self.today_volume += data.volume
+                return p
             else:
                 """ 当前账户不足以支撑成交 """
                 self.logger.error("资金不足啦!")
-                return
-
+                return None
         else:
             raise TypeError("未支持的成交机制")
 
@@ -149,7 +160,7 @@ class LocalLooper():
         """ 回测参数设置 """
         # todo: 本地设置回测参数
 
-        self.parmas.update(params)
+        self.params.update(params)
 
     def __init_params(self, params):
         """ 初始化参数设置  """

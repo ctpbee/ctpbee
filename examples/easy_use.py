@@ -59,3 +59,8 @@ if __name__ == '__main__':
     app.config.from_mapping(info)
     app.add_extension(just_use)
     app.start()
+
+
+a -- b --c --d
+e -- f --g
+h -- i --j

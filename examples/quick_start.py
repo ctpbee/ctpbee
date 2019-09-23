@@ -1,10 +1,10 @@
-from datetime import datetime
 from time import sleep
-from ctpbee import VLogger
+
 from ctpbee import Action
 from ctpbee import CtpBee
 from ctpbee import CtpbeeApi
 from ctpbee import RiskLevel
+from ctpbee import VLogger
 from ctpbee import hickey
 from ctpbee.constant import PositionData, AccountData, LogData
 
@@ -175,61 +175,8 @@ class DataRecorder(CtpbeeApi):
             # print(app.recorder.get_contract("ag1912.SHFE"))
 
 
-api = CtpbeeApi(extension_name="hi")
-
-
-@api.register()
-def get_it(self, hel):
-    print(hel)
-
-
-@api.route(handler="bar")
-def handle_bar(self, bar):
-    """ """
-    # self.action.short(bar.high_price, 1, bar)
-
-
-@api.route(handler="tick")
-def handle_tick(self, tick):
-    """ """
-    self.get_it("hhhh")
-    print("当前时间: ", str(datetime.now()))
-    print("tick时间: ", str(tick.datetime))
-
-
-@api.route(handler="contract")
-def handle_contract(self, contract):
-    if contract.local_symbol == "zn1911.SHFE":
-        self.app.subscribe(contract.local_symbol)
-
-
-@api.route(handler="timer")
-def realtime(self):
-    """ """
-
-
-@api.route(handler="position")
-def handld_position(self, position):
-    """ """
-
-
-@api.route(handler="account")
-def handle_account(self, account):
-    """ """
-
-
-@api.route(handler="order")
-def handle_order(self, order):
-    """ """
-
-
-@api.route(handler="trade")
-def handle_trade(self, trade):
-    """ """
-
-
 def create_app():
-    app = CtpBee("last", __name__, action_class=ActionMe, logger_class=Vlog, work_mode="limit_time", refresh=True,
+    app = CtpBee("last", __name__, action_class=ActionMe, logger_class=Vlog, refresh=True,
                  risk=RiskMe)
 
     """ 
@@ -243,13 +190,11 @@ def create_app():
       
     """
     data_recorder = DataRecorder("data_recorder")
-    app.add_extension(api)
+    app.add_extension(data_recorder)
 
     """ 启动 """
     return [app]
 
 
 if __name__ == '__main__':
-    app = create_app()
-    app[0].start()
-    # hickey.start_all(app_func=create_app)
+    hickey.start_all(app_func=create_app)
