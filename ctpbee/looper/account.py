@@ -33,13 +33,11 @@ class Account:
 
     """
 
-    def __init__(self):
-        self.position_manager = LocalPositionManager(app=None)
+    def __init__(self, interface):
+        self.interface = interface
+        self.position_manager = LocalPositionManager(interface.params)
         # 每日资金情况
         self.daily_life = defaultdict(list)
-
-        # 回测模式
-        self.pattern = "t+0"
 
         # 起始资金 默认10w 以及冻结
         self.balance = 100000

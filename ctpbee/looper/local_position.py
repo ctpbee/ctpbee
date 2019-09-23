@@ -404,9 +404,9 @@ class PositionHolding:
 class LocalPositionManager(dict):
     """ 用于管理持仓信息 只提供向外的接口 """
 
-    # def __init__(self, app):
-    #     super().__init__({})
-    #     self.app = app
+    def __init__(self, params: dict):
+        """ 传入参数进行参数设置 """
+        self.size_map = params.get("size_map")
 
     def update_tick(self, tick: TickData):
         """ 更新tick  """
@@ -451,10 +451,10 @@ class LocalPositionManager(dict):
         else:
             self.get(order.local_symbol).update_order(order)
 
-    def update_trade(self, trade, size, **kwargs):
+    def update_trade(self, trade, **kwargs):
         """ 更新成交  """
         if trade.local_symbol not in self:
-            self[trade.local_symbol] = PositionHolding(trade.local_symbol)
+            self[trade.local_symbol] = PositionHolding(trade.local_symbol, self.size_map.get(trade.local_symbol))
             self[trade.local_symbol].update_trade(trade)
         self.get(trade.local_symbol).update_trade(trade)
 
@@ -470,7 +470,7 @@ class LocalPositionManager(dict):
         """ 根据local_symbol 获取持仓信息 """
         return self.get(local_symbol, None)
 
-    def get_position_by_ld(self, local_symbol: Text, direction: Direction) -> PositionData:
+    def get_position_by_ld(self, local_symbol: Text, direction: Direction) -> PositionData or None:
         """
         ld means local_symbol and direction
         ld意味着local_symbol和direction

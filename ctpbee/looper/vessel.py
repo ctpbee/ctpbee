@@ -71,7 +71,7 @@ class Vessel:
 
     def add_strategy(self, strategy):
         """ 添加策略到本容器 """
-        self.strategy = strategy 
+        self.strategy = strategy
         try:
             self.interface.update_strategy(strategy)
             self._strategy_status = True
