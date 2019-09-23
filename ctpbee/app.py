@@ -14,7 +14,7 @@ from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
 from ctpbee.event_engine import EventEngine, AsyncEngine
 from ctpbee.exceptions import ConfigError
-from ctpbee.helpers import locked_cached_property, find_package, run_forever, refresh_query, graphic_pattern
+from ctpbee.helpers import locked_cached_property, find_package, refresh_query, graphic_pattern
 from ctpbee.interface import Interface
 from ctpbee.level import CtpbeeApi, Action
 from ctpbee.log import VLogger
@@ -60,7 +60,7 @@ class CtpBee(object):
              SLIPPAGE_SELL=0,  # 平空头滑点设置
              SLIPPAGE_SHORT=0,  # 卖空滑点设置
              SLIPPAGE_BUY=0,  # 买多滑点设置
-             LOOPER_SETTING=default_params,  # 回测需要设置的参数
+             LOOPER_PARAMS=default_params,  # 回测需要设置的参数
              SHARED_FUNC=False,  # 分时图数据 --> 等待优化
              REFRESH_INTERVAL=1.5,  # 定时刷新秒数， 需要在CtpBee实例化的时候将refresh设置为True才会生效
              INSTRUMENT_INDEPEND=False,  # 是否开启独立行情，策略对应相应的行情

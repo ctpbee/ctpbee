@@ -18,16 +18,16 @@ class LooperLogger:
             self.logger = VLogger(app_name="Vessel")
 
     def info(self, msg, **kwargs):
-        self.logger.info(msg=msg, extra={"owner": "Looper"}, **kwargs)
+        self.logger.info(msg, owner="Looper", **kwargs)
 
     def error(self, msg, **kwargs):
-        self.logger.error(msg=msg, extra={"owner": "Looper"}, **kwargs)
+        self.logger.error(msg, owner="Looper", **kwargs)
 
     def debug(self, msg, **kwargs):
-        self.logger.debug(msg=msg, extra={"owner": "Looper"}, **kwargs)
+        self.logger.debug(msg, owner="Looper", **kwargs)
 
     def warning(self, msg, **kwargs):
-        self.logger.warning(msg=msg, extra={"owner": "Looper"}, **kwargs)
+        self.logger.warning(msg, owner="Looper", **kwargs)
 
     def __repr__(self):
         return "LooperLogger -----> just enjoy it"
@@ -49,7 +49,7 @@ class Vessel:
         self.account = Account()
         self.risk = None
         self.strategy = None
-        self.interface = LocalLooper(self.strategy, risk=self.risk, account=self.account, logger=self.logger)
+        self.interface = LocalLooper(logger=self.logger, strategy=self.strategy, risk=self.risk, account=self.account)
         self.params = dict()
         self.looper_pattern = pattern
 
@@ -71,7 +71,7 @@ class Vessel:
 
     def add_strategy(self, strategy):
         """ 添加策略到本容器 """
-        self.strategy = strategy
+        self.strategy = strategy 
         try:
             self.interface.update_strategy(strategy)
             self._strategy_status = True
