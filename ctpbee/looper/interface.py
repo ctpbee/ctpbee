@@ -5,6 +5,7 @@ import uuid
 from ctpbee.constant import OrderRequest, Offset, Direction, OrderType, OrderData, CancelRequest, TradeData, BarData, \
     TickData, PositionData
 from ctpbee.jsond import dumps
+from ctpbee.looper.account import Account
 from ctpbee.looper.data import Bumblebee
 
 
@@ -37,7 +38,7 @@ class Action:
 
 
 class LocalLooper():
-    def __init__(self, logger, strategy=None, risk=None, account=None):
+    def __init__(self, logger, strategy=None, risk=None):
         """ 需要构建完整的成交回报以及发单报告,在account里面需要存储大量的存储 """
 
         self.pending = collections.deque()
@@ -61,7 +62,7 @@ class LocalLooper():
             single_day_limit=100,
         )
         # 账户属性
-        self.account = account
+        self.account = Account(self)
         self.order_ref = 0
 
         # 发单的ref集合
