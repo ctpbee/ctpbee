@@ -25,6 +25,7 @@ class AliasDayResult:
             setattr(self, i, v)
 
 
+
 class Account:
     """
     账户类
@@ -54,7 +55,7 @@ class Account:
         # 滑点相关设置
         self.slip_page: float = 0
 
-        # 当前日志信息
+        # 当前日期
         self.date = None
 
     def is_traded(self, trade: TradeData) -> bool:

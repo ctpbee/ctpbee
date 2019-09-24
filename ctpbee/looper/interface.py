@@ -41,7 +41,9 @@ class LocalLooper():
     def __init__(self, logger, strategy=None, risk=None):
         """ 需要构建完整的成交回报以及发单报告,在account里面需要存储大量的存储 """
 
+        # 活跃报单数量
         self.pending = collections.deque()
+
         self.sessionid = random.randint(1000, 10000)
         self.frontid = random.randint(10001, 500000)
 
@@ -77,6 +79,9 @@ class LocalLooper():
 
         # 所有的报单数量
         self.order_buffer = dict()
+
+        # 行情
+        self.price = None
 
     def update_strategy(self, strategy):
         self.strategy = strategy
@@ -141,9 +146,45 @@ class LocalLooper():
                 """ 超出涨跌价格 """
                 return None
 
+            # if self.mode == BacktestingMode.BAR:
+            #     long_cross_price = self.bar.low_price
+            #     short_cross_price = self.bar.high_price
+            #     long_best_price = self.bar.open_price
+            #     short_best_price = self.bar.open_price
+            # else:
+            #     long_cross_price = self.tick.ask_price_1
+            #     short_cross_price = self.tick.bid_price_1
+            #     long_best_price = long_cross_price
+            #     short_best_price = short_cross_price
+
+            long_c = self.price.low_price if self.price.low_price is not None else self.price.ask_price_1
+            short_c = self.price.high_price if self.price.low_price is not None else self.price.bid_price_1
+            long_b = self.price.open_price if self.price.low_price is not None else long_c
+            short_b = self.price.open_price if self.price.low_price is not None else short_c
+            long_cross = data.direction == Direction.LONG and data.price >= long_c > 0
+            short_cross = data.direction == Direction.SHORT and data.price <= short_c and short_c > 0
+
+            for order in self.pending:
+                long_cross = data.direction == Direction.LONG and order.price >= long_c > 0
+                short_cross = data.direction == Direction.SHORT and order.price <= short_c and short_c > 0
+                if not long_cross and not short_cross:
+                    """ 不成交 """
+                    continue
+                if long_cross:
+                    order.price = min(order.price, long_b)
+                else:
+                    order.price = max(order.price, short_b)
+                trade = self._generate_trade_data_from_order(order)
+                self.strategy.on_trade(trade)
+
+            if not long_cross and not short_cross:
+                # 未成交单, 提交到pending里面去
+                self.pending.append(data)
+
             """ 判断账户资金是否足以支撑成交 """
             if self.account.is_traded(data):
                 """ 调用API生成成交单 """
+                # 同时这里需要处理是否要进行
                 p = self._generate_trade_data_from_order(data)
                 self.account.update_trade(p)
                 """ 调用strategy的on_trade """
@@ -174,6 +215,8 @@ class LocalLooper():
         """ 回测周期 """
         p_data: Bumblebee = args[0]
         params = args[1]
+
+        self.price = p_data
         self.__init_params(params)
         if p_data.type == "tick":
             self.strategy.on_tick(tick=p_data.to_tick())

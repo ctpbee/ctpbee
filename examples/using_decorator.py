@@ -67,7 +67,7 @@ def get_it(self, hel):
 @api.route(handler="bar")
 def handle_bar(self, bar):
     """ """
-    # self.action.short(bar.high_price, 1, bar)
+    self.action.sell(bar.high_price, 1, bar)
 
 
 @api.route(handler="tick")
@@ -97,6 +97,7 @@ def handld_position(self, position):
 @api.route(handler="account")
 def handle_account(self, account):
     """ """
+
 
 
 @api.route(handler="order")
