@@ -42,10 +42,13 @@ class Vessel:
 
     """
 
-    def __init__(self, pattern="T0"):
+    def __init__(self, logger_class=None, pattern="T0"):
         self.ready = False
         self.looper_data: VessData = None
-        self.logger = LooperLogger()
+        if logger_class:
+            self.logger = logger_class()
+        else:
+            self.logger = LooperLogger()
         self.account = Account()
         self.risk = None
         self.strategy = None

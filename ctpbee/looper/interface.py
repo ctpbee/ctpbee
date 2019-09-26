@@ -212,7 +212,6 @@ class LocalLooper():
                 return p
             else:
                 """ 当前账户不足以支撑成交 """
-                self.logger.error("资金不足啦!")
                 return -4
         else:
             raise TypeError("未支持的成交机制")
@@ -239,4 +238,5 @@ class LocalLooper():
 
         if p_data.type == "bar":
             self.strategy.on_bar(tick=p_data.to_bar())
+        # 更新接口的日期
         self.date = p_data.datetime.date
