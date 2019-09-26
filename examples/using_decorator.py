@@ -90,14 +90,13 @@ def realtime(self):
 
 
 @api.route(handler="position")
-def handld_position(self, position):
+def handle_position(self, position):
     """ """
 
 
 @api.route(handler="account")
 def handle_account(self, account):
     """ """
-
 
 
 @api.route(handler="order")

@@ -265,3 +265,13 @@ class Hickey(object):
 
 
 hickey = Hickey()
+
+
+class RLock:
+    def __init__(self, name, second=10):
+        """ 创建一个新锁 """
+        self._start = datetime.now().timestamp()
+        self._end = self._start + second
+
+    def release(self):
+        pass
