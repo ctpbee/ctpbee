@@ -6,7 +6,7 @@ class JustUse(CtpbeeApi):
 
     def __init__(self, name):
         super().__init__(name)
-        self.instrument_set = set(['rb2001.SHFE'])
+        self.instrument_set = set(['rb1910.SHFE'])
 
     def on_account(self, account: AccountData) -> None:
         pass
@@ -21,12 +21,10 @@ class JustUse(CtpbeeApi):
         pass
 
     def on_tick(self, tick: TickData) -> None:
-        print(tick)
+        """ """
 
     def on_bar(self, bar: BarData) -> None:
-        pass
-        dict_bar = bar._to_dict()
-        self.action.short(bar.high_price, 1, bar)
+        print(datetime.now().timestamp())
 
     def on_contract(self, contract: ContractData):
         if contract.local_symbol in self.instrument_set:
@@ -45,8 +43,8 @@ if __name__ == '__main__':
             "userid": "089131",
             "password": "350888",
             "brokerid": "9999",
-            "md_address": "tcp://180.168.146.187:10131",
-            "td_address": "tcp://180.168.146.187:10130",
+            "md_address": "tcp://218.202.237.33:10112",
+            "td_address": "tcp://218.202.237.33:10102",
             "product_info": "",
             "appid": "simnow_client_test",
             "auth_code": "0000000000000000",
@@ -54,13 +52,7 @@ if __name__ == '__main__':
         "INTERFACE": "ctp",
         "TD_FUNC": True,
         "MD_FUNC": True,
-        "XMIN": [3, 5]
     }
     app.config.from_mapping(info)
     app.add_extension(just_use)
     app.start()
-
-
-a -- b --c --d
-e -- f --g
-h -- i --j

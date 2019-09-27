@@ -105,7 +105,6 @@ class Vessel:
 
     def letsgo(self, parmas, ready):
         if self.looper_data.init_flag:
-            self.logger.info(f"数据提供商: {self.looper_data.provider}")
             self.logger.info(f"产品: {self.looper_data.product}")
             self.logger.info(f"回测模式: {self.looper_pattern}")
         while True:
@@ -159,6 +158,9 @@ class Vessel:
         p = Process(name="looper", target=self.letsgo, args=(self.params, self.ready,))
         p.start()
 
+    def __repr__(self):
+        return "Backtesting Vessel powered by ctpbee current version: 0.1"
+
 
 if __name__ == '__main__':
-    main = Vessel()
+    vessel = Vessel()

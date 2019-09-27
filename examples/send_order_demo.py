@@ -1,5 +1,4 @@
-from threading import Thread
-from time import sleep
+from datetime import datetime
 
 from ctpbee import CtpbeeApi, helper, CtpBee
 from ctpbee.constant import ContractData, LogData, TickData, BarData, OrderType, Offset, OrderData, SharedData, \
@@ -7,18 +6,17 @@ from ctpbee.constant import ContractData, LogData, TickData, BarData, OrderType,
 
 
 class Demo(CtpbeeApi):
-    contract_set = set(["rb1910"])
+    instrument_set = set(["rb1910.SHFE"])
 
     # 当前插件绑定的CtpBee的数据记录信息都在self.app.recorder下面
 
     def on_contract(self, contract: ContractData):
         """ 处理推送的合约信息 """
-        if contract.symbol in self.contract_set:
-            self.app.subscribe(contract.symbol)
+        if contract.local_symbol in self.instrument_set:
+            self.app.subscribe(contract.local_symbol)
 
     def on_log(self, log: LogData):
         """ 处理日志信息 ,特殊需求才用到 """
-
         pass
 
     def on_tick(self, tick: TickData) -> None:
@@ -34,8 +32,6 @@ class Demo(CtpbeeApi):
         # 调用绑定的app进行发单
         id = self.app.send_order(req)
         print("返回id", id)
-
-        sleep(1)
 
     def on_init(self, init):
         if init:
@@ -67,19 +63,7 @@ def letsgo():
     app.add_extension(demo)
     app.config.from_json("config.json")
     app.start(log_output=True)
-
-    def query(time=1):
-        nonlocal app
-        while True:
-            app.query_position()
-            sleep(time)
-            app.query_account()
-            sleep(time)
-
     # 单独开一个线程来进行查询持仓和账户信息
-    p = Thread(target=query, args=(2,))
-    p.setDaemon(daemonic=True)
-    p.start()
 
 
 if __name__ == '__main__':
