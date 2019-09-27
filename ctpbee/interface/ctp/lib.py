@@ -56,6 +56,8 @@ DIRECTION_VT2CTP = {
     Direction.LONG: THOST_FTDC_D_Buy,
     Direction.SHORT: THOST_FTDC_D_Sell
 }
+
+
 DIRECTION_CTP2VT = {v: k for k, v in DIRECTION_VT2CTP.items()}
 DIRECTION_CTP2VT[THOST_FTDC_PD_Long] = Direction.LONG
 DIRECTION_CTP2VT[THOST_FTDC_PD_Short] = Direction.SHORT

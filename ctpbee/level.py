@@ -1,5 +1,4 @@
 import inspect
-from datetime import datetime
 from types import MethodType
 from typing import Set, List, AnyStr, Text
 from warnings import warn
@@ -70,7 +69,7 @@ class Action(object):
         self.app = app
 
     def buy(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
-            price_type: OrderType = "LIMIT", stop: bool = False, lock: bool = False, **kwargs):
+            price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
         """
         开仓 多头
         """
@@ -80,11 +79,11 @@ class Action(object):
             raise ConfigError(message="滑点配置应为浮点小数或者整数")
         price = price + self.app.config['SLIPPAGE_BUY']
         req = helper.generate_order_req_by_var(volume=volume, price=price, offset=Offset.OPEN, direction=Direction.LONG,
-                                               type=OrderType.LIMIT, exchange=origin.exchange, symbol=origin.symbol)
+                                               type=price_type, exchange=origin.exchange, symbol=origin.symbol)
         return self.send_order(req)
 
     def short(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
-              stop: bool = False, lock: bool = False, **kwargs):
+              price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
         """
          开仓 空头
         """
@@ -95,24 +94,24 @@ class Action(object):
         price = price + self.app.config['SLIPPAGE_SHORT']
         req = helper.generate_order_req_by_var(volume=volume, price=price, offset=Offset.OPEN,
                                                direction=Direction.SHORT,
-                                               type=OrderType.LIMIT, exchange=origin.exchange, symbol=origin.symbol)
+                                               type=price_type, exchange=origin.exchange, symbol=origin.symbol)
         return self.send_order(req)
 
     def sell(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData] = None,
-             stop: bool = False, lock: bool = False, **kwargs):
+             price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
         """ 平空头 """
         if not isinstance(self.app.config['SLIPPAGE_SELL'], float) and not isinstance(
                 self.app.config['SLIPPAGE_SELL'], int):
             raise ConfigError(message="滑点配置应为浮点小数")
         price = price + self.app.config['SLIPPAGE_SELL']
         req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.LONG,
-                                                     type=OrderType.LIMIT, exchange=origin.exchange,
+                                                     type=price_type, exchange=origin.exchange,
                                                      symbol=origin.symbol) for x in
                     self.get_req(origin.local_symbol, Direction.SHORT, volume, self.app)]
         return [self.send_order(req) for req in req_list if req.volume != 0]
 
     def cover(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
-              stop: bool = False, lock: bool = False, **kwargs):
+              price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
         """
         平多头
         """
@@ -121,7 +120,7 @@ class Action(object):
             raise ConfigError(message="滑点配置应为浮点小数")
         price = price + self.app.config['SLIPPAGE_COVER']
         req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.SHORT,
-                                                     type=OrderType.LIMIT, exchange=origin.exchange,
+                                                     type=price_type, exchange=origin.exchange,
                                                      symbol=origin.symbol) for x in
                     self.get_req(origin.local_symbol, Direction.LONG, volume, self.app)]
         return [self.send_order(req) for req in req_list if req.volume != 0]
@@ -459,7 +458,7 @@ class AsyncApi(object):
         if self.app is not None:
             self.init_app(self.app)
         # 是否冻结
-        self.fronzen = False
+        self.frozen = False
 
     @property
     def action(self):
@@ -522,7 +521,7 @@ class AsyncApi(object):
     async def on_init(self, init: bool):
         pass
 
-    async def on_realtime(self, timed: datetime):
+    async def on_realtime(self):
         pass
 
     def route(self, handler):
@@ -551,7 +550,7 @@ class AsyncApi(object):
             self.app = app
             self.app.extensions[self.extension_name] = self
 
-    async def __call__(self, event: Event):
+    async def __call__(self, event: Event = None):
         if not event:
             if not self.frozen:
                 await self.map[EVENT_TIMER](self)

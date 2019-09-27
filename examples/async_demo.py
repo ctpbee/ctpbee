@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 
 from ctpbee import AsyncApi
 from ctpbee import CtpBee, RiskLevel
@@ -50,7 +51,7 @@ class RiskMe(RiskLevel):
 
     """
 
-    def realtime_check(self, cur):
+    def realtime_check(self):
         # print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
         # print(f"\r {self.app.recorder.get_all_active_orders()}", end="")
         # self.action.cover
@@ -77,7 +78,7 @@ class RiskMe(RiskLevel):
 class DataRecorder(AsyncApi):
     def __init__(self, name, app=None):
         super().__init__(name, app)
-        self.instrument_set = set(["rb1910"])
+        self.instrument_set = set(["rb1910.SHFE"])
 
     async def on_trade(self, trade):
         pass
@@ -87,9 +88,9 @@ class DataRecorder(AsyncApi):
         # self.app.subscribe(contract.symbol)
 
         # 或者 单独制定
-        if contract.symbol in self.instrument_set:
-            self.app.subscribe(contract.symbol)
-            # 或者
+        if contract.local_symbol in self.instrument_set:
+            print(contract.local_symbol)
+            self.app.subscribe(contract.local_symbol)
             # current_app.subscribe(contract.symbol)
 
     async def on_order(self, order):
@@ -107,10 +108,10 @@ class DataRecorder(AsyncApi):
     async def on_tick(self, tick):
         """tick process function"""
         # print(tick._to_dict())
-        print(tick)
 
     async def on_bar(self, bar):
         """bar process function"""
+        print(datetime.now().timestamp())
 
     async def on_shared(self, shared):
         """ 处理分时图数据 """
@@ -132,11 +133,11 @@ def go():
             "password": "350888",
             "brokerid": "9999",
             # 24小时
-            "md_address": "tcp://180.168.146.187:10131",
-            "td_address": "tcp://180.168.146.187:10130",
-            # 移动
-            # "md_address": "tcp://218.202.237.33:10112",
-            # "td_address": "tcp://218.202.237.33:10102",
+            # "md_address": "tcp://180.168.146.187:10131",
+            # "td_address": "tcp://180.168.146.187:10130",
+            # # 移动
+            "md_address": "tcp://218.202.237.33:10112",
+            "td_address": "tcp://218.202.237.33:10102",
             "product_info": "",
             "appid": "simnow_client_test",
             "auth_code": "0000000000000000",
@@ -165,4 +166,3 @@ def go():
 
 if __name__ == '__main__':
     go()
-

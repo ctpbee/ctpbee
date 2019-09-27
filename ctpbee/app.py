@@ -14,7 +14,8 @@ from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
 from ctpbee.event_engine import EventEngine, AsyncEngine
 from ctpbee.exceptions import ConfigError
-from ctpbee.helpers import locked_cached_property, find_package, run_forever, refresh_query, graphic_pattern
+from ctpbee.helpers import end_thread
+from ctpbee.helpers import locked_cached_property, find_package, refresh_query, graphic_pattern
 from ctpbee.interface import Interface
 from ctpbee.level import CtpbeeApi, Action
 from ctpbee.log import VLogger
@@ -60,7 +61,7 @@ class CtpBee(object):
              SLIPPAGE_SELL=0,  # 平空头滑点设置
              SLIPPAGE_SHORT=0,  # 卖空滑点设置
              SLIPPAGE_BUY=0,  # 买多滑点设置
-             LOOPER_SETTING=default_params,  # 回测需要设置的参数
+             LOOPER_PARAMS=default_params,  # 回测需要设置的参数
              SHARED_FUNC=False,  # 分时图数据 --> 等待优化
              REFRESH_INTERVAL=1.5,  # 定时刷新秒数， 需要在CtpBee实例化的时候将refresh设置为True才会生效
              INSTRUMENT_INDEPEND=False,  # 是否开启独立行情，策略对应相应的行情
@@ -83,7 +84,7 @@ class CtpBee(object):
     tools = {}
 
     def __init__(self, name: Text, import_name, action_class: Action = None, engine_method: str = "thread",
-                 work_mode="limit_time", logger_class=None, logger_config_path=None,
+                 logger_class=None, logger_config_path=None,
                  refresh: bool = False, risk=None,
                  instance_path=None):
         """ 初始化 """
@@ -95,6 +96,8 @@ class CtpBee(object):
         # 是否加载以使用默认的logger类/ choose if use the default logging class
         if logger_class is None:
             self.logger = VLogger(app_name=self.name)
+            self.logger.config.from_pyfile(os.path.join(os.path.split(__file__)[0], 'cprint_config.py'))
+            self.logger.set_default(name=self.logger.app_name, owner='App')
         else:
             self.logger = logger_class(app_name=self.name)
             if logger_config_path:
@@ -165,7 +168,6 @@ class CtpBee(object):
 
         self.r = None
         self.r_flag = True
-        self.work_mode = work_mode
 
         _app_context_ctx.push(self.name, self)
 
@@ -218,27 +220,8 @@ class CtpBee(object):
                 self.trader = TdApi(self.event_engine)
             self.trader.connect(info)
 
-        show_me = graphic_pattern(__version__, self.work_mode, self.engine_method)
+        show_me = graphic_pattern(__version__, self.engine_method)
         print(show_me)
-
-        # 检查work_mode
-        if self.work_mode == "forever":
-            """ 7×24小时 """
-            # 启动监视器
-
-            if self.p is not None:
-                self.p_flag = False
-                sleep(1.5)
-                self.p = Thread(target=run_forever, args=(self,))
-                self.p.start()
-
-            else:
-                self.p = Thread(target=run_forever, args=(self,))
-                self.p.start()
-            self.p_flag = True
-        else:
-            pass
-
         if self.refresh:
             if self.r is not None:
                 self.r_flag = False
@@ -249,7 +232,6 @@ class CtpBee(object):
                 self.r = Thread(target=refresh_query, args=(self,))
                 self.r.start()
             self.r_flag = True
-        self.p_flag = True
 
     @locked_cached_property
     def name(self):
@@ -327,5 +309,8 @@ class CtpBee(object):
             self.market, self.trader = None, None
             self.event_engine.stop()
             del self.event_engine
+            if self.r is not None:
+                """ 强行终结掉线程 """
+                end_thread(self.r)
         except AttributeError:
             print(1)

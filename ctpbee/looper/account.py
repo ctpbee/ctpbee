@@ -32,31 +32,18 @@ class Account:
     支持成交之后修改资金 ， 对外提供API
 
     """
+    balance = 100000
+    frozen = 0
+    size = 5
+    pricetick = 10
+    daily_limit = 20
+    commission: float = 0
 
-    def __init__(self):
-        self.position_manager = LocalPositionManager(app=None)
+    def __init__(self, interface):
+        self.interface = interface
+        self.position_manager = LocalPositionManager(interface.params)
         # 每日资金情况
-        self.daily_life = defaultdict(list)
-
-        # 回测模式
-        self.pattern = "t+0"
-
-        # 起始资金 默认10w 以及冻结
-        self.balance = 100000
-        self.frozen = 0
-
-        self.size = 5
-        self.pricetick = 10
-
-        self.daily_limit = 20
-
-        # 手续费
-        self.commission: float = 0
-
-        # 滑点相关设置
-        self.slip_page: float = 0
-
-        # 当前日志信息
+        self.daily_life = defaultdict(AliasDayResult)
         self.date = None
 
     def is_traded(self, trade: TradeData) -> bool:
@@ -76,18 +63,21 @@ class Account:
         :param trade:交易单子/trade_id
         :return:
         """
-        # 根据单子 更新当前的持仓和----->
-
-        if trade.datetime.date != self.date:
+        # 根据单子 更新当前的持仓 ----->
+        if not self.date:
+            self.date = self.interface.date
+        if self.interface.date != self.date:
             """ 新的一天 """
-            p = AliasDayResult({"balance": self.balance, "frozen": self.frozen, "avaiable": self.balance - self.frozen})
+            p = AliasDayResult(
+                **{"balance": self.balance, "frozen": self.frozen, "available": self.balance - self.frozen})
             self.daily_life[self.date] = p
-            self.date = trade.datetime.date
-
-        commission_expense = trade.price * trade.volume
+            self.date = self.interface.date
+        if self.commission != 0:
+            commission_expense = trade.price * trade.volume
+        else:
+            commission_expense = 0
         self.balance -= commission_expense
-        # todo : 更新本地账户数据， 如果是隔天数据， 那么统计战绩， -----> AliasDayResult，然后推送到字典 。 以日期为key
-
+        # todo : 更新本地账户数据， 如果是隔天数据， 那么统计战绩 -----> AliasDayResult，然后推送到字典 。 以日期为key
         self.position_manager.update_trade(trade=trade)
 
     @property

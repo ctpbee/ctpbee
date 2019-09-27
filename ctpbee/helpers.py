@@ -114,7 +114,7 @@ def check(type: AnyStr):
     return midlle
 
 
-def graphic_pattern(version, work_mode, engine_method):
+def graphic_pattern(version, engine_method):
     first = f"""                                                            
                @             @                           
                 )           (                                 
@@ -122,7 +122,7 @@ def graphic_pattern(version, work_mode, engine_method):
           ##                     ##                            
          ##                       ##                                                  
         ##   ctpbee   :{version.ljust(12, ' ')}##                          
-        ##   work_mode:{work_mode.ljust(12, ' ')}##                          
+        ##                         ##                          
         ##   engine   :{engine_method.ljust(12, ' ')}##                          
          ##                       ##                          
           ++++++++    +    ++++++++                      
@@ -139,7 +139,7 @@ def graphic_pattern(version, work_mode, engine_method):
           +#######################+                            
          ##                       ##                                                  
          ##  ctpbee:    {version.ljust(10, ' ')}##                          
-         ##  work_mode: {work_mode.ljust(10, ' ')}##                          
+         ##                       ##                          
          ##  engine:    {engine_method.ljust(10, ' ')}##                          
          ##                       ##                          
           ++++++++    +    ++++++++                      
@@ -154,7 +154,7 @@ def graphic_pattern(version, work_mode, engine_method):
     *          -------------------------------------           *
     *          |                                   |           *
     *          |      ctpbee:    {version.ljust(16, " ")}  |           *
-    *          |      work_mode: {work_mode.ljust(16, " ")}  |           *
+    *          |                                   |           *
     *          |      engine:    {engine_method.ljust(16, " ")}  |           *
     *          |                                   |           *
     *          -------------------------------------           *
@@ -280,10 +280,10 @@ def value_call(func):
     return wrapper
 
 
-async def async_value_call(func):
+def async_value_call(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        d = func(*args, **kwargs)
+        d = await func(*args, **kwargs)
         self, event = args
         for value in self.app.extensions.values():
             if self.app.config['INSTRUMENT_INDEPEND']:
