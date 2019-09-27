@@ -67,7 +67,7 @@ def get_it(self, hel):
 @api.route(handler="bar")
 def handle_bar(self, bar):
     """ """
-    # self.action.short(bar.high_price, 1, bar)
+    self.action.sell(bar.high_price, 1, bar)
 
 
 @api.route(handler="tick")
@@ -90,7 +90,7 @@ def realtime(self):
 
 
 @api.route(handler="position")
-def handld_position(self, position):
+def handle_position(self, position):
     """ """
 
 

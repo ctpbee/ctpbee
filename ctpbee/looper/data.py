@@ -63,11 +63,6 @@ class VessData:
         return len(self.data)
 
     @property
-    def provider(self):
-        """ 数据提供商 """
-        return self.data_provider
-
-    @property
     def type(self):
         """ 数据类型 """
         return self.data_type

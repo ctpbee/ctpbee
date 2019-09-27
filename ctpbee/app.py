@@ -14,6 +14,7 @@ from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
 from ctpbee.event_engine import EventEngine, AsyncEngine
 from ctpbee.exceptions import ConfigError
+from ctpbee.helpers import end_thread
 from ctpbee.helpers import locked_cached_property, find_package, refresh_query, graphic_pattern
 from ctpbee.interface import Interface
 from ctpbee.level import CtpbeeApi, Action
@@ -231,7 +232,6 @@ class CtpBee(object):
                 self.r = Thread(target=refresh_query, args=(self,))
                 self.r.start()
             self.r_flag = True
-        self.p_flag = True
 
     @locked_cached_property
     def name(self):
@@ -309,5 +309,8 @@ class CtpBee(object):
             self.market, self.trader = None, None
             self.event_engine.stop()
             del self.event_engine
+            if self.r is not None:
+                """ 强行终结掉线程 """
+                end_thread(self.r)
         except AttributeError:
             print(1)

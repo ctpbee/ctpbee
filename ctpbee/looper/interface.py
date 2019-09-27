@@ -1,12 +1,12 @@
 import collections
 import random
 import uuid
+from copy import deepcopy
 
 from ctpbee.constant import OrderRequest, Offset, Direction, OrderType, OrderData, CancelRequest, TradeData, BarData, \
-    TickData, PositionData
+    TickData, PositionData, Status
 from ctpbee.jsond import dumps
 from ctpbee.looper.account import Account
-from ctpbee.looper.data import Bumblebee
 
 
 class Action:
@@ -38,10 +38,19 @@ class Action:
 
 
 class LocalLooper():
+    message_box = {
+        -1: "超出下单限制",
+        -2: "超出涨跌价格",
+        -3: "未成交",
+        -4: "资金不足"
+    }
+
     def __init__(self, logger, strategy=None, risk=None):
         """ 需要构建完整的成交回报以及发单报告,在account里面需要存储大量的存储 """
 
+        # 活跃报单数量
         self.pending = collections.deque()
+
         self.sessionid = random.randint(1000, 10000)
         self.frontid = random.randint(10001, 500000)
 
@@ -77,6 +86,10 @@ class LocalLooper():
 
         # 所有的报单数量
         self.order_buffer = dict()
+
+        self.date = None
+        # 行情
+        self.price = None
 
     def update_strategy(self, strategy):
         self.strategy = strategy
@@ -120,12 +133,29 @@ class LocalLooper():
             if result:
                 """ 将成交单通过日志接口暴露出去"""
                 self.logger.info(dumps(result))
+            else:
+                self.logger.info(self.message_box[result])
         if isinstance(data, CancelRequest):
-            """ 撤单请求处理 """
-            # todo: 处理日志接口
+            """ 撤单请求处理 
+            """
+            for order in self.pending:
+                if data.order_id == order.order_id:
+                    order = deepcopy(order)
+                    self.strategy.on_order(order)
+                    self.pending.remove(order)
+                    return 1
+            return 0
 
-    def match_deal(self, data: OrderData):
-        """ 撮合成交 """
+    def match_deal(self, data: OrderData) -> int or TradeData:
+        """ 撮合成交
+            维护一个返回状态
+            -1: 超出下单限制
+            -2: 超出涨跌价格
+            -3: 未成交
+            -4: 资金不足
+            p : 成交回报
+
+        """
         if self.params.get("deal_pattern") == "match":
             """ 撮合成交 """
             # todo: 是否可以模拟一定量的市场冲击响应？ 以靠近更加逼真的回测效果 ？？？？
@@ -136,14 +166,44 @@ class LocalLooper():
             if data.volume > self.params.get("single_order_limit") or self.today_volume > self.params.get(
                     "single_day_limit"):
                 """ 超出限制 直接返回不允许成交 """
-                return None
+                return -1
             if data.price < self.drop_price or data.price > self.upper_price:
                 """ 超出涨跌价格 """
-                return None
+                return -2
 
+            long_c = self.price.low_price if self.price.low_price is not None else self.price.ask_price_1
+            short_c = self.price.high_price if self.price.low_price is not None else self.price.bid_price_1
+            long_b = self.price.open_price if self.price.low_price is not None else long_c
+            short_b = self.price.open_price if self.price.low_price is not None else short_c
+            long_cross = data.direction == Direction.LONG and data.price >= long_c > 0
+            short_cross = data.direction == Direction.SHORT and data.price <= short_c and short_c > 0
+
+            # 处理未成交的单子
+            for order in self.pending:
+                long_cross = data.direction == Direction.LONG and order.price >= long_c > 0
+                short_cross = data.direction == Direction.SHORT and order.price <= short_c and short_c > 0
+                if not long_cross and not short_cross:
+                    """ 不成交 """
+                    continue
+                if long_cross:
+                    order.price = min(order.price, long_b)
+                else:
+                    order.price = max(order.price, short_b)
+                trade = self._generate_trade_data_from_order(order)
+                order: OrderData.status = Status.ALLTRADED
+                self.strategy.on_order(deepcopy(order))
+                self.strategy.on_trade(trade)
+
+                self.pending.remove(order)
+
+            if not long_cross and not short_cross:
+                # 未成交单, 提交到pending里面去
+                self.pending.append(data)
+                return -3
             """ 判断账户资金是否足以支撑成交 """
             if self.account.is_traded(data):
                 """ 调用API生成成交单 """
+                # 同时这里需要处理是否要进行
                 p = self._generate_trade_data_from_order(data)
                 self.account.update_trade(p)
                 """ 调用strategy的on_trade """
@@ -152,15 +212,13 @@ class LocalLooper():
                 return p
             else:
                 """ 当前账户不足以支撑成交 """
-                self.logger.error("资金不足啦!")
-                return None
+                return -4
         else:
             raise TypeError("未支持的成交机制")
 
     def init_params(self, params):
         """ 回测参数设置 """
         # todo: 本地设置回测参数
-
         self.params.update(params)
 
     def __init_params(self, params):
@@ -172,11 +230,13 @@ class LocalLooper():
 
     def __call__(self, *args, **kwargs):
         """ 回测周期 """
-        p_data: Bumblebee = args[0]
-        params = args[1]
+        p_data, params = args
+        self.price = p_data.price
         self.__init_params(params)
         if p_data.type == "tick":
             self.strategy.on_tick(tick=p_data.to_tick())
 
         if p_data.type == "bar":
             self.strategy.on_bar(tick=p_data.to_bar())
+        # 更新接口的日期
+        self.date = p_data.datetime.date
