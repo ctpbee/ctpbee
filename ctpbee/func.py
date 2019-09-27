@@ -10,7 +10,6 @@ from multiprocessing import Process
 from time import sleep
 from typing import Text, Any, List
 
-import ctpbee.app as ap
 from ctpbee.constant import \
     (OrderRequest, CancelRequest, Direction, Exchange,
      Offset, OrderType, AccountRegisterRequest, AccountBanlanceRequest, TransferRequest, TransferSerialRequest,
@@ -179,7 +178,7 @@ def auth_time(data_time: time):
         raise TypeError("参数类型错误, 期望为datatime.time}")
     DAY_START = time(9, 0)  # 日盘启动和停止时间
     DAY_END = time(15, 0)
-    NIGHT_START = time(21, 0)  # 夜盘启动和停止时间
+    NIGHT_START = time(21, 0)
     NIGHT_END = time(2, 30)
     if data_time <= DAY_END and data_time >= DAY_START:
         return True
@@ -217,14 +216,15 @@ class Hickey(object):
         return False
 
     def run_all_app(self, app_func):
+        from ctpbee.app import CtpBee
         apps = app_func()
-        if isinstance(apps, ap.CtpBee):
+        if isinstance(apps, CtpBee):
             if not apps.active:
                 apps.start()
             else:
                 raise ValueError("你选择的app已经在函数中启动")
 
-        elif isinstance(apps, List) and isinstance(apps[0], ap.CtpBee):
+        elif isinstance(apps, List) and isinstance(apps[0], CtpBee):
             for app in apps:
                 if app.name not in self.names and not app.active:
                     app.start()
