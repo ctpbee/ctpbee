@@ -155,6 +155,8 @@ class LocalLooper():
             -4: 资金不足
             p : 成交回报
 
+            todo: 处理冻结 ??
+
         """
         if self.params.get("deal_pattern") == "match":
             """ 撮合成交 """
@@ -234,9 +236,11 @@ class LocalLooper():
         self.price = p_data.price
         self.__init_params(params)
         if p_data.type == "tick":
-            self.strategy.on_tick(tick=p_data.to_tick())
+            self.strategy.on_tick(tick=p_data)
 
         if p_data.type == "bar":
-            self.strategy.on_bar(tick=p_data.to_bar())
+            self.strategy.on_bar(bar=p_data)
         # 更新接口的日期
-        self.date = p_data.datetime.date
+        self.date = p_data.datetime.date()
+        # 穿过接口日期检查
+        self.account.via_aisle()

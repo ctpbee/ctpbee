@@ -21,8 +21,16 @@ class AliasDayResult:
 
     def __init__(self, **kwargs):
         """ 实例化进行调用 """
-        for i, v in kwargs:
+        for i, v in kwargs.items():
             setattr(self, i, v)
+
+    def __repr__(self):
+        result = "DailyResult: { "
+        for x in dir(self):
+            if x.startswith("_"):
+                continue
+            result += f"{x}:{getattr(self, x)} "
+        return result + "}"
 
 
 class Account:
@@ -68,9 +76,7 @@ class Account:
             self.date = self.interface.date
         if self.interface.date != self.date:
             """ 新的一天 """
-            p = AliasDayResult(
-                **{"balance": self.balance, "frozen": self.frozen, "available": self.balance - self.frozen})
-            self.daily_life[self.date] = p
+            self.get_new_day()
             self.date = self.interface.date
         if self.commission != 0:
             commission_expense = trade.price * trade.volume
@@ -80,8 +86,26 @@ class Account:
         # todo : 更新本地账户数据， 如果是隔天数据， 那么统计战绩 -----> AliasDayResult，然后推送到字典 。 以日期为key
         self.position_manager.update_trade(trade=trade)
 
+    def get_new_day(self, interface_date):
+        """ 获取到新的一天数据 """
+        p = AliasDayResult(
+            **{"balance": self.balance, "frozen": self.frozen, "available": self.balance - self.frozen})
+        if not self.date:
+            date = interface_date
+        else:
+            date = self.date
+        print(date, p)
+        self.daily_life[date] = p
+
+    def via_aisle(self):
+        if self.interface.date != self.date:
+            self.get_new_day(self.interface.date)
+            self.date = self.interface.date
+        else:
+            pass
+
     @property
     def result(self):
         # 计算并获取最后的结果
-        df = DataFrame.from_dict(self.daily_life).set_index("datetime")
+        df = DataFrame.from_dict(self.daily_life).set_index("date")
         return df

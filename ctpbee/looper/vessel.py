@@ -1,11 +1,12 @@
 """
 回测容器模块, 回测
 """
-from multiprocessing import Process
+import json
+from datetime import datetime, date
+from threading import Thread
 from time import sleep
 
 from ctpbee.log import VLogger
-from ctpbee.looper.account import Account
 from ctpbee.looper.data import VessData
 from ctpbee.looper.interface import LocalLooper
 
@@ -49,10 +50,10 @@ class Vessel:
             self.logger = logger_class()
         else:
             self.logger = LooperLogger()
-        self.account = Account()
+
         self.risk = None
         self.strategy = None
-        self.interface = LocalLooper(logger=self.logger, strategy=self.strategy, risk=self.risk, account=self.account)
+        self.interface = LocalLooper(logger=self.logger, strategy=self.strategy, risk=self.risk)
         self.params = dict()
         self.looper_pattern = pattern
 
@@ -70,7 +71,7 @@ class Vessel:
         self._data_status = False
         self._looper_status = "unready"
         self._strategy_status = False
-        self._risk_status = False
+        self._risk_status = True
 
     def add_strategy(self, strategy):
         """ 添加策略到本容器 """
@@ -92,6 +93,7 @@ class Vessel:
     def check_if_ready(self):
         if self._data_status and self._strategy_status and self._risk_status:
             self._looper_status = "ready"
+        self.ready = True
 
     def add_risk(self, risk):
         """ 添加风控 """
@@ -107,6 +109,7 @@ class Vessel:
         if self.looper_data.init_flag:
             self.logger.info(f"产品: {self.looper_data.product}")
             self.logger.info(f"回测模式: {self.looper_pattern}")
+
         while True:
             if ready:
                 """ 如果处于就绪状态 那么直接开始继续回测 """
@@ -155,12 +158,89 @@ class Vessel:
 
     def run(self):
         """ 开始运行回测 """
-        p = Process(name="looper", target=self.letsgo, args=(self.params, self.ready,))
+        print(self.looper_data.data_type)
+        p = Thread(name="looper", target=self.letsgo, args=(self.params, self.ready,))
         p.start()
 
     def __repr__(self):
         return "Backtesting Vessel powered by ctpbee current version: 0.1"
 
 
+def get_data():
+    """ using rqdatac to make an example """
+    import rqdatac as rq
+    from rqdatac import get_price, id_convert
+    username = "license"
+    password = "NK-Ci7vnLsRiPPWYwxvvPYdYM90vxN60qUB5tVac2mQuvZ8f9Mq8K_nnUqVspOpi4BLTkSLgq8OQFpOOj7L" \
+               "t7AbdBZEBqRK74fIJH5vsaAfFQgl-tuB8l03axrW8cyN6-nBUho_6Y5VCRI63Mx_PN54nsQOpc1psIGEz" \
+               "gND8c6Y=bqMVlABkpSlrDNk4DgG-1QXNknJtk0Kkw2axvFDa0E_XPMqOcBxifuRa_DFI2svseXU-8A" \
+               "eLjchnTkeuvQkKh6nrfehVDiXjoMeq5sXgqpbgFAd4A5j2B1a0gpE3cb5kXb42n13fGwFaGris" \
+               "8-eKzz_jncvuAamkJEQQV0aLdiw="
+    host = "rqdatad-pro.ricequant.com"
+    port = 16011
+    rq.init(username, password, (host, port))
+    symbol = id_convert("ag1912")
+    data = get_price(symbol, start_date='2018-01-04', end_date='2019-01-04', frequency='1m', fields=None,
+                     adjust_type='pre', skip_suspended=False, market='cn', expect_df=False)
+    origin = data.to_dict(orient='records')
+    result = []
+    for x in origin:
+        do = {}
+        do['open_price'] = x['open']
+        do['low_price'] = x['low']
+        do['high_price'] = x['high']
+        do['close_price'] = x['close']
+        do['datetime'] = datetime.strptime(str(x['trading_date']), "%Y-%m-%d %H:%M:%S")
+        result.append(do)
+    return result
+
+
+def get_a_strategy():
+    from ctpbee import CtpbeeApi
+    class Westrategy(CtpbeeApi):
+        def on_bar(self, bar):
+            # self.action.short(bar.high_price, 1, bar)
+            pass
+
+        def init_params(self, data):
+            """"""
+            # print("我在设置策略参数")
+
+    return Westrategy("Strategy")
+
+
+def save_data_json(data):
+    result = {"result": data}
+
+    class CJsonEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, datetime):
+                return obj.strftime('%Y-%m-%d %H:%M:%S')
+            elif isinstance(obj, date):
+                return obj.strftime('%Y-%m-%d')
+            else:
+                return json.JSONEncoder.default(self, obj)
+
+    with open("data.json", "w") as f:
+        json.dump(result, f, cls=CJsonEncoder)
+
+
+def load_data():
+    with open("data.json", "r") as f:
+        data = json.load(f)
+    return data.get("result")
+
+
 if __name__ == '__main__':
+    # data = get_data()
+    # save_data_json(data)
+    data = load_data()
+    for x in data:
+        x['datetime'] = datetime.strptime(str(x['datetime']), "%Y-%m-%d %H:%M:%S")
+    print(f"数据长度: {len(data)}")
     vessel = Vessel()
+    vessel.add_data(data)
+    stra = get_a_strategy()
+    vessel.add_strategy(stra)
+    vessel.params = {"looper": {}}
+    vessel.run()

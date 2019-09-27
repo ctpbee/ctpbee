@@ -235,7 +235,6 @@ class BaseData:
         return temp
 
     def _to_df(self):
-        # todo: df support
         temp = {}
         for x in dir(self):
             if x.startswith("_") or x.startswith("create"):
