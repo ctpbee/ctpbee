@@ -2,9 +2,13 @@
 回测容器模块, 回测
 """
 import json
+import os
+from collections import defaultdict
 from datetime import datetime, date
 from threading import Thread
 from time import sleep
+
+from pandas import DataFrame
 
 from ctpbee.log import VLogger
 from ctpbee.looper.data import VessData
@@ -17,6 +21,8 @@ class LooperLogger:
             self.logger = v_logger
         else:
             self.logger = VLogger(app_name="Vessel")
+            self.logger.config.from_pyfile(os.path.join(os.path.abspath(os.path.pardir), 'cprint_config.py'))
+            self.logger.set_default(name=self.logger.app_name, owner='App')
 
     def info(self, msg, **kwargs):
         self.logger.info(msg, owner="Looper", **kwargs)
@@ -109,13 +115,13 @@ class Vessel:
         if self.looper_data.init_flag:
             self.logger.info(f"产品: {self.looper_data.product}")
             self.logger.info(f"回测模式: {self.looper_pattern}")
-
-        while True:
+        for x in range(self.looper_data.length):
             if ready:
                 """ 如果处于就绪状态 那么直接开始继续回测 """
                 try:
                     p = next(self.looper_data)
                     self.interface(p, parmas)
+
                 except StopIteration:
                     self._looper_status = "finished"
                     break
@@ -123,8 +129,6 @@ class Vessel:
                 """ 如果处于未就绪状态 那么暂停回测 """
                 sleep(1)
         self.logger.info("回测结束,正在生成回测报告")
-        result = self.cal_result()
-        return result
 
     def suspend_looper(self):
         """ 暂停回测 """
@@ -158,13 +162,12 @@ class Vessel:
 
     def run(self):
         """ 开始运行回测 """
-        print(self.looper_data.data_type)
         p = Thread(name="looper", target=self.letsgo, args=(self.params, self.ready,))
         p.start()
+        p.join()
 
     def __repr__(self):
         return "Backtesting Vessel powered by ctpbee current version: 0.1"
-
 
 def get_data():
     """ using rqdatac to make an example """
@@ -180,7 +183,7 @@ def get_data():
     port = 16011
     rq.init(username, password, (host, port))
     symbol = id_convert("ag1912")
-    data = get_price(symbol, start_date='2018-01-04', end_date='2019-01-04', frequency='1m', fields=None,
+    data = get_price(symbol, start_date='2019-01-04', end_date='2019-08-04', frequency='1m', fields=None,
                      adjust_type='pre', skip_suspended=False, market='cn', expect_df=False)
     origin = data.to_dict(orient='records')
     result = []
@@ -237,10 +240,13 @@ if __name__ == '__main__':
     data = load_data()
     for x in data:
         x['datetime'] = datetime.strptime(str(x['datetime']), "%Y-%m-%d %H:%M:%S")
-    print(f"数据长度: {len(data)}")
     vessel = Vessel()
     vessel.add_data(data)
     stra = get_a_strategy()
     vessel.add_strategy(stra)
     vessel.params = {"looper": {}}
     vessel.run()
+    from pprint import pprint
+    result = vessel.interface.account.result
+    pprint(result)
+

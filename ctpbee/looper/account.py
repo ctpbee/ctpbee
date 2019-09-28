@@ -8,6 +8,7 @@
 
 from collections import defaultdict
 
+import numpy as np
 from pandas import DataFrame
 
 from ctpbee.constant import TradeData
@@ -32,6 +33,9 @@ class AliasDayResult:
             result += f"{x}:{getattr(self, x)} "
         return result + "}"
 
+    def _to_dict(self):
+        return self.__dict__
+
 
 class Account:
     """
@@ -53,6 +57,10 @@ class Account:
         # 每日资金情况
         self.daily_life = defaultdict(AliasDayResult)
         self.date = None
+        self.pre_commission = self.commission
+        self.count_statistics = 0
+        self.pre_count = 0
+        self.initial_capital = self.balance
 
     def is_traded(self, trade: TradeData) -> bool:
         """ 当前账户是否足以支撑成交 """
@@ -84,18 +92,24 @@ class Account:
             commission_expense = 0
         self.balance -= commission_expense
         # todo : 更新本地账户数据， 如果是隔天数据， 那么统计战绩 -----> AliasDayResult，然后推送到字典 。 以日期为key
+        self.count_statistics += 1
         self.position_manager.update_trade(trade=trade)
 
     def get_new_day(self, interface_date):
         """ 获取到新的一天数据 """
-        p = AliasDayResult(
-            **{"balance": self.balance, "frozen": self.frozen, "available": self.balance - self.frozen})
+
         if not self.date:
             date = interface_date
         else:
             date = self.date
-        print(date, p)
-        self.daily_life[date] = p
+        p = AliasDayResult(
+            **{"balance": self.balance, "frozen": self.frozen, "available": self.balance - self.frozen,
+               "date": date, "commission": self.commission - self.pre_commission, "net_pnl": 0,
+               "count": self.count_statistics - self.pre_count})
+
+        self.pre_commission = self.commission
+        self.pre_count = self.count_statistics
+        self.daily_life[date] = p._to_dict()
 
     def via_aisle(self):
         if self.interface.date != self.date:
@@ -106,6 +120,44 @@ class Account:
 
     @property
     def result(self):
-        # 计算并获取最后的结果
-        df = DataFrame.from_dict(self.daily_life).set_index("date")
-        return df
+        # 根据daily_life里面的数据 获取最后的结果
+        result = defaultdict(list)
+        for daily in self.daily_life.values():
+            for key, value in daily.items():
+                result[key].append(value)
+        df = DataFrame.from_dict(result).set_index("date")
+        return self._cal_result(df)
+
+    def _cal_result(self, df: DataFrame) -> dict:
+        result = dict()
+        # df["balance"] = df["net_pnl"].cumsum() + self.capital
+        df["return"] = np.log(df["balance"] / df["balance"].shift(1)).fillna(0)
+        df["high_level"] = (
+            df["balance"].rolling(
+                min_periods=1, window=len(df), center=False).max()
+        )
+        df["draw_down"] = df["balance"] - df["high_level"]
+        df["dd_percent"] = df["draw_down"] / df["high_level"] * 100
+        result['start_date'] = df.index[0]
+        result['end_date'] = df.index[-1]
+        result['total_days'] = len(df)
+        result['profit_days'] = len(df[df["net_pnl"] > 0])
+        result['loss_days'] = len(df[df["net_pnl"] < 0])
+        result['end_balance'] = df["balance"].iloc[-1]
+        result['max_draw_down'] = df["draw_down"].min()
+        result['max_dd_percent'] = df["dd_percent"].min()
+        # result['total_net_pnl'] = df["net_pnl"].sum()
+        # result['daily_net_pnl'] = result['total_net_pnl'] / result['total_days']
+        result['total_commission'] = df["commission"].sum()
+        result['daily_commission'] = result['total_commission'] / result['total_days']
+        # result['total_slippage'] = df["slippage"].sum()
+        # result['daily_slippage'] = result['total_slippage'] / result['total_days']
+        # result['total_turnover'] = df["turnover"].sum()
+        # result['daily_turnover'] = result['total_turnover'] / result['total_days']
+        result['total_count'] = df["count"].sum()
+        result['daily_count'] = result['total_count'] / result['total_days']
+        result['total_return'] = (result['end_balance'] / self.initial_capital - 1) * 100
+        result['annual_return'] = result['total_return'] / result['total_days'] * 240
+        result['daily_return'] = df["return"].mean() * 100
+        result['return_std'] = df["return"].std() * 100
+        return result
