@@ -55,12 +55,18 @@ class Account:
         self.interface = interface
         self.position_manager = LocalPositionManager(interface.params)
         # 每日资金情况
+
+        self.pre_balance = 0
         self.daily_life = defaultdict(AliasDayResult)
         self.date = None
-        self.pre_commission = self.commission
+        self.commission = 0
+        self.commission_expense = 0
+        self.pre_commission_expense = 0
         self.count_statistics = 0
         self.pre_count = 0
-        self.initial_capital = self.balance
+        self.initial_capital = 0
+
+        self.init = False
 
     def is_traded(self, trade: TradeData) -> bool:
         """ 当前账户是否足以支撑成交 """
@@ -91,6 +97,7 @@ class Account:
         else:
             commission_expense = 0
         self.balance -= commission_expense
+        self.commission_expense += commission_expense
         # todo : 更新本地账户数据， 如果是隔天数据， 那么统计战绩 -----> AliasDayResult，然后推送到字典 。 以日期为key
         self.count_statistics += 1
         self.position_manager.update_trade(trade=trade)
@@ -104,12 +111,16 @@ class Account:
             date = self.date
         p = AliasDayResult(
             **{"balance": self.balance, "frozen": self.frozen, "available": self.balance - self.frozen,
-               "date": date, "commission": self.commission - self.pre_commission, "net_pnl": 0,
+               "date": date, "commission": self.commission_expense - self.pre_commission_expense,
+               "net_pnl": self.balance - self.pre_balance,
                "count": self.count_statistics - self.pre_count})
 
-        self.pre_commission = self.commission
+        self.pre_commission_expense = self.commission_expense
+        self.pre_balance = self.balance
         self.pre_count = self.count_statistics
         self.daily_life[date] = p._to_dict()
+
+        self.balance -= 10000
 
     def via_aisle(self):
         if self.interface.date != self.date:
@@ -117,6 +128,18 @@ class Account:
             self.date = self.interface.date
         else:
             pass
+
+    def update_params(self, params: dict):
+        """ 更新本地账户回测参数 """
+        for i, v in params.items():
+            if i == "initial_capital" and not self.init:
+                self.balance = v
+                self.pre_balance = v
+                self.initial_capital = v
+                self.init = True
+            else:
+                continue
+            setattr(self, i, v)
 
     @property
     def result(self):
@@ -130,7 +153,6 @@ class Account:
 
     def _cal_result(self, df: DataFrame) -> dict:
         result = dict()
-        # df["balance"] = df["net_pnl"].cumsum() + self.capital
         df["return"] = np.log(df["balance"] / df["balance"].shift(1)).fillna(0)
         df["high_level"] = (
             df["balance"].rolling(
@@ -138,6 +160,7 @@ class Account:
         )
         df["draw_down"] = df["balance"] - df["high_level"]
         df["dd_percent"] = df["draw_down"] / df["high_level"] * 100
+        result['initial_capital'] = self.initial_capital
         result['start_date'] = df.index[0]
         result['end_date'] = df.index[-1]
         result['total_days'] = len(df)
@@ -146,8 +169,8 @@ class Account:
         result['end_balance'] = df["balance"].iloc[-1]
         result['max_draw_down'] = df["draw_down"].min()
         result['max_dd_percent'] = df["dd_percent"].min()
-        # result['total_net_pnl'] = df["net_pnl"].sum()
-        # result['daily_net_pnl'] = result['total_net_pnl'] / result['total_days']
+        result['total_pnl'] = df["net_pnl"].sum()
+        result['daily_pnl'] = result['total_pnl'] / result['total_days']
         result['total_commission'] = df["commission"].sum()
         result['daily_commission'] = result['total_commission'] / result['total_days']
         # result['total_slippage'] = df["slippage"].sum()

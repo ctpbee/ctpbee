@@ -3,12 +3,9 @@
 """
 import json
 import os
-from collections import defaultdict
 from datetime import datetime, date
 from threading import Thread
 from time import sleep
-
-from pandas import DataFrame
 
 from ctpbee.log import VLogger
 from ctpbee.looper.data import VessData
@@ -107,9 +104,14 @@ class Vessel:
         self.interface.update_risk(risk)
         self.check_if_ready()
 
-    def cal_result(self):
+    def set_params(self, params):
+        if not isinstance(params, dict):
+            raise ValueError(f"配置信息格式出现问题， 你当前的配置信息为 {type(params)}")
+        self.params = params
+
+    def get_result(self):
         """ 计算回测结果，生成回测报告 """
-        return None
+        return self.interface.account.result
 
     def letsgo(self, parmas, ready):
         if self.looper_data.init_flag:
@@ -168,6 +170,7 @@ class Vessel:
 
     def __repr__(self):
         return "Backtesting Vessel powered by ctpbee current version: 0.1"
+
 
 def get_data():
     """ using rqdatac to make an example """
@@ -244,9 +247,9 @@ if __name__ == '__main__':
     vessel.add_data(data)
     stra = get_a_strategy()
     vessel.add_strategy(stra)
-    vessel.params = {"looper": {}}
+    vessel.set_params({"looper": {"initial_capital": 2000000, "commission": 0.01}})
     vessel.run()
     from pprint import pprint
-    result = vessel.interface.account.result
-    pprint(result)
 
+    result = vessel.get_result()
+    pprint(result)
