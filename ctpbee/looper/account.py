@@ -11,7 +11,7 @@ from collections import defaultdict
 import numpy as np
 from pandas import DataFrame
 
-from ctpbee.constant import TradeData, OrderData
+from ctpbee.constant import TradeData, OrderData, Offset
 from ctpbee.looper.local_position import LocalPositionManager
 
 
@@ -87,12 +87,33 @@ class Account:
         :return:
         """
         # 根据单子 更新当前的持仓 ----->
-        if self.commission != 0:
-            commission_expense = trade.price * trade.volume * self.commission
+        if trade.offset == Offset.OPEN:
+            if self.commission != 0:
+                commission_expense = trade.price * trade.volume * self.commission
+            else:
+                commission_expense = 0
+            self.balance -= trade.price * trade.volume
+        elif trade.offset == Offset.CLOSETODAY:
+            if self.interface.params.get("today_commission") != 0:
+                commission_expense = trade.price * trade.volume * self.interface.params.get("today_commission")
+            else:
+                commission_expense = 0
+            self.balance += trade.price * trade.volume
+        elif trade.offset == Offset.CLOSEYESTERDAY:
+            if self.interface.params.get("yesterday_commission") != 0:
+                commission_expense = trade.price * trade.volume * self.interface.params.get("yesterday_commission")
+            else:
+                commission_expense = 0
+                self.balance += trade.price * trade.volume
         else:
-            commission_expense = 0
+            if self.interface.params.get("close_commission") != 0:
+                commission_expense = trade.price * trade.volume * self.interface.params.get("close_commission")
+            else:
+                commission_expense = 0
+            self.balance += trade.price * trade.volume
+
         self.balance -= commission_expense
-        self.balance -= trade.price * trade.volume
+
         self.commission_expense += commission_expense
         # todo : 更新本地账户数据， 如果是隔天数据， 那么统计战绩 -----> AliasDayResult，然后推送到字典 。 以日期为key
         self.count_statistics += 1
@@ -123,6 +144,7 @@ class Account:
         self.pre_commission_expense = self.commission_expense
         self.pre_balance = self.balance
         self.pre_count = self.count_statistics
+        self.position_manager.covert_to_yesterday_holding()
         self.daily_life[date] = p._to_dict()
 
     def via_aisle(self):

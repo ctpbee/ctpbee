@@ -7,6 +7,7 @@ from datetime import datetime, date
 from threading import Thread
 from time import sleep
 
+from ctpbee.constant import Direction
 from ctpbee.log import VLogger
 from ctpbee.looper.data import VessData
 from ctpbee.looper.interface import LocalLooper
@@ -230,25 +231,74 @@ def get_data():
 
 
 def get_a_strategy():
-    class Westrategy(LooperStrategy):
+    from ctpbee.looper.ta_lib import ArrayManager
+
+    class DoubleMaStrategy(LooperStrategy):
+        fast_window = 10
+        slow_window = 20
+
+        fast_ma0 = 0.0
+        fast_ma1 = 0.0
+
+        slow_ma0 = 0.0
+        slow_ma1 = 0.0
+
+        parameters = ["fast_window", "slow_window"]
+        variables = ["fast_ma0", "fast_ma1", "slow_ma0", "slow_ma1"]
 
         def __init__(self, name):
             super().__init__(name)
             self.count = 1
+            self.am = ArrayManager()
+            self.pos = 0
 
         def on_bar(self, bar):
-            if self.count % 5 == 0:
-                self.action.short(bar.high_price, 1, bar)
-            self.count += 1
+            # todo: 双均线
+            """ """
+
+            am = self.am
+            am.update_bar(bar)
+            if not am.inited:
+                return
+
+            fast_ma = am.sma(self.fast_window, array=True)
+            self.fast_ma0 = fast_ma[-1]
+            self.fast_ma1 = fast_ma[-2]
+
+            slow_ma = am.sma(self.slow_window, array=True)
+            self.slow_ma0 = slow_ma[-1]
+            self.slow_ma1 = slow_ma[-2]
+            # 计算金叉 死叉
+            cross_over = self.fast_ma0 > self.slow_ma0 and self.fast_ma1 < self.slow_ma1
+            cross_below = self.fast_ma0 < self.slow_ma0 and self.fast_ma1 > self.slow_ma1
+            # 金叉做多
+            if cross_over:
+                if self.pos == 0:
+                    self.action.buy(bar.close_price, 1, bar)
+                # 反向进行开仓
+                elif self.pos < 0:
+                    self.action.cover(bar.close_price, 1, bar)
+                    self.action.buy(bar.close_price, 1, bar)
+            # 死叉做空
+            elif cross_below:
+                if self.pos == 0:
+                    self.action.short(bar.close_price, 1, bar)
+                # 反向进行开仓
+                elif self.pos > 0:
+                    self.action.sell(bar.close_price, 1, bar)
+                    self.action.short(bar.close_price, 1, bar)
 
         def on_trade(self, trade):
-            pass
+            if trade.direction == Direction.LONG:
+                self.pos += trade.volume
+            else:
+                self.pos -= trade.volume
 
         def init_params(self, data):
             """"""
             # print("我在设置策略参数")
 
-    return Westrategy("Strategy")
+    return DoubleMaStrategy("double_ma")
 
 
 def save_data_json(data):
@@ -273,20 +323,40 @@ def load_data():
     return data.get("result")
 
 
-if __name__ == '__main__':
-    # data = get_data()
-    # save_data_json(data)
-    data = load_data()
-    for x in data:
-        x['datetime'] = datetime.strptime(str(x['datetime']), "%Y-%m-%d %H:%M:%S")
+def run_main(data):
     vessel = Vessel()
     vessel.add_data(data)
     stra = get_a_strategy()
     vessel.add_strategy(stra)
-    vessel.set_params({"looper": {"initial_capital": 2000000, "commission": 0.01, "deal_pattern": "price",
-                                  "size_map": {"ag1912.SHFE": 10}}})
+    vessel.set_params({"looper":
+                           {"initial_capital": 100000,
+                            "commission": 0.01,
+                            "deal_pattern": "price",
+                            "size_map": {"ag1912.SHFE": 10},
+                            "today_commission": 0.01,
+                            "yesterday_commission": 0.02,
+                            "close_commission": 0.01,
+                            "slippage_sell": 0,
+                            "slippage_cover": 0,
+                            "slippage_buy": 0,
+                            "slippage_short": 0,
+                            "close_pattern": "yesterday",
+
+                            },
+                       "strategy": {}
+                       })
     vessel.run()
     from pprint import pprint
 
     result = vessel.get_result()
     pprint(result)
+
+
+if __name__ == '__main__':
+    # data = get_data()
+    # save_data_json(data)
+
+    data = load_data()
+    for x in data:
+        x['datetime'] = datetime.strptime(str(x['datetime']), "%Y-%m-%d %H:%M:%S")
+    run_main(data)

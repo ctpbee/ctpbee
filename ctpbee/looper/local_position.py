@@ -484,6 +484,17 @@ class LocalPositionManager(dict):
             return None
         return self[local_symbol].get_position_by_direction(direction)
 
+    def covert_to_yesterday_holding(self):
+        """ 转换为昨日持仓 """
+        for holding in self.values():
+            if holding.long_td != 0:
+                holding.long_yd += holding.long_td
+                holding.long_td = 0
+
+            if holding.short_td != 0:
+                holding.short_yd += holding.short_td
+                holding.short_td = 0
+
     def get_all_positions(self):
         """ 返回所有的持仓信息 """
         position_list = []
