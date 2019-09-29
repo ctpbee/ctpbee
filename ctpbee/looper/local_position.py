@@ -406,6 +406,11 @@ class LocalPositionManager(dict):
 
     def __init__(self, params: dict):
         """ 传入参数进行参数设置 """
+
+        self.size_map = params.get("size_map")
+
+    def update_size_map(self, params):
+
         self.size_map = params.get("size_map")
 
     def update_tick(self, tick: TickData):

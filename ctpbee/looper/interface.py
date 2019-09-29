@@ -5,7 +5,6 @@ from copy import deepcopy
 
 from ctpbee.constant import OrderRequest, Offset, Direction, OrderType, OrderData, CancelRequest, TradeData, BarData, \
     TickData, PositionData, Status
-from ctpbee.jsond import dumps
 from ctpbee.looper.account import Account
 
 
@@ -16,12 +15,12 @@ class Action:
 
     def buy(self, price, volume, origin, price_type: OrderType = OrderType.LIMIT, **kwargs):
         req = OrderRequest(price=price, volume=volume, exchange=origin.exchange, offset=Offset.OPEN,
-                           direction=Direction.LONG, type=price_type)
+                           direction=Direction.LONG, type=price_type, symbol=origin.symbol)
         return self.looper.send_order(req)
 
     def short(self, price, volume, origin, price_type: OrderType = OrderType.LIMIT, **kwargs):
         req = OrderRequest(price=price, volume=volume, exchange=origin.exchange, offset=Offset.OPEN,
-                           direction=Direction.SHORT, type=price_type)
+                           direction=Direction.SHORT, type=price_type, symbol=origin.symbol)
         return self.looper.send_order(req)
 
     @property
@@ -112,9 +111,9 @@ class LocalLooper():
     def _generate_trade_data_from_order(self, order_data: OrderData):
         """ 将orderdata转换成成交单 """
         p = TradeData(price=order_data.price, istraded=order_data.volume, volume=order_data.volume,
-                      trade_id=uuid.uuid1(),
+                      tradeid=uuid.uuid1(),
                       gateway_name=order_data.gateway_name, time=order_data.time,
-                      order_id=order_data.order_id)
+                      order_id=order_data.order_id, symbol=order_data.symbol, exchange=order_data.exchange)
         return p
 
     def send_order(self, order_req):
@@ -130,9 +129,10 @@ class LocalLooper():
         if isinstance(data, OrderRequest):
             """ 发单请求处理 """
             result = self.match_deal(self._generate_order_data_from_req(data))
-            if result:
+            if isinstance(result, TradeData):
                 """ 将成交单通过日志接口暴露出去"""
-                self.logger.info(dumps(result))
+                # self.logger.info(dumps(result))
+                print(f"我成交了一笔, 成交价格{str(result.price)}, 成交笔数: {str(result.volume)}")
             else:
                 self.logger.info(self.message_box[result])
         if isinstance(data, CancelRequest):
@@ -195,13 +195,18 @@ class LocalLooper():
                 order: OrderData.status = Status.ALLTRADED
                 self.strategy.on_order(deepcopy(order))
                 self.strategy.on_trade(trade)
-
                 self.pending.remove(order)
 
             if not long_cross and not short_cross:
                 # 未成交单, 提交到pending里面去
                 self.pending.append(data)
                 return -3
+
+            if long_cross:
+                data.price = min(data.price, long_b)
+            else:
+                data.price = max(data.price, short_b)
+
             """ 判断账户资金是否足以支撑成交 """
             if self.account.is_traded(data):
                 """ 调用API生成成交单 """
@@ -236,7 +241,7 @@ class LocalLooper():
     def __call__(self, *args, **kwargs):
         """ 回测周期 """
         p_data, params = args
-        self.price = p_data.price
+        self.price = p_data
         self.__init_params(params)
         if p_data.type == "tick":
             self.strategy.on_tick(tick=p_data)

@@ -12,6 +12,32 @@ from ctpbee.looper.data import VessData
 from ctpbee.looper.interface import LocalLooper
 
 
+class LooperStrategy:
+    def __init__(self, name):
+        self.name = name
+
+    def on_bar(self, bar):
+        raise NotImplemented
+
+    def on_tick(self, tick):
+        raise NotImplemented
+
+    def on_trade(self, trade):
+        raise NotImplemented
+
+    def on_order(self, order):
+        raise NotImplemented
+
+    def on_position(self, position):
+        raise NotImplemented
+
+    def on_account(self, account):
+        raise NotImplemented
+
+    def on_contract(self, contract):
+        raise NotImplemented
+
+
 class LooperLogger:
     def __init__(self, v_logger=None):
         if v_logger:
@@ -79,11 +105,10 @@ class Vessel:
     def add_strategy(self, strategy):
         """ 添加策略到本容器 """
         self.strategy = strategy
-        try:
-            self.interface.update_strategy(strategy)
-            self._strategy_status = True
-        except Exception:
-            self._strategy_status = False
+
+        self.interface.update_strategy(strategy)
+        self._strategy_status = True
+
         self.check_if_ready()
 
     def add_data(self, data):
@@ -197,15 +222,26 @@ def get_data():
         do['high_price'] = x['high']
         do['close_price'] = x['close']
         do['datetime'] = datetime.strptime(str(x['trading_date']), "%Y-%m-%d %H:%M:%S")
+        do['symbol'] = "ag1912"
+        do['local_symbol'] = "ag1912.SHFE"
+        do['exchange'] = "SHFE"
         result.append(do)
     return result
 
 
 def get_a_strategy():
-    from ctpbee import CtpbeeApi
-    class Westrategy(CtpbeeApi):
+    class Westrategy(LooperStrategy):
+
+        def __init__(self, name):
+            super().__init__(name)
+            self.count = 1
+
         def on_bar(self, bar):
-            # self.action.short(bar.high_price, 1, bar)
+            if self.count % 5 == 0:
+                self.action.short(bar.high_price, 1, bar)
+            self.count += 1
+
+        def on_trade(self, trade):
             pass
 
         def init_params(self, data):
@@ -247,7 +283,8 @@ if __name__ == '__main__':
     vessel.add_data(data)
     stra = get_a_strategy()
     vessel.add_strategy(stra)
-    vessel.set_params({"looper": {"initial_capital": 2000000, "commission": 0.01}})
+    vessel.set_params({"looper": {"initial_capital": 2000000, "commission": 0.01, "deal_pattern": "price",
+                                  "size_map": {"ag1912.SHFE": 10}}})
     vessel.run()
     from pprint import pprint
 

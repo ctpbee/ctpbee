@@ -11,8 +11,8 @@ from collections import defaultdict
 import numpy as np
 from pandas import DataFrame
 
-from ctpbee.constant import TradeData
-from ctpbee.data_handle.local_position import LocalPositionManager
+from ctpbee.constant import TradeData, OrderData
+from ctpbee.looper.local_position import LocalPositionManager
 
 
 class AliasDayResult:
@@ -68,10 +68,11 @@ class Account:
 
         self.init = False
 
-    def is_traded(self, trade: TradeData) -> bool:
+    def is_traded(self, order: OrderData) -> bool:
         """ 当前账户是否足以支撑成交 """
         # 根据传入的单子判断当前的账户资金和冻结 是否足以成交此单
-        if trade.price * trade.volume < self.balance - self.frozen:
+
+        if order.price * order.volume * (1 + self.commission) > self.balance - self.frozen:
             """ 可用不足"""
             return False
         return True
@@ -86,21 +87,23 @@ class Account:
         :return:
         """
         # 根据单子 更新当前的持仓 ----->
+        if self.commission != 0:
+            commission_expense = trade.price * trade.volume * self.commission
+        else:
+            commission_expense = 0
+        self.balance -= commission_expense
+        self.balance -= trade.price * trade.volume
+        self.commission_expense += commission_expense
+        # todo : 更新本地账户数据， 如果是隔天数据， 那么统计战绩 -----> AliasDayResult，然后推送到字典 。 以日期为key
+        self.count_statistics += 1
+        self.position_manager.update_trade(trade=trade)
+
         if not self.date:
             self.date = self.interface.date
         if self.interface.date != self.date:
             """ 新的一天 """
             self.get_new_day()
             self.date = self.interface.date
-        if self.commission != 0:
-            commission_expense = trade.price * trade.volume
-        else:
-            commission_expense = 0
-        self.balance -= commission_expense
-        self.commission_expense += commission_expense
-        # todo : 更新本地账户数据， 如果是隔天数据， 那么统计战绩 -----> AliasDayResult，然后推送到字典 。 以日期为key
-        self.count_statistics += 1
-        self.position_manager.update_trade(trade=trade)
 
     def get_new_day(self, interface_date):
         """ 获取到新的一天数据 """
@@ -113,16 +116,17 @@ class Account:
             **{"balance": self.balance, "frozen": self.frozen, "available": self.balance - self.frozen,
                "date": date, "commission": self.commission_expense - self.pre_commission_expense,
                "net_pnl": self.balance - self.pre_balance,
-               "count": self.count_statistics - self.pre_count})
+               "count": self.count_statistics - self.pre_count
+               })
 
+        self.interface.today_volume = 0
         self.pre_commission_expense = self.commission_expense
         self.pre_balance = self.balance
         self.pre_count = self.count_statistics
         self.daily_life[date] = p._to_dict()
 
-        self.balance -= 10000
-
     def via_aisle(self):
+        self.position_manager.update_size_map(self.interface.params)
         if self.interface.date != self.date:
             self.get_new_day(self.interface.date)
             self.date = self.interface.date
@@ -137,8 +141,9 @@ class Account:
                 self.pre_balance = v
                 self.initial_capital = v
                 self.init = True
-            else:
                 continue
+            else:
+                pass
             setattr(self, i, v)
 
     @property
@@ -148,10 +153,15 @@ class Account:
         for daily in self.daily_life.values():
             for key, value in daily.items():
                 result[key].append(value)
+
+        import matplotlib.pyplot as plt
         df = DataFrame.from_dict(result).set_index("date")
+        df['balance'].plot()
+        plt.show()
         return self._cal_result(df)
 
     def _cal_result(self, df: DataFrame) -> dict:
+
         result = dict()
         df["return"] = np.log(df["balance"] / df["balance"].shift(1)).fillna(0)
         df["high_level"] = (
