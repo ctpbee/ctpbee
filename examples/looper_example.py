@@ -59,8 +59,8 @@ def get_a_strategy():
     from ctpbee.looper.ta_lib import ArrayManager
 
     class DoubleMaStrategy(LooperApi):
-        fast_window = 10
-        slow_window = 20
+        fast_window = 5
+        slow_window = 50
 
         fast_ma0 = 0.0
         fast_ma1 = 0.0
@@ -154,13 +154,13 @@ def run_main(data):
     stra = get_a_strategy()
     vessel.add_strategy(stra)
     vessel.set_params({"looper":
-                           {"initial_capital": 2000000,
-                            "commission": 0.01,
+                           {"initial_capital": 100000,
+                            "commission": 0.005,
                             "deal_pattern": "price",
-                            "size_map": {"ag1912.SHFE": 10},
-                            "today_commission": 0.01,
+                            "size_map": {"ag1912.SHFE": 15},
+                            "today_commission": 0.005,
                             "yesterday_commission": 0.02,
-                            "close_commission": 0.01,
+                            "close_commission": 0.005,
                             "slippage_sell": 0,
                             "slippage_cover": 0,
                             "slippage_buy": 0,

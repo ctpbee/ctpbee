@@ -78,7 +78,7 @@ class RiskMe(RiskLevel):
 class DataRecorder(AsyncApi):
     def __init__(self, name, app=None):
         super().__init__(name, app)
-        self.instrument_set = set(["rb1910.SHFE"])
+        self.instrument_set = set(["ag1912.SHFE"])
 
     async def on_trade(self, trade):
         pass
@@ -90,6 +90,7 @@ class DataRecorder(AsyncApi):
         # 或者 单独制定
         if contract.local_symbol in self.instrument_set:
             print(contract.local_symbol)
+            print(contract.size)
             self.app.subscribe(contract.local_symbol)
             # current_app.subscribe(contract.symbol)
 
