@@ -11,7 +11,7 @@ from collections import defaultdict
 import numpy as np
 from pandas import DataFrame
 
-from ctpbee.constant import TradeData, OrderData, Offset
+from ctpbee.constant import TradeData, OrderData, Offset, PositionData, Direction
 from ctpbee.looper.local_position import LocalPositionManager
 
 
@@ -83,7 +83,7 @@ class Account:
 
         make sure it can be traded if you choose to call this method,
 
-        :param trade:交易单子/trade_id
+        :param trade:交易单子/trade
         :return:
         """
         # 根据单子 更新当前的持仓 ----->
@@ -92,13 +92,18 @@ class Account:
                 commission_expense = trade.price * trade.volume * self.commission
             else:
                 commission_expense = 0
-            self.balance -= trade.price * trade.volume
+
+            # self.frozen += trade.price * trade.volume
+
         elif trade.offset == Offset.CLOSETODAY:
             if self.interface.params.get("today_commission") != 0:
                 commission_expense = trade.price * trade.volume * self.interface.params.get("today_commission")
             else:
                 commission_expense = 0
+            # 计算盈亏
+            position = self.position_manager.get_position_by_ld(trade.local_symbol, trade.direction)
             self.balance += trade.price * trade.volume
+
         elif trade.offset == Offset.CLOSEYESTERDAY:
             if self.interface.params.get("yesterday_commission") != 0:
                 commission_expense = trade.price * trade.volume * self.interface.params.get("yesterday_commission")
@@ -110,12 +115,24 @@ class Account:
                 commission_expense = trade.price * trade.volume * self.interface.params.get("close_commission")
             else:
                 commission_expense = 0
-            self.balance += trade.price * trade.volume
+            reversed_map = {
+                Direction.LONG: Direction.SHORT,
+                Direction.SHORT: Direction.LONG
+            }
+            position: PositionData = self.position_manager.get_position_by_ld(trade.local_symbol, reversed_map[trade.direction])
 
+            if trade.direction == Direction.LONG:
+                """ 平空头 """
+                pnl = (position.price - trade.price) * trade.volume * self.interface.params.get("size_map").get(
+                    trade.local_symbol)
+            else:
+                """ 平多头 """
+                pnl = (trade.price - position.price) * trade.volume * self.interface.params.get("size_map").get(
+                    trade.local_symbol)
+            print(pnl)
+            self.balance += pnl
         self.balance -= commission_expense
-
         self.commission_expense += commission_expense
-        # todo : 更新本地账户数据， 如果是隔天数据， 那么统计战绩 -----> AliasDayResult，然后推送到字典 。 以日期为key
         self.count_statistics += 1
         self.position_manager.update_trade(trade=trade)
 

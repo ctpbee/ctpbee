@@ -295,7 +295,6 @@ class PositionHolding:
                 req_open.offset = Offset.OPEN
                 req_open.volume = open_volume
                 req_list.append(req_open)
-
             return req_list
 
     def calculate_pnl(self):
