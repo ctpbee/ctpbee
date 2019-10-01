@@ -89,8 +89,7 @@ class DataRecorder(AsyncApi):
 
         # 或者 单独制定
         if contract.local_symbol in self.instrument_set:
-            print(contract.local_symbol)
-            print(contract.size)
+
             self.app.subscribe(contract.local_symbol)
             # current_app.subscribe(contract.symbol)
 

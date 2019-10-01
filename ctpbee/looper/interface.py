@@ -87,7 +87,7 @@ class Action:
          """
         def cal_req(position, volume, looper) -> List:
             # 判断是否为上期所或者能源交易所 / whether the exchange is SHFE or INE
-            if position.exchange not in looper.params["today_exchange"]:
+            if position.exchange.value not in looper.params["today_exchange"]:
                 return [[Offset.CLOSE, volume]]
 
             if looper.params["close_pattern"] == "today":
@@ -137,7 +137,7 @@ class LocalLooper():
         """ 需要构建完整的成交回报以及发单报告,在account里面需要存储大量的存储 """
 
         # 活跃报单数量
-        self.pending = collections.deque()
+        self.pending = []
 
         self.sessionid = random.randint(1000, 10000)
         self.frontid = random.randint(10001, 500000)
@@ -274,6 +274,7 @@ class LocalLooper():
 
             # 处理未成交的单子
             for order in self.pending:
+                index = self.pending.index(order)
                 long_cross = data.direction == Direction.LONG and order.price >= long_c > 0
                 short_cross = data.direction == Direction.SHORT and order.price <= short_c and short_c > 0
                 if not long_cross and not short_cross:
@@ -284,7 +285,7 @@ class LocalLooper():
                 else:
                     order.price = max(order.price, short_b)
                 trade = self._generate_trade_data_from_order(order)
-                order: OrderData.status = Status.ALLTRADED
+                order.status = Status.ALLTRADED
                 self.strategy.on_order(deepcopy(order))
                 self.strategy.on_trade(trade)
                 self.pending.remove(order)

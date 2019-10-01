@@ -23,7 +23,7 @@ from ctpbee import LooperApi, Vessel
 from ctpbee.constant import Direction
 
 
-def get_data():
+def get_data(start, end, symbol, exchange, level):
     """ using rqdatac to make an example """
     import rqdatac as rq
     from rqdatac import get_price, id_convert
@@ -36,8 +36,8 @@ def get_data():
     host = "rqdatad-pro.ricequant.com"
     port = 16011
     rq.init(username, password, (host, port))
-    symbol = id_convert("ag1912")
-    data = get_price(symbol, start_date='2019-01-04', end_date='2019-08-04', frequency='1m', fields=None,
+    symbol_rq = id_convert(symbol)
+    data = get_price(symbol_rq, start_date=start, end_date=end, frequency=level, fields=None,
                      adjust_type='pre', skip_suspended=False, market='cn', expect_df=False)
     origin = data.to_dict(orient='records')
     result = []
@@ -48,9 +48,9 @@ def get_data():
         do['high_price'] = x['high']
         do['close_price'] = x['close']
         do['datetime'] = datetime.strptime(str(x['trading_date']), "%Y-%m-%d %H:%M:%S")
-        do['symbol'] = "ag1912"
-        do['local_symbol'] = "ag1912.SHFE"
-        do['exchange'] = "SHFE"
+        do['symbol'] = symbol
+        do['local_symbol'] = symbol + "." + exchange
+        do['exchange'] = exchange
         result.append(do)
     return result
 
@@ -59,11 +59,11 @@ def get_a_strategy():
     from ctpbee.looper.ta_lib import ArrayManager
 
     class DoubleMaStrategy(LooperApi):
-        fast_window = 5
-        slow_window = 50
+        fast_window = 20
+        slow_window = 10
 
         fast_ma0 = 0.0
-        fast_ma1 = 0.0
+        fast_ma1 = 1.0
 
         slow_ma0 = 0.0
         slow_ma1 = 0.0
@@ -123,6 +123,77 @@ def get_a_strategy():
             """"""
             # print("我在设置策略参数")
 
+    class BollStrategy(LooperApi):
+
+        boll_window = 18
+        boll_dev = 3.4
+        cci_window = 10
+        atr_window = 30
+        sl_multiplier = 5.2
+        fixed_size = 1
+
+        boll_up = 0
+        boll_down = 0
+        cci_value = 0
+        atr_value = 0
+
+        intra_trade_high = 0
+        intra_trade_low = 0
+        long_stop = 0
+        short_stop = 0
+
+        parameters = ["boll_window", "boll_dev", "cci_window",
+                      "atr_window", "sl_multiplier", "fixed_size"]
+        variables = ["boll_up", "boll_down", "cci_value", "atr_value",
+                     "intra_trade_high", "intra_trade_low", "long_stop", "short_stop"]
+
+        def __init__(self, name):
+            super().__init__(name)
+            self.am = ArrayManager()
+            self.pos = 0
+
+        def on_bar(self, bar):
+            am = self.am
+            am.update_bar(bar)
+            if not am.inited:
+                return
+
+            self.boll_up, self.boll_down = am.boll(self.boll_window, self.boll_dev)
+            self.cci_value = am.cci(self.cci_window)
+            self.atr_value = am.atr(self.atr_window)
+
+            if self.pos == 0:
+                self.intra_trade_high = bar.high_price
+                self.intra_trade_low = bar.low_price
+
+                if self.cci_value > 0:
+                    self.action.buy(self.boll_up, self.fixed_size, bar)
+                elif self.cci_value < 0:
+                    self.action.short(self.boll_down, self.fixed_size, bar)
+
+            elif self.pos > 0:
+                self.intra_trade_high = max(self.intra_trade_high, bar.high_price)
+                self.intra_trade_low = bar.low_price
+
+                self.long_stop = self.intra_trade_high - self.atr_value * self.sl_multiplier
+                self.action.sell(self.long_stop, abs(self.pos), bar)
+
+            elif self.pos < 0:
+                self.intra_trade_high = bar.high_price
+                self.intra_trade_low = min(self.intra_trade_low, bar.low_price)
+
+                self.short_stop = self.intra_trade_low + self.atr_value * self.sl_multiplier
+                self.action.cover(self.short_stop, abs(self.pos), bar)
+
+        def on_trade(self, trade):
+            if trade.direction == Direction.LONG:
+                self.pos += trade.volume
+            else:
+                self.pos -= trade.volume
+
+        def on_order(self, order):
+            pass
+
     return DoubleMaStrategy("double_ma")
 
 
@@ -166,7 +237,6 @@ def run_main(data):
                             "slippage_buy": 0,
                             "slippage_short": 0,
                             "close_pattern": "yesterday",
-
                             },
                        "strategy": {}
                        })
@@ -177,7 +247,7 @@ def run_main(data):
 
 
 if __name__ == '__main__':
-    # data = get_data()
+    data = get_data(start="2019-1-5", end="2019-9-1", symbol="ag1912", exchange="SHFE", level="15m")
     # save_data_json(data)
     data = load_data()
     for x in data:

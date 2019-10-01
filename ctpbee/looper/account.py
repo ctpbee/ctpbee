@@ -12,6 +12,7 @@ import numpy as np
 from pandas import DataFrame
 
 from ctpbee.constant import TradeData, OrderData, Offset, PositionData, Direction
+from ctpbee.exceptions import ConfigError
 from ctpbee.looper.local_position import LocalPositionManager
 
 
@@ -87,40 +88,40 @@ class Account:
         :return:
         """
         # 根据单子 更新当前的持仓 ----->
+
         if trade.offset == Offset.OPEN:
             if self.commission != 0:
                 commission_expense = trade.price * trade.volume * self.commission
             else:
                 commission_expense = 0
 
-            # self.frozen += trade.price * trade.volume
-
         elif trade.offset == Offset.CLOSETODAY:
             if self.interface.params.get("today_commission") != 0:
                 commission_expense = trade.price * trade.volume * self.interface.params.get("today_commission")
             else:
                 commission_expense = 0
-            # 计算盈亏
-            position = self.position_manager.get_position_by_ld(trade.local_symbol, trade.direction)
-            self.balance += trade.price * trade.volume
 
         elif trade.offset == Offset.CLOSEYESTERDAY:
             if self.interface.params.get("yesterday_commission") != 0:
                 commission_expense = trade.price * trade.volume * self.interface.params.get("yesterday_commission")
             else:
                 commission_expense = 0
-                self.balance += trade.price * trade.volume
         else:
             if self.interface.params.get("close_commission") != 0:
                 commission_expense = trade.price * trade.volume * self.interface.params.get("close_commission")
             else:
                 commission_expense = 0
+
+        if trade.offset == Offset.CLOSETODAY or trade.offset == Offset.CLOSEYESTERDAY or trade.offset == Offset.CLOSE:
             reversed_map = {
                 Direction.LONG: Direction.SHORT,
                 Direction.SHORT: Direction.LONG
             }
-            position: PositionData = self.position_manager.get_position_by_ld(trade.local_symbol, reversed_map[trade.direction])
-
+            position: PositionData = self.position_manager.get_position_by_ld(trade.local_symbol,
+                                                                              reversed_map[trade.direction])
+            if self.interface.params.get("size_map") is None or self.interface.params.get("size_map").get(
+                    trade.local_symbol) is None:
+                raise ConfigError(message="请检查你的回测配置中是否存在着size配置", args=("回测配置错误",))
             if trade.direction == Direction.LONG:
                 """ 平空头 """
                 pnl = (position.price - trade.price) * trade.volume * self.interface.params.get("size_map").get(
@@ -129,8 +130,8 @@ class Account:
                 """ 平多头 """
                 pnl = (trade.price - position.price) * trade.volume * self.interface.params.get("size_map").get(
                     trade.local_symbol)
-            print(pnl)
             self.balance += pnl
+
         self.balance -= commission_expense
         self.commission_expense += commission_expense
         self.count_statistics += 1
@@ -144,7 +145,7 @@ class Account:
             self.date = self.interface.date
 
     def get_new_day(self, interface_date):
-        """ 获取到新的一天数据 """
+        """ 生成今天的交易数据， 同时更新前日数据 ，然后进行持仓结算 """
 
         if not self.date:
             date = interface_date

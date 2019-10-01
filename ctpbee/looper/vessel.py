@@ -35,6 +35,10 @@ class LooperApi:
     def on_contract(self, contract):
         raise NotImplemented
 
+    def init_params(self, data):
+        """ 用户需要继承此方法"""
+        # print("我在设置策略参数")
+
 
 class LooperLogger:
     def __init__(self, v_logger=None):

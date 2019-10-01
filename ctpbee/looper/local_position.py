@@ -136,8 +136,8 @@ class PositionHolding:
         # 汇总
         self.calculate_price(trade)
         self.calculate_position()
-        self.calculate_pnl()
-        self.calculate_stare_pnl()
+        # self.calculate_pnl()
+        # self.calculate_stare_pnl()
 
     def calculate_position(self):
         """计算持仓情况"""
