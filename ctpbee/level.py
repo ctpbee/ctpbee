@@ -343,10 +343,10 @@ class CtpbeeApi(object):
         return self.app.recorder
 
     def on_order(self, order: OrderData) -> None:
-        raise NotImplemented
+        pass
 
     def on_shared(self, shared: SharedData) -> None:
-        raise NotImplemented
+        pass
 
     def on_bar(self, bar: BarData) -> None:
         raise NotImplemented
@@ -355,16 +355,16 @@ class CtpbeeApi(object):
         raise NotImplemented
 
     def on_trade(self, trade: TradeData) -> None:
-        raise NotImplemented
+        pass
 
     def on_position(self, position: PositionData) -> None:
-        raise NotImplemented
+        pass
 
     def on_account(self, account: AccountData) -> None:
-        raise NotImplemented
+        pass
 
     def on_contract(self, contract: ContractData):
-        raise NotImplemented
+        pass
 
     def on_init(self, init: bool):
         pass
@@ -495,10 +495,10 @@ class AsyncApi(object):
         self.logger.debug(msg, **kwargs)
 
     async def on_order(self, order: OrderData) -> None:
-        raise NotImplemented
+        pass
 
     async def on_shared(self, shared: SharedData) -> None:
-        raise NotImplemented
+        pass
 
     async def on_bar(self, bar: BarData) -> None:
         raise NotImplemented
@@ -507,16 +507,16 @@ class AsyncApi(object):
         raise NotImplemented
 
     async def on_trade(self, trade: TradeData) -> None:
-        raise NotImplemented
+        pass
 
     async def on_position(self, position: PositionData) -> None:
-        raise NotImplemented
+        pass
 
     async def on_account(self, account: AccountData) -> None:
-        raise NotImplemented
+        pass
 
     async def on_contract(self, contract: ContractData):
-        raise NotImplemented
+        pass
 
     async def on_init(self, init: bool):
         pass
