@@ -16,7 +16,6 @@ log格式
 
 """
 
-
 # class VLogger():
 #     attributes = ["created", "levelname", "name", "owner", "msg"]
 #     extra_attributes = []
@@ -62,7 +61,7 @@ log格式
 #
 #             temp_record.name = self.white + str(temp_record.name).ljust(10) + '\x1b[0m'
 #             for x in VLogger.extra_attributes:
-#                 setattr(temp_record, x, self.white + str(getattr(temp_record, x)) + '\x1b[0m')
+#                 setattr(temp_record, x, self.white + str(getattr(temp_record, x, None)) + '\x1b[0m')
 #             logging.StreamHandler.emit(self, temp_record)
 #
 #     def __init__(self, app_name="ctpbee"):
@@ -120,7 +119,7 @@ log格式
 #         """ 将record里面的数据提取出来然后转换为正常的字符串 """
 #         result = {}
 #         for x in self.attributes:
-#             p = getattr(record, x)
+#             p = getattr(record, x, None)
 #             if isinstance(p, float) and p > 1000000000:
 #                 time_local = time.localtime(p)
 #                 p = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
@@ -143,9 +142,9 @@ log格式
 
 if __name__ == '__main__':
     logger_me = VLogger()
-    logger_me.set_formatter("handler", ["price", "ok"])
-    logger_me.warning("这里发生了警告", owner="somewheve", price=1)
-    logger_me.error("这里发生了错误", owner="somewheve", price=2)
-    logger_me.info("这里发生了信息输出", owner="somewheve", price=3)
-    logger_me.debug("这里发生了调试", owner="somewheve", price=5)
 
+    # logger_me.set_formatter("handler")
+    logger_me.warning("这里发生了警告", owner="somewheve")
+    logger_me.error("这里发生了错误", owner="somewheve")
+    logger_me.info("这里发生了信息输出", owner="somewheve")
+    logger_me.debug("这里发生了调试", owner="somewheve")
