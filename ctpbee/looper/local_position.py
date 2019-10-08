@@ -136,8 +136,8 @@ class PositionHolding:
         # 汇总
         self.calculate_price(trade)
         self.calculate_position()
-        self.calculate_pnl()
-        self.calculate_stare_pnl()
+        # self.calculate_pnl()
+        # self.calculate_stare_pnl()
 
     def calculate_position(self):
         """计算持仓情况"""
@@ -295,7 +295,6 @@ class PositionHolding:
                 req_open.offset = Offset.OPEN
                 req_open.volume = open_volume
                 req_list.append(req_open)
-
             return req_list
 
     def calculate_pnl(self):
@@ -406,6 +405,11 @@ class LocalPositionManager(dict):
 
     def __init__(self, params: dict):
         """ 传入参数进行参数设置 """
+
+        self.size_map = params.get("size_map")
+
+    def update_size_map(self, params):
+
         self.size_map = params.get("size_map")
 
     def update_tick(self, tick: TickData):
@@ -478,6 +482,17 @@ class LocalPositionManager(dict):
         if local_symbol not in self:
             return None
         return self[local_symbol].get_position_by_direction(direction)
+
+    def covert_to_yesterday_holding(self):
+        """ 转换为昨日持仓 """
+        for holding in self.values():
+            if holding.long_td != 0:
+                holding.long_yd += holding.long_td
+                holding.long_td = 0
+
+            if holding.short_td != 0:
+                holding.short_yd += holding.short_td
+                holding.short_td = 0
 
     def get_all_positions(self):
         """ 返回所有的持仓信息 """

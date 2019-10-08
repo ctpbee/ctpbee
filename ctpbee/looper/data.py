@@ -42,11 +42,16 @@ class VessData:
         # 数据供应商默认设置为ctpbee
         self.data_provider = "ctpbee"
         # 数据类型默认设置为tick
-        self.data_type = "tick"
         # 默认的产品类型
         self.product_type = "future"
         # 应该是个生成器
-        self.inner_data = chain(map(lambda x: Bumblebee(**x), data))
+        self.data_type = Bumblebee(**data[0]).type
+        try:
+            self.inner_data = chain(map(lambda x: Bumblebee(**x), data))
+            self.init_flag = True
+        except Exception:
+            pass
+
         self.slice = 0
 
     def __next__(self):

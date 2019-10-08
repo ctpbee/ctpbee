@@ -1,13 +1,43 @@
 """
 回测容器模块, 回测
 """
-from multiprocessing import Process
+import os
+from threading import Thread
 from time import sleep
 
 from ctpbee.log import VLogger
-from ctpbee.looper.account import Account
 from ctpbee.looper.data import VessData
 from ctpbee.looper.interface import LocalLooper
+
+
+class LooperApi:
+    def __init__(self, name):
+        self.name = name
+
+    def on_bar(self, bar):
+        raise NotImplemented
+
+    def on_tick(self, tick):
+        raise NotImplemented
+
+    def on_trade(self, trade):
+        raise NotImplemented
+
+    def on_order(self, order):
+        raise NotImplemented
+
+    def on_position(self, position):
+        raise NotImplemented
+
+    def on_account(self, account):
+        raise NotImplemented
+
+    def on_contract(self, contract):
+        raise NotImplemented
+
+    def init_params(self, data):
+        """ 用户需要继承此方法"""
+        # print("我在设置策略参数")
 
 
 class LooperLogger:
@@ -16,6 +46,9 @@ class LooperLogger:
             self.logger = v_logger
         else:
             self.logger = VLogger(app_name="Vessel")
+            d = os.path.dirname(os.path.dirname(__file__))
+            self.logger.config.from_pyfile(os.path.join(os.path.abspath(d), 'cprint_config.py'))
+            self.logger.set_default(name=self.logger.app_name, owner='App')
 
     def info(self, msg, **kwargs):
         self.logger.info(msg, owner="Looper", **kwargs)
@@ -49,10 +82,10 @@ class Vessel:
             self.logger = logger_class()
         else:
             self.logger = LooperLogger()
-        self.account = Account()
+
         self.risk = None
         self.strategy = None
-        self.interface = LocalLooper(logger=self.logger, strategy=self.strategy, risk=self.risk, account=self.account)
+        self.interface = LocalLooper(logger=self.logger, strategy=self.strategy, risk=self.risk)
         self.params = dict()
         self.looper_pattern = pattern
 
@@ -70,16 +103,15 @@ class Vessel:
         self._data_status = False
         self._looper_status = "unready"
         self._strategy_status = False
-        self._risk_status = False
+        self._risk_status = True
 
     def add_strategy(self, strategy):
         """ 添加策略到本容器 """
         self.strategy = strategy
-        try:
-            self.interface.update_strategy(strategy)
-            self._strategy_status = True
-        except Exception:
-            self._strategy_status = False
+
+        self.interface.update_strategy(strategy)
+        self._strategy_status = True
+
         self.check_if_ready()
 
     def add_data(self, data):
@@ -92,6 +124,7 @@ class Vessel:
     def check_if_ready(self):
         if self._data_status and self._strategy_status and self._risk_status:
             self._looper_status = "ready"
+        self.ready = True
 
     def add_risk(self, risk):
         """ 添加风控 """
@@ -99,20 +132,26 @@ class Vessel:
         self.interface.update_risk(risk)
         self.check_if_ready()
 
-    def cal_result(self):
+    def set_params(self, params):
+        if not isinstance(params, dict):
+            raise ValueError(f"配置信息格式出现问题， 你当前的配置信息为 {type(params)}")
+        self.params = params
+
+    def get_result(self):
         """ 计算回测结果，生成回测报告 """
-        return None
+        return self.interface.account.result
 
     def letsgo(self, parmas, ready):
         if self.looper_data.init_flag:
             self.logger.info(f"产品: {self.looper_data.product}")
             self.logger.info(f"回测模式: {self.looper_pattern}")
-        while True:
+        for x in range(self.looper_data.length):
             if ready:
                 """ 如果处于就绪状态 那么直接开始继续回测 """
                 try:
                     p = next(self.looper_data)
                     self.interface(p, parmas)
+
                 except StopIteration:
                     self._looper_status = "finished"
                     break
@@ -120,8 +159,6 @@ class Vessel:
                 """ 如果处于未就绪状态 那么暂停回测 """
                 sleep(1)
         self.logger.info("回测结束,正在生成回测报告")
-        result = self.cal_result()
-        return result
 
     def suspend_looper(self):
         """ 暂停回测 """
@@ -155,12 +192,9 @@ class Vessel:
 
     def run(self):
         """ 开始运行回测 """
-        p = Process(name="looper", target=self.letsgo, args=(self.params, self.ready,))
+        p = Thread(name="looper", target=self.letsgo, args=(self.params, self.ready,))
         p.start()
+        p.join()
 
     def __repr__(self):
         return "Backtesting Vessel powered by ctpbee current version: 0.1"
-
-
-if __name__ == '__main__':
-    vessel = Vessel()

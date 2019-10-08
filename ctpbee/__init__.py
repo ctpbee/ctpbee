@@ -1,9 +1,8 @@
 """
     for the future of  life
 """
-
-__version__ = '0.31.3'
-__status__ = '0.31修复版本3'
+__version__ = '0.32'
+__status__ = '0.32.0'
 
 from ctpbee.app import CtpBee
 from ctpbee.context import current_app, switch_app, get_app, del_app
@@ -16,3 +15,5 @@ from ctpbee.signals import send_monitor, cancel_monitor
 from ctpbee.trade_time import TradingDay
 from ctpbee.util import RiskLevel
 from ctpbee.func import hickey
+
+from ctpbee.looper.vessel import LooperApi, Vessel

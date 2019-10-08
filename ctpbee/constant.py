@@ -235,7 +235,6 @@ class BaseData:
         return temp
 
     def _to_df(self):
-        # todo: df support
         temp = {}
         for x in dir(self):
             if x.startswith("_") or x.startswith("create"):
@@ -245,7 +244,8 @@ class BaseData:
                 continue
             temp[x] = getattr(self, x)
 
-        return DataFrame([temp], columns=list(temp.keys()).remove("datetime")).set_index(['datetime']) if temp.get("datetime", None) is not None else DataFrame([temp], columns=list(temp.keys()))
+        return DataFrame([temp], columns=list(temp.keys()).remove("datetime")).set_index(['datetime']) if temp.get(
+            "datetime", None) is not None else DataFrame([temp], columns=list(temp.keys()))
 
     def _asdict(self):
         """ 转换为字典 里面会有enum """
@@ -401,7 +401,10 @@ class OrderData(BaseData):
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        try:
+            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        except AttributeError as e:
+            self.local_symbol = f"{self.symbol}.{self.exchange}"
         self.local_order_id = f"{self.gateway_name}.{self.order_id}"
 
     def _is_active(self):
@@ -443,7 +446,10 @@ class TradeData(BaseData):
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        try:
+            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        except AttributeError:
+            self.local_symbol = f"{self.symbol}.{self.exchange}"
         self.local_order_id = f"{self.gateway_name}.{self.order_id}"
         self.local_trade_id = f"{self.gateway_name}.{self.tradeid}"
 
@@ -580,7 +586,10 @@ class OrderRequest(BaseRequest):
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        try:
+            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        except AttributeError:
+            self.local_symbol = f"{self.symbol}.{self.exchange}"
 
     def _create_order_data(self, order_id: str, gateway_name: str):
         """
