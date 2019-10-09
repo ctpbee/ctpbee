@@ -175,7 +175,7 @@ def auth_time(data_time: time):
         data_time = tick.datetime.time()
     """
     if not isinstance(data_time, time):
-        raise TypeError("参数类型错误, 期望为datatime.time}")
+        raise TypeError("参数类型错误, 期望为datetime.time}")
     DAY_START = time(9, 0)  # 日盘启动和停止时间
     DAY_END = time(15, 0)
     NIGHT_START = time(21, 0)
@@ -236,6 +236,11 @@ class Hickey(object):
 
     def start_all(self, app_func):
         """ 开始进程管理 """
+        print("""
+        Ctpbee 7*24 Manager started !
+        Warning: program will automatic start at trade time ....
+        Hope you will have a  good profit ^_^
+        """)
         if not isfunction(app_func):
             raise TypeError(f"请检查你传入的app_func是否是创建app的函数,  而不是{type(app_func)}")
         p = None
