@@ -29,187 +29,190 @@ owner_default = ""
 
 message_default = ""
 
-INFO = {
-    "created": {
-        "DEFAULT": created_default,  # 默认值
-        "fore": Fore.RED,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
 
-    "name": {
-        "DEFAULT": name_default,  # 默认值
-        "fore": Fore,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+class CP(object):
+    TEMPLATE = TEMPLATE
+    INFO = {
+        "created": {
+            "DEFAULT": created_default,  # 默认值
+            "fore": Fore.RED,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-    "levelname": {
-        "DEFAULT": "INFO",  # 默认值
-        "fore": Fore.PURPLE,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+        "name": {
+            "DEFAULT": name_default,  # 默认值
+            "fore": Fore,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-    "owner": {
-        "DEFAULT": owner_default,  # 默认值
-        "fore": Fore.CYAN,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+        "levelname": {
+            "DEFAULT": "INFO",  # 默认值
+            "fore": Fore.PURPLE,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-    "message": {
-        "DEFAULT": message_default,  # 默认值
-        "fore": Fore.GREEN,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
-}
+        "owner": {
+            "DEFAULT": owner_default,  # 默认值
+            "fore": Fore.CYAN,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-SUCCESS = {
-    "created": {
-        "DEFAULT": created_default,  # 默认值
-        "fore": Fore.CYAN,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+        "message": {
+            "DEFAULT": message_default,  # 默认值
+            "fore": Fore.GREEN,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
+    }
 
-    "name": {
-        "DEFAULT": name_default,  # 默认值
-        "fore": Fore.CYAN,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+    SUCCESS = {
+        "created": {
+            "DEFAULT": created_default,  # 默认值
+            "fore": Fore.CYAN,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-    "levelname": {
-        "DEFAULT": "SUCCESS",  # 默认值
-        "fore": Fore.CYAN,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+        "name": {
+            "DEFAULT": name_default,  # 默认值
+            "fore": Fore.CYAN,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-    "owner": {
-        "DEFAULT": owner_default,  # 默认值
-        "fore": Fore.CYAN,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+        "levelname": {
+            "DEFAULT": "SUCCESS",  # 默认值
+            "fore": Fore.CYAN,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-    "message": {
-        "DEFAULT": message_default,  # 默认值
-        "fore": Fore.CYAN,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
-}
+        "owner": {
+            "DEFAULT": owner_default,  # 默认值
+            "fore": Fore.CYAN,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-WARNING = {
-    "created": {
-        "DEFAULT": created_default,  # 默认值
-        "fore": Fore.RED,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+        "message": {
+            "DEFAULT": message_default,  # 默认值
+            "fore": Fore.CYAN,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
+    }
 
-    "name": {
-        "DEFAULT": name_default,  # 默认值
-        "fore": Fore,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+    WARNING = {
+        "created": {
+            "DEFAULT": created_default,  # 默认值
+            "fore": Fore.RED,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-    "levelname": {
-        "DEFAULT": "WARNING",  # 默认值
-        "fore": Fore.PURPLE,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+        "name": {
+            "DEFAULT": name_default,  # 默认值
+            "fore": Fore,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-    "owner": {
-        "DEFAULT": owner_default,  # 默认值
-        "fore": Fore.CYAN,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+        "levelname": {
+            "DEFAULT": "WARNING",  # 默认值
+            "fore": Fore.PURPLE,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-    "message": {
-        "DEFAULT": message_default,  # 默认值
-        "fore": Fore.YELLOW,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
-}
+        "owner": {
+            "DEFAULT": owner_default,  # 默认值
+            "fore": Fore.CYAN,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-ERROR = {
-    "created": {
-        "DEFAULT": created_default,  # 默认值
-        "fore": Fore.RED,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+        "message": {
+            "DEFAULT": message_default,  # 默认值
+            "fore": Fore.YELLOW,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
+    }
 
-    "name": {
-        "DEFAULT": name_default,  # 默认值
-        "fore": Fore,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+    ERROR = {
+        "created": {
+            "DEFAULT": created_default,  # 默认值
+            "fore": Fore.RED,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-    "levelname": {
-        "DEFAULT": "ERROR",  # 默认值
-        "fore": Fore.PURPLE,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+        "name": {
+            "DEFAULT": name_default,  # 默认值
+            "fore": Fore,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-    "owner": {
-        "DEFAULT": owner_default,  # 默认值
-        "fore": Fore.CYAN,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+        "levelname": {
+            "DEFAULT": "ERROR",  # 默认值
+            "fore": Fore.PURPLE,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-    "message": {
-        "DEFAULT": message_default,  # 默认值
-        "fore": Fore.RED,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
-}
+        "owner": {
+            "DEFAULT": owner_default,  # 默认值
+            "fore": Fore.CYAN,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-DEBUG = {
-    "created": {
-        "DEFAULT": created_default,  # 默认值
-        "fore": Fore.RED,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+        "message": {
+            "DEFAULT": message_default,  # 默认值
+            "fore": Fore.RED,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
+    }
 
-    "name": {
-        "DEFAULT": name_default,  # 默认值
-        "fore": Fore,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+    DEBUG = {
+        "created": {
+            "DEFAULT": created_default,  # 默认值
+            "fore": Fore.RED,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-    "levelname": {
-        "DEFAULT": "DEBUG",  # 默认值
-        "fore": Fore.PURPLE,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+        "name": {
+            "DEFAULT": name_default,  # 默认值
+            "fore": Fore,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-    "owner": {
-        "DEFAULT": owner_default,  # 默认值
-        "fore": Fore.CYAN,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
+        "levelname": {
+            "DEFAULT": "DEBUG",  # 默认值
+            "fore": Fore.PURPLE,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
 
-    "message": {
-        "DEFAULT": message_default,  # 默认值
-        "fore": Fore.PURPLE,  # 前景色
-        "back": Back,  # 背景色
-        "mode": Mode,  # 模式
-    },
-}
+        "owner": {
+            "DEFAULT": owner_default,  # 默认值
+            "fore": Fore.CYAN,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
+
+        "message": {
+            "DEFAULT": message_default,  # 默认值
+            "fore": Fore.PURPLE,  # 前景色
+            "back": Back,  # 背景色
+            "mode": Mode,  # 模式
+        },
+    }

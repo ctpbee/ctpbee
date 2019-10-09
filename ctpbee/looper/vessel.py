@@ -8,7 +8,7 @@ from time import sleep
 from ctpbee.log import VLogger
 from ctpbee.looper.data import VessData
 from ctpbee.looper.interface import LocalLooper
-
+from ctpbee.cprint_config import CP
 
 class LooperApi:
     def __init__(self, name):
@@ -45,9 +45,7 @@ class LooperLogger:
         if v_logger:
             self.logger = v_logger
         else:
-            self.logger = VLogger(app_name="Vessel")
-            d = os.path.dirname(os.path.dirname(__file__))
-            self.logger.config.from_pyfile(os.path.join(os.path.abspath(d), 'cprint_config.py'))
+            self.logger = VLogger(CP,app_name="Vessel")
             self.logger.set_default(name=self.logger.app_name, owner='App')
 
     def info(self, msg, **kwargs):
