@@ -173,5 +173,5 @@ class TradingDay:
 
 if __name__ == '__main__':
     # 爬
-    Papa.run([2004, datetime.datetime.now().year+12])
+    Papa.run([2004, datetime.datetime.now().year])
     # Papa.write()

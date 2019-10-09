@@ -21,7 +21,7 @@ def tradetime_handle(year):
 
 def execute():
     if len(sys.argv) <= 1:
-        print('ctpbee -h view help')
+        print('[*]Tip: ctpbee -h view help')
         sys.exit(0)
     args = parser.parse_args()
     # argv_value
