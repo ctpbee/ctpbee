@@ -132,7 +132,8 @@ else:
 
 pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.interface',
         'ctpbee.event_engine', 'ctpbee.interface.ctp', 'ctpbee.jsond']
-install_requires = ['flask>=1.1.1', "blinker", "dataclasses", "requests", "simplejson", "lxml", "pandas",'colour_printing']
+install_requires = ['flask>=1.1.1', "blinker", "dataclasses", "requests", "simplejson", "lxml", "pandas",
+                    'colour_printing']
 setup(
     name='ctpbee',
     version=version,
@@ -155,5 +156,8 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.7',
-    ]
+    ],
+    entry_points={
+        'console_scripts': ['ctpbee = ctpbee.cmdline:execute']
+    },
 )
