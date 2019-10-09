@@ -247,8 +247,13 @@ def run_main(data):
 
 
 if __name__ == '__main__':
-    data = get_data(start="2019-1-5", end="2019-9-1", symbol="ag1912", exchange="SHFE", level="15m")
+    # data = get_data(start="2019-1-5", end="2019-9-1", symbol="ag1912", exchange="SHFE", level="15m")
     # save_data_json(data)
+    try:
+        import talib
+    except ImportError:
+        print("please install talib first")
+
     data = load_data()
     for x in data:
         x['datetime'] = datetime.strptime(str(x['datetime']), "%Y-%m-%d %H:%M:%S")

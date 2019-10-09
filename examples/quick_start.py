@@ -197,4 +197,8 @@ def create_app():
 
 
 if __name__ == '__main__':
-    hickey.start_all(app_func=create_app)
+    # 7*24 小时运行模块
+    # hickey.start_all(app_func=create_app)
+
+    app = create_app()
+    app[0].start()
