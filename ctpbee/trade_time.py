@@ -77,7 +77,7 @@ class Papa:
 
     @classmethod
     def run(cls, start_end: list):
-        years = [i for i in range(start_end[0], start_end[1] + 1)]
+        years = [i for i in range(int(start_end[0]), int(start_end[1]) + 1)]
         for year in years:
             year = str(year)
             data = cls.parse(year)
