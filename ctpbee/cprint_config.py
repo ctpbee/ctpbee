@@ -12,207 +12,60 @@
 #            'white':  白色           'white':  白色                                     #
 #########################################################################################
 """
+
+from colour_printing.config import CPConfig, Term
+
 from datetime import datetime
+
 from colour_printing import Mode, Fore, Back
 
-get_time = lambda: datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S,%f')[:-3]
+get_time = lambda: datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S.%f')[:-3]
 
 TEMPLATE = "{created} {name}     {levelname}  {owner}   {message}"
-
-created_default = get_time
-
-name_default = ""
-
-levelname_default = ""
-
-owner_default = ""
-
-message_default = ""
+CP = CPConfig(TEMPLATE)  # 我才是主角,从其他地方导入我
 
 
-class CP(object):
-    TEMPLATE = TEMPLATE
-    INFO = {
-        "created": {
-            "DEFAULT": created_default,  # 默认值
-            "fore": Fore.RED,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
+#        +------------------------->  doesn't matter,不用实例化
+#        |
+#        V
+class Paper(object):
 
-        "name": {
-            "DEFAULT": name_default,  # 默认值
-            "fore": Fore,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
+    @CP.wrap
+    def info(self):
+        self.created = Term(Fore.RED)
+        self.name = Term()
+        self.levelname = Term(Fore.PURPLE, default="INFO")
+        self.owner = Term(Fore.CYAN)
+        self.message = Term(Fore.GREEN)
 
-        "levelname": {
-            "DEFAULT": "INFO",  # 默认值
-            "fore": Fore.PURPLE,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
+    @CP.wrap
+    def success(self):
+        self.created = Term(Fore.CYAN)
+        self.name = Term(Fore.CYAN)
+        self.levelname = Term(default="SUCCESS")
+        self.owner = Term(Fore.CYAN)
+        self.message = Term(Fore.CYAN)
 
-        "owner": {
-            "DEFAULT": owner_default,  # 默认值
-            "fore": Fore.CYAN,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
+    @CP.wrap
+    def warning(self):
+        self.created = Term(Fore.RED)
+        self.name = Term()
+        self.levelname = Term(Fore.PURPLE, default="WARNING")
+        self.owner = Term(Fore.CYAN)
+        self.message = Term(Fore.YELLOW)
 
-        "message": {
-            "DEFAULT": message_default,  # 默认值
-            "fore": Fore.GREEN,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-    }
+    @CP.wrap
+    def error(self):
+        self.created = Term(Fore.RED)
+        self.name = Term()
+        self.levelname = Term(Fore.PURPLE, default="ERROR")
+        self.owner = Term(Fore.CYAN)
+        self.message = Term(Fore.RED)
 
-    SUCCESS = {
-        "created": {
-            "DEFAULT": created_default,  # 默认值
-            "fore": Fore.CYAN,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-
-        "name": {
-            "DEFAULT": name_default,  # 默认值
-            "fore": Fore.CYAN,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-
-        "levelname": {
-            "DEFAULT": "SUCCESS",  # 默认值
-            "fore": Fore.CYAN,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-
-        "owner": {
-            "DEFAULT": owner_default,  # 默认值
-            "fore": Fore.CYAN,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-
-        "message": {
-            "DEFAULT": message_default,  # 默认值
-            "fore": Fore.CYAN,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-    }
-
-    WARNING = {
-        "created": {
-            "DEFAULT": created_default,  # 默认值
-            "fore": Fore.RED,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-
-        "name": {
-            "DEFAULT": name_default,  # 默认值
-            "fore": Fore,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-
-        "levelname": {
-            "DEFAULT": "WARNING",  # 默认值
-            "fore": Fore.PURPLE,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-
-        "owner": {
-            "DEFAULT": owner_default,  # 默认值
-            "fore": Fore.CYAN,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-
-        "message": {
-            "DEFAULT": message_default,  # 默认值
-            "fore": Fore.YELLOW,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-    }
-
-    ERROR = {
-        "created": {
-            "DEFAULT": created_default,  # 默认值
-            "fore": Fore.RED,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-
-        "name": {
-            "DEFAULT": name_default,  # 默认值
-            "fore": Fore,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-
-        "levelname": {
-            "DEFAULT": "ERROR",  # 默认值
-            "fore": Fore.PURPLE,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-
-        "owner": {
-            "DEFAULT": owner_default,  # 默认值
-            "fore": Fore.CYAN,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-
-        "message": {
-            "DEFAULT": message_default,  # 默认值
-            "fore": Fore.RED,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-    }
-
-    DEBUG = {
-        "created": {
-            "DEFAULT": created_default,  # 默认值
-            "fore": Fore.RED,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-
-        "name": {
-            "DEFAULT": name_default,  # 默认值
-            "fore": Fore,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-
-        "levelname": {
-            "DEFAULT": "DEBUG",  # 默认值
-            "fore": Fore.PURPLE,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-
-        "owner": {
-            "DEFAULT": owner_default,  # 默认值
-            "fore": Fore.CYAN,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-
-        "message": {
-            "DEFAULT": message_default,  # 默认值
-            "fore": Fore.PURPLE,  # 前景色
-            "back": Back,  # 背景色
-            "mode": Mode,  # 模式
-        },
-    }
+    @CP.wrap
+    def debug(self):
+        self.created = Term(Fore.RED)
+        self.name = Term()
+        self.levelname = Term(Fore.PURPLE, default="DEBUG")
+        self.owner = Term(Fore.CYAN)
+        self.message = Term(Fore.PURPLE)
