@@ -27,7 +27,7 @@ CP = CPConfig(TEMPLATE)  # 我才是主角,从其他地方导入我
 
 #        +------------------------->  doesn't matter,不用实例化
 #        |
-#        V
+#        v
 class Paper(object):
 
     @CP.wrap
