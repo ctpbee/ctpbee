@@ -42,7 +42,7 @@ flask的微核心设计结构的来了无限的可能性, 能够让你快速上�
         def on_trade(self, trade):
             """ 处理成交回报 """
 
-        def on_realtime(self, date):
+        def on_realtime(self):
             """ 一秒运行一次的检查函数 """"
 
         def on_order(self, order):

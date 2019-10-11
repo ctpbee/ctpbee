@@ -192,13 +192,13 @@ def create_app():
     data_recorder = DataRecorder("data_recorder")
     app.add_extension(data_recorder)
 
-    """ 启动 """
+    """ 启动 """ctpbee
     return [app]
 
 
 if __name__ == '__main__':
     # 7*24 小时运行模块
-    # hickey.start_all(app_func=create_app)
+    hickey.start_all(app_func=create_app)
 
-    app = create_app()
-    app[0].start()
+    # app = create_app()
+    # app[0].start()

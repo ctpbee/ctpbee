@@ -32,7 +32,7 @@ def send_order(order_req: OrderRequest, app_name: str = "current_app"):
     return app.trader.send_order(order_req)
 
 
-def cancel_order(cancle_req: CancelRequest, app_name: str = "current_app"):
+def cancel_order(cancel_req: CancelRequest, app_name: str = "current_app"):
     """ 撤单 """
     if app_name == "current_app":
         app = current_app
@@ -40,8 +40,8 @@ def cancel_order(cancle_req: CancelRequest, app_name: str = "current_app"):
         app = get_app(app_name)
     if not app.config.get("TD_FUNC"):
         raise TraderError(message="交易功能未开启", args=("交易功能未开启",))
-    cancel_monitor.send(cancle_req)
-    app.trader.cancel_order(cancle_req)
+    cancel_monitor.send(cancel_req)
+    app.trader.cancel_order(cancel_req)
 
 
 def subscribe(symbol: Text, app_name: str = "current_app") -> None:
