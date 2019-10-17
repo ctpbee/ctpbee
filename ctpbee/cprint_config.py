@@ -32,7 +32,7 @@ class Paper(object):
 
     @CP.wrap
     def info(self):
-        self.created = Term(Fore.RED)
+        self.created = Term(Fore.RED, default=get_time)
         self.name = Term()
         self.levelname = Term(Fore.PURPLE, default="INFO")
         self.owner = Term(Fore.CYAN)
@@ -40,7 +40,7 @@ class Paper(object):
 
     @CP.wrap
     def success(self):
-        self.created = Term(Fore.CYAN)
+        self.created = Term(Fore.CYAN, default=get_time)
         self.name = Term(Fore.CYAN)
         self.levelname = Term(default="SUCCESS")
         self.owner = Term(Fore.CYAN)
@@ -48,7 +48,7 @@ class Paper(object):
 
     @CP.wrap
     def warning(self):
-        self.created = Term(Fore.RED)
+        self.created = Term(Fore.RED, default=get_time)
         self.name = Term()
         self.levelname = Term(Fore.PURPLE, default="WARNING")
         self.owner = Term(Fore.CYAN)
@@ -56,7 +56,7 @@ class Paper(object):
 
     @CP.wrap
     def error(self):
-        self.created = Term(Fore.RED)
+        self.created = Term(Fore.RED, default=get_time)
         self.name = Term()
         self.levelname = Term(Fore.PURPLE, default="ERROR")
         self.owner = Term(Fore.CYAN)
@@ -64,7 +64,7 @@ class Paper(object):
 
     @CP.wrap
     def debug(self):
-        self.created = Term(Fore.RED)
+        self.created = Term(Fore.RED, default=get_time)
         self.name = Term()
         self.levelname = Term(Fore.PURPLE, default="DEBUG")
         self.owner = Term(Fore.CYAN)
