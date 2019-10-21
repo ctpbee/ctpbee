@@ -13,6 +13,14 @@ with io.open('ctpbee/__init__.py', 'rt', encoding='utf8') as f:
 
 if sys.version_info < (3, 6):
     raise RuntimeError('当前ctpbee只支持python36以及更高版本/ ctpbee only support python36 and highly only ')
+
+# 依赖
+install_requires = ['flask>=1.1.1', "blinker", "requests", "simplejson", "lxml", "pandas",
+                    'colour_printing>=0.3.16']
+
+if sys.version_info == (3, 6):
+    install_requires.append("dataclasses")
+
 runtime_library_dir = []
 try:
     import pypandoc
@@ -132,8 +140,7 @@ else:
 
 pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.interface',
         'ctpbee.event_engine', 'ctpbee.interface.ctp', 'ctpbee.jsond', "ctpbee.looper"]
-install_requires = ['flask>=1.1.1', "blinker", "dataclasses", "requests", "simplejson", "lxml", "pandas",
-                    'colour_printing>=0.3.16']
+
 setup(
     name='ctpbee',
     version=version,

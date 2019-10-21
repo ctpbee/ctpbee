@@ -5,6 +5,7 @@ from inspect import ismethod
 from threading import Thread
 from time import sleep
 from typing import Text
+from threading import local
 
 from werkzeug.datastructures import ImmutableDict
 
@@ -21,6 +22,9 @@ from ctpbee.level import CtpbeeApi, Action
 from ctpbee.log import VLogger
 from ctpbee.record import Recorder, AsyncRecorder
 from ctpbee.cprint_config import CP
+
+local_variable = locals()
+
 
 class CtpBee(object):
     """
@@ -95,7 +99,7 @@ class CtpBee(object):
         self.active = False
         # 是否加载以使用默认的logger类/ choose if use the default logging class
         if logger_class is None:
-            self.logger = VLogger(CP,app_name=self.name)
+            self.logger = VLogger(CP, app_name=self.name)
             self.logger.set_default(name=self.logger.app_name, owner='App')
         else:
             if logger_config_path:
