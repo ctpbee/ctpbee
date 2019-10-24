@@ -51,7 +51,7 @@ docker run -p 5000:5000 yutiansut/ctpbee:latest
     
 ## 功能支持
 
-- [x] k线数据支持
+- [x] k线数据支持/home/somewheve/Templates
 - [x] 分时图数据支持
 - [x] 交易支持
 - [x] 行情支持 --> 需要自己编写相应的数据库写入代码。
