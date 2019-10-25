@@ -1,5 +1,6 @@
+import io
 import os
-from json import load
+from json import load, dump, JSONDecodeError
 
 from ctpbee.constant import TradeData, PositionData
 
@@ -80,15 +81,17 @@ class ApiPositionManager(dict):
         * name: 策略名称
         * cache_path： 缓存文件地址,注意如果是默认的策略持仓参数会被放置到用户目录下的.ctpbee/position_params下面
         """
-        self.name = name + ".json"
+        self.filename = name + ".json"
         dict.__init__(self)
-        if not cache_path:
-            """ 从默认的文件夹进行加载 """
-        else:
-            path = cache_path
+        self.cache_path = cache_path
+        file_path = cache_path + "/" + self.filename
+        with open(file_path, "w+") as f:
+            try:
+                data = load(f)
+            except JSONDecodeError:
+                data = {}
+                dump(obj=data, fp=f)
 
-        with open(os.path.join(cache_path, name), "r") as f:
-            data = load(f)
         self.init_data(data)
 
     def init_data(self, data):

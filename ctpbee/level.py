@@ -1,4 +1,5 @@
 import inspect
+import os
 from types import MethodType
 from typing import Set, List, AnyStr, Text
 from warnings import warn
@@ -6,9 +7,10 @@ from warnings import warn
 from ctpbee.constant import EVENT_INIT_FINISHED, EVENT_TICK, EVENT_BAR, EVENT_ORDER, EVENT_SHARED, EVENT_TRADE, \
     EVENT_POSITION, EVENT_ACCOUNT, EVENT_CONTRACT, OrderData, SharedData, BarData, TickData, TradeData, \
     PositionData, AccountData, ContractData, Offset, Direction, OrderType, Exchange
+from ctpbee.data_handle.level_position import ApiPositionManager
 from ctpbee.event_engine.engine import EVENT_TIMER, Event
 from ctpbee.exceptions import ConfigError
-from ctpbee.func import helper
+from ctpbee.func import helper, get_ctpbee_path
 from ctpbee.helpers import check
 
 
@@ -296,7 +298,7 @@ class CtpbeeApi(object):
         setattr(cls, "parmeter", parmeter)
         return super().__new__(cls)
 
-    def __init__(self, extension_name, app=None):
+    def __init__(self, extension_name, app=None, **kwargs):
         """
         init function
         :param name: extension name , 插件名字
@@ -309,9 +311,28 @@ class CtpbeeApi(object):
             self.init_app(self.app)
         # 是否冻结
         self.frozen = False
+        if "cache_path" in kwargs:
+
+            self.path = kwargs.get("cache_path")
+            if not os.path.isdir(self.path):
+                raise ValueError("请填写正确的缓存绝对路径")
+        else:
+            self.path = get_ctpbee_path()
+        self.api_path = self.get_api_dir(self.path)
+        self.level_position_manager = ApiPositionManager(self.extension_name, self.api_path)
+
+    def get_api_dir(self, path):
+        """
+        获取API专属的文件夹的路径
+        如果不存在就创建
+        """
+        path = os.path.join(path, "api")
+        if not os.path.isdir(path):
+            os.mkdir(path)
+        return path
 
     @property
-    def action(self) -> Action:
+    def action(self):
         if self.app is None:
             raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
         return self.app.action
