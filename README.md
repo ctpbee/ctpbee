@@ -63,8 +63,8 @@ docker run -p 5000:5000 yutiansut/ctpbee:latest
 - [x] 跟单信号
 - [x] 多路行情对比 --> [looper_me](https://github.com/ctpbee/looper_me)
 - [x] 数据快速支持 --> [ctpbee_converter](https://github.com/ctpbee/data_converter)
-- [ ] 策略层对接CTA  --> 即将以[ctpbee_cta](https://github.com/ctpbee/ctpbee_cta)
-- [ ] 回测系统搭建  --> interface/looper
+- [x] cta support 
+- [x] 回测系统搭建  --> interface/looper
 
 
 ## 一些可能会减少你工作量的工作
