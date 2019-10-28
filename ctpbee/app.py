@@ -228,10 +228,10 @@ class CtpBee(object):
             if self.r is not None:
                 self.r_flag = False
                 sleep(self.config['REFRESH_INTERVAL'] + 1.5)
-                self.r = Thread(target=refresh_query, args=(self,))
+                self.r = Thread(target=refresh_query, args=(self,),daemon=True)
                 self.r.start()
             else:
-                self.r = Thread(target=refresh_query, args=(self,))
+                self.r = Thread(target=refresh_query, args=(self,), daemon=True)
                 self.r.start()
             self.r_flag = True
 
@@ -315,4 +315,4 @@ class CtpBee(object):
                 """ 强行终结掉线程 """
                 end_thread(self.r)
         except AttributeError:
-            print(1)
+            pass
