@@ -312,14 +312,16 @@ class CtpbeeApi(object):
         # 是否冻结
         self.frozen = False
         if "cache_path" in kwargs:
-
             self.path = kwargs.get("cache_path")
             if not os.path.isdir(self.path):
                 raise ValueError("请填写正确的缓存绝对路径")
         else:
             self.path = get_ctpbee_path()
+        init = kwargs.get("init_position")
+        if init and not isinstance(init, bool):
+            raise TypeError(f"init参数应该设置为True或者False，而不是{type(init)}")
         self.api_path = self.get_api_dir(self.path)
-        self.level_position_manager = ApiPositionManager(self.extension_name, self.api_path)
+        self.level_position_manager = ApiPositionManager(self.extension_name, self.api_path, init)
 
     def get_api_dir(self, path):
         """

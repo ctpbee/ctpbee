@@ -72,25 +72,38 @@ class PositionModel:
         """ 将持仓信息构建为DataFrame """
         pass
 
+    @classmethod
+    def create_model(cls, local, **kwargs):
+        """
+        根据字典数据创建PositionModel实例
+        """
+        instance = cls(local)
+        {setattr(instance, key, value) for key, value in kwargs.items()}
+        return instance
+
 
 class ApiPositionManager(dict):
 
-    def __init__(self, name, cache_path=None):
+    def __init__(self, name, cache_path=None, init_flag: bool = False):
         """
         策略持仓管理的基本信息,注意你需要确保没有在其他地方进行下单， 否则会影响到持仓信息的准确性
         * name: 策略名称
-        * cache_path： 缓存文件地址,注意如果是默认的策略持仓参数会被放置到用户目录下的.ctpbee/position_params下面
+        * cache_path： 缓存文件地址,注意如果是默认的策略持仓参数会被放置到用户目录下的.ctpbee/api目录下
         """
         self.filename = name + ".json"
         dict.__init__(self)
         self.cache_path = cache_path
         file_path = cache_path + "/" + self.filename
         with open(file_path, "w+") as f:
-            try:
-                data = load(f)
-            except JSONDecodeError:
+            if init_flag:
                 data = {}
                 dump(obj=data, fp=f)
+            else:
+                try:
+                    data = load(f)
+                except JSONDecodeError:
+                    data = {}
+                    dump(obj=data, fp=f)
 
         self.init_data(data)
 
@@ -98,7 +111,18 @@ class ApiPositionManager(dict):
         """
         初始化数据
         """
-        pass
+
+        def create_position_model(local, data: dict):
+            """
+            将地点数据解析为PositionModel
+            """
+            return PositionModel.create_model(local, **data)
+
+        if not data:
+            return
+        else:
+            for local, position_detail in data:
+                self[local] = create_position_model(local, position_detail)
 
     def on_trade(self, trade: TradeData):
         """
