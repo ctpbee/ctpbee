@@ -6,7 +6,7 @@ from ctpbee import CtpbeeApi
 from ctpbee import RiskLevel
 from ctpbee import VLogger
 from ctpbee import hickey
-from ctpbee.constant import PositionData, AccountData, LogData
+from ctpbee.constant import PositionData, AccountData, LogData, BarData
 
 
 class Vlog(VLogger):
@@ -115,7 +115,6 @@ class DataRecorder(CtpbeeApi):
 
     def on_contract(self, contract):
         # 通过本地的
-        print(contract)
         if contract.local_symbol in self.instrument_set:
             self.app.subscribe(contract.local_symbol)
 
@@ -199,7 +198,6 @@ def create_app():
 if __name__ == '__main__':
     # 7*24 小时运行模块
     # hickey.start_all(app_func=create_app)
-
 
     app = create_app()
     app[0].start()
