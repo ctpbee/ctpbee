@@ -30,7 +30,7 @@ class Demo(CtpbeeApi):
                                                direction=Direction.LONG, type=OrderType.LIMIT, volume=3,
                                                offset=Offset.OPEN)
         # 调用绑定的app进行发单
-        id = self.app.send_order(req)
+        id = self.action.sell(bar.high_price, 1, bar)
         print("返回id", id)
 
     def on_init(self, init):

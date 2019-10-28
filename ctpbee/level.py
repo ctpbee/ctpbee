@@ -90,7 +90,7 @@ class Action(object):
          开仓 空头
         """
 
-        if not isinstance(self.app.config['SLIPPAGE_SHORT'], float) and not isinstance(
+        if not isinstance(self.app.config['SLIPPAGE_intSHORT'], float) and not isinstance(
                 self.app.config['SLIPPAGE_SHORT'], int):
             raise ConfigError(message="滑点配置应为浮点小数")
         price = price + self.app.config['SLIPPAGE_SHORT']
@@ -101,7 +101,9 @@ class Action(object):
 
     def sell(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData] = None,
              price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
-        """ 平空头 """
+        """
+        平空头
+        """
         if not isinstance(self.app.config['SLIPPAGE_SELL'], float) and not isinstance(
                 self.app.config['SLIPPAGE_SELL'], int):
             raise ConfigError(message="滑点配置应为浮点小数")
@@ -152,7 +154,7 @@ class Action(object):
         return self.cancel_order(req)
 
     @staticmethod
-    def get_req(local_symbol, direction, volume: int, app) -> List:
+    def get_req(local_symbol, direction, volume, app) -> List:
         """
         generate the offset and volume
         生成平仓所需要的offset和volume
@@ -252,6 +254,17 @@ class Action(object):
         return f"{self.__name__} "
 
 
+class CoreAction:
+    def __init__(self, action, api):
+        self.action = action
+        self.api = api
+
+    def __getattr__(self, item):
+        result = getattr(self.action, item)
+        self.api.resolve_callback(item, result)
+        return result
+
+
 class CtpbeeApi(object):
     """
     数据模块/策略模块 都是基于此实现的
@@ -307,6 +320,7 @@ class CtpbeeApi(object):
         self.instrument_set: List or Set = set()
         self.extension_name = extension_name
         self.app = app
+
         if self.app is not None:
             self.init_app(self.app)
         # 是否冻结
@@ -320,10 +334,12 @@ class CtpbeeApi(object):
         init = kwargs.get("init_position")
         if init and not isinstance(init, bool):
             raise TypeError(f"init参数应该设置为True或者False，而不是{type(init)}")
-        self.api_path = self.get_api_dir(self.path)
+
+        self.api_path = self.get_dir(self.path)
         self.level_position_manager = ApiPositionManager(self.extension_name, self.api_path, init)
 
-    def get_api_dir(self, path):
+    @staticmethod
+    def get_dir(path):
         """
         获取API专属的文件夹的路径
         如果不存在就创建
@@ -333,11 +349,19 @@ class CtpbeeApi(object):
             os.mkdir(path)
         return path
 
+    def resolve_callback(self, item, result):
+        """
+        处理回调函数
+        * item: 操作项
+        * result: 执行结果
+        """
+        pass
+
     @property
     def action(self):
         if self.app is None:
             raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
-        return self.app.action
+        return CoreAction(self.app.action, self)
 
     @property
     def logger(self):
