@@ -265,7 +265,17 @@ class CoreAction:
         return result
 
 
-class CtpbeeApi(object):
+class BeeApi(object):
+    def resolve_callback(self, item, result):
+        """
+        处理回调函数
+        * item: 操作项
+        * result: 执行结果
+        """
+        pass
+
+
+class CtpbeeApi(BeeApi):
     """
     数据模块/策略模块 都是基于此实现的
         如果你要开发上述插件需要继承此抽象demo
@@ -311,6 +321,24 @@ class CtpbeeApi(object):
         setattr(cls, "parmeter", parmeter)
         return super().__new__(cls)
 
+    def __call__(self, event: Event = None):
+        # 特别处理两种情况
+        if event and event.type == EVENT_ORDER:
+            if event.data.local_order_id in self.order_id_mapping:
+                self.level_position_manager.on_order(event.data)
+        if event and event.type == EVENT_TRADE:
+            """如果发现单号是已经存进来的"""
+            if event.data.local_order_id in self.order_id_mapping:
+                self.level_position_manager.on_trade(event.data)
+
+        if not event:
+            if not self.frozen:
+                self.map[EVENT_TIMER](self)
+        else:
+            func = self.map[event.type]
+            if not self.frozen:
+                func(self, event.data)
+
     def __init__(self, extension_name, app=None, **kwargs):
         """
         init function
@@ -335,8 +363,27 @@ class CtpbeeApi(object):
         if init and not isinstance(init, bool):
             raise TypeError(f"init参数应该设置为True或者False，而不是{type(init)}")
 
+        # 单号如
+        self.order_id_mapping = {}
+
         self.api_path = self.get_dir(self.path)
         self.level_position_manager = ApiPositionManager(self.extension_name, self.api_path, init)
+
+    def resolve_callback(self, item, result):
+        """
+        处理回调函数
+        * item: 操作项
+        * result: 执行结果
+        """
+
+        # 买多卖空
+        if item == "buy" or item == "short":
+            self.order_id_mapping.setdefault(result, False)
+            self.info("呀，我买入了一手, 单号: " + result)
+        # 平多平空
+        elif item == "sell" or item == "cover":
+            for i in result:
+                self.order_id_mapping.setdefault(i, False)
 
     @staticmethod
     def get_dir(path):
@@ -348,14 +395,6 @@ class CtpbeeApi(object):
         if not os.path.isdir(path):
             os.mkdir(path)
         return path
-
-    def resolve_callback(self, item, result):
-        """
-        处理回调函数
-        * item: 操作项
-        * result: 执行结果
-        """
-        pass
 
     @property
     def action(self):
@@ -444,15 +483,6 @@ class CtpbeeApi(object):
             return funcd
 
         return attribute
-
-    def __call__(self, event: Event = None):
-        if not event:
-            if not self.frozen:
-                self.map[EVENT_TIMER](self)
-        else:
-            func = self.map[event.type]
-            if not self.frozen:
-                func(self, event.data)
 
 
 class AsyncApi(object):

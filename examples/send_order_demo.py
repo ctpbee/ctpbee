@@ -6,14 +6,16 @@ from ctpbee.constant import ContractData, LogData, TickData, BarData, OrderType,
 
 
 class Demo(CtpbeeApi):
-    instrument_set = set(["rb1910.SHFE"])
+    instrument_set = ["rb2010.SHFE"]
 
     # 当前插件绑定的CtpBee的数据记录信息都在self.app.recorder下面
 
     def on_contract(self, contract: ContractData):
         """ 处理推送的合约信息 """
+        # print(contract.local_symbol)
         if contract.local_symbol in self.instrument_set:
             self.app.subscribe(contract.local_symbol)
+            print("back")
 
     def on_log(self, log: LogData):
         """ 处理日志信息 ,特殊需求才用到 """
@@ -21,6 +23,7 @@ class Demo(CtpbeeApi):
 
     def on_tick(self, tick: TickData) -> None:
         """ 处理推送的tick """
+        print(tick)
         pass
 
     def on_bar(self, bar: BarData) -> None:
@@ -34,19 +37,16 @@ class Demo(CtpbeeApi):
         print("返回id", id)
 
     def on_init(self, init):
+
+        self.app.recorder.get_all_contracts()
         if init:
             print("初始化完成")
 
     def on_order(self, order: OrderData) -> None:
         """ 报单回报 """
-        print("order", order)
-
-    def on_shared(self, shared: SharedData) -> None:
-        pass
 
     def on_trade(self, trade: TradeData) -> None:
         """ 成交回报 """
-        print("成交", trade)
 
     def on_position(self, position: PositionData) -> None:
         """ 处理持仓回报 """

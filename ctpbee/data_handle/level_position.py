@@ -134,6 +134,9 @@ class ApiPositionManager(dict):
 
         self[local].update_trade(trade=trade)
 
+    def on_order(self, order):
+        pass
+
     def on_position(self, position: PositionData):
         """
         更新持仓
