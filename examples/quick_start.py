@@ -105,7 +105,7 @@ class RiskMe(RiskLevel):
 class DataRecorder(CtpbeeApi):
     def __init__(self, name, app=None):
         super().__init__(name, app)
-        self.instrument_set = set(["jd1910.DCE"])
+        self.instrument_set = set(["rb2010.SHFE"])
         self.comming_in = None
         self.id = None
         self.f_init = False
@@ -132,13 +132,11 @@ class DataRecorder(CtpbeeApi):
 
     def on_tick(self, tick):
         """tick processself-control  && kill your  function"""
-        print(tick)
-        print(tick._to_df())
 
     def on_bar(self, bar):
         """bar process function"""
 
-        # self.action.sell(ids)
+        self.action.buy(bar.high_price , 1, bar)
 
     def on_shared(self, shared):
         """ 处理分时图数据 """

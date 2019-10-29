@@ -11,7 +11,7 @@ from ctpbee.data_handle.level_position import ApiPositionManager
 from ctpbee.event_engine.engine import EVENT_TIMER, Event
 from ctpbee.exceptions import ConfigError
 from ctpbee.func import helper, get_ctpbee_path
-from ctpbee.helpers import check
+from ctpbee.helpers import check, exec_intercept
 
 
 class Action(object):
@@ -254,15 +254,14 @@ class Action(object):
         return f"{self.__name__} "
 
 
-class CoreAction:
+class ActionProxy:
     def __init__(self, action, api):
         self.action = action
         self.api = api
 
     def __getattr__(self, item):
-        result = getattr(self.action, item)
-        self.api.resolve_callback(item, result)
-        return result
+        callable_func = exec_intercept(self=self, func=getattr(self.action, item))
+        return callable_func
 
 
 class BeeApi(object):
@@ -400,7 +399,7 @@ class CtpbeeApi(BeeApi):
     def action(self):
         if self.app is None:
             raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
-        return CoreAction(self.app.action, self)
+        return ActionProxy(self.app.action, self)
 
     @property
     def logger(self):

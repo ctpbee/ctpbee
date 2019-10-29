@@ -31,7 +31,7 @@ class PositionModel:
         # 网关名字
         self.gateway_name = None
 
-    def on_trade(self, trade):
+    def update_trade(self, trade):
         """根据立即成交的信息来更新本地持仓 """
         self.direction = trade.direction
         cost = self.price * self.volume

@@ -54,7 +54,7 @@ class Account:
 
     def __init__(self, interface):
         self.interface = interface
-        self.position_manager = LocalPositionManager(interface.params)
+        self.position_manager = LocalPositionManager(interface.exec_intercept)
         # 每日资金情况
 
         self.pre_balance = 0
@@ -96,19 +96,19 @@ class Account:
                 commission_expense = 0
 
         elif trade.offset == Offset.CLOSETODAY:
-            if self.interface.params.get("today_commission") != 0:
-                commission_expense = trade.price * trade.volume * self.interface.params.get("today_commission")
+            if self.interface.exec_intercept.get("today_commission") != 0:
+                commission_expense = trade.price * trade.volume * self.interface.exec_intercept.get("today_commission")
             else:
                 commission_expense = 0
 
         elif trade.offset == Offset.CLOSEYESTERDAY:
-            if self.interface.params.get("yesterday_commission") != 0:
-                commission_expense = trade.price * trade.volume * self.interface.params.get("yesterday_commission")
+            if self.interface.exec_intercept.get("yesterday_commission") != 0:
+                commission_expense = trade.price * trade.volume * self.interface.exec_intercept.get("yesterday_commission")
             else:
                 commission_expense = 0
         else:
-            if self.interface.params.get("close_commission") != 0:
-                commission_expense = trade.price * trade.volume * self.interface.params.get("close_commission")
+            if self.interface.exec_intercept.get("close_commission") != 0:
+                commission_expense = trade.price * trade.volume * self.interface.exec_intercept.get("close_commission")
             else:
                 commission_expense = 0
 
@@ -119,16 +119,16 @@ class Account:
             }
             position: PositionData = self.position_manager.get_position_by_ld(trade.local_symbol,
                                                                               reversed_map[trade.direction])
-            if self.interface.params.get("size_map") is None or self.interface.params.get("size_map").get(
+            if self.interface.exec_intercept.get("size_map") is None or self.interface.exec_intercept.get("size_map").get(
                     trade.local_symbol) is None:
                 raise ConfigError(message="请检查你的回测配置中是否存在着size配置", args=("回测配置错误",))
             if trade.direction == Direction.LONG:
                 """ 平空头 """
-                pnl = (position.price - trade.price) * trade.volume * self.interface.params.get("size_map").get(
+                pnl = (position.price - trade.price) * trade.volume * self.interface.exec_intercept.get("size_map").get(
                     trade.local_symbol)
             else:
                 """ 平多头 """
-                pnl = (trade.price - position.price) * trade.volume * self.interface.params.get("size_map").get(
+                pnl = (trade.price - position.price) * trade.volume * self.interface.exec_intercept.get("size_map").get(
                     trade.local_symbol)
             self.balance += pnl
 
@@ -166,7 +166,7 @@ class Account:
         self.daily_life[date] = p._to_dict()
 
     def via_aisle(self):
-        self.position_manager.update_size_map(self.interface.params)
+        self.position_manager.update_size_map(self.interface.exec_intercept)
         if self.interface.date != self.date:
             self.get_new_day(self.interface.date)
             self.date = self.interface.date
