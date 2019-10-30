@@ -5,6 +5,7 @@ from inspect import ismethod
 from threading import Thread
 from time import sleep
 from typing import Text
+from threading import local
 
 from werkzeug.datastructures import ImmutableDict
 
@@ -21,6 +22,9 @@ from ctpbee.level import CtpbeeApi, Action
 from ctpbee.log import VLogger
 from ctpbee.record import Recorder, AsyncRecorder
 from ctpbee.cprint_config import CP
+
+local_variable = locals()
+
 
 class CtpBee(object):
     """
@@ -95,7 +99,7 @@ class CtpBee(object):
         self.active = False
         # 是否加载以使用默认的logger类/ choose if use the default logging class
         if logger_class is None:
-            self.logger = VLogger(CP,app_name=self.name)
+            self.logger = VLogger(CP, app_name=self.name)
             self.logger.set_default(name=self.logger.app_name, owner='App')
         else:
             if logger_config_path:
@@ -224,10 +228,10 @@ class CtpBee(object):
             if self.r is not None:
                 self.r_flag = False
                 sleep(self.config['REFRESH_INTERVAL'] + 1.5)
-                self.r = Thread(target=refresh_query, args=(self,))
+                self.r = Thread(target=refresh_query, args=(self,),daemon=True)
                 self.r.start()
             else:
-                self.r = Thread(target=refresh_query, args=(self,))
+                self.r = Thread(target=refresh_query, args=(self,), daemon=True)
                 self.r.start()
             self.r_flag = True
 
@@ -311,4 +315,4 @@ class CtpBee(object):
                 """ 强行终结掉线程 """
                 end_thread(self.r)
         except AttributeError:
-            print(1)
+            pass

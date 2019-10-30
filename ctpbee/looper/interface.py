@@ -34,10 +34,10 @@ class Action:
     def sell(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData] = None,
              price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
 
-        if not isinstance(self.looper.params['slippage_sell'], float) and not isinstance(
-                self.looper.params['slippage_sell'], int):
+        if not isinstance(self.looper.exec_intercept['slippage_sell'], float) and not isinstance(
+                self.looper.exec_intercept['slippage_sell'], int):
             raise ConfigError(message="滑点配置应为浮点小数")
-        price = price + self.looper.params['slippage_sell']
+        price = price + self.looper.exec_intercept['slippage_sell']
         req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.LONG,
                                                      type=price_type, exchange=origin.exchange,
                                                      symbol=origin.symbol) for x in
@@ -46,10 +46,10 @@ class Action:
 
     def cover(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
               price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
-        if not isinstance(self.looper.params['slippage_cover'], float) and not isinstance(
-                self.looper.params['slippage_cover'], int):
+        if not isinstance(self.looper.exec_intercept['slippage_cover'], float) and not isinstance(
+                self.looper.exec_intercept['slippage_cover'], int):
             raise ConfigError(message="滑点配置应为浮点小数")
-        price = price + self.looper.params['slippage_cover']
+        price = price + self.looper.exec_intercept['slippage_cover']
         req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.LONG,
                                                      type=price_type, exchange=origin.exchange,
                                                      symbol=origin.symbol) for x in
@@ -87,10 +87,10 @@ class Action:
          """
         def cal_req(position, volume, looper) -> List:
             # 判断是否为上期所或者能源交易所 / whether the exchange is SHFE or INE
-            if position.exchange.value not in looper.params["today_exchange"]:
+            if position.exchange.value not in looper.exec_intercept["today_exchange"]:
                 return [[Offset.CLOSE, volume]]
 
-            if looper.params["close_pattern"] == "today":
+            if looper.exec_intercept["close_pattern"] == "today":
                 # 那么先判断今仓数量是否满足volume /
                 td_volume = position.volume - position.yd_volume
                 if td_volume >= volume:
@@ -100,7 +100,7 @@ class Action:
                             [Offset.CLOSEYESTERDAY, volume - td_volume]] if td_volume != 0 else [
                         [Offset.CLOSEYESTERDAY, volume]]
 
-            elif looper.params["close_pattern"] == "yesterday":
+            elif looper.exec_intercept["close_pattern"] == "yesterday":
                 if position.yd_volume >= volume:
                     """如果昨仓数量要大于或者等于需要平仓数目 那么直接平昨"""
                     return [[Offset.CLOSEYESTERDAY, volume]]

@@ -4,6 +4,7 @@
 
 """
 import logging
+import os
 from datetime import time, datetime
 from inspect import isfunction
 from multiprocessing import Process
@@ -280,3 +281,13 @@ class RLock:
 
     def release(self):
         pass
+
+
+def get_ctpbee_path():
+    """ 获取ctpbee的路径默认路径 """
+    import os
+    home_path = os.environ['HOME']
+    ctpbee_path = os.path.join(home_path, ".ctpbee")
+    if not os.path.isdir(ctpbee_path):
+        os.mkdir(ctpbee_path)
+    return ctpbee_path

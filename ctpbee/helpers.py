@@ -322,3 +322,18 @@ def end_thread(thread):
 
 def exec_wrapper(func):
     """ 错误装饰器 """
+
+
+def exec_intercept(self, func):
+    """
+    此函数主要用于CtpbeeApi的Action结果拦截，保证用户简单调用，实现暗地结果处理
+
+    """
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        result = func(*args, **kwargs)
+        self.api.resolve_callback(func.__name__, result)
+        return result
+
+    return wrapper

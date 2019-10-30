@@ -51,7 +51,7 @@ docker run -p 5000:5000 yutiansut/ctpbee:latest
     
 ## 功能支持
 
-- [x] k线数据支持
+- [x] k线数据支持/home/somewheve/Templates
 - [x] 分时图数据支持
 - [x] 交易支持
 - [x] 行情支持 --> 需要自己编写相应的数据库写入代码。
@@ -63,8 +63,9 @@ docker run -p 5000:5000 yutiansut/ctpbee:latest
 - [x] 跟单信号
 - [x] 多路行情对比 --> [looper_me](https://github.com/ctpbee/looper_me)
 - [x] 数据快速支持 --> [ctpbee_converter](https://github.com/ctpbee/data_converter)
-- [x] 策略层对接CTA  
-- [x] 回测系统搭建  --> interface/looper  /初步完成
+- [x] cta support 
+- [x] 回测系统搭建  --> interface/looper
+
 
 
 ## 一些可能会减少你工作量的工作
@@ -105,9 +106,14 @@ ctpbee主要面对开发者, 希望能得到各位大佬的支持. 后续不再�
 策略以及指标等工具都以ctpbee_** 形式发布. ctpbee只提供最小的内核. 本人崇尚开源, 无论你是交易者还是程序员, 只要你有新的想法以及对开源感兴趣, 欢迎基于ctpbee 开发出新的可用工具. 我会维护一个工具列表, 指引用户前往使用. 
 
 ## 最后一句 
+ctpbee是开源项目, 如果你同意使用ctpbee, 那么我们默认你 *清楚* 你的每个行为带来的*后果*, 加以思考并自行承担后果！
+
 如果这个能帮助到你, 请点击star来支持我噢. ^_^  
 
 如果你希望贡献代码, 欢迎加群一起讨论和或者提交PR  QQ群号(: 756319143) [点进加入群聊以了解更多](https://jq.qq.com/?_wv=1027&k=5xWbIq3)
 
 如果你有遇到问题请发邮件给我 邮箱: somewheve@gmail.com 我会及时回复! 
 最后一句 ----> 祝各位大佬都能赚钱 ！
+
+
+
