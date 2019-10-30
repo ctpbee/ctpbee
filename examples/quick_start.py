@@ -136,7 +136,7 @@ class DataRecorder(CtpbeeApi):
     def on_bar(self, bar):
         """bar process function"""
 
-        self.action.buy(bar.high_price , 1, bar)
+        self.action.buy(bar.high_price, 1, bar)
 
     def on_shared(self, shared):
         """ 处理分时图数据 """
@@ -161,7 +161,7 @@ class DataRecorder(CtpbeeApi):
             #
             # # 获取合约的价格
             # # #  如果你需要该合约的handlerevent最新的行情价格 你可能需要通过self.app.trader.request_market_data() 来更新最新的深度行情，回调函数会自动更新行情数据，
-            # # 也许在风控那边一直发送请求数据或者在start()之后开个单独线程来请求是个不错的选择
+            # # 也许在风控那边一直肿发送请求数据或者在start()之后开个单独线程来请求是个不错的选择
             # print(self.app.recorder.get_contract_last_price("AP910.CZCE"))
             #
             # # 获取主力合约列表

@@ -1,8 +1,9 @@
 import io
+import json
 import os
 from json import load, dump, JSONDecodeError
 
-from ctpbee.constant import TradeData, PositionData
+from ctpbee.constant import TradeData, PositionData, Direction, Offset, Exchange
 
 
 class PositionModel:
@@ -42,6 +43,23 @@ class PositionModel:
         else:
             self.price = 0
 
+        if trade.offset == Offset.OPEN:
+            self.t_pos += trade.volume
+        # 平今
+        elif trade.offset == Offset.CLOSETODAY:
+            self.t_pos -= trade.volume
+        # 平昨
+        elif trade.offset == Offset.CLOSEYESTERDAY:
+            self.y_pos -= trade.volume
+        # 平仓
+        elif trade.offset == Offset.CLOSE:
+            # 上期所等同于平昨
+            if self.exchange == Exchange.SHFE:
+                self.y_pos -= trade.volume
+            # 非上期所，优先平今
+            else:
+                self.t_pos -= trade.volume
+
     def update_postition(self, position: PositionData):
         """ 根据返回的查询持仓信息来更新持仓信息 """
         self.t_pos = position.volume - position.yd_volume
@@ -55,7 +73,7 @@ class PositionModel:
     def to_dict(self):
         """ 将持仓信息构建为字典的信息"""
         return {
-            "direction": self.direction,
+            "direction": self.direction.value,
             "y_pos": self.y_pos,
             "t_pos": self.t_pos
         }
@@ -93,8 +111,8 @@ class ApiPositionManager(dict):
         self.filename = name + ".json"
         dict.__init__(self)
         self.cache_path = cache_path
-        file_path = cache_path + "/" + self.filename
-        with open(file_path, "w+") as f:
+        self.file_path = cache_path + "/" + self.filename
+        with open(self.file_path, "r+") as f:
             if init_flag:
                 data = {}
                 dump(obj=data, fp=f)
@@ -104,7 +122,6 @@ class ApiPositionManager(dict):
                 except JSONDecodeError:
                     data = {}
                     dump(obj=data, fp=f)
-
         self.init_data(data)
 
     def init_data(self, data):
@@ -121,18 +138,36 @@ class ApiPositionManager(dict):
         if not data:
             return
         else:
-            for local, position_detail in data:
+            for local, position_detail in data.items():
                 self[local] = create_position_model(local, position_detail)
 
     def on_trade(self, trade: TradeData):
         """
         更新成交单
         """
-        local = trade.local_symbol + "." + trade.direction.value
+
+        def update_local_cache(file_path, local):
+            with open(self.file_path, "r+") as f:
+                p = json.load(f)
+                p[local] = self[local].to_dict()
+                f.seek(0)
+                dump(obj=p, fp=f)
+
+        def get_reverse(direction: Direction) -> Direction:
+            if direction == Direction.LONG:
+                return Direction.SHORT
+            if direction == Direction.SHORT:
+                return Direction.LONG
+
+        # 如果是平仓， 那么反转方向
+        if trade.offset == Offset.OPEN:
+            local = trade.local_symbol + "." + trade.direction.value
+        else:
+            local = trade.local_symbol + "." + get_reverse(trade.direction).value
         if local not in self.keys():
             self[local] = PositionModel(local_symbol=trade.local_symbol)
-
         self[local].update_trade(trade=trade)
+        update_local_cache(self.file_path, local)
 
     def on_order(self, order):
         pass
