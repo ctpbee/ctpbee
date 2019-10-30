@@ -67,13 +67,14 @@ docker run -p 5000:5000 yutiansut/ctpbee:latest
 - [x] 回测系统搭建  --> interface/looper
 
 
+
 ## 一些可能会减少你工作量的工作
 - [x] 7×24小时无人值守 (可选)
 - [x] 定时查持仓和账户信息  (可选)
 - [x] 策略对应订阅行情 (可选)
 - [ ] 性能优化 --> julia支持 ？
 - [ ] 对接多种指标计算                     
-- [ ] 优化代码
+- [ ] 优化代码  / try to do it 
 
 ## 快速开始 
 ```python
