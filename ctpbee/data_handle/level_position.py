@@ -34,6 +34,7 @@ class PositionModel:
 
     def update_trade(self, trade):
         """根据立即成交的信息来更新本地持仓 """
+        self.exchange = trade.exchange
         self.direction = trade.direction
         cost = self.price * self.volume
         cost += trade.volume * trade.price
@@ -53,12 +54,12 @@ class PositionModel:
             self.y_pos -= trade.volume
         # 平仓
         elif trade.offset == Offset.CLOSE:
-            # 上期所等同于平昨
-            if self.exchange == Exchange.SHFE:
-                self.y_pos -= trade.volume
-            # 非上期所，优先平今
-            else:
+            if trade.volume < self.t_pos:
                 self.t_pos -= trade.volume
+            else:
+                self.y_pos -= trade.volume - self.t_pos
+                self.t_pos = 0
+        self.volume = self.y_pos + self.t_pos
 
     def update_postition(self, position: PositionData):
         """ 根据返回的查询持仓信息来更新持仓信息 """
@@ -75,7 +76,11 @@ class PositionModel:
         return {
             "direction": self.direction.value,
             "y_pos": self.y_pos,
-            "t_pos": self.t_pos
+            "t_pos": self.t_pos,
+            "local_symbol": self.local_symbol,
+            "exchange": self.exchange.value,
+            "price": self.price,
+            "volume": self.volume
         }
 
     def to_position(self):
@@ -112,16 +117,13 @@ class ApiPositionManager(dict):
         dict.__init__(self)
         self.cache_path = cache_path
         self.file_path = cache_path + "/" + self.filename
-        with open(self.file_path, "r+") as f:
-            if init_flag:
+        try:
+            with open(self.file_path, "r") as f:
+                data = json.load(f)
+        except json.decoder.JSONDecodeError as e:
+            with open(self.file_path, "w") as f:
                 data = {}
-                dump(obj=data, fp=f)
-            else:
-                try:
-                    data = load(f)
-                except JSONDecodeError:
-                    data = {}
-                    dump(obj=data, fp=f)
+                dump(data, f)
         self.init_data(data)
 
     def init_data(self, data):
@@ -146,12 +148,12 @@ class ApiPositionManager(dict):
         更新成交单
         """
 
-        def update_local_cache(file_path, local):
-            with open(self.file_path, "r+") as f:
-                p = json.load(f)
+        def update_local_cache(file_path, local, self):
+            with open(file_path, "r") as fp:
+                p = json.load(fp)
                 p[local] = self[local].to_dict()
-                f.seek(0)
-                dump(obj=p, fp=f)
+            with open(file_path, "w") as fp:
+                dump(obj=p, fp=fp)
 
         def get_reverse(direction: Direction) -> Direction:
             if direction == Direction.LONG:
@@ -167,7 +169,7 @@ class ApiPositionManager(dict):
         if local not in self.keys():
             self[local] = PositionModel(local_symbol=trade.local_symbol)
         self[local].update_trade(trade=trade)
-        update_local_cache(self.file_path, local)
+        update_local_cache(self.file_path, local, self)
 
     def on_order(self, order):
         pass
