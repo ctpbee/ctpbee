@@ -125,9 +125,8 @@ class ApiPositionManager(dict):
                 data = {}
                 dump(data, f)
         except FileNotFoundError as e:
-            path = os.path.join(os.environ['HOME'], '.ctpbee')
-            if not os.path.exists(path):
-                os.mkdir(path)
+            with open(self.file_path,'w') as f:
+                data = {}
         self.init_data(data)
 
     def init_data(self, data):
