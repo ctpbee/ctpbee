@@ -1,7 +1,7 @@
 """
     for the future of  life
 """
-__version__ = '0.34.1s'
+__version__ = '0.34.1'
 __status__ = '0.34修复版本1'
 
 # About core
