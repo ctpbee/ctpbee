@@ -124,6 +124,9 @@ class ApiPositionManager(dict):
             with open(self.file_path, "w") as f:
                 data = {}
                 dump(data, f)
+        except FileNotFoundError as e:
+            with open(self.file_path,'w') as f:
+                data = {}
         self.init_data(data)
 
     def init_data(self, data):
