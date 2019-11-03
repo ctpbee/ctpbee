@@ -57,12 +57,6 @@ class Indicator(File):
         self.average_message = {}
         self.indicator_message = {}
 
-    def __new__(cls, *args, **kwargs):
-        if not hasattr(cls, "_instance"):
-            obj = super(Indicator, cls)
-            cls._instance = obj.__new__(cls, *args, **kwargs)
-        return cls._instance
-
     def calculate(self):
         """
         计算指标

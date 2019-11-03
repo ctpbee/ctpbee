@@ -35,6 +35,11 @@ class Interface:
     def open_csv(self, file: str, start_time=None, end_time=None):
         """
         open TXT file
+            data_type:
+                Date,Open,High,Low,Close,Volume
+                '2019-01-07 00:00:00', 3831.0, 3847.0, 3831.0, 3840.0, 554
+                '2019-01-08 00:00:00', 3841.0, 3841.0, 3833.0, 3836.0, 554
+                ...
         :param file: name
         :param start_time:
         :param end_time:
@@ -45,12 +50,29 @@ class Interface:
     def open_json(self, file: str, start_time=None, end_time=None):
         """
         open JSON file
+            data_type:
+                {"zn1912.SHFE": [
+                        ["2014-01-01", 18780.0, 18780.0, 18770.0, 18775.0, 266],
+                        ["2014-01-02", 18775.0, 18780.0, 18770.0, 18770.0, 312],
+                            ...
+                        ]
+                }
         :param file: name
         :param start_time:
         :param end_time:
         :return:
         """
         return Scheduler.open_json(file, start_time, end_time)
+
+    def open_cache(self, data: list):
+        """
+        read CACHE data
+            data_type:
+                [["2014-01-01", 22, 44, 55, 55, 6666], ["2014-01-02", 22, 44, 55, 55, 6666], ...]
+        :param data:
+        :return:
+        """
+        return Scheduler.open_cache(data)
 
     def add_bar(self, data, opens=False):
         """
@@ -131,4 +153,4 @@ class Interface:
         Scheduler.plot(width=width, height=height, color=color, lw=lw)
 
 
-api = Interface()
+api = Interface
