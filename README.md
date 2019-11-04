@@ -67,6 +67,11 @@ docker run -p 5000:5000 yutiansut/ctpbee:latest
 - [x] 回测系统搭建  --> interface/looper
 
 
+## 插件支持
+
+- [ ] 套利 ---> ready to support
+- [ ] 历史数据 support
+
 
 ## 一些可能会减少你工作量的工作
 - [x] 7×24小时无人值守 (可选)

@@ -62,7 +62,7 @@ def get_a_strategy():
         fast_window = 20
         slow_window = 10
 
-        fast_ma0 = 0.0
+        fast_ma0 = 2.0
         fast_ma1 = 1.0
 
         slow_ma0 = 0.0
@@ -122,77 +122,6 @@ def get_a_strategy():
         def init_params(self, data):
             """"""
             # print("我在设置策略参数")
-
-    class BollStrategy(LooperApi):
-
-        boll_window = 18
-        boll_dev = 3.4
-        cci_window = 10
-        atr_window = 30
-        sl_multiplier = 5.2
-        fixed_size = 1
-
-        boll_up = 0
-        boll_down = 0
-        cci_value = 0
-        atr_value = 0
-
-        intra_trade_high = 0
-        intra_trade_low = 0
-        long_stop = 0
-        short_stop = 0
-
-        parameters = ["boll_window", "boll_dev", "cci_window",
-                      "atr_window", "sl_multiplier", "fixed_size"]
-        variables = ["boll_up", "boll_down", "cci_value", "atr_value",
-                     "intra_trade_high", "intra_trade_low", "long_stop", "short_stop"]
-
-        def __init__(self, name):
-            super().__init__(name)
-            self.am = ArrayManager()
-            self.pos = 0
-
-        def on_bar(self, bar):
-            am = self.am
-            am.update_bar(bar)
-            if not am.inited:
-                return
-
-            self.boll_up, self.boll_down = am.boll(self.boll_window, self.boll_dev)
-            self.cci_value = am.cci(self.cci_window)
-            self.atr_value = am.atr(self.atr_window)
-
-            if self.pos == 0:
-                self.intra_trade_high = bar.high_price
-                self.intra_trade_low = bar.low_price
-
-                if self.cci_value > 0:
-                    self.action.buy(self.boll_up, self.fixed_size, bar)
-                elif self.cci_value < 0:
-                    self.action.short(self.boll_down, self.fixed_size, bar)
-
-            elif self.pos > 0:
-                self.intra_trade_high = max(self.intra_trade_high, bar.high_price)
-                self.intra_trade_low = bar.low_price
-
-                self.long_stop = self.intra_trade_high - self.atr_value * self.sl_multiplier
-                self.action.sell(self.long_stop, abs(self.pos), bar)
-
-            elif self.pos < 0:
-                self.intra_trade_high = bar.high_price
-                self.intra_trade_low = min(self.intra_trade_low, bar.low_price)
-
-                self.short_stop = self.intra_trade_low + self.atr_value * self.sl_multiplier
-                self.action.cover(self.short_stop, abs(self.pos), bar)
-
-        def on_trade(self, trade):
-            if trade.direction == Direction.LONG:
-                self.pos += trade.volume
-            else:
-                self.pos -= trade.volume
-
-        def on_order(self, order):
-            pass
 
     return DoubleMaStrategy("double_ma")
 
