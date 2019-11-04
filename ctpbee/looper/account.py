@@ -45,6 +45,7 @@ class Account:
     支持成交之后修改资金 ， 对外提供API
 
     """
+    # 每日资金情况
     balance = 100000
     frozen = 0
     size = 5
@@ -55,25 +56,34 @@ class Account:
     def __init__(self, interface):
         self.interface = interface
         self.position_manager = LocalPositionManager(interface.params)
-        # 每日资金情况
 
         self.pre_balance = 0
         self.daily_life = defaultdict(AliasDayResult)
+        # 日期
         self.date = None
+        # 手续费
         self.commission = 0
         self.commission_expense = 0
+        # 昨日手续费
         self.pre_commission_expense = 0
         self.count_statistics = 0
         self.pre_count = 0
+        # 初始资金
         self.initial_capital = 0
+        # 占用保证金
+        self.occupation_margin = 0
 
         self.init = False
 
+    @property
+    def available(self) -> float:
+        return self.balance - self.frozen - self.occupation_margin
+
     def is_traded(self, order: OrderData) -> bool:
         """ 当前账户是否足以支撑成交 """
-        # 根据传入的单子判断当前的账户资金和冻结 是否足以成交此单
+        # 根据传入的单子判断当前的账户可用资金是否足以成交此单
 
-        if order.price * order.volume * (1 + self.commission) > self.balance - self.frozen:
+        if order.price * order.volume * (1 + self.commission) > self.available:
             """ 可用不足"""
             return False
         return True
@@ -87,8 +97,7 @@ class Account:
         :param trade:交易单子/trade
         :return:
         """
-        # 根据单子 更新当前的持仓 ----->
-
+        # 根据当前成交单子 更新当前的持仓 ----->
         if trade.offset == Offset.OPEN:
             if self.commission != 0:
                 commission_expense = trade.price * trade.volume * self.commission
@@ -107,8 +116,8 @@ class Account:
             else:
                 commission_expense = 0
         else:
-            if self.interface.exec_intercept.get("close_commission") != 0:
-                commission_expense = trade.price * trade.volume * self.interface.exec_intercept.get("close_commission")
+            if self.interface.params.get("close_commission") != 0:
+                commission_expense = trade.price * trade.volume * self.interface.params.get("close_commission")
             else:
                 commission_expense = 0
 
@@ -164,6 +173,12 @@ class Account:
         self.pre_count = self.count_statistics
         self.position_manager.covert_to_yesterday_holding()
         self.daily_life[date] = p._to_dict()
+        # 结算撤掉所有单
+
+        self.interface.pending.clear()
+        # 归还所有的冻结
+        self.balance += self.frozen
+        self.frozen = 0
 
     def via_aisle(self):
         self.position_manager.update_size_map(self.interface.params)
