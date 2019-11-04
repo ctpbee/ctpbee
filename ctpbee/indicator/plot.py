@@ -27,11 +27,6 @@ colors = {
 
 
 class ShowLine(Indicator):
-    def __new__(cls, *args, **kwargs):
-        if not hasattr(cls, "_instance"):
-            obj = super(ShowLine, cls)
-            cls._instance = obj.__new__(cls, *args, **kwargs)
-        return cls._instance
 
     def __init__(self):
         super().__init__()

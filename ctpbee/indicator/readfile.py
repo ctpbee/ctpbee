@@ -120,5 +120,17 @@ class ReadFile:
         ret_close = self.data_columns(data, start_time, end_time)
         return ret_close
 
+    def open_cache(self, data: list):
+        """
+        读取cache数据
+        :param data:
+            [[1883823344, 22, 44, 55, 55, 6666], [1883823345, 22, 44, 55, 55, 6666], ...]
+        :return:
+        """
+        datas = np.array(data)
+        data_array = np.array([datas[:, 1], datas[:, 2], datas[:, 3], datas[:, 4], datas[:, 5]], dtype=float)
+        ret_close = self.data_columns(data_array)
+        return ret_close
+
 
 File = ReadFile
