@@ -195,4 +195,4 @@ class Vessel:
         p.join()
 
     def __repr__(self):
-        return "Backtesting Vessel powered by ctpbee current version: 0.1"
+        return "ctpbee Backtesting Vessel powered by ctpbee current version: 0.1"

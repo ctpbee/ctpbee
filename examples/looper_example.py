@@ -23,36 +23,36 @@ from ctpbee import LooperApi, Vessel
 from ctpbee.constant import Direction
 
 
-def get_data(start, end, symbol, exchange, level):
-    """ using rqdatac to make an example """
-    import rqdatac as rq
-    from rqdatac import get_price, id_convert
-    username = "license"
-    password = "NK-Ci7vnLsRiPPWYwxvvPYdYM90vxN60qUB5tVac2mQuvZ8f9Mq8K_nnUqVspOpi4BLTkSLgq8OQFpOOj7L" \
-               "t7AbdBZEBqRK74fIJH5vsaAfFQgl-tuB8l03axrW8cyN6-nBUho_6Y5VCRI63Mx_PN54nsQOpc1psIGEz" \
-               "gND8c6Y=bqMVlABkpSlrDNk4DgG-1QXNknJtk0Kkw2axvFDa0E_XPMqOcBxifuRa_DFI2svseXU-8A" \
-               "eLjchnTkeuvQkKh6nrfehVDiXjoMeq5sXgqpbgFAd4A5j2B1a0gpE3cb5kXb42n13fGwFaGris" \
-               "8-eKzz_jncvuAamkJEQQV0aLdiw="
-    host = "rqdatad-pro.ricequant.com"
-    port = 16011
-    rq.init(username, password, (host, port))
-    symbol_rq = id_convert(symbol)
-    data = get_price(symbol_rq, start_date=start, end_date=end, frequency=level, fields=None,
-                     adjust_type='pre', skip_suspended=False, market='cn', expect_df=False)
-    origin = data.to_dict(orient='records')
-    result = []
-    for x in origin:
-        do = {}
-        do['open_price'] = x['open']
-        do['low_price'] = x['low']
-        do['high_price'] = x['high']
-        do['close_price'] = x['close']
-        do['datetime'] = datetime.strptime(str(x['trading_date']), "%Y-%m-%d %H:%M:%S")
-        do['symbol'] = symbol
-        do['local_symbol'] = symbol + "." + exchange
-        do['exchange'] = exchange
-        result.append(do)
-    return result
+# def get_data(start, end, symbol, exchange, level):
+#     """ using rqdatac to make an example """
+#     import rqdatac as rq
+#     from rqdatac import get_price, id_convert
+#     username = "license"
+#     password = "NK-Ci7vnLsRiPPWYwxvvPYdYM90vxN60qUB5tVac2mQuvZ8f9Mq8K_nnUqVspOpi4BLTkSLgq8OQFpOOj7L" \
+#                "t7AbdBZEBqRK74fIJH5vsaAfFQgl-tuB8l03axrW8cyN6-nBUho_6Y5VCRI63Mx_PN54nsQOpc1psIGEz" \
+#                "gND8c6Y=bqMVlABkpSlrDNk4DgG-1QXNknJtk0Kkw2axvFDa0E_XPMqOcBxifuRa_DFI2svseXU-8A" \
+#                "eLjchnTkeuvQkKh6nrfehVDiXjoMeq5sXgqpbgFAd4A5j2B1a0gpE3cb5kXb42n13fGwFaGris" \
+#                "8-eKzz_jncvuAamkJEQQV0aLdiw="
+#     host = "rqdatad-pro.ricequant.com"
+#     port = 16011
+#     rq.init(username, password, (host, port))
+#     symbol_rq = id_convert(symbol)
+#     data = get_price(symbol_rq, start_date=start, end_date=end, frequency=level, fields=None,
+#                      adjust_type='pre', skip_suspended=False, market='cn', expect_df=False)
+#     origin = data.to_dict(orient='records')
+#     result = []
+#     for x in origin:
+#         do = {}
+#         do['open_price'] = x['open']
+#         do['low_price'] = x['low']
+#         do['high_price'] = x['high']
+#         do['close_price'] = x['close']
+#         do['datetime'] = datetime.strptime(str(x['trading_date']), "%Y-%m-%d %H:%M:%S")
+#         do['symbol'] = symbol
+#         do['local_symbol'] = symbol + "." + exchange
+#         do['exchange'] = exchange
+#         result.append(do)
+#     return result
 
 
 def get_a_strategy():
