@@ -85,6 +85,7 @@ class Action:
         generate the offset and volume
         生成平仓所需要的offset和volume
          """
+
         def cal_req(position, volume, looper) -> List:
             # 判断是否为上期所或者能源交易所 / whether the exchange is SHFE or INE
             if position.exchange.value not in looper.params["today_exchange"]:
@@ -265,6 +266,10 @@ class LocalLooper():
                 """ 超出涨跌价格 """
                 return -2
 
+            # 发单立即冻结
+            self.account.update_frozen(data)
+
+            # 进行成交判断
             long_c = self.price.low_price if self.price.low_price is not None else self.price.ask_price_1
             short_c = self.price.high_price if self.price.low_price is not None else self.price.bid_price_1
             long_b = self.price.open_price if self.price.low_price is not None else long_c
@@ -290,6 +295,10 @@ class LocalLooper():
                 self.strategy.on_trade(trade)
                 self.pending.remove(order)
 
+                # 成交，移除冻结
+                self.account.update_frozen(order=order, reverse=True)
+                self.update_account_margin(trade)
+
             if not long_cross and not short_cross:
                 # 未成交单, 提交到pending里面去
                 self.pending.append(data)
@@ -309,12 +318,22 @@ class LocalLooper():
                 """ 调用strategy的on_trade """
                 self.strategy.on_trade(p)
                 self.today_volume += data.volume
+                # 已经成交，同时移除冻结
+                self.account.update_frozen(p, reverse=True)
+                self.update_account_margin(p)
+
                 return p
             else:
                 """ 当前账户不足以支撑成交 """
                 return -4
         else:
             raise TypeError("未支持的成交机制")
+
+    def update_account_margin(self, p):
+        if p.offset == Offset.OPEN:
+            self.account.update_margin(p, reverse=True)
+        else:
+            self.account.update_margin(p)
 
     def init_params(self, params):
         """ 回测参数设置 """

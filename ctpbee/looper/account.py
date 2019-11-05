@@ -82,18 +82,16 @@ class Account:
     def is_traded(self, order: OrderData) -> bool:
         """ 当前账户是否足以支撑成交 """
         # 根据传入的单子判断当前的账户可用资金是否足以成交此单
-
         if order.price * order.volume * (1 + self.commission) > self.available:
             """ 可用不足"""
             return False
+
         return True
 
     def update_trade(self, trade: TradeData) -> None:
         """
         当前选择调用这个接口的时候就已经确保了这个单子是可以成交的，
-
         make sure it can be traded if you choose to call this method,
-
         :param trade:交易单子/trade
         :return:
         """
@@ -153,6 +151,35 @@ class Account:
             self.get_new_day()
             self.date = self.interface.date
 
+    def update_margin(self, data: OrderData or TradeData, reverse=False):
+        """
+            更新保证金
+            如果出现成交 开方向 ----> 增加保证金--> 默认
+            如果出现成交 平方向 ----> 减少保证金
+        """
+        if reverse:
+            """ 开仓增加保证金"""
+            self.occupation_margin += data.volume * data.price
+            self.balance -= data.volume * data.price
+        else:
+            """ 平仓移除保证金归还本金 """
+            self.occupation_margin -= data.price * data.volume
+            self.balance += data.volume * data.price
+
+    def update_frozen(self, order, reverse=False):
+        """
+        根据reverse判断方向
+        如果是False， 那么出现冻结，同时从余额里面扣除
+        """
+        if reverse:
+            """ 成交 """
+            self.frozen -= order.volume * order.price
+            self.balance += order.volume * order.price
+        else:
+            """ 未成交 """
+            self.frozen += order.volume * order.price
+            self.balance -= order.price * order.volume
+
     def get_new_day(self, interface_date=None):
         """ 生成今天的交易数据， 同时更新前日数据 ，然后进行持仓结算 """
 
@@ -174,7 +201,6 @@ class Account:
         self.position_manager.covert_to_yesterday_holding()
         self.daily_life[date] = p._to_dict()
         # 结算撤掉所有单
-
         self.interface.pending.clear()
         # 归还所有的冻结
         self.balance += self.frozen
