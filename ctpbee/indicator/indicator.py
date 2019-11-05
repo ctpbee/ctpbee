@@ -183,7 +183,7 @@ class Indicator(File):
         self.macds = np.array(me1) - np.array(me2)
         self.signal = self.ema(self.macds, period=period_signal)
         self.histo = np.array(self.macds) - np.array(self.signal)
-        return self.histo
+        return self.macds, self.signal, self.histo
 
     @getAverageName
     def rsi(self, data:object,  period=14, lookback=1):
