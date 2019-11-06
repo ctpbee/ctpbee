@@ -21,6 +21,7 @@ from datetime import datetime, date
 
 from ctpbee import LooperApi, Vessel
 from ctpbee.constant import Direction
+from ctpbee.indicator import Interface
 
 
 # def get_data(start, end, symbol, exchange, level):
@@ -56,48 +57,38 @@ from ctpbee.constant import Direction
 
 
 def get_a_strategy():
-    from ctpbee.looper.ta_lib import ArrayManager
 
     class DoubleMaStrategy(LooperApi):
-        fast_window = 20
-        slow_window = 10
 
-        fast_ma0 = 2.0
-        fast_ma1 = 1.0
-
-        slow_ma0 = 0.0
-        slow_ma1 = 0.0
-
-        parameters = ["fast_window", "slow_window"]
-        variables = ["fast_ma0", "fast_ma1", "slow_ma0", "slow_ma1"]
+        allow_max_price = 5000  # 设置价格上限 当价格达到这个就卖出 防止突然跌 止盈
+        allow_low_price = 2000  # 设置价格下限 当价格低出这里就卖 防止巨亏 止损
 
         def __init__(self, name):
             super().__init__(name)
             self.count = 1
-            self.am = ArrayManager()
+            self.api = Interface()
+            self.api.open_json("zn1912.SHFE.json")
             self.pos = 0
 
         def on_bar(self, bar):
-            # todo: 双均线
+            # todo: 均线 和 MACD 和 BOLL 结合使用
             """ """
+            am = self.api
+            am.add_bar(bar)
+            # 收盘
+            close = am.close
+            # 压力 平均 支撑
+            top, middle, bottom = am.boll()
+            # DIF DEA DIF-DEA
+            macd, signal, histo = am.macd()
 
-            am = self.am
-            am.update_bar(bar)
-            if not am.inited:
-                return
+            if self.allow_max_price <= close[-1] and self.pos > 0:
+                self.action.sell(bar.close_price, self.pos, bar)
 
-            fast_ma = am.sma(self.fast_window, array=True)
-            self.fast_ma0 = fast_ma[-1]
-            self.fast_ma1 = fast_ma[-2]
-
-            slow_ma = am.sma(self.slow_window, array=True)
-            self.slow_ma0 = slow_ma[-1]
-            self.slow_ma1 = slow_ma[-2]
-            # 计算金叉 死叉
-            cross_over = self.fast_ma0 > self.slow_ma0 and self.fast_ma1 < self.slow_ma1
-            cross_below = self.fast_ma0 < self.slow_ma0 and self.fast_ma1 > self.slow_ma1
-            # 金叉做多
-            if cross_over:
+            if self.allow_low_price >= close[-1] and self.pos > 0:
+                self.action.sell(bar.close_price, self.pos, bar)
+            # 金叉做多 和 均线>平均
+            if histo[-1] > 0 and close[-1] > middle[-1]:
                 if self.pos == 0:
                     self.action.buy(bar.close_price, 1, bar)
                 # 反向进行开仓
@@ -105,9 +96,9 @@ def get_a_strategy():
                     self.action.cover(bar.close_price, 1, bar)
                     self.action.buy(bar.close_price, 1, bar)
             # 死叉做空
-            elif cross_below:
+            elif histo[-1] < 0:
                 if self.pos == 0:
-                    self.action.short(bar.close_price, 1, bar)
+                    pass
                 # 反向进行开仓
                 elif self.pos > 0:
                     self.action.sell(bar.close_price, 1, bar)
@@ -178,11 +169,6 @@ def run_main(data):
 if __name__ == '__main__':
     # data = get_data(start="2019-1-5", end="2019-9-1", symbol="ag1912", exchange="SHFE", level="15m")
     # save_data_json(data)
-    try:
-        import talib
-    except ImportError:
-        print("please install talib first")
-
     data = load_data()
     for x in data:
         x['datetime'] = datetime.strptime(str(x['datetime']), "%Y-%m-%d %H:%M:%S")
