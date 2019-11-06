@@ -76,7 +76,8 @@ class Papa:
         return raw
 
     @classmethod
-    def run(cls, years: list):
+    def run(cls, start_end: list):
+        years = [i for i in range(int(start_end[0]), int(start_end[1]) + 1)]
         for year in years:
             year = str(year)
             data = cls.parse(year)
@@ -172,5 +173,5 @@ class TradingDay:
 
 if __name__ == '__main__':
     # 爬
-    Papa.run([i for i in range(2004, datetime.datetime.now().year + 1)])
-    Papa.write()
+    Papa.run([2004, datetime.datetime.now().year])
+    # Papa.write()

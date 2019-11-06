@@ -1,45 +1,168 @@
 import collections
 import random
+import uuid
 from copy import deepcopy
-from functools import lru_cache
+from typing import Text, List
+from warnings import warn
 
-from ctpbee.constant import OrderRequest, CancelRequest, EVENT_TICK, TickData, EVENT_ORDER, EVENT_TRADE, \
-    OrderData, Status, TradeData, EVENT_INIT_FINISHED
-from ctpbee.event_engine import Event
+from ctpbee.constant import OrderRequest, Offset, Direction, OrderType, OrderData, CancelRequest, TradeData, BarData, \
+    TickData, PositionData, Status, Exchange
+from ctpbee.exceptions import ConfigError
+from ctpbee.func import helper
 from ctpbee.looper.account import Account
 
 
-class AliasDayResult:
-    """
-    每天的结果
-    """
+class Action:
+    def __init__(self, looper):
+        """ 将action这边报单 """
+        self.looper = looper
 
-    def __init__(self, **kwargs):
-        """ 实例化进行调用 """
-        for i, v in kwargs:
-            setattr(self, i, v)
+    def buy(self, price, volume, origin, price_type: OrderType = OrderType.LIMIT, **kwargs):
+        req = OrderRequest(price=price, volume=volume, exchange=origin.exchange, offset=Offset.OPEN,
+                           direction=Direction.LONG, type=price_type, symbol=origin.symbol)
+        return self.looper.send_order(req)
+
+    def short(self, price, volume, origin, price_type: OrderType = OrderType.LIMIT, **kwargs):
+        req = OrderRequest(price=price, volume=volume, exchange=origin.exchange, offset=Offset.OPEN,
+                           direction=Direction.SHORT, type=price_type, symbol=origin.symbol)
+        return self.looper.send_order(req)
+
+    @property
+    def position_manager(self):
+        return self.looper.account.position_manager
+
+    def sell(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData] = None,
+             price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
+
+        if not isinstance(self.looper.params['slippage_sell'], float) and not isinstance(
+                self.looper.params['slippage_sell'], int):
+            raise ConfigError(message="滑点配置应为浮点小数")
+        price = price + self.looper.params['slippage_sell']
+        req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.LONG,
+                                                     type=price_type, exchange=origin.exchange,
+                                                     symbol=origin.symbol) for x in
+                    self.get_req(origin.local_symbol, Direction.SHORT, volume, self.looper)]
+        return [self.looper.send_order(req) for req in req_list if req.volume != 0]
+
+    def cover(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
+              price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
+        if not isinstance(self.looper.params['slippage_cover'], float) and not isinstance(
+                self.looper.params['slippage_cover'], int):
+            raise ConfigError(message="滑点配置应为浮点小数")
+        price = price + self.looper.exec_intercept['slippage_cover']
+        req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.LONG,
+                                                     type=price_type, exchange=origin.exchange,
+                                                     symbol=origin.symbol) for x in
+                    self.get_req(origin.local_symbol, Direction.SHORT, volume, self.looper)]
+        return [self.looper.send_order(req) for req in req_list if req.volume != 0]
+
+    def cancel(self, id: Text, origin: [BarData, TickData, TradeData, OrderData, PositionData] = None, **kwargs):
+        if "." in id:
+            orderid = id.split(".")[1]
+        if origin is None:
+            exchange = kwargs.get("exchange")
+            if isinstance(exchange, Exchange):
+                exchange = exchange.value
+            local_symbol = kwargs.get("local_symbol")
+        elif origin:
+            exchange = origin.exchange.value
+            local_symbol = origin.local_symbol
+
+        if origin is None and len(kwargs) == 0:
+            """ 如果两个都不传"""
+            order = self.app.recorder.get_order(id)
+            if not order:
+                print("找不到订单啦... 撤不了哦")
+                return None
+            exchange = order.exchange.value
+            local_symbol = order.local_symbol
+        req = helper.generate_cancel_req_by_str(order_id=orderid, exchange=exchange, symbol=local_symbol)
+        return self.looper.cancel_order(req)
+
+    @staticmethod
+    def get_req(local_symbol, direction, volume: int, looper) -> List:
+        """
+        generate the offset and volume
+        生成平仓所需要的offset和volume
+         """
+
+        def cal_req(position, volume, looper) -> List:
+            # 判断是否为上期所或者能源交易所 / whether the exchange is SHFE or INE
+            if position.exchange.value not in looper.params["today_exchange"]:
+                return [[Offset.CLOSE, volume]]
+
+            if looper.params["close_pattern"] == "today":
+                # 那么先判断今仓数量是否满足volume /
+                td_volume = position.volume - position.yd_volume
+                if td_volume >= volume:
+                    return [[Offset.CLOSETODAY, volume]]
+                else:
+                    return [[Offset.CLOSETODAY, td_volume],
+                            [Offset.CLOSEYESTERDAY, volume - td_volume]] if td_volume != 0 else [
+                        [Offset.CLOSEYESTERDAY, volume]]
+
+            elif looper.params["close_pattern"] == "yesterday":
+                if position.yd_volume >= volume:
+                    """如果昨仓数量要大于或者等于需要平仓数目 那么直接平昨"""
+                    return [[Offset.CLOSEYESTERDAY, volume]]
+                else:
+                    """如果昨仓数量要小于需要平仓数目 那么优先平昨再平今"""
+                    return [[Offset.CLOSEYESTERDAY, position.yd_volume],
+                            [Offset.CLOSETODAY, volume - position.yd_volume]] if position.yd_volume != 0 else [
+                        [Offset.CLOSETODAY, volume]]
+            else:
+                raise ValueError("异常配置, ctpbee只支持today和yesterday两种优先模式")
+
+        position: PositionData = looper.account.position_manager.get_position_by_ld(local_symbol, direction)
+        if not position:
+            msg = f"{local_symbol}在{direction.value}上无仓位"
+            warn(msg)
+            return []
+        if position.volume < volume:
+            msg = f"{local_symbol}在{direction.value}上仓位不足, 平掉当前 {direction.value} 的所有持仓, 平仓数量: {position.volume}"
+            warn(msg)
+            return cal_req(position, position.volume, looper)
+        else:
+            return cal_req(position, volume, looper)
 
 
-class LocalLooperApi():
-    """
-    本地化回测的服务端 ---> this will be a very interesting thing!
-    尽量模拟交易所成交
+class LocalLooper():
+    message_box = {
+        -1: "超出下单限制",
+        -2: "超出涨跌价格",
+        -3: "未成交",
+        -4: "资金不足"
+    }
 
-    -----> 应该推出在线回测与本地回测两种模式
-    在线: tick和bar的接收应该与协议保持一致----> 对接开源的looper_me服务器
-    本地 : 读取本地数据库的数据进行回测
-    """
+    def __init__(self, logger, strategy=None, risk=None):
+        """ 需要构建完整的成交回报以及发单报告,在account里面需要存储大量的存储 """
 
-    def __init__(self, event_engine, app):
-        super().__init__()
-
-        # 接入事件引擎
-        self.event_engine = event_engine
-        self.pending = collections.deque()
-        self.account = Account()
+        # 活跃报单数量
+        self.pending = []
 
         self.sessionid = random.randint(1000, 10000)
         self.frontid = random.randint(10001, 500000)
+
+        # 日志输出器
+        self.logger = logger
+
+        self.strategy = strategy
+        # 覆盖里面的action和logger属性
+        # 涨跌停价格
+        self.upper_price = 99999
+        self.drop_price = 0
+
+        # 风控/risk control todo:完善
+        self.risk = risk
+        self.params = dict(
+            deal_pattern="match",
+            single_order_limit=10,
+            single_day_limit=100,
+            today_exchange=['INE', "SHFE"]
+        )
+        # 账户属性
+        self.account = Account(self)
+        self.order_ref = 0
 
         # 发单的ref集合
         self.order_ref_set = set()
@@ -48,217 +171,196 @@ class LocalLooperApi():
         # 已经order_id --- 报单
         self.order_id_pending_mapping = {}
 
-        # 当前tick
-        self.current_tick: TickData = None
+        # 当日成交笔数, 需要如果是第二天的数据，那么需要被清空
+        self.today_volume = 0
 
-        # 独立回测
-        self.p = collections.defaultdict(collections.deque)
-        self._ocos = dict()
-        self._ocol = collections.defaultdict(list)
+        # 所有的报单数量
+        self.order_buffer = dict()
 
-        # 根据外部配置覆盖配置
-        self.init_config(app)
-        self.account.update_attr(app.config['LOOPER_SETTING'])
-        self.event_engine.register(EVENT_TICK, self._process_tick)
+        self.date = None
+        # 行情
+        self.price = None
 
-    def _push_order(self, order: OrderData):
-        """
-        将订单回报推送到策略层，这个地方将order请求转换为order数据， 从而简化代码
-        :param order:
-        :return:
-        """
-        event = Event(EVENT_ORDER, deepcopy(order))
-        self.event_engine.put(event)
+    def update_strategy(self, strategy):
+        self.strategy = strategy
+        setattr(self.strategy, "action", Action(self))
+        setattr(self.strategy, "logger", self.logger)
+        setattr(self.strategy, "info", self.logger.info)
+        setattr(self.strategy, "debug", self.logger.debug)
+        setattr(self.strategy, "error", self.logger.error)
+        setattr(self.strategy, "warning", self.logger.warning)
 
-    def _push_trade(self, trade):
-        """  将成交回报推送到策略层 """
-        event = Event(EVENT_TRADE, deepcopy(trade))
-        self.event_engine.put(event)
+    def update_risk(self, risk):
+        self.risk = risk
 
-    def _push_order_callback(self, order: OrderData, is_traded: bool):
-        """
-        推送order回策略层，
-        如果已经成交， 那么找到成交单数据并推送回去，
-        如果没有成交 ，那么将order的状态推荐为正在提交中
-        :param order_data: 报单
-        :param is_traded: 是否成交
-        :return:
-        """
-        if is_traded:
-            """ 如果成交了那么同时推送"""
-            trade = self.traded_order_mapping[order.order_id]
-            order.status = Status.ALLTRADED
-            self._push_order()
-            self._push_trade(trade)
-        else:
-            order.status = Status.SUBMITTING
-            self.order_id_pending_mapping[order.order_id] = order
-            self._push_order(order)
-            self.pending.appendleft(order)
+    def _generate_order_data_from_req(self, req: OrderRequest):
+        """ 将发单请求转换为发单数据 """
+        self.order_ref += 1
+        order_id = f"{self.frontid}-{self.sessionid}-{self.order_ref}"
+        return req._create_order_data(gateway_name="looper", order_id=order_id)
 
-    def _process_tick(self, event):
-        """
-        处理tick数据， 对服务器的单子 进行成交
-        :param event: tick数据事件
-        :return:
-        """
-        # 先更新当前tick
-        self.current_tick = event.data
+    def _generate_trade_data_from_order(self, order_data: OrderData):
+        """ 将orderdata转换成成交单 """
+        p = TradeData(price=order_data.price, istraded=order_data.volume, volume=order_data.volume,
+                      tradeid=uuid.uuid1(), offset=order_data.offset, direction=order_data.direction,
+                      gateway_name=order_data.gateway_name, time=order_data.time,
+                      order_id=order_data.order_id, symbol=order_data.symbol, exchange=order_data.exchange)
+        return p
 
-        # 然后立即处理未成交的单子或者部分成交的单子
-        for _ in self.pending:
-            # 行情能够发生成交
-            result = self._cal_whether_traded(_, event.data)
-            if result:
-                # 判断当前成交单是否能由账户支撑起
-                if self.account.is_traded(result):
-                    # 如果账户能够进行交易 那么更新账户数据
-                    self._update_trading(result)
-                else:
-                    # 无法交易 直接进行下一个的成交
-                    continue
-                self.traded_order_mapping[_.order_id] = result
-                self._push_order_callback(_, is_traded=False)
-                self.pending.remove(_)
+    def send_order(self, order_req):
+        """ 发单的操作"""
+        self.intercept_gateway(order_req)
+
+    def cancel(self, cancel_req):
+        """ 撤单机制 """
+        self.intercept_gateway(cancel_req)
+
+    def intercept_gateway(self, data):
+        """ 拦截网关 同时这里应该返回相应的水平"""
+        if isinstance(data, OrderRequest):
+            """ 发单请求处理 """
+            result = self.match_deal(self._generate_order_data_from_req(data))
+            if isinstance(result, TradeData):
+                """ 将成交单通过日志接口暴露出去"""
+                # self.logger.info(dumps(result))
+                self.logger.info(
+                    f"成交, 成交价格{str(result.price)}, 成交笔数: {str(result.volume)},"
+                    f" 成交方向: {str(result.direction.value)}，行为: {str(result.offset.value)}")
             else:
-                continue
-
-    @lru_cache(maxsize=100000)
-    def _cal_whether_traded(self, order: OrderData, tick: TickData) -> TradeData or None:
-        """
-        计算是否进行成交， 这个地方需要用到lru缓存来提升计算性能
-        :param order:报单
-        :param tick:当前行情
-        :return: 成交单或者空
-        """
-        if tick.ask_price_1 and tick.bid_price_1:
-            pass
-        if tick.ask_price_1 >= tick.bid_price_1:
-            # 撮合成交
-            return TradeData(
-                direction=order.direction,
-                price=order.price,
-                symbol=order.symbol,
-                offset=order.offset,
-                type=order.type,
-                time=order.time,
-            )
-            pass
-        else:
-            return None
-
-    def _convert_req_to_data(self, order: OrderRequest):
-        # 随机生成一个order_ref
-        while True:
-            ref = random.randint(1, 100000)
-            if ref not in self.order_ref_set:
-                self.order_ref_set.add(ref)
-                break
-        order_id = f"{self.frontid}_{self.sessionid}_{ref}"
-
-        return order._create_order_data(order_id=order_id, gateway_name="looper")
-
-    def __accept_order(self, order: OrderRequest):
-        """
-
-        :param order:报单
-        :return:
-        """
-        order = self._convert_req_to_data(order)
-        if self._auth_order_price(order):
-            #  如果单子满足 那么立即进行撮合成交
-            self._brokered_transactions(order)
-
-    def _auth_order_price(self, order: OrderData):
-        """
-        检查报单价格是否超过涨跌停
-        :param order: 报单
-        :return:
-        """
-        if order.price > self.current_tick.limit_up or order.price < self.current_tick.limit_down:
-            self.log("价格超过涨跌停， 拒单")
-            order.status = Status.REJECTED
-            self._push_order(order)
-            return False
-        return True
-
-    def _brokered_transactions(self, order):
-        """
-        计算是否成交， 如果成交那么就 推送成交回报并将报单推送回去
-        :param order:保单数据
-        :return:
-        """
-        result = self._cal_whether_traded(order, self.current_tick)
-        if result:
-            # 判断当前成交单是否能由账户支撑起
-            if self.account.is_traded(result):
-                # 如果账户能够进行交易 那么更新账户数据
-                self._update_trading(result)
-            else:
-                # 无法交易 直接推出并过滤此次成交
-                # todo： 是否此处应该将order添加为未成交
-                return
-            self.traded_order_mapping[order.order_id] = result
-            self._push_order_callback(order, is_traded=False)
-
-    def _update_trading(self, trade):
-        """ 根据成交单进行系统更新 """
-        self.account.trading(trade)
-
-    def set_attribute(self, **attr):
-        """ 通过外部设置参数 """
-        for i, v in attr:
-            setattr(self, i, v)
-
-    def init_config(self, app):
-        """ 初始化设置 """
-        {setattr(self, idx, value) for idx, value in app.config['LOOPER'] if hasattr(self, idx)}
-
-    def send_order(self, order: OrderRequest, **kwargs):
-        """ 发单, 可以被外部进行调用
-        """
-        self._accept_order(order)
-
-    def cancel_order(self, cancel_req: CancelRequest, **kwargs):
-        """
-        根据撤单请求找到order，然后在
-        可以被外部进行调用
-        :param cancel_req:
-        :return:
-        """
-        if cancel_req.order_id in self.order_id_pending_mapping:
-            """ 在pending中进行移除"""
-
-            order = self.order_id_pending_mapping[cancel_req.order_id]
-            # 在挂单中移除order
-            self.pending.remove(order)
-
-            # 将撤单推送回去
-            order.status = Status.CANCELLED
-            self._push_order(order)
-            # 删除挂单映射
-            # todo 回撤单是否可以存起来 ？
-            del self.order_id_pending_mapping[order.order_id]
-            self.log(f"撤单, 单号:{order.order_id}")
+                self.logger.info(self.message_box[result])
+        if isinstance(data, CancelRequest):
+            """ 撤单请求处理 
+            """
+            for order in self.pending:
+                if data.order_id == order.order_id:
+                    order = deepcopy(order)
+                    self.strategy.on_order(order)
+                    self.pending.remove(order)
+                    return 1
             return 0
-        return -1
 
-    def log(self, log):
-        from datetime import datetime
-        print(f"{str(datetime.now())}    交易所   {log}")
+    def match_deal(self, data: OrderData) -> int or TradeData:
+        """ 撮合成交
+            维护一个返回状态
+            -1: 超出下单限制
+            -2: 超出涨跌价格
+            -3: 未成交
+            -4: 资金不足
+            p : 成交回报
 
-    def query_position(self):
-        return 0
+            todo: 处理冻结 ??
 
-    def query_account(self):
-        return 0
+        """
+        if self.params.get("deal_pattern") == "match":
+            """ 撮合成交 """
+            # todo: 是否可以模拟一定量的市场冲击响应？ 以靠近更加逼真的回测效果 ？？？？
 
-    def request_market_data(self):
-        """ 请求市场行情 """
-        return True
+        elif self.params.get("deal_pattern") == "price":
+            """ 见价成交 """
+            # 先判断价格和手数是否满足限制条件
+            if data.volume > self.params.get("single_order_limit") or self.today_volume > self.params.get(
+                    "single_day_limit"):
+                """ 超出限制 直接返回不允许成交 """
+                return -1
+            if data.price < self.drop_price or data.price > self.upper_price:
+                """ 超出涨跌价格 """
+                return -2
 
-    def connect(self, info):
-        self.userid = info.get("userid")
-        # 初始化策略
-        event = Event(EVENT_INIT_FINISHED, True)
-        self.event_engine.put(event)
+            # 发单立即冻结
+            self.account.update_frozen(data)
+
+            # 进行成交判断
+            long_c = self.price.low_price if self.price.low_price is not None else self.price.ask_price_1
+            short_c = self.price.high_price if self.price.low_price is not None else self.price.bid_price_1
+            long_b = self.price.open_price if self.price.low_price is not None else long_c
+            short_b = self.price.open_price if self.price.low_price is not None else short_c
+            long_cross = data.direction == Direction.LONG and data.price >= long_c > 0
+            short_cross = data.direction == Direction.SHORT and data.price <= short_c and short_c > 0
+
+            # 处理未成交的单子
+            for order in self.pending:
+                index = self.pending.index(order)
+                long_cross = data.direction == Direction.LONG and order.price >= long_c > 0
+                short_cross = data.direction == Direction.SHORT and order.price <= short_c and short_c > 0
+                if not long_cross and not short_cross:
+                    """ 不成交 """
+                    continue
+                if long_cross:
+                    order.price = min(order.price, long_b)
+                else:
+                    order.price = max(order.price, short_b)
+                trade = self._generate_trade_data_from_order(order)
+                order.status = Status.ALLTRADED
+                self.strategy.on_order(deepcopy(order))
+                self.strategy.on_trade(trade)
+                self.pending.remove(order)
+
+                # 成交，移除冻结
+                self.account.update_frozen(order=order, reverse=True)
+                self.update_account_margin(trade)
+
+            if not long_cross and not short_cross:
+                # 未成交单, 提交到pending里面去
+                self.pending.append(data)
+                return -3
+
+            if long_cross:
+                data.price = min(data.price, long_b)
+            else:
+                data.price = max(data.price, short_b)
+
+            """ 判断账户资金是否足以支撑成交 """
+            if self.account.is_traded(data):
+                """ 调用API生成成交单 """
+                # 同时这里需要处理是否要进行
+                p = self._generate_trade_data_from_order(data)
+                self.account.update_trade(p)
+                """ 调用strategy的on_trade """
+                self.strategy.on_trade(p)
+                self.today_volume += data.volume
+                # 已经成交，同时移除冻结
+                self.account.update_frozen(p, reverse=True)
+                self.update_account_margin(p)
+
+                return p
+            else:
+                """ 当前账户不足以支撑成交 """
+                return -4
+        else:
+            raise TypeError("未支持的成交机制")
+
+    def update_account_margin(self, p):
+        if p.offset == Offset.OPEN:
+            self.account.update_margin(p, reverse=True)
+        else:
+            self.account.update_margin(p)
+
+    def init_params(self, params):
+        """ 回测参数设置 """
+        # todo: 本地设置回测参数
+        """ 更新接口参数设置 """
+        self.params.update(params)
+        """ 更新账户策略参数 """
+        self.account.update_params(params)
+
+    def __init_params(self, params):
+        """ 初始化参数设置  """
+        if not isinstance(params, dict):
+            raise AttributeError("回测参数类型错误，请检查是否为字典")
+        self.strategy.init_params(params.get("strategy"))
+        self.init_params(params.get("looper"))
+
+    def __call__(self, *args, **kwargs):
+        """ 回测周期 """
+        p_data, params = args
+        self.price = p_data
+        self.__init_params(params)
+        if p_data.type == "tick":
+            self.strategy.on_tick(tick=p_data)
+
+        if p_data.type == "bar":
+            self.strategy.on_bar(bar=p_data)
+        # 更新接口的日期
+        self.date = p_data.datetime.date()
+        # 穿过接口日期检查
+        self.account.via_aisle()

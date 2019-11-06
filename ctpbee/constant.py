@@ -8,6 +8,8 @@ from enum import Enum
 from logging import INFO
 from typing import Any
 
+from pandas import DataFrame
+
 
 class Missing:
     value = "属性缺失"
@@ -232,6 +234,19 @@ class BaseData:
             temp[x] = getattr(self, x)
         return temp
 
+    def _to_df(self):
+        temp = {}
+        for x in dir(self):
+            if x.startswith("_") or x.startswith("create"):
+                continue
+            if isinstance(getattr(self, x), Enum):
+                temp[x] = getattr(self, x).value
+                continue
+            temp[x] = getattr(self, x)
+
+        return DataFrame([temp], columns=list(temp.keys()).remove("datetime")).set_index(['datetime']) if temp.get(
+            "datetime", None) is not None else DataFrame([temp], columns=list(temp.keys()))
+
     def _asdict(self):
         """ 转换为字典 里面会有enum """
         return asdict(self)
@@ -386,7 +401,10 @@ class OrderData(BaseData):
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        try:
+            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        except AttributeError as e:
+            self.local_symbol = f"{self.symbol}.{self.exchange}"
         self.local_order_id = f"{self.gateway_name}.{self.order_id}"
 
     def _is_active(self):
@@ -428,7 +446,10 @@ class TradeData(BaseData):
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        try:
+            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        except AttributeError:
+            self.local_symbol = f"{self.symbol}.{self.exchange}"
         self.local_order_id = f"{self.gateway_name}.{self.order_id}"
         self.local_trade_id = f"{self.gateway_name}.{self.tradeid}"
 
@@ -532,7 +553,6 @@ class ContractData(BaseData):
     short_margin_ratio: float
     max_margin_side_algorithm: bool
 
-
     def __post_init__(self):
         """"""
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
@@ -566,7 +586,10 @@ class OrderRequest(BaseRequest):
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        try:
+            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        except AttributeError:
+            self.local_symbol = f"{self.symbol}.{self.exchange}"
 
     def _create_order_data(self, order_id: str, gateway_name: str):
         """

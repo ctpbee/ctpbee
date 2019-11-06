@@ -20,7 +20,9 @@ class RiskLevel:
 
     """
     app = None
+    logger = None
     action = None
+    recorder = None
     thread_pool = []
 
     def __init__(self, func):
@@ -31,6 +33,8 @@ class RiskLevel:
         """ 将app更新到类变量里面"""
         cls.app = app
         cls.action = app.action
+        cls.logger = app.logger
+        cls.recorder = app.recorder
 
         update_list = ["realtime_check", "mimo_thread"]
         for _ in update_list:
@@ -38,23 +42,23 @@ class RiskLevel:
             funcd = MethodType(func, cls)
             cls.app.event_engine.register(EVENT_TIMER, funcd)
 
-    @property
-    def logger(self):
-        return self.app.logger
-
+    @classmethod
     def warning(self, msg, **kwargs):
         self.logger.warning(msg, owner="Risk", **kwargs)
 
+    @classmethod
     def info(self, msg, **kwargs):
         self.logger.info(msg, owner="Risk", **kwargs)
 
+    @classmethod
     def error(self, msg, **kwargs):
         self.logger.error(msg, owner="Risk", **kwargs)
 
+    @classmethod
     def debug(self, msg, **kwargs):
         self.logger.debug(msg, owner="Risk", **kwargs)
 
-    def mimo_thread(self, cur):
+    def mimo_thread(self):
         for thread in self.thread_pool:
             # 判断线程的数量是否超过超时数
             if not isinstance(self.app.config['AFTER_TIMEOUT'], int):
@@ -80,7 +84,7 @@ class RiskLevel:
         if fr_func:
             result, new_args, new_kwargs = fr_func(*args, **kwargs)
         if not result:
-            self.log("事前检查失败, 放弃此次操作")
+            self.error("事前检查失败, 放弃此次操作")
         else:
             # execute func
             result = self.__wrapped__(*new_args, **new_kwargs)
@@ -98,14 +102,5 @@ class RiskLevel:
         return res
 
     @classmethod
-    def realtime_check(self, cur):
+    def realtime_check(self):
         """ 一直检查 """
-        pass
-
-    @property
-    def recorder(self):
-        return self.app.recorder
-
-    @property
-    def action(self):
-        return self.app.action

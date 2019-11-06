@@ -3,13 +3,12 @@ Event-driven framework of vn.py framework.
 """
 import asyncio
 from collections import defaultdict
-from datetime import datetime
 from queue import Empty, Queue
 from threading import Thread
 from time import sleep
 from typing import Any, Callable
 
-EVENT_TIMER = "eTimer"
+EVENT_TIMER = "timer"
 
 
 class Event:
@@ -77,7 +76,7 @@ class EventEngine:
         to all types.
         """
         if event.type in self._handlers:
-            [handler(event) for handler in self._handlers[event.type]]
+            [handler(event) if event.type != EVENT_TIMER else handler() for handler in self._handlers[event.type]]
 
         if self._general_handlers:
             [handler(event) for handler in self._general_handlers]
@@ -88,7 +87,7 @@ class EventEngine:
         """
         while self._active:
             sleep(self._interval)
-            event = Event(EVENT_TIMER, data=datetime.now())
+            event = Event(EVENT_TIMER)
             self.put(event)
 
     def start(self):
@@ -197,8 +196,19 @@ class AsyncEngine:
         self.loop.create_task(self._put(event))
 
     async def future_finish(self, event: Event):
-        for func in self._func[event.type]:
-            await func(event)
+        for handler in self._func[event.type]:
+
+            if event.type != EVENT_TIMER:
+                await handler(event)
+
+            else:
+                if handler.__name__ in ["realtime_check", "mimo_thread"]:
+                    handler()
+                else:
+                    await handler()
+        # [await handler(event) if event.type != EVENT_TIMER else await handler() for handler in self._func[event.type]]
+        # for func in self._func[event.type]:
+        #     await func(event)
 
     def register(self, type, func):
         # print(func.__name__)

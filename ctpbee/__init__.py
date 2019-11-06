@@ -1,10 +1,10 @@
 """
     for the future of  life
 """
+__version__ = '0.34.1'
+__status__ = '0.34修复版本1'
 
-__version__ = '0.30.3'
-__status__ = '0.30修复版本'
-
+# About core
 from ctpbee.app import CtpBee
 from ctpbee.context import current_app, switch_app, get_app, del_app
 from ctpbee.func import cancel_order, send_order, subscribe, query_func, auth_time, helper
@@ -15,3 +15,7 @@ from ctpbee.log import VLogger
 from ctpbee.signals import send_monitor, cancel_monitor
 from ctpbee.trade_time import TradingDay
 from ctpbee.util import RiskLevel
+from ctpbee.func import hickey, get_ctpbee_path
+
+# About looper
+from ctpbee.looper import LooperApi, Vessel

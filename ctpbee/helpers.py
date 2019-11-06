@@ -114,7 +114,7 @@ def check(type: AnyStr):
     return midlle
 
 
-def graphic_pattern(version, work_mode, engine_method):
+def graphic_pattern(version, engine_method):
     first = f"""                                                            
                @             @                           
                 )           (                                 
@@ -122,7 +122,7 @@ def graphic_pattern(version, work_mode, engine_method):
           ##                     ##                            
          ##                       ##                                                  
         ##   ctpbee   :{version.ljust(12, ' ')}##                          
-        ##   work_mode:{work_mode.ljust(12, ' ')}##                          
+        ##                         ##                          
         ##   engine   :{engine_method.ljust(12, ' ')}##                          
          ##                       ##                          
           ++++++++    +    ++++++++                      
@@ -139,7 +139,7 @@ def graphic_pattern(version, work_mode, engine_method):
           +#######################+                            
          ##                       ##                                                  
          ##  ctpbee:    {version.ljust(10, ' ')}##                          
-         ##  work_mode: {work_mode.ljust(10, ' ')}##                          
+         ##                       ##                          
          ##  engine:    {engine_method.ljust(10, ' ')}##                          
          ##                       ##                          
           ++++++++    +    ++++++++                      
@@ -154,7 +154,7 @@ def graphic_pattern(version, work_mode, engine_method):
     *          -------------------------------------           *
     *          |                                   |           *
     *          |      ctpbee:    {version.ljust(16, " ")}  |           *
-    *          |      work_mode: {work_mode.ljust(16, " ")}  |           *
+    *          |                                   |           *
     *          |      engine:    {engine_method.ljust(16, " ")}  |           *
     *          |                                   |           *
     *          -------------------------------------           *
@@ -209,9 +209,7 @@ def run_forever(app):
 
     running_me = False
     running_status = True
-
     while True:
-
         if not app.p_flag:
             break
         current_time = datetime.now()
@@ -239,6 +237,8 @@ def run_forever(app):
             """ 非交易日 并且在运行 """
             for x in app.extensions.keys():
                 app.suspend_extension(x)
+                if hasattr(app.extensions[x], "f_init"):
+                    app.extensions[x].f_init = False
             print(f"当前时间不允许， 时间: {str(current_time)}, 即将阻断运行")
             running_status = False
 
@@ -280,10 +280,10 @@ def value_call(func):
     return wrapper
 
 
-async def async_value_call(func):
+def async_value_call(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        d = func(*args, **kwargs)
+        d = await func(*args, **kwargs)
         self, event = args
         for value in self.app.extensions.values():
             if self.app.config['INSTRUMENT_INDEPEND']:
@@ -320,8 +320,20 @@ def end_thread(thread):
     _async_raise(thread.ident, SystemExit)
 
 
-
 def exec_wrapper(func):
     """ 错误装饰器 """
-    
 
+
+def exec_intercept(self, func):
+    """
+    此函数主要用于CtpbeeApi的Action结果拦截，保证用户简单调用，实现暗地结果处理
+
+    """
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        result = func(*args, **kwargs)
+        self.api.resolve_callback(func.__name__, result)
+        return result
+
+    return wrapper

@@ -1,45 +1,59 @@
-import threading
-import time
-import inspect
-import ctypes
+class Action:
+
+    def __init__(self, app):
+        self.app = app
+
+    def sell(self, b):
+        a = 1 + b
+        return a
 
 
-def _async_raise(tid, exctype):
-    """raises the exception, performs cleanup if needed"""
-    tid = ctypes.c_long(tid)
-    if not inspect.isclass(exctype):
-        exctype = type(exctype)
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
-    if res == 0:
-        raise ValueError("invalid thread id")
-    elif res != 1:
-        # """if it returns a number greater than one, you're in trouble,
-        # and you should call it again with exc=NULL to revert the effect"""
-        ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, None)
-        raise SystemError("PyThreadState_SetAsyncExc failed")
+class App:
+    def __init__(self, action_class, cia_class):
+        self.action = action_class(self)
+        self.cia = cia_class(self)
 
 
-def end_thread(thread):
-    _async_raise(thread.ident, SystemExit)
+from functools import wraps
 
 
-def print_time():
-    while 2:
-        print(111111111111)
-        print(222222222222)
-        print(333333333333)
-        print(444444444444)
-        print(555555555555)
-        print(666666666666)
+def exec_intercept(self, func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        result = func(*args, **kwargs)
+        self.api.resolve_callback(func.__name__, result)
+        return result
+
+    return wrapper
 
 
-if __name__ == "__main__":
-    t = threading.Thread(target=print_time)
-    t.start()
+class CoreAction:
+    def __init__(self, action, api):
+        self.api = api
+        self.action = action
+        self.params = exec_intercept
+
+    def __getattr__(self, item):
+        p = self.params(self, getattr(self.action, item))
+        return p
 
 
-    end_thread(t)
-    print("stoped")
-    while 1:
-        print(t)
+class Cia:
+    def __init__(self, app):
+        self.app = app
 
+    @property
+    def action(self):
+        return CoreAction(self.app.action, self)
+
+    def do(self, i):
+        p = self.action.sell(i)
+        print(p)
+
+    def resolve_callback(self, i, v):
+        print(i, v)
+
+
+if __name__ == '__main__':
+    app = App(Action, Cia)
+    app.cia.do(2)
