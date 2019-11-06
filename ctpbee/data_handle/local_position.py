@@ -86,7 +86,7 @@ class PositionHolding:
         self.short_yd_frozen = 0
         self.short_td_frozen = 0
 
-        self.pre_close_price = 0
+        self.pre_settlement_price = 0
         self.last_price = 0
 
     def update_trade(self, trade):
@@ -113,7 +113,8 @@ class PositionHolding:
                     if self.short_td < 0:
                         self.short_yd += self.short_td
                         self.short_td = 0
-        # 空头
+        # 空头 {'OI001.CZCE': 1590.0},
+
         elif trade.direction == Direction.SHORT:
             # 开仓
 
@@ -184,7 +185,7 @@ class PositionHolding:
 
     def update_tick(self, tick):
         """行情更新"""
-        self.pre_close_price = tick.pre_close
+        self.pre_settlement_price = tick.pre_settlement_price
         self.last_price = tick.last_price
         self.calculate_pnl()
         self.calculate_stare_pnl()
@@ -306,30 +307,13 @@ class PositionHolding:
     def calculate_pnl(self):
         """ 计算浮动盈亏 """
         try:
-            open_cost = self.app.trader.open_cost_dict.get(self.symbol)
-            single = LocalVariable(open_cost)
-        except AttributeError as e:
-            single = None
-        try:
-            # if self.long_pos == self.long_yd:
-            #     self.long_pnl = self.long_pos * (
-            #             self.last_price - single.long / (self.size * self.long_pos)) * self.size
-            if self.long_pos == self.long_yd:
-                self.long_pnl = self.long_pos * (
-                        self.last_price - self.long_price / (self.size * self.long_pos)) * self.size
-
-            if self.long_pos != self.long_yd:
-                self.long_pnl = self.long_pos * (self.last_price - self.long_price) * self.size
+            self.long_pnl = round(self.long_pos * (self.last_price - self.long_price) * self.size)
         except ZeroDivisionError:
             self.long_pnl = 0
         except AttributeError:
             self.long_pnl = 0
         try:
-            if self.short_pos == self.short_yd:
-                self.short_pnl = self.short_pos * (
-                        self.short_price / (self.size * self.short_pos) - self.last_price) * self.size
-            if self.short_pos != self.short_yd:
-                self.short_pnl = self.short_pos * (self.short_price - self.last_price) * self.size
+             self.short_pnl = round(self.short_pos * (self.short_price - self.last_price) * self.size)
         except ZeroDivisionError:
             self.short_pnl = 0
         except AttributeError:
@@ -337,23 +321,14 @@ class PositionHolding:
 
     def calculate_stare_pnl(self):
         """计算盯市盈亏"""
-        ## 昨日结算价
         try:
-            if self.long_pos == self.long_yd:
-                self.long_stare_pnl = self.long_pos * (
-                        self.last_price - self.pre_close_price / (self.size * self.long_pos)) * self.size
-            if self.long_pos != self.long_yd:
-                self.long_stare_pnl = self.long_pos * (self.last_price - self.pre_close_price) * self.size
+            self.long_stare_pnl = self.long_pos * (self.long_price - self.pre_settlement_price) * self.size
         except ZeroDivisionError:
             self.long_pnl = 0
         except AttributeError:
             self.long_pnl = 0
         try:
-            if self.short_pos == self.short_yd:
-                self.short_stare_pnl = self.short_pos * (
-                        self.pre_close_price / (self.size * self.short_pos) - self.last_price) * self.size
-            if self.short_pos != self.short_yd:
-                self.short_stare_pnl = self.short_pos * (self.pre_close_price - self.last_price) * self.size
+            self.short_stare_pnl = self.short_pos * (self.pre_settlement_price - self.short_price) * self.size
         except ZeroDivisionError:
             self.short_pnl = 0
         except AttributeError:
