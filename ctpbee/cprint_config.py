@@ -22,12 +22,9 @@ from colour_printing import Mode, Fore, Back
 get_time = lambda: datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S.%f')[:-3]
 
 TEMPLATE = "{created} {name}     {levelname}  {owner}   {message}"
-CP = CPConfig(TEMPLATE)  # 我才是主角,从其他地方导入我
+CP = CPConfig(TEMPLATE)  # 导出CP
 
 
-#        +------------------------->  doesn't matter,不用实例化
-#        |
-#        v
 class Paper(object):
 
     @CP.wrap
