@@ -45,6 +45,7 @@ class Account:
     支持成交之后修改资金 ， 对外提供API
 
     """
+    # 每日资金情况
     balance = 100000
     frozen = 0
     size = 5
@@ -54,41 +55,47 @@ class Account:
 
     def __init__(self, interface):
         self.interface = interface
-        self.position_manager = LocalPositionManager(interface.exec_intercept)
-        # 每日资金情况
+        self.position_manager = LocalPositionManager(interface.params)
 
         self.pre_balance = 0
         self.daily_life = defaultdict(AliasDayResult)
+        # 日期
         self.date = None
+        # 手续费
         self.commission = 0
         self.commission_expense = 0
+        # 昨日手续费
         self.pre_commission_expense = 0
         self.count_statistics = 0
         self.pre_count = 0
+        # 初始资金
         self.initial_capital = 0
+        # 占用保证金
+        self.occupation_margin = 0
 
         self.init = False
 
+    @property
+    def available(self) -> float:
+        return self.balance - self.frozen - self.occupation_margin
+
     def is_traded(self, order: OrderData) -> bool:
         """ 当前账户是否足以支撑成交 """
-        # 根据传入的单子判断当前的账户资金和冻结 是否足以成交此单
-
-        if order.price * order.volume * (1 + self.commission) > self.balance - self.frozen:
+        # 根据传入的单子判断当前的账户可用资金是否足以成交此单
+        if order.price * order.volume * (1 + self.commission) > self.available:
             """ 可用不足"""
             return False
+
         return True
 
     def update_trade(self, trade: TradeData) -> None:
         """
         当前选择调用这个接口的时候就已经确保了这个单子是可以成交的，
-
         make sure it can be traded if you choose to call this method,
-
         :param trade:交易单子/trade
         :return:
         """
-        # 根据单子 更新当前的持仓 ----->
-
+        # 根据当前成交单子 更新当前的持仓 ----->
         if trade.offset == Offset.OPEN:
             if self.commission != 0:
                 commission_expense = trade.price * trade.volume * self.commission
@@ -96,19 +103,19 @@ class Account:
                 commission_expense = 0
 
         elif trade.offset == Offset.CLOSETODAY:
-            if self.interface.exec_intercept.get("today_commission") != 0:
-                commission_expense = trade.price * trade.volume * self.interface.exec_intercept.get("today_commission")
+            if self.interface.params.get("today_commission") != 0:
+                commission_expense = trade.price * trade.volume * self.interface.params.get("today_commission")
             else:
                 commission_expense = 0
 
         elif trade.offset == Offset.CLOSEYESTERDAY:
-            if self.interface.exec_intercept.get("yesterday_commission") != 0:
-                commission_expense = trade.price * trade.volume * self.interface.exec_intercept.get("yesterday_commission")
+            if self.interface.params.get("yesterday_commission") != 0:
+                commission_expense = trade.price * trade.volume * self.interface.params.get("yesterday_commission")
             else:
                 commission_expense = 0
         else:
-            if self.interface.exec_intercept.get("close_commission") != 0:
-                commission_expense = trade.price * trade.volume * self.interface.exec_intercept.get("close_commission")
+            if self.interface.params.get("close_commission") != 0:
+                commission_expense = trade.price * trade.volume * self.interface.params.get("close_commission")
             else:
                 commission_expense = 0
 
@@ -119,16 +126,16 @@ class Account:
             }
             position: PositionData = self.position_manager.get_position_by_ld(trade.local_symbol,
                                                                               reversed_map[trade.direction])
-            if self.interface.exec_intercept.get("size_map") is None or self.interface.exec_intercept.get("size_map").get(
+            if self.interface.params.get("size_map") is None or self.interface.params.get("size_map").get(
                     trade.local_symbol) is None:
                 raise ConfigError(message="请检查你的回测配置中是否存在着size配置", args=("回测配置错误",))
             if trade.direction == Direction.LONG:
                 """ 平空头 """
-                pnl = (position.price - trade.price) * trade.volume * self.interface.exec_intercept.get("size_map").get(
+                pnl = (position.price - trade.price) * trade.volume * self.interface.params.get("size_map").get(
                     trade.local_symbol)
             else:
                 """ 平多头 """
-                pnl = (trade.price - position.price) * trade.volume * self.interface.exec_intercept.get("size_map").get(
+                pnl = (trade.price - position.price) * trade.volume * self.interface.params.get("size_map").get(
                     trade.local_symbol)
             self.balance += pnl
 
@@ -144,7 +151,36 @@ class Account:
             self.get_new_day()
             self.date = self.interface.date
 
-    def get_new_day(self, interface_date):
+    def update_margin(self, data: OrderData or TradeData, reverse=False):
+        """
+            更新保证金
+            如果出现成交 开方向 ----> 增加保证金--> 默认
+            如果出现成交 平方向 ----> 减少保证金
+        """
+        if reverse:
+            """ 开仓增加保证金"""
+            self.occupation_margin += data.volume * data.price
+            self.balance -= data.volume * data.price
+        else:
+            """ 平仓移除保证金归还本金 """
+            self.occupation_margin -= data.price * data.volume
+            self.balance += data.volume * data.price
+
+    def update_frozen(self, order, reverse=False):
+        """
+        根据reverse判断方向
+        如果是False， 那么出现冻结，同时从余额里面扣除
+        """
+        if reverse:
+            """ 成交 """
+            self.frozen -= order.volume * order.price
+            self.balance += order.volume * order.price
+        else:
+            """ 未成交 """
+            self.frozen += order.volume * order.price
+            self.balance -= order.price * order.volume
+
+    def get_new_day(self, interface_date=None):
         """ 生成今天的交易数据， 同时更新前日数据 ，然后进行持仓结算 """
 
         if not self.date:
@@ -164,9 +200,14 @@ class Account:
         self.pre_count = self.count_statistics
         self.position_manager.covert_to_yesterday_holding()
         self.daily_life[date] = p._to_dict()
+        # 结算撤掉所有单
+        self.interface.pending.clear()
+        # 归还所有的冻结
+        self.balance += self.frozen
+        self.frozen = 0
 
     def via_aisle(self):
-        self.position_manager.update_size_map(self.interface.exec_intercept)
+        self.position_manager.update_size_map(self.interface.params)
         if self.interface.date != self.date:
             self.get_new_day(self.interface.date)
             self.date = self.interface.date
@@ -194,11 +235,16 @@ class Account:
             for key, value in daily.items():
                 result[key].append(value)
 
-        import matplotlib.pyplot as plt
         df = DataFrame.from_dict(result).set_index("date")
-        df['balance'].plot()
-        plt.show()
-        return self._cal_result(df)
+        try:
+            import matplotlib.pyplot as plt
+            df['balance'].plot()
+            plt.show()
+
+        except ImportError as e:
+            pass
+        finally:
+            return self._cal_result(df)
 
     def _cal_result(self, df: DataFrame) -> dict:
 

@@ -1,59 +1,36 @@
-class Action:
+from pprint import pprint
+from time import sleep
 
-    def __init__(self, app):
-        self.app = app
+from ctpbee import CtpBee
 
-    def sell(self, b):
-        a = 1 + b
-        return a
-
-
-class App:
-    def __init__(self, action_class, cia_class):
-        self.action = action_class(self)
-        self.cia = cia_class(self)
-
-
-from functools import wraps
-
-
-def exec_intercept(self, func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        result = func(*args, **kwargs)
-        self.api.resolve_callback(func.__name__, result)
-        return result
-
-    return wrapper
+app = CtpBee("dete",__name__, refresh=True)
+info =  {
+        "CONNECT_INFO": {
+            "userid": "089131",
+            "password": "350888",
+            "brokerid": "9999",
+            # 24小时
+            # "md_address": "tcp://180.168.146.187:10131",
+            # "td_address": "tcp://180.168.146.187:10130",
+            # # 移动
+            "md_address": "tcp://218.202.237.33:10112",
+            "td_address": "tcp://218.202.237.33:10102",
+            "product_info": "",
+            "appid": "simnow_client_test",
+            "auth_code": "0000000000000000",
+        },
+        "INTERFACE": "ctp",
+        "TD_FUNC": True,
+        "MD_FUNC": True,
+    }
 
 
-class CoreAction:
-    def __init__(self, action, api):
-        self.api = api
-        self.action = action
-        self.params = exec_intercept
+app.config.from_mapping(info)
 
-    def __getattr__(self, item):
-        p = self.params(self, getattr(self.action, item))
-        return p
+app.start()
+app.action.subscribe("IC1912.CFFEX")
 
-
-class Cia:
-    def __init__(self, app):
-        self.app = app
-
-    @property
-    def action(self):
-        return CoreAction(self.app.action, self)
-
-    def do(self, i):
-        p = self.action.sell(i)
-        print(p)
-
-    def resolve_callback(self, i, v):
-        print(i, v)
-
-
-if __name__ == '__main__':
-    app = App(Action, Cia)
-    app.cia.do(2)
+while True:
+    dictd=app.recorder.get_all_positions()
+    result = [{x['local_symbol']:x['stare_position_profit']} for x in dictd if x['local_symbol'] == "IC1912.CFFEX" ]
+    print("\r", result, end="")

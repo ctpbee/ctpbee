@@ -23,36 +23,36 @@ from ctpbee import LooperApi, Vessel
 from ctpbee.constant import Direction
 
 
-def get_data(start, end, symbol, exchange, level):
-    """ using rqdatac to make an example """
-    import rqdatac as rq
-    from rqdatac import get_price, id_convert
-    username = "license"
-    password = "NK-Ci7vnLsRiPPWYwxvvPYdYM90vxN60qUB5tVac2mQuvZ8f9Mq8K_nnUqVspOpi4BLTkSLgq8OQFpOOj7L" \
-               "t7AbdBZEBqRK74fIJH5vsaAfFQgl-tuB8l03axrW8cyN6-nBUho_6Y5VCRI63Mx_PN54nsQOpc1psIGEz" \
-               "gND8c6Y=bqMVlABkpSlrDNk4DgG-1QXNknJtk0Kkw2axvFDa0E_XPMqOcBxifuRa_DFI2svseXU-8A" \
-               "eLjchnTkeuvQkKh6nrfehVDiXjoMeq5sXgqpbgFAd4A5j2B1a0gpE3cb5kXb42n13fGwFaGris" \
-               "8-eKzz_jncvuAamkJEQQV0aLdiw="
-    host = "rqdatad-pro.ricequant.com"
-    port = 16011
-    rq.init(username, password, (host, port))
-    symbol_rq = id_convert(symbol)
-    data = get_price(symbol_rq, start_date=start, end_date=end, frequency=level, fields=None,
-                     adjust_type='pre', skip_suspended=False, market='cn', expect_df=False)
-    origin = data.to_dict(orient='records')
-    result = []
-    for x in origin:
-        do = {}
-        do['open_price'] = x['open']
-        do['low_price'] = x['low']
-        do['high_price'] = x['high']
-        do['close_price'] = x['close']
-        do['datetime'] = datetime.strptime(str(x['trading_date']), "%Y-%m-%d %H:%M:%S")
-        do['symbol'] = symbol
-        do['local_symbol'] = symbol + "." + exchange
-        do['exchange'] = exchange
-        result.append(do)
-    return result
+# def get_data(start, end, symbol, exchange, level):
+#     """ using rqdatac to make an example """
+#     import rqdatac as rq
+#     from rqdatac import get_price, id_convert
+#     username = "license"
+#     password = "NK-Ci7vnLsRiPPWYwxvvPYdYM90vxN60qUB5tVac2mQuvZ8f9Mq8K_nnUqVspOpi4BLTkSLgq8OQFpOOj7L" \
+#                "t7AbdBZEBqRK74fIJH5vsaAfFQgl-tuB8l03axrW8cyN6-nBUho_6Y5VCRI63Mx_PN54nsQOpc1psIGEz" \
+#                "gND8c6Y=bqMVlABkpSlrDNk4DgG-1QXNknJtk0Kkw2axvFDa0E_XPMqOcBxifuRa_DFI2svseXU-8A" \
+#                "eLjchnTkeuvQkKh6nrfehVDiXjoMeq5sXgqpbgFAd4A5j2B1a0gpE3cb5kXb42n13fGwFaGris" \
+#                "8-eKzz_jncvuAamkJEQQV0aLdiw="
+#     host = "rqdatad-pro.ricequant.com"
+#     port = 16011
+#     rq.init(username, password, (host, port))
+#     symbol_rq = id_convert(symbol)
+#     data = get_price(symbol_rq, start_date=start, end_date=end, frequency=level, fields=None,
+#                      adjust_type='pre', skip_suspended=False, market='cn', expect_df=False)
+#     origin = data.to_dict(orient='records')
+#     result = []
+#     for x in origin:
+#         do = {}
+#         do['open_price'] = x['open']
+#         do['low_price'] = x['low']
+#         do['high_price'] = x['high']
+#         do['close_price'] = x['close']
+#         do['datetime'] = datetime.strptime(str(x['trading_date']), "%Y-%m-%d %H:%M:%S")
+#         do['symbol'] = symbol
+#         do['local_symbol'] = symbol + "." + exchange
+#         do['exchange'] = exchange
+#         result.append(do)
+#     return result
 
 
 def get_a_strategy():
@@ -62,7 +62,7 @@ def get_a_strategy():
         fast_window = 20
         slow_window = 10
 
-        fast_ma0 = 0.0
+        fast_ma0 = 2.0
         fast_ma1 = 1.0
 
         slow_ma0 = 0.0
@@ -122,77 +122,6 @@ def get_a_strategy():
         def init_params(self, data):
             """"""
             # print("我在设置策略参数")
-
-    class BollStrategy(LooperApi):
-
-        boll_window = 18
-        boll_dev = 3.4
-        cci_window = 10
-        atr_window = 30
-        sl_multiplier = 5.2
-        fixed_size = 1
-
-        boll_up = 0
-        boll_down = 0
-        cci_value = 0
-        atr_value = 0
-
-        intra_trade_high = 0
-        intra_trade_low = 0
-        long_stop = 0
-        short_stop = 0
-
-        parameters = ["boll_window", "boll_dev", "cci_window",
-                      "atr_window", "sl_multiplier", "fixed_size"]
-        variables = ["boll_up", "boll_down", "cci_value", "atr_value",
-                     "intra_trade_high", "intra_trade_low", "long_stop", "short_stop"]
-
-        def __init__(self, name):
-            super().__init__(name)
-            self.am = ArrayManager()
-            self.pos = 0
-
-        def on_bar(self, bar):
-            am = self.am
-            am.update_bar(bar)
-            if not am.inited:
-                return
-
-            self.boll_up, self.boll_down = am.boll(self.boll_window, self.boll_dev)
-            self.cci_value = am.cci(self.cci_window)
-            self.atr_value = am.atr(self.atr_window)
-
-            if self.pos == 0:
-                self.intra_trade_high = bar.high_price
-                self.intra_trade_low = bar.low_price
-
-                if self.cci_value > 0:
-                    self.action.buy(self.boll_up, self.fixed_size, bar)
-                elif self.cci_value < 0:
-                    self.action.short(self.boll_down, self.fixed_size, bar)
-
-            elif self.pos > 0:
-                self.intra_trade_high = max(self.intra_trade_high, bar.high_price)
-                self.intra_trade_low = bar.low_price
-
-                self.long_stop = self.intra_trade_high - self.atr_value * self.sl_multiplier
-                self.action.sell(self.long_stop, abs(self.pos), bar)
-
-            elif self.pos < 0:
-                self.intra_trade_high = bar.high_price
-                self.intra_trade_low = min(self.intra_trade_low, bar.low_price)
-
-                self.short_stop = self.intra_trade_low + self.atr_value * self.sl_multiplier
-                self.action.cover(self.short_stop, abs(self.pos), bar)
-
-        def on_trade(self, trade):
-            if trade.direction == Direction.LONG:
-                self.pos += trade.volume
-            else:
-                self.pos -= trade.volume
-
-        def on_order(self, order):
-            pass
 
     return DoubleMaStrategy("double_ma")
 
