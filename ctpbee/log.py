@@ -11,7 +11,8 @@ log格式
 """
 
 if __name__ == '__main__':
-    logger_me = VLogger()
+    from ctpbee.cprint_config import CP
+    logger_me = VLogger(CP)
 
     # logger_me.set_formatter("handler")
     logger_me.warning("这里发生了警告", owner="somewheve")
