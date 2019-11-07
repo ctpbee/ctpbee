@@ -378,7 +378,6 @@ class CtpbeeApi(BeeApi):
         # 买多卖空
         if item == "buy" or item == "short":
             self.order_id_mapping.setdefault(result, False)
-            self.info("呀，我买入了一手, 单号: " + result)
         # 平多平空
         elif item == "sell" or item == "cover":
             for i in result:
