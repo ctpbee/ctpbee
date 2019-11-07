@@ -88,7 +88,7 @@ class CtpBee(object):
     tools = {}
 
     def __init__(self, name: Text, import_name, action_class: Action = None, engine_method: str = "thread",
-                 logger_class=None, logger_config_path=None,
+                 logger_class=None, logger_config=None,
                  refresh: bool = False, risk=None,
                  instance_path=None):
         """ 初始化 """
@@ -102,8 +102,8 @@ class CtpBee(object):
             self.logger = VLogger(CP, app_name=self.name)
             self.logger.set_default(name=self.logger.app_name, owner='App')
         else:
-            if logger_config_path:
-                self.logger = logger_class(logger_config_path, app_name=self.name)
+            if logger_config:
+                self.logger = logger_class(logger_config, app_name=self.name)
             else:
                 self.logger = logger_class(CP, app_name=self.name)
             self.logger.set_default(name=self.logger.app_name, owner='App')

@@ -5,7 +5,8 @@ import sys
 from .trade_time import Papa
 
 parser = argparse.ArgumentParser(description="bee bee bee~")
-parser.add_argument('-tt', '--tradetime', help='更新交易日历/Update transaction calendar;Example: 2019 or 2004-2020 or now')
+parser.add_argument('-tt', '--tradetime', help='更新交易日历/Update transaction calendar;'
+                                               'Example: -tt 2019 or -tt 2004-2020 or -tt now')
 
 
 def tradetime_handle(year):
