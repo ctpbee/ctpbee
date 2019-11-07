@@ -16,7 +16,7 @@ if sys.version_info < (3, 6):
 
 # 依赖
 install_requires = ['flask>=1.1.1', "blinker", "requests", "simplejson", "lxml", "pandas",
-                    'colour_printing>=0.3.16']
+                    'colour_printing>=0.3.16', "numpy"]
 
 if sys.version_info == (3, 6):
     install_requires.append("dataclasses")
