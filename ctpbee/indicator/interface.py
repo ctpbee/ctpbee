@@ -143,6 +143,13 @@ class Interface:
         data = Scheduler.ret_close
         return Scheduler.wr(data, n)
 
+    def cci(self, n=20, f=0.015):
+        return Scheduler.cci(n, f)
+
+    def sar(self, n=2, af=0.02, afmax=0.20):
+        data = Scheduler.ret_close
+        return Scheduler.sar(data, n, af, afmax)
+
     def UltimateOscillator(self):
         pass
 

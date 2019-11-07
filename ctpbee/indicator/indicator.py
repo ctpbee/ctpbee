@@ -459,3 +459,118 @@ class Indicator(File):
             den[i] = min(self.ret_low[i - period + 1: i + 1])
         self.percR = -100 * (np.array(num) / np.array(data)) / (np.array(num) - np.array(den))
         return self.percR
+
+    def mean_dev(self, data, mean, period=20):
+        """
+        MeanDeviation
+        Note:
+          - If 2 datas are provided as parameters, the 2nd is considered to be the
+            mean of the first
+
+         Formula:
+          - mean = MovingAverage(data, period) (or provided mean)
+          - absdeviation = abs(data - mean)
+          - meandev = MovingAverage(absdeviation, period)
+
+        See:
+          - https://en.wikipedia.org/wiki/Average_absolute_deviation
+        :param data:
+        :param period:
+        :return:
+        """
+        absdev = abs(np.array(data) - np.array(mean))
+        meandev = self.sma(absdev, period)
+        return meandev
+
+    def cci(self, period=20, factor=0.015):
+        """
+        商品渠道指数 CommodityChannelIndex
+        Formula:
+          - tp = typical_price = (high + low + close) / 3
+          - tpmean = MovingAverage(tp, period)
+          - deviation = tp - tpmean
+          - meandev = MeanDeviation(tp)
+          - cci = deviation / (meandeviation * factor)
+
+        See:
+          - https://en.wikipedia.org/wiki/Commodity_channel_index
+            :return:
+        """
+        tp = (self.ret_high + self.ret_low + self.ret_close) / 3
+        tpmean = self.sma(tp, period)
+        dev = np.array(tp) - np.array(tpmean)
+        meandev = self.mean_dev(tp, tpmean, period)
+        self.cci_list = np.array(dev) / (factor * meandev)
+        return self.cci_list
+
+    def sar(self, data, period=2, i_af=0.02, afmax=0.02):
+        """
+        抛物线指标 Parabolic SAR
+        See:
+          - https://en.wikipedia.org/wiki/Parabolic_SAR
+          - http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:parabolic_sar
+
+        :return:
+        """
+        self.sar_list = []
+        status = {
+            "sar": None,
+            "tr": None,
+            "af": 0.0,
+            "ep": 0.0
+        }
+        num = len(data)
+
+        sar = (self.ret_high[0] + self.ret_low[0]) / 2.0
+        status['sar'] = sar
+        status['af'] = i_af
+        if data[1] >= data[0]:
+            status['tr'] = False
+            status['ep'] = self.ret_low[0]
+        else:
+            status['tr'] = True
+            status['ep'] = self.ret_high[0]
+
+        for i in range(num):
+            n = i - period + 1
+            m = n + 1
+
+            hi = self.ret_high[m]
+            lo = self.ret_low[m]
+
+            tr = status['tr']
+            sar = status['sar']
+
+            if (tr and sar >= lo) or (not tr and sar <= hi):
+                tr = not tr
+                sar = status['ep']
+                ep = hi if tr else lo
+                af = i_af
+            else:
+                ep = status['ep']
+                af = status['af']
+
+            if tr:
+                if hi > ep:
+                    ep = hi
+                    af = min(af + i_af, afmax)
+            else:
+                if lo < ep:
+                    ep = lo
+                    af = min(af + i_af, afmax)
+            sar = sar + af * (ep - sar)
+
+            if tr:  # long trade
+                lo1 = self.ret_low[n]
+                if sar > lo or sar > lo1:
+                    sar = min(lo, lo1)  # sar not above last 2 lows -> lower
+            else:
+                hi1 = self.ret_high[n]
+                if sar < hi or sar < hi1:
+                    sar = max(hi, hi1)
+            status['tr'] = tr
+            status['sar'] = sar
+            status['ep'] = ep
+            status['af'] = af
+            self.sar_list.append(status)
+        return self.sar_list
