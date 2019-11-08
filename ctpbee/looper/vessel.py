@@ -10,6 +10,7 @@ from ctpbee.looper.data import VessData
 from ctpbee.looper.interface import LocalLooper
 from ctpbee.cprint_config import CP
 
+
 class LooperApi:
     def __init__(self, name):
         self.name = name
@@ -45,20 +46,24 @@ class LooperLogger:
         if v_logger:
             self.logger = v_logger
         else:
-            self.logger = VLogger(CP,app_name="Vessel")
+            self.logger = VLogger(CP, app_name="Vessel")
             self.logger.set_default(name=self.logger.app_name, owner='App')
 
     def info(self, msg, **kwargs):
-        self.logger.info(msg, owner="Looper", **kwargs)
+        kwargs['owner'] = "Looper"
+        self.logger.info(msg, **kwargs)
 
     def error(self, msg, **kwargs):
-        self.logger.error(msg, owner="Looper", **kwargs)
+        kwargs['owner'] = "Looper"
+        self.logger.error(msg, **kwargs)
 
     def debug(self, msg, **kwargs):
-        self.logger.debug(msg, owner="Looper", **kwargs)
+        kwargs['owner'] = "Looper"
+        self.logger.debug(msg, **kwargs)
 
     def warning(self, msg, **kwargs):
-        self.logger.warning(msg, owner="Looper", **kwargs)
+        kwargs['owner'] = "Looper"
+        self.logger.warning(msg, **kwargs)
 
     def __repr__(self):
         return "LooperLogger -----> just enjoy it"

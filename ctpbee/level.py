@@ -378,7 +378,6 @@ class CtpbeeApi(BeeApi):
         # 买多卖空
         if item == "buy" or item == "short":
             self.order_id_mapping.setdefault(result, False)
-            self.info("呀，我买入了一手, 单号: " + result)
         # 平多平空
         elif item == "sell" or item == "cover":
             for i in result:
@@ -406,19 +405,19 @@ class CtpbeeApi(BeeApi):
         return self.app.logger
 
     def warning(self, msg, **kwargs):
-        kwargs.update(dict(owner="API: " + self.extension_name))
+        kwargs['owner'] = "API: " + self.extension_name
         self.logger.warning(msg, **kwargs)
 
     def info(self, msg, **kwargs):
-        kwargs.update(dict(owner="API: " + self.extension_name))
+        kwargs['owner'] = "API: " + self.extension_name
         self.logger.info(msg, **kwargs)
 
     def error(self, msg, **kwargs):
-        kwargs.update(dict(owner="API: " + self.extension_name))
+        kwargs['owner'] = "API: " + self.extension_name
         self.logger.error(msg, **kwargs)
 
     def debug(self, msg, **kwargs):
-        kwargs.update(dict(owner="API: " + self.extension_name))
+        kwargs['owner'] = "API: " + self.extension_name
         self.logger.debug(msg, **kwargs)
 
     @property
@@ -555,19 +554,19 @@ class AsyncApi(object):
         return self.app.logger
 
     def warning(self, msg, **kwargs):
-        kwargs.update(dict(owner="API: " + self.extension_name))
+        kwargs['owner'] = "API: " + self.extension_name
         self.logger.warning(msg, **kwargs)
 
     def info(self, msg, **kwargs):
-        kwargs.update(dict(owner="API: " + self.extension_name))
+        kwargs['owner'] = "API: " + self.extension_name
         self.logger.info(msg, **kwargs)
 
     def error(self, msg, **kwargs):
-        kwargs.update(dict(owner="API: " + self.extension_name))
+        kwargs['owner'] = "API: " + self.extension_name
         self.logger.error(msg, **kwargs)
 
     def debug(self, msg, **kwargs):
-        kwargs.update(dict(owner="API: " + self.extension_name))
+        kwargs['owner'] = "API: " + self.extension_name
         self.logger.debug(msg, **kwargs)
 
     async def on_order(self, order: OrderData) -> None:

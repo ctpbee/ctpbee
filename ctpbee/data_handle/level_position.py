@@ -46,7 +46,7 @@ class PositionModel:
 
         if trade.offset == Offset.OPEN:
             self.t_pos += trade.volume
-        # 平今
+        # 平今/home/somewheve/PycharmProjects/ctpbee_tutorial
         elif trade.offset == Offset.CLOSETODAY:
             self.t_pos -= trade.volume
         # 平昨
