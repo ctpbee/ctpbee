@@ -124,7 +124,7 @@ vnctptd_se = Extension(
     libraries=["thosttraderapi_se_app", "thostmduserapi_se_app"],
     extra_compile_args=compiler_flags,
     extra_link_args=extra_link_args,
-    runtime_library_dirs=["$ORIGIN"],
+    runtime_library_dirs=runtime_library_dir,
     depends=[],
     language="cpp",
 )
