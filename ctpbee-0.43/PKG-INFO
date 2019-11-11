@@ -1,0 +1,16 @@
+Metadata-Version: 1.1
+Name: ctpbee
+Version: 0.43
+Summary: Easy ctp trade and market support
+Home-page: https://github.com/ctpbee/ctpbee
+Author: somewheve
+Author-email: somewheve@gmail.com
+License: MIT
+Description: UNKNOWN
+Platform: Windows
+Platform: Linux
+Platform: Mac OS-X
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.7
