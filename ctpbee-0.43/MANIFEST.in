@@ -1,5 +1,0 @@
-
-# include MANIFEST.in
-include README.md
-recursive-include ctpbee/api *
-include ctpbee/holiday.json
