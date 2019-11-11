@@ -1,7 +1,7 @@
 """
     for the future of  life
 """
-__version__ = '0.42'
+__version__ = '0.43'
 __status__ = 'Happy'
 
 # About core

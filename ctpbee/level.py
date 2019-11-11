@@ -1,5 +1,6 @@
 import inspect
 import os
+from functools import partial
 from types import MethodType
 from typing import Set, List, AnyStr, Text
 from warnings import warn
