@@ -60,6 +60,13 @@ class ReadFile:
                     t.write(txt)
 
         else:
+            max_value = 120
+            if self.count > max_value:
+                self.ret_close = self.ret_close[-max_value:]
+                self.ret_open = self.ret_open[-max_value:]
+                self.ret_high = self.ret_high[-max_value:]
+                self.ret_low = self.ret_low[-max_value:]
+                self.ret_volume = self.ret_volume[-max_value:]
             self.count += 1
             self.ret_close = np.append(self.ret_close, data[4])
             self.ret_high = np.append(self.ret_high, data[2])
