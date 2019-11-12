@@ -337,10 +337,11 @@ class LocalLooper():
 
     def init_params(self, params):
         """ 回测参数设置 """
-        # todo: 本地设置回测参数
+        self.params.update(params)
         """ 更新接口参数设置 """
         self.params.update(params)
         """ 更新账户策略参数 """
+
         self.account.update_params(params)
 
     def __init_params(self, params):

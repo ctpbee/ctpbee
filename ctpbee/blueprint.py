@@ -5,7 +5,6 @@ class BluePrint:
     """
     实现一个类似与CtpBee的管理机制
     从而实现分组
-
     """
 
     def __init__(self, info, mode, group, action_class, logger_class, refresh):

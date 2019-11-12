@@ -78,7 +78,7 @@ def get_a_strategy():
             # 收盘
             close = am.close
             # 压力 平均 支撑
-            top, middle, bottom = am.boll()
+            # top, middle, bottom = am.boll()
             # DIF DEA DIF-DEA
             macd, signal, histo = am.macd()
 
@@ -88,7 +88,7 @@ def get_a_strategy():
             if self.allow_low_price >= close[-1] and self.pos > 0:
                 self.action.sell(bar.close_price, self.pos, bar)
             # 金叉做多 和 均线>平均
-            if histo[-1] > 0 and close[-1] > middle[-1]:
+            if histo[-1] > 0:
                 if self.pos == 0:
                     self.action.buy(bar.close_price, 1, bar)
                 # 反向进行开仓
