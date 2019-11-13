@@ -68,14 +68,15 @@ def get_a_strategy():
             if self.allow_low_price > bar.close_price and self.pos > 0:
                 self.action.sell(bar.close_price, self.pos, bar)
 
-            # 接连三天涨
-            if histo[-1] > 0:
+            # 趋势好 可能会涨 多头
+            if mtm[-1] > 0 and mtm[-1] > mtm[-2]:
                 # 没有就买
                 if self.pos == 0:
                     self.action.buy(bar.close_price, 1, bar)
                 elif self.pos < 0:
                     self.action.cover(bar.close_price, 1, bar)
                     self.action.buy(bar.close_price, 1, bar)
+            # 空头
             else:
                 if self.pos > 0:
                     self.action.sell(bar.close_price, 1, bar)

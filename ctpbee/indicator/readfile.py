@@ -60,7 +60,7 @@ class ReadFile:
                     t.write(txt)
 
         else:
-            max_value = 120
+            max_value = 90
             if self.count > max_value:
                 self.ret_close = self.ret_close[-max_value:]
                 self.ret_open = self.ret_open[-max_value:]

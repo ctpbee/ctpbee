@@ -69,11 +69,10 @@ def get_a_strategy():
             if self.allow_low_price > close[-1] and self.pos > 0:
                 self.action.sell(bar.close_price, self.pos, bar)
 
-            # 接连三天涨
-            if close[-1] > close[-2] > close[-3]:
-                # 没有就买
-                if self.pos == 0:
-                    self.action.buy(bar.close_price, 1, bar)
+            ###############
+            #  暂时不写    #
+            ##############
+            pass
 
         def on_trade(self, trade):
             if trade.direction == Direction.LONG:
