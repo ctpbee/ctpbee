@@ -597,7 +597,6 @@ class BeeTdApi(TdApi):
             p = self.exit()
 
 
-
 class BeeTdApiApp(TdApiApp):
     """ 申请穿透式网关 """
 

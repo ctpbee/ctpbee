@@ -6,16 +6,14 @@ from ctpbee.constant import ContractData, LogData, TickData, BarData, OrderType,
 
 
 class Demo(CtpbeeApi):
-    instrument_set = ["rb2010.SHFE"]
+    instrument_set = ["rb2001.SHFE"]
 
     # 当前插件绑定的CtpBee的数据记录信息都在self.app.recorder下面
 
     def on_contract(self, contract: ContractData):
         """ 处理推送的合约信息 """
-        # print(contract.local_symbol)
-        if contract.local_symbol in self.instrument_set:
+        if contract.local_symbol == "rb2003.SHFE":
             self.app.subscribe(contract.local_symbol)
-            print("back")
 
     def on_log(self, log: LogData):
         """ 处理日志信息 ,特殊需求才用到 """
@@ -24,16 +22,11 @@ class Demo(CtpbeeApi):
     def on_tick(self, tick: TickData) -> None:
         """ 处理推送的tick """
         print(tick)
-        pass
 
     def on_bar(self, bar: BarData) -> None:
         """ 处理ctpbee生成的bar """
-        # 构建发单请求
-        req = helper.generate_order_req_by_var(symbol=bar.symbol, exchange=bar.exchange, price=bar.high_price,
-                                               direction=Direction.LONG, type=OrderType.LIMIT, volume=3,
-                                               offset=Offset.OPEN)
         # 调用绑定的app进行发单
-        id = self.action.sell(bar.high_price, 1, bar)
+        id = self.action.buy(bar.high_price, 1, bar)
         print("返回id", id)
 
     def on_init(self, init):
@@ -44,6 +37,7 @@ class Demo(CtpbeeApi):
 
     def on_order(self, order: OrderData) -> None:
         """ 报单回报 """
+        print(order)
 
     def on_trade(self, trade: TradeData) -> None:
         """ 成交回报 """
