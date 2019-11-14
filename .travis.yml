@@ -12,3 +12,9 @@ script:
 
 before_install:
   - sudo locale-gen zh_CN.GB18030
+  - sudo apt install gcc
+  - pip install ctpbee_api
+  - pip install flask
+  - pip install simplejson
+  - pip install pandas
+
