@@ -18,3 +18,8 @@ before_install:
   - pip install simplejson
   - pip install pandas
 
+
+# running test after install
+after_script:
+  - sudo ctpbee -auto generate
+  - python ./ci_script/test_module.py
