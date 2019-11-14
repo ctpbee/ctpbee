@@ -27,7 +27,8 @@ def update_locale():
     with open("/etc/locale.gen", "a+") as f:
         code_lines = [
             "zh_CN.GB18030 GB18030",
-            "en_US.UTF-8 UTF-8"
+            "en_US.UTF-8 UTF-8",
+            "zh_CN.UTF-8 UTF-8"
         ]
         for x in code_lines:
             f.write(x + "\n")

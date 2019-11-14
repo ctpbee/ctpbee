@@ -1,0 +1,14 @@
+language: python
+os: "ubuntu" # set the system
+
+matrix:
+  include:
+    - python: 3.6
+    - python: 3.7
+    - python: 3.8
+
+script:
+  - python setup.py install
+
+before_install:
+  - sudo locale-gen zh_CN.GB18030
