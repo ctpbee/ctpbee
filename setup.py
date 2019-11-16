@@ -41,7 +41,7 @@ setup(
     install_requires=install_requires,
     platforms=["Windows", "Linux", "Mac OS-X"],
     package_dir={'ctpbee': 'ctpbee'},
-    # zip_safe=True,
+    zip_safe=False,
     include_package_data=True,
     package_data={'ctpbee': ['api/ctp/*', 'holiday.json']},
     ext_modules=[],
@@ -49,7 +49,6 @@ setup(
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.7',
     ],
     entry_points={
         'console_scripts': ['ctpbee = ctpbee.cmdline:execute']

@@ -228,7 +228,7 @@ class CtpBee(object):
             if self.r is not None:
                 self.r_flag = False
                 sleep(self.config['REFRESH_INTERVAL'] + 1.5)
-                self.r = Thread(target=refresh_query, args=(self,),daemon=True)
+                self.r = Thread(target=refresh_query, args=(self,), daemon=True)
                 self.r.start()
             else:
                 self.r = Thread(target=refresh_query, args=(self,), daemon=True)
@@ -270,7 +270,6 @@ class CtpBee(object):
         """添加插件"""
         self.extensions.pop(extension.extension_name, None)
         extension.init_app(self)
-        self.extensions[extension.extension_name] = extension
 
     def suspend_extension(self, extension_name):
         extension = self.extensions.get(extension_name, None)

@@ -55,8 +55,6 @@ class Account:
 
     def __init__(self, interface):
         self.interface = interface
-        self.position_manager = LocalPositionManager(interface.params)
-
         self.pre_balance = 0
         self.daily_life = defaultdict(AliasDayResult)
         # 日期
@@ -72,7 +70,7 @@ class Account:
         self.initial_capital = 0
         # 占用保证金
         self.occupation_margin = 0
-
+        self.init_position_manager_flag = False
         self.init = False
 
     @property
@@ -226,6 +224,11 @@ class Account:
             else:
                 pass
             setattr(self, i, v)
+        if not self.init_position_manager_flag:
+            self.position_manager = LocalPositionManager(params)
+            self.init_position_manager_flag = True
+        else:
+            pass
 
     @property
     def result(self):

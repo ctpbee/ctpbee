@@ -1,7 +1,6 @@
 # ctpbee 
 bee bee .... 为二次开发而生 ~~
 
-
 ![ctpbee](https://github.com/ctpbee/ctpbee/blob/master/docs/source/ctpbee.jpg)
 
 ctpbee 提供了一个可供使用的交易微框架, 你可以通过这个微小的核心来构建值得信赖的工具， 
@@ -10,7 +9,7 @@ ctpbee 提供了一个可供使用的交易微框架, 你可以通过这个微�
 ## 开始之前 
 ```bash
 # just for linux 
-sudo locale-gen zh_CN.GB18030  
+sudo locale-gen zh_CN.GB18030
 ```
 ## 起源
 
@@ -32,18 +31,10 @@ docker pull yutiansut/ctpbee:latest
 docker run -p 5000:5000 yutiansut/ctpbee:latest
 ```
 
-本地打开 localhost:5000 即可使用
+it will be fix in next version
 
 ## 文档
-本地生成:
-
-    1. git clone https://github.com/ctpbee/ctpbee 
-    2. pip3 install sphinx
-    3. cd ./ctpbee/docs && make html
-    4. 你可以在docs/build/html 下面看到index.html, 浏览器打开即可
-    
-在线:
-    [文档](http://docs.ctpbee.com)
+[文档](http://docs.ctpbee.com)
 
 ## 社区支持
 [地址](http://community.ctpbee.com)
@@ -70,16 +61,15 @@ docker run -p 5000:5000 yutiansut/ctpbee:latest
 ## 插件支持
 
 - [ ] 套利 ---> ready to support
-- [ ] 历史数据 support
+- [ ] 历史数据 support 
 
 
 ## 一些可能会减少你工作量的工作
 - [x] 7×24小时无人值守 (可选)
 - [x] 定时查持仓和账户信息  (可选)
 - [x] 策略对应订阅行情 (可选)
-- [ ] 性能优化 --> julia支持 ？
-- [ ] 对接多种指标计算                     
-- [ ] 优化代码  / try to do it 
+- [x] 对接多种指标计算                     
+- [ ] 优化代码  / Hope for your work ^_^
 
 ## 快速开始 
 ```python
@@ -102,8 +92,6 @@ info = {
 app.config.from_mapping(info)  # 从dict中载入信息 对于更多配置载入方式, 请参阅文档或者阅读代码
 app.start() 
 ```
-
-
 
 
 ## 发展计划

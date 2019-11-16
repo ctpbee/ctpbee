@@ -1,19 +1,5 @@
 """
-    当前回测示例
-    1.当前数据基于rq进行下载的
-    2.首先你需要调用get_data 来获得rq的数据 ，然后save_to_json保存到 json文件中去，主要在此过程中你需要手动对数据加入symbol等
-    3.然后通过load_data函数重复调用数据
-    4.调用run_main进行回测
-
-    当前的strategy是借助vnpy的 ArrayManager . 你需要对此实现一些额外的安装操作
-
-    需要额外安装的包
-    ta-lib,  rqdatac( 后面需要被取代  ？？ Maybe use quantdata )
-
-    目前暂时不够完善   ---> hope it will be a  very fancy framework
-
-    written by somewheve  2019-9-30 08:43
-
+    简单收盘价策略 close = info.close
 """
 
 import json
@@ -67,36 +53,32 @@ def get_a_strategy():
             super().__init__(name)
             self.count = 1
             self.api = Interface()
-            self.api.open_json("zn1912.SHFE.json")
+            self.api.open_json("../zn1912.SHFE.json")
             self.pos = 0
 
         def on_bar(self, bar):
-            # todo: 均线 和 MACD 和 BOLL 结合使用
+            # todo: 均线
             """ """
             am = self.api
             am.add_bar(bar)
             # 收盘
             close = am.close
-            # 压力 平均 支撑
-            # top, middle, bottom = am.boll()
-            # DIF DEA DIF-DEA
-            macd, signal, histo = am.macd()
-
+            # 允许最大价格小于当前收盘价
             if self.allow_max_price <= close[-1] and self.pos > 0:
                 self.action.sell(bar.close_price, self.pos, bar)
-
+            # 允许最小价格大于当前收盘价
             if self.allow_low_price >= close[-1] and self.pos > 0:
                 self.action.sell(bar.close_price, self.pos, bar)
-            # 金叉做多 和 均线>平均
-            if histo[-1] > 0:
+            # 接连两天涨
+            if close[-1] > close[-2] > close[-3]:
                 if self.pos == 0:
                     self.action.buy(bar.close_price, 1, bar)
                 # 反向进行开仓
                 elif self.pos < 0:
                     self.action.cover(bar.close_price, 1, bar)
                     self.action.buy(bar.close_price, 1, bar)
-            # 死叉做空
-            elif histo[-1] < 0:
+            # 接连两天降
+            elif close[-1] < close[-2] < close[-3]:
                 if self.pos == 0:
                     pass
                 # 反向进行开仓
@@ -129,12 +111,12 @@ def save_data_json(data):
             else:
                 return json.JSONEncoder.default(self, obj)
 
-    with open("data.json", "w") as f:
+    with open("../data.json", "w") as f:
         json.dump(result, f, cls=CJsonEncoder)
 
 
 def load_data():
-    with open("data.json", "r") as f:
+    with open("../data.json", "r") as f:
         data = json.load(f)
     return data.get("result")
 

@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import os
 import sys
 
 from .trade_time import Papa
@@ -7,6 +8,8 @@ from .trade_time import Papa
 parser = argparse.ArgumentParser(description="bee bee bee~")
 parser.add_argument('-tt', '--tradetime', help='更新交易日历/Update transaction calendar;'
                                                'Example: -tt 2019 or -tt 2004-2020 or -tt now')
+
+parser.add_argument("-auto", '--generate', help="对于linux自动生成中文环境")
 
 
 def tradetime_handle(year):
@@ -20,6 +23,18 @@ def tradetime_handle(year):
     Papa.write()
 
 
+def update_locale():
+    with open("/etc/locale.gen", "a+") as f:
+        code_lines = [
+            "zh_CN.GB18030 GB18030",
+            "en_US.UTF-8 UTF-8",
+            "zh_CN.UTF-8 UTF-8"
+        ]
+        for x in code_lines:
+            f.write(x + "\n")
+    os.system("locale-gen")
+
+
 def execute():
     if len(sys.argv) <= 1:
         print('[*]Tip: ctpbee -h view help')
@@ -30,6 +45,12 @@ def execute():
     # handle
     if year:
         tradetime_handle(year)
+        return
+
+    auto = args.generate
+    if auto == "generate":
+        update_locale()
+        return
 
 
 if __name__ == '__main__':
