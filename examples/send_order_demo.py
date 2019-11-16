@@ -12,7 +12,7 @@ class Demo(CtpbeeApi):
 
     def on_contract(self, contract: ContractData):
         """ 处理推送的合约信息 """
-        if contract.local_symbol == "rb2003.SHFE":
+        if contract.local_symbol == "rb2001.SHFE":
             self.app.subscribe(contract.local_symbol)
 
     def on_log(self, log: LogData):
@@ -41,7 +41,6 @@ class Demo(CtpbeeApi):
 
     def on_trade(self, trade: TradeData) -> None:
         """ 成交回报 """
-
     def on_position(self, position: PositionData) -> None:
         """ 处理持仓回报 """
 
