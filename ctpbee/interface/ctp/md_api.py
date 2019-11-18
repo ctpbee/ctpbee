@@ -111,6 +111,8 @@ class BeeMdApi(MdApi):
             ask_volume_1=data["AskVolume1"],
             average_price=data['AveragePrice'],
             pre_settlement_price=data['PreSettlementPrice'],
+            settlement_price=data['SettlementPrice'],
+            pre_open_interest=data['PreOpenInterest'],
             gateway_name=self.gateway_name
         )
         self.on_event(type=EVENT_TICK, data=tick)
