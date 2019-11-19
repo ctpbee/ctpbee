@@ -1,7 +1,7 @@
 # ctpbee 
 bee bee .... 为二次开发而生 ~~
 
-![ctpbee](https://github.com/ctpbee/ctpbee/blob/master/docs/source/ctpbee.jpg)
+![ctpbee](source/ctpbee.jpg)
 
 ctpbee 提供了一个可供使用的交易微框架, 你可以通过这个微小的核心来构建值得信赖的工具， 
 当然这需要你的编程功力。 你所需要关心的是如何编程来处理行情和交易信息即可。
