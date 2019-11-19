@@ -1,1 +1,1 @@
-from ctpbee.indicator.interface import Interface
+from ctpbee.indicator.interface import Indicator
