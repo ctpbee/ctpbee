@@ -78,7 +78,7 @@ class RiskMe(RiskLevel):
 class DataRecorder(AsyncApi):
     def __init__(self, name, app=None):
         super().__init__(name, app)
-        self.instrument_set = set(["ag1912.SHFE"])
+        self.instrument_set = set(["rb2001.SHFE"])
 
     async def on_trade(self, trade):
         pass
@@ -108,6 +108,7 @@ class DataRecorder(AsyncApi):
     async def on_tick(self, tick):
         """tick process function"""
         # print(tick._to_dict())
+        print(tick)
 
     async def on_bar(self, bar):
         """bar process function"""
