@@ -131,6 +131,9 @@ class DataRecorder(CtpbeeApi):
         """tick processself-control  && kill your  function"""
         print(tick)
 
+
+
+
     def on_bar(self, bar):
         """bar process function"""
 
@@ -148,10 +151,7 @@ class DataRecorder(CtpbeeApi):
         """  """
         # for x in self.app.recorder.get_all_active_orders():
         #     self.action.cancel(x.local_order_id)
-        try:
-            print(self.app.recorder.generators["rb2001.SHFE"].get_min_1_bar)
-        except Exception:
-            pass
+        print(self.app.recorder.generators["rb2001.SHFE"].get_min_1_bar)
 
     def on_init(self, init):
         self.info("初始化")

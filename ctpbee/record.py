@@ -127,6 +127,7 @@ class Recorder(object):
             bm.update_tick(tick)
         if not bm:
             self.generators[tick.local_symbol] = generator(self.event_engine, self.app)
+            self.generators[tick.local_symbol].update_tick(tick)
 
     @value_call
     def process_order_event(self, event: Event):
