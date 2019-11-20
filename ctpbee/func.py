@@ -235,7 +235,7 @@ class Hickey(object):
         else:
             raise ValueError("你传入的创建的func无法创建CtpBee变量, 请检查返回值")
 
-    def start_all(self, app_func):
+    def start_all(self, app_func, info=True):
         """ 开始进程管理 """
         print("""
         Ctpbee 7*24 Manager started !
@@ -249,12 +249,14 @@ class Hickey(object):
             """ """
             current = datetime.now()
             status = self.auth_time(current)
+            if info:
+                print("ctpbee manager running ---> ^_^ ")
             if p is None and status == True:
                 p = Process(target=self.run_all_app, args=(app_func,))
                 p.start()
-                self.logger.info("启动程序")
+                print("启动程序")
             if not status and p is not None:
-                self.logger.info("查杀子进程")
+                print("invalid time, 查杀子进程")
                 import os
                 import platform
                 if platform.uname().system == "Windows":
