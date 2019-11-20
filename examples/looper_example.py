@@ -21,7 +21,7 @@ from datetime import datetime, date
 
 from ctpbee import LooperApi, Vessel
 from ctpbee.constant import Direction
-from ctpbee.indicator import Interface
+from ctpbee.indicator import Indicator
 
 
 # def get_data(start, end, symbol, exchange, level):
@@ -66,8 +66,8 @@ def get_a_strategy():
         def __init__(self, name):
             super().__init__(name)
             self.count = 1
-            self.api = Interface()
-            self.api.open_json("zn1912.SHFE.json")
+            self.api = Indicator()
+            # self.api.open_json("zn1912.SHFE.json")
             self.pos = 0
 
         def on_bar(self, bar):
@@ -75,6 +75,8 @@ def get_a_strategy():
             """ """
             am = self.api
             am.add_bar(bar)
+            if not am.inited:
+                return
             # 收盘
             close = am.close
             # 压力 平均 支撑
@@ -91,7 +93,7 @@ def get_a_strategy():
             if histo[-1] > 0:
                 if self.pos == 0:
                     self.action.buy(bar.close_price, 1, bar)
-                # 反向进行开仓
+
                 elif self.pos < 0:
                     self.action.cover(bar.close_price, 1, bar)
                     self.action.buy(bar.close_price, 1, bar)
@@ -99,7 +101,6 @@ def get_a_strategy():
             elif histo[-1] < 0:
                 if self.pos == 0:
                     pass
-                # 反向进行开仓
                 elif self.pos > 0:
                     self.action.sell(bar.close_price, 1, bar)
                     self.action.short(bar.close_price, 1, bar)

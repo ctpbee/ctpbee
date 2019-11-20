@@ -1,7 +1,15 @@
 from .plot import Scheduler
 
 
-class Interface:
+class Indicator:
+
+    @property
+    def inited(self):
+        """
+        是否满足计算要求
+        :return: bool
+        """
+        return Scheduler.inited
 
     @property
     def open(self):
@@ -160,4 +168,4 @@ class Interface:
         Scheduler.plot(width=width, height=height, color=color, lw=lw)
 
 
-api = Interface
+api = Indicator
