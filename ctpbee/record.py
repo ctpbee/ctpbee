@@ -115,7 +115,6 @@ class Recorder(object):
         """"""
         tick = event.data
         self.ticks[tick.local_symbol] = tick
-        symbol = tick.symbol
         self.position_manager.update_tick(tick)
         # 生成datetime对象
         if not tick.datetime:
@@ -123,11 +122,11 @@ class Recorder(object):
                 tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y%m%d %H:%M:%S.%f')
             else:
                 tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y%m%d %H:%M:%S')
-        bm = self.generators.get(symbol, None)
+        bm = self.generators.get(tick.local_symbol, None)
         if bm:
             bm.update_tick(tick)
         if not bm:
-            self.generators[symbol] = generator(self.event_engine, self.app)
+            self.generators[tick.local_symbol] = generator(self.event_engine, self.app)
 
     @value_call
     def process_order_event(self, event: Event):
@@ -209,7 +208,6 @@ class Recorder(object):
 
     def get_trade(self, local_trade_id):
         return self.trades.get(local_trade_id, None)
-
 
     def get_position(self, local_position_id):
         return self.positions.get(local_position_id, None)

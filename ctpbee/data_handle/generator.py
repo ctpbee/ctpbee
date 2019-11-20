@@ -1,4 +1,6 @@
 # encoding: UTF-8
+from types import MethodType
+from typing import List
 
 from ctpbee.constant import BarData, TickData, SharedData, EVENT_BAR, EVENT_SHARED
 from ctpbee.event_engine import Event
@@ -15,7 +17,7 @@ class DataGenerator:
     def __init__(self, et_engine, app):
         """Constructor"""
         self.rpo = et_engine
-        self.bar = None
+        self.min_1_bar = None
         self.last_tick = None
         self.local_symbol = None
         self.last_price = None
@@ -32,6 +34,11 @@ class DataGenerator:
         self.XMIN = app.config.get("XMIN")
         self._generator()
         self.rd = None
+
+        gen_func = lambda item: setattr(self, f"get_min_{item}_bar",
+                                        property(
+                                            MethodType(lambda self: getattr(self, f"min_{item}_bar"), self)).fget())
+        [gen_func(x) for x in self.XMIN]
 
     def _generator(self):
         for x in self.XMIN:
@@ -59,16 +66,16 @@ class DataGenerator:
             self.last_volume = tick.volume
         if self.local_symbol is None:
             self.local_symbol = tick.local_symbol
-        if not self.bar:
+        if not self.min_1_bar:
             new_minute = True
-        elif self.bar.datetime.minute != tick.datetime.minute:
-            self.bar.datetime = self.bar.datetime.replace(
+        elif self.min_1_bar.datetime.minute != tick.datetime.minute:
+            self.min_1_bar.datetime = self.min_1_bar.datetime.replace(
                 second=0, microsecond=0
             )
-            self.bar.interval = 1
-            event = Event(type=EVENT_BAR, data=self.bar)
+            self.min_1_bar.interval = 1
+            event = Event(type=EVENT_BAR, data=self.min_1_bar)
             self.rpo.put(event)
-            [self.update_bar(x, getattr(self, "min_{}_bar".format(x)), self.bar) for x in self.XMIN]
+            [self.update_bar(x, getattr(self, "min_{}_bar".format(x)), self.min_1_bar) for x in self.XMIN]
             new_minute = True
         if new_minute:
             if self.app.config.get("SHARED_FUNC"):
@@ -80,7 +87,7 @@ class DataGenerator:
                 self.rpo.put(event)
             self.last_volume = tick.volume
 
-            self.bar = BarData(
+            self.min_1_bar = BarData(
                 symbol=tick.symbol,
                 exchange=tick.exchange,
                 datetime=tick.datetime,
@@ -91,14 +98,14 @@ class DataGenerator:
                 close_price=tick.last_price,
             )
         else:
-            self.bar.high_price = max(self.bar.high_price, tick.last_price)
-            self.bar.low_price = min(self.bar.low_price, tick.last_price)
-            self.bar.close_price = tick.last_price
-            self.bar.datetime = tick.datetime
+            self.min_1_bar.high_price = max(self.min_1_bar.high_price, tick.last_price)
+            self.min_1_bar.low_price = min(self.min_1_bar.low_price, tick.last_price)
+            self.min_1_bar.close_price = tick.last_price
+            self.min_1_bar.datetime = tick.datetime
 
         if self.last_tick:
             volume_change = tick.volume - self.last_tick.volume
-            self.bar.volume += max(volume_change, 0)
+            self.min_1_bar.volume += max(volume_change, 0)
         self.last_tick = tick
 
     def update_bar(self, xmin, xmin_bar: BarData, bar: BarData):
@@ -133,17 +140,17 @@ class DataGenerator:
             xmin_bar = None
 
     def generate(self):
-        if self.bar is not None:
-            self.bar.interval = 1
-            event = Event(type=EVENT_BAR, data=self.bar)
+        if self.min_1_bar is not None:
+            self.min_1_bar.interval = 1
+            event = Event(type=EVENT_BAR, data=self.min_1_bar)
             self.rpo.put(event)
         for x in self.XMIN:
-            if self.bar is not None:
+            if self.min_1_bar is not None:
                 bar = getattr(self, "min_{}_bar".format(x))
                 bar.interval = x
                 event = Event(type=EVENT_BAR, data=bar)
                 self.rpo.put(event)
-        self.bar = None
+        self.min_1_bar = None
         [setattr(self, "min_{}_bar".format(x), None) for x in self.XMIN]
 
     def __del__(self):

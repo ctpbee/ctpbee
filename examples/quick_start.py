@@ -69,7 +69,7 @@ class RiskMe(RiskLevel):
 
     """
 
-    def realtime_check(self, cur):
+    def realtime_check(self):
         pass
 
     def after_cancel_order(self, result):
@@ -96,16 +96,13 @@ class RiskMe(RiskLevel):
             self.info("正在检查呢 ")
             # do something
 
-    def realtime_check(self):
-        """ """
-
 
 # 启动过程  --- strategy/ .py  --- app.add_extension(ext)
 
 class DataRecorder(CtpbeeApi):
     def __init__(self, name, app=None):
         super().__init__(name, app)
-        self.instrument_set = set(["rb2010.SHFE"])
+        self.instrument_set = set(["rb2001.SHFE"])
         self.comming_in = None
         self.id = None
         self.f_init = False
@@ -116,7 +113,7 @@ class DataRecorder(CtpbeeApi):
     def on_contract(self, contract):
         # 通过本地的
         if contract.local_symbol in self.instrument_set:
-            self.app.subscribe(contract.local_symbol)
+            self.app.action.subscribe(contract.local_symbol)
 
     def on_order(self, order):
         """ """
@@ -132,6 +129,7 @@ class DataRecorder(CtpbeeApi):
 
     def on_tick(self, tick):
         """tick processself-control  && kill your  function"""
+        print(tick)
 
     def on_bar(self, bar):
         """bar process function"""
@@ -150,6 +148,10 @@ class DataRecorder(CtpbeeApi):
         """  """
         # for x in self.app.recorder.get_all_active_orders():
         #     self.action.cancel(x.local_order_id)
+        try:
+            print(self.app.recorder.generators["rb2001.SHFE"].get_min_1_bar)
+        except Exception:
+            pass
 
     def on_init(self, init):
         self.info("初始化")
