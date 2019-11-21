@@ -69,7 +69,8 @@ class RiskMe(RiskLevel):
 
     """
 
-    def realtime_check(self):
+    @classmethod
+    def realtime_check(cls):
         pass
 
     def after_cancel_order(self, result):
@@ -80,7 +81,6 @@ class RiskMe(RiskLevel):
 
     def before_short(self, *args, **kwargs):
         """"""
-
         # do something  ??
         self.info("发单")
         return True, args, kwargs
@@ -131,17 +131,10 @@ class DataRecorder(CtpbeeApi):
         """tick processself-control  && kill your  function"""
         print(tick)
 
-
-
-
     def on_bar(self, bar):
         """bar process function"""
 
         self.action.buy(bar.high_price, 1, bar)
-
-    def on_shared(self, shared):
-        """ 处理分时图数据 """
-        print(shared)
 
     def on_log(self, log: LogData):
         """ 可以用于将log信息推送到外部 """
@@ -151,7 +144,7 @@ class DataRecorder(CtpbeeApi):
         """  """
         # for x in self.app.recorder.get_all_active_orders():
         #     self.action.cancel(x.local_order_id)
-        print(self.app.recorder.generators["rb2001.SHFE"].get_min_1_bar)
+        # print(self.app.recorder.generators["rb2001.SHFE"].get_min_1_bar)
 
     def on_init(self, init):
         self.info("初始化")

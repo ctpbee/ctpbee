@@ -1,7 +1,7 @@
 # encoding: UTF-8
 from types import MethodType
 from typing import List
-
+from ctpbee.signals import common_signals
 from ctpbee.constant import BarData, TickData, SharedData, EVENT_BAR, EVENT_SHARED
 from ctpbee.event_engine import Event
 
@@ -14,9 +14,8 @@ class DataGenerator:
     3, generate shared time data
     """
 
-    def __init__(self, et_engine, app):
+    def __init__(self, app):
         """Constructor"""
-        self.rpo = et_engine
         self.bar = None
         self.last_tick = None
         self.local_symbol = None
@@ -58,14 +57,6 @@ class DataGenerator:
         self.open_interest = tick.open_interest
         self.volume = tick.volume
 
-        # 更新均价线
-        self.molecule = self.molecule + tick.last_price * tick.volume
-        self.denominator = self.denominator + tick.volume
-        try:
-            self.average_price = self.molecule / self.denominator
-        except ZeroDivisionError:
-            self.average_price = tick.last_price
-
         if self.last_volume is None:
             self.last_volume = tick.volume
         if self.local_symbol is None:
@@ -78,17 +69,10 @@ class DataGenerator:
             )
             self.bar.interval = 1
             event = Event(type=EVENT_BAR, data=self.bar)
-            self.rpo.put(event)
+            common_signals.bar_signal.send(event)
             [self.update_bar(x, getattr(self, "min_{}_bar".format(x)), self.bar) for x in self.XMIN]
             new_minute = True
         if new_minute:
-            if self.app.config.get("SHARED_FUNC"):
-                shared = SharedData(last_price=round(self.last_price, 2), datetime=tick.datetime,
-                                    local_symbol=self.local_symbol,
-                                    open_interest=self.open_interest, average_price=round(self.average_price, 2),
-                                    volume=self.volume - self.last_volume, gateway_name=tick.gateway_name)
-                event = Event(type=EVENT_SHARED, data=shared)
-                self.rpo.put(event)
             self.last_volume = tick.volume
 
             self.bar = BarData(
@@ -142,20 +126,21 @@ class DataGenerator:
             )
             xmin_bar.interval = xmin
             event = Event(type=EVENT_BAR, data=xmin_bar)
-            self.rpo.put(event)
+            common_signals.bar_signal.send(event)
             setattr(self, f"min_{xmin}_bar", None)
 
     def generate(self):
         if self.bar is not None:
             self.bar.interval = 1
             event = Event(type=EVENT_BAR, data=self.bar)
-            self.rpo.put(event)
+            common_signals.bar_signal.send(event)
+
         for x in self.XMIN:
             if self.bar is not None:
                 bar = getattr(self, "min_{}_bar".format(x))
                 bar.interval = x
                 event = Event(type=EVENT_BAR, data=bar)
-                self.rpo.put(event)
+                common_signals.bar_signal.send(event)
         self.bar = None
         [setattr(self, "min_{}_bar".format(x), None) for x in self.XMIN]
 

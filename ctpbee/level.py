@@ -91,7 +91,7 @@ class Action(object):
          开仓 空头
         """
 
-        if not isinstance(self.app.config['SLIPPAGE_intSHORT'], float) and not isinstance(
+        if not isinstance(self.app.config['SLIPPAGE_SHORT'], float) and not isinstance(
                 self.app.config['SLIPPAGE_SHORT'], int):
             raise ConfigError(message="滑点配置应为浮点小数")
         price = price + self.app.config['SLIPPAGE_SHORT']
@@ -299,7 +299,6 @@ class CtpbeeApi(BeeApi):
             EVENT_TICK: cls.on_tick,
             EVENT_BAR: cls.on_bar,
             EVENT_ORDER: cls.on_order,
-            EVENT_SHARED: cls.on_shared,
             EVENT_TRADE: cls.on_trade,
             EVENT_POSITION: cls.on_position,
             EVENT_ACCOUNT: cls.on_account,
@@ -430,9 +429,6 @@ class CtpbeeApi(BeeApi):
     def on_order(self, order: OrderData) -> None:
         pass
 
-    def on_shared(self, shared: SharedData) -> None:
-        pass
-
     def on_bar(self, bar: BarData) -> None:
         raise NotImplemented
 
@@ -482,155 +478,3 @@ class CtpbeeApi(BeeApi):
             return funcd
 
         return attribute
-
-
-class AsyncApi(object):
-    """
-    数据模块
-    策略模块
-        如果你要开发上述插件需要继承此抽象demo
-    AsyncApi ---> 性能优化
-    """
-
-    def __new__(cls, *args, **kwargs):
-        map = {
-            EVENT_TIMER: cls.on_realtime,
-            EVENT_INIT_FINISHED: cls.on_init,
-            EVENT_TICK: cls.on_tick,
-            EVENT_BAR: cls.on_bar,
-            EVENT_ORDER: cls.on_order,
-            EVENT_SHARED: cls.on_shared,
-            EVENT_TRADE: cls.on_trade,
-            EVENT_POSITION: cls.on_position,
-            EVENT_ACCOUNT: cls.on_account,
-            EVENT_CONTRACT: cls.on_contract,
-        }
-        parmeter = {
-            EVENT_TIMER: EVENT_TIMER,
-            EVENT_INIT_FINISHED: EVENT_INIT_FINISHED,
-            EVENT_POSITION: EVENT_POSITION,
-            EVENT_TRADE: EVENT_TRADE,
-            EVENT_BAR: EVENT_BAR,
-            EVENT_TICK: EVENT_TICK,
-            EVENT_ORDER: EVENT_ORDER,
-            EVENT_SHARED: EVENT_SHARED,
-            EVENT_ACCOUNT: EVENT_ACCOUNT,
-            EVENT_CONTRACT: EVENT_CONTRACT,
-        }
-        setattr(cls, "map", map)
-        setattr(cls, "parmeter", parmeter)
-        return super().__new__(cls)
-
-    def __init__(self, extension_name, app=None):
-        """
-        init function
-        :param name: extension name , 插件名字
-        :param app: CtpBee 实例
-        :param api_type 针对几种API实行不同的优化措施
-        """
-        self.extension_name = extension_name
-        self.instrument_set: List or Set = set()
-        self.app = app
-        if self.app is not None:
-            self.init_app(self.app)
-        # 是否冻结
-        self.frozen = False
-
-    @property
-    def action(self):
-        if self.app is None:
-            raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
-        return self.app.action
-
-    @property
-    def recorder(self):
-        if self.app is None:
-            raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
-        return self.app.recorder
-
-    @property
-    def logger(self):
-        if self.app is None:
-            raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
-        return self.app.logger
-
-    def warning(self, msg, **kwargs):
-        kwargs['owner'] = "API: " + self.extension_name
-        self.logger.warning(msg, **kwargs)
-
-    def info(self, msg, **kwargs):
-        kwargs['owner'] = "API: " + self.extension_name
-        self.logger.info(msg, **kwargs)
-
-    def error(self, msg, **kwargs):
-        kwargs['owner'] = "API: " + self.extension_name
-        self.logger.error(msg, **kwargs)
-
-    def debug(self, msg, **kwargs):
-        kwargs['owner'] = "API: " + self.extension_name
-        self.logger.debug(msg, **kwargs)
-
-    async def on_order(self, order: OrderData) -> None:
-        pass
-
-    async def on_shared(self, shared: SharedData) -> None:
-        pass
-
-    async def on_bar(self, bar: BarData) -> None:
-        raise NotImplemented
-
-    async def on_tick(self, tick: TickData) -> None:
-        raise NotImplemented
-
-    async def on_trade(self, trade: TradeData) -> None:
-        pass
-
-    async def on_position(self, position: PositionData) -> None:
-        pass
-
-    async def on_account(self, account: AccountData) -> None:
-        pass
-
-    async def on_contract(self, contract: ContractData):
-        pass
-
-    async def on_init(self, init: bool):
-        pass
-
-    async def on_realtime(self):
-        pass
-
-    def route(self, handler):
-        """ """
-        if handler not in self.map:
-            raise TypeError(f"呀， ctpbee暂不支持此函数类型 {handler}")
-
-        def converter(func):
-            self.map[handler] = func
-            return func
-
-        return converter
-
-    def register(self):
-        """ 用于注册函数 """
-
-        def attribute(func):
-            funcd = MethodType(func, self)
-            setattr(self, func.__name__, funcd)
-            return funcd
-
-        return attribute
-
-    def init_app(self, app):
-        if app is not None:
-            self.app = app
-            self.app.extensions[self.extension_name] = self
-
-    async def __call__(self, event: Event = None):
-        if not event:
-            if not self.frozen:
-                await self.map[EVENT_TIMER](self)
-        else:
-            func = self.map[event.type]
-            if not self.frozen:
-                await func(self, event.data)

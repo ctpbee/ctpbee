@@ -1,10 +1,9 @@
 import types
 from functools import wraps
 from threading import Thread
-from types import MethodType
-
-from ctpbee.event_engine.engine import EVENT_TIMER
 from ctpbee.helpers import end_thread
+
+from ctpbee.signals import common_signals
 
 
 class ThreadMe(Thread):
@@ -36,39 +35,44 @@ class RiskLevel:
         cls.logger = app.logger
         cls.recorder = app.recorder
 
-        update_list = ["realtime_check", "mimo_thread"]
-        for _ in update_list:
-            func = getattr(cls, _)
-            funcd = MethodType(func, cls)
-            cls.app.event_engine.register(EVENT_TIMER, funcd)
+        def connect_mimo(event):
+            cls.mimo_thread()
+
+        def connect_realtime(event):
+            cls.realtime_check()
+
+        common_signals.timer_signal.connect(connect_mimo, weak=False)
+
+        common_signals.timer_signal.connect(connect_realtime, weak=False)
 
     @classmethod
-    def warning(self, msg, **kwargs):
-        self.logger.warning(msg, owner="Risk", **kwargs)
+    def warning(cls, msg, **kwargs):
+        cls.logger.warning(msg, owner="Risk", **kwargs)
 
     @classmethod
-    def info(self, msg, **kwargs):
-        self.logger.info(msg, owner="Risk", **kwargs)
+    def info(cls, msg, **kwargs):
+        cls.logger.info(msg, owner="Risk", **kwargs)
 
     @classmethod
-    def error(self, msg, **kwargs):
-        self.logger.error(msg, owner="Risk", **kwargs)
+    def error(cls, msg, **kwargs):
+        cls.logger.error(msg, owner="Risk", **kwargs)
 
     @classmethod
-    def debug(self, msg, **kwargs):
-        self.logger.debug(msg, owner="Risk", **kwargs)
+    def debug(cls, msg, **kwargs):
+        cls.logger.debug(msg, owner="Risk", **kwargs)
 
-    def mimo_thread(self):
-        for thread in self.thread_pool:
+    @classmethod
+    def mimo_thread(cls):
+        for thread in cls.thread_pool:
             # 判断线程的数量是否超过超时数
-            if not isinstance(self.app.config['AFTER_TIMEOUT'], int):
+            if not isinstance(cls.app.config['AFTER_TIMEOUT'], int):
                 raise AttributeError("请检查你的配置中项 AFTER_TIMEOUT的值是否为整数")
-            if thread.count >= self.app.config['AFTER_TIMEOUT']:
+            if thread.count >= cls.app.config['AFTER_TIMEOUT']:
                 try:
                     end_thread(thread)
                 except ValueError:
                     pass
-                self.thread_pool.remove(thread)
+                cls.thread_pool.remove(thread)
             thread.count += 1
 
     def run(self, func, args):
@@ -78,7 +82,7 @@ class RiskLevel:
         self.thread_pool.append(p)
 
     def __call__(self, *args, **kwargs):
-        # check before execute
+
         result = None
         fr_func = getattr(self, f"before_{self.__wrapped__.__name__}", None)
         if fr_func:
@@ -102,5 +106,5 @@ class RiskLevel:
         return res
 
     @classmethod
-    def realtime_check(self):
+    def realtime_check(cls):
         """ 一直检查 """
