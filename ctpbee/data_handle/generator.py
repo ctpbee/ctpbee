@@ -126,6 +126,7 @@ class DataGenerator:
                 high_price=bar.high_price,
                 low_price=bar.low_price
             )
+            setattr(self, f"min_{xmin}_bar", xmin_bar)
         else:
             xmin_bar.high_price = max(
                 xmin_bar.high_price, bar.high_price)
@@ -134,6 +135,7 @@ class DataGenerator:
 
         xmin_bar.close_price = bar.close_price
         xmin_bar.volume += int(bar.volume)
+
         if not (bar.datetime.minute + 1) % xmin:
             xmin_bar.datetime = xmin_bar.datetime.replace(
                 second=0, microsecond=0
@@ -141,7 +143,7 @@ class DataGenerator:
             xmin_bar.interval = xmin
             event = Event(type=EVENT_BAR, data=xmin_bar)
             self.rpo.put(event)
-            xmin_bar = None
+            setattr(self, f"min_{xmin}_bar", None)
 
     def generate(self):
         if self.bar is not None:
