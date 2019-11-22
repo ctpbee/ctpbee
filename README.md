@@ -1,15 +1,15 @@
 # ctpbee 
 bee bee .... 为二次开发而生 ~~
 
-![ctpbee](https://github.com/ctpbee/ctpbee/blob/master/docs/source/ctpbee.jpg)
+![ctpbee](source/ctpbee.jpg)
 
 ctpbee 提供了一个可供使用的交易微框架, 你可以通过这个微小的核心来构建值得信赖的工具， 
 当然这需要你的编程功力。 你所需要关心的是如何编程来处理行情和交易信息即可。
 
 ## 开始之前 
 ```bash
-# just for linux 
-sudo locale-gen zh_CN.GB18030
+# just for linux/ 生成中文环境
+sudo ctpbee -auto generate
 ```
 ## 起源
 
@@ -34,6 +34,7 @@ docker run -p 5000:5000 yutiansut/ctpbee:latest
 it will be fix in next version
 
 ## 文档
+文档中描述相关教程，请认真阅读。如有问题，请到底部加群或者邮件联系作者 ^_^
 [文档](http://docs.ctpbee.com)
 
 ## 社区支持
@@ -98,12 +99,21 @@ app.start()
 ctpbee主要面对开发者, 希望能得到各位大佬的支持. 后续不再开发examples. 
 策略以及指标等工具都以ctpbee_** 形式发布. ctpbee只提供最小的内核. 本人崇尚开源, 无论你是交易者还是程序员, 只要你有新的想法以及对开源感兴趣, 欢迎基于ctpbee 开发出新的可用工具. 我会维护一个工具列表, 指引用户前往使用. 
 
+## 贡献代码
+如果你希望贡献代码，请遵循以下步骤，注意我们仅仅接受向dev`分支提交代码 ! ! ! ! 
+
+1. `fork`本项目到你的`github`本地仓库
+2. `clone`你账户的`ctpbee dev`分支的代码到本地
+3. 修改提交到你自己本地仓库到dev分支中。
+4. 打开[地址](https://github.com/ctpbee/ctpbee/compare/dev?expand=1)。点击`compare across forks`，将`base`中的`branch`选为`dev`,`head`选取你自己的项目地址，分支选取`dev`，点击提交即可。
+
+
 ## 最后一句 
 ctpbee是开源项目, 如果你同意使用ctpbee, 那么我们默认你 *清楚* 你的每个行为带来的*后果*, 加以思考并自行承担后果！
 
 如果这个能帮助到你, 请点击star来支持我噢. ^_^  
 
-如果你希望贡献代码, 欢迎加群一起讨论和或者提交PR  QQ群号(: 756319143) [点进加入群聊以了解更多](https://jq.qq.com/?_wv=1027&k=5xWbIq3)
+QQ群号(: 756319143)， [点进加入群聊以了解更多](https://jq.qq.com/?_wv=1027&k=5xWbIq3)
 
 如果你有遇到问题请发邮件给我 邮箱: somewheve@gmail.com 我会及时回复! 
 最后一句 ----> 祝各位大佬都能赚钱 ！

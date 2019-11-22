@@ -19,5 +19,8 @@
   "SLIPPAGE_COVER": 0,
   "SLIPPAGE_SELL": 0,
   "CLOSE_PATTERN": "yesterday",
-  "SHARED_FUNC": false
+  "SHARED_FUNC": false,
+  "XMIN": [
+    3
+  ]
 }

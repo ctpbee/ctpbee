@@ -11,13 +11,15 @@ from ctpbee.event_engine import Event
 from ctpbee.event_engine.engine import EVENT_TIMER
 from ctpbee.helpers import value_call, async_value_call
 
+import ctpbee.signals as signal
+
 
 class Recorder(object):
     """
     data center
     """
 
-    def __init__(self, app, event_engine):
+    def __init__(self, app):
         """"""
         self.bar = {}
         self.ticks = {}
@@ -28,14 +30,11 @@ class Recorder(object):
         self.contracts = {}
         self.logs = {}
         self.errors = []
-        self.shared = {}
         self.generators = {}
         self.active_orders = {}
         self.local_contract_price_mapping = {}
-        self.event_engine = event_engine
-        self.register_event()
-
         self.app = app
+        self.register_event()
         self.position_manager = LocalPositionManager(app=self.app)
         self.main_contract_mapping = defaultdict(list)
 
@@ -46,21 +45,26 @@ class Recorder(object):
 
     def register_event(self):
         """ bind process function """
-        self.event_engine.register(EVENT_TICK, self.process_tick_event)
-        self.event_engine.register(EVENT_ORDER, self.process_order_event)
-        self.event_engine.register(EVENT_TRADE, self.process_trade_event)
-        self.event_engine.register(EVENT_POSITION, self.process_position_event)
-        self.event_engine.register(EVENT_ACCOUNT, self.process_account_event)
-        self.event_engine.register(EVENT_CONTRACT, self.process_contract_event)
-        self.event_engine.register(EVENT_BAR, self.process_bar_event)
-        self.event_engine.register(EVENT_LOG, self.process_log_event)
-        self.event_engine.register(EVENT_ERROR, self.process_error_event)
-        self.event_engine.register(EVENT_SHARED, self.process_shared_event)
-        self.event_engine.register(EVENT_LAST, self.process_last_event)
-        self.event_engine.register(EVENT_INIT_FINISHED, self.process_init_event)
-        self.event_engine.register(EVENT_TIMER, self.process_timer_event)
 
-    def process_timer_event(self):
+        function = lambda name: lambda event: getattr(self, f"process_{name}_event")(event)
+
+        def connect(data):
+            name = data[0]
+            signal = data[1]
+            temp_sig = getattr(signal, f"{name}_signal")
+            temp_sig.connect(function(name=name), weak=False)
+            return name
+
+        def generate_params(data, signal):
+            temp = []
+            for x in data:
+                temp.append((x, signal))
+            return temp
+
+        p = list(map(connect, generate_params(signal.common_signals.event, signal.common_signals)))
+        p = list(map(connect, generate_params(self.app.app_signal.event, self.app.app_signal)))
+
+    def process_timer_event(self, event):
         for x in self.app.extensions.values():
             x()
 
@@ -79,25 +83,14 @@ class Recorder(object):
         key = "".join([x for x in data.symbol if not x.isdigit()])
         self.main_contract_mapping[key.upper()].append(data)
 
-    def process_shared_event(self, event):
-        self.shared.setdefault(event.data.local_symbol, []).append(event.data)
-        for value in self.app.extensions.values():
-            if self.app.config['INSTRUMENT_INDEPEND']:
-                if len(value.instrument_set) == 0:
-                    warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
-                if event.data.local_symbol in value.instrument_set:
-                    value(deepcopy(event))
-            else:
-                value(deepcopy(event))
-
     def process_error_event(self, event: Event):
         self.errors.append({"time": self.get_local_time(), "data": event.data})
         self.app.logger.error(event.data)
 
     def process_log_event(self, event: Event):
         self.logs[self.get_local_time()] = event.data
-        if self.app.config.get("LOG_OUTPUT"):
-            self.app.logger.info(event.data)
+        # if self.app.config.get("LOG_OUTPUT"):
+        self.app.logger.info(event.data)
 
     @value_call
     def process_bar_event(self, event: Event):
@@ -115,7 +108,6 @@ class Recorder(object):
         """"""
         tick = event.data
         self.ticks[tick.local_symbol] = tick
-        symbol = tick.symbol
         self.position_manager.update_tick(tick)
         # 生成datetime对象
         if not tick.datetime:
@@ -123,11 +115,12 @@ class Recorder(object):
                 tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y%m%d %H:%M:%S.%f')
             else:
                 tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y%m%d %H:%M:%S')
-        bm = self.generators.get(symbol, None)
+        bm = self.generators.get(tick.local_symbol, None)
         if bm:
             bm.update_tick(tick)
         if not bm:
-            self.generators[symbol] = generator(self.event_engine, self.app)
+            self.generators[tick.local_symbol] = generator(self.app)
+            self.generators[tick.local_symbol].update_tick(tick)
 
     @value_call
     def process_order_event(self, event: Event):
@@ -209,7 +202,6 @@ class Recorder(object):
 
     def get_trade(self, local_trade_id):
         return self.trades.get(local_trade_id, None)
-
 
     def get_position(self, local_position_id):
         return self.positions.get(local_position_id, None)

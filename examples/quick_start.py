@@ -69,7 +69,7 @@ class RiskMe(RiskLevel):
 
     """
 
-    def realtime_check(self, cur):
+    def realtime_check(self):
         pass
 
     def after_cancel_order(self, result):
@@ -80,7 +80,6 @@ class RiskMe(RiskLevel):
 
     def before_short(self, *args, **kwargs):
         """"""
-
         # do something  ??
         self.info("发单")
         return True, args, kwargs
@@ -96,16 +95,13 @@ class RiskMe(RiskLevel):
             self.info("正在检查呢 ")
             # do something
 
-    def realtime_check(self):
-        """ """
-
 
 # 启动过程  --- strategy/ .py  --- app.add_extension(ext)
 
 class DataRecorder(CtpbeeApi):
     def __init__(self, name, app=None):
         super().__init__(name, app)
-        self.instrument_set = set(["rb2010.SHFE"])
+        self.instrument_set = set(["rb2001.SHFE"])
         self.comming_in = None
         self.id = None
         self.f_init = False
@@ -116,7 +112,7 @@ class DataRecorder(CtpbeeApi):
     def on_contract(self, contract):
         # 通过本地的
         if contract.local_symbol in self.instrument_set:
-            self.app.subscribe(contract.local_symbol)
+            self.app.action.subscribe(contract.local_symbol)
 
     def on_order(self, order):
         """ """
@@ -132,15 +128,12 @@ class DataRecorder(CtpbeeApi):
 
     def on_tick(self, tick):
         """tick processself-control  && kill your  function"""
+        # print(tick)
 
     def on_bar(self, bar):
         """bar process function"""
 
-        self.action.buy(bar.high_price, 1, bar)
-
-    def on_shared(self, shared):
-        """ 处理分时图数据 """
-        print(shared)
+        self.action.short(bar.high_price, 1, bar)
 
     def on_log(self, log: LogData):
         """ 可以用于将log信息推送到外部 """
@@ -150,7 +143,7 @@ class DataRecorder(CtpbeeApi):
         """  """
         # for x in self.app.recorder.get_all_active_orders():
         #     self.action.cancel(x.local_order_id)
-
+        # print(self.app.recorder.generators["rb2001.SHFE"].get_min_1_bar)
     def on_init(self, init):
         self.info("初始化")
         if init:
@@ -195,6 +188,6 @@ def create_app():
 
 if __name__ == '__main__':
     # 7*24 小时运行模块
-    # hickey.start_all(app_func=create_app)
-    app = create_app()
-    app[0].start()
+    hickey.start_all(app_func=create_app)
+    # app = create_app()
+    # app[0].start()

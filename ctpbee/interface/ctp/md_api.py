@@ -2,20 +2,21 @@ from datetime import date, datetime
 
 from ctpbee.constant import *
 from ctpbee.event_engine import Event
+from ctpbee.signals import common_signals
 from .lib import *
 
 
 class BeeMdApi(MdApi):
     """"""
 
-    def __init__(self, event_engine):
+    def __init__(self, app_signal):
         """Constructor"""
         super(BeeMdApi, self).__init__()
 
         self.gateway_name = "ctp"
 
         self.reqid = 0
-        self.event_engine = event_engine
+        self.app_signal = app_signal
         self.connect_status = False
         self.login_status = False
         self.subscribed = set()
@@ -29,8 +30,14 @@ class BeeMdApi(MdApi):
         return self.login_status
 
     def on_event(self, type, data):
-        event = Event(type=type, data=data)
-        self.event_engine.put(event)
+        if type == EVENT_TICK or type == EVENT_ERROR:
+            event = Event(type=type, data=data)
+            signal = getattr(common_signals, f"{type}_signal")
+            signal.send(event)
+        else:
+            event = Event(type=type, data=data)
+            signal = getattr(self.app_signal, f"{type}_signal")
+            signal.send(event)
 
     def onFrontConnected(self):
         """
@@ -111,6 +118,8 @@ class BeeMdApi(MdApi):
             ask_volume_1=data["AskVolume1"],
             average_price=data['AveragePrice'],
             pre_settlement_price=data['PreSettlementPrice'],
+            settlement_price=data['SettlementPrice'],
+            pre_open_interest=data['PreOpenInterest'],
             gateway_name=self.gateway_name
         )
         self.on_event(type=EVENT_TICK, data=tick)
@@ -125,7 +134,7 @@ class BeeMdApi(MdApi):
 
         # If not connected, then start connection first.
         if not self.connect_status:
-            path = get_folder_path(self.gateway_name.lower()+ f"/{self.userid}")
+            path = get_folder_path(self.gateway_name.lower() + f"/{self.userid}")
             self.createFtdcMdApi(str(path) + "\\Md")
             self.registerFront(info['md_address'])
             self.init()
@@ -284,7 +293,7 @@ class BeeMdApiApp(MdApiApp):
 
         # If not connected, then start connection first.
         if not self.connect_status:
-            path = get_folder_path(self.gateway_name.lower()+ f"/{self.userid}")
+            path = get_folder_path(self.gateway_name.lower() + f"/{self.userid}")
             self.createFtdcMdApi(str(path) + "\\Md")
             self.registerFront(info['md_address'])
             self.init()

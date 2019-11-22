@@ -5,7 +5,7 @@
 """
 import logging
 import os
-from datetime import time, datetime
+from datetime import time, datetime, timedelta
 from inspect import isfunction
 from multiprocessing import Process
 from time import sleep
@@ -192,27 +192,30 @@ def auth_time(data_time: time):
 
 class Hickey(object):
     """ ctpbee进程调度 """
-
+    from datetime import time
     logger = logging.getLogger("ctpbee")
+    DAY_START = time(9, 0)  # 日盘启动和停止时间
+    DAY_END = time(15, 5)
+    NIGHT_START = time(21, 0)  # 夜盘启动和停止时间
+    NIGHT_END = time(2, 35)
 
     def __init__(self):
         self.names = []
+        from datetime import time
+        self.open_trading = {
+            "ctp": {"DAY_START": time(9, 0), "NIGHT_START": time(21, 0)}
+        }
 
     def auth_time(self, current: datetime):
-        from datetime import time
-        DAY_START = time(8, 57)  # 日盘启动和停止时间
-        DAY_END = time(15, 5)
-        NIGHT_START = time(20, 57)  # 夜盘启动和停止时间
-        NIGHT_END = time(2, 35)
         if ((current.today().weekday() == 6) or
-                (current.today().weekday() == 5 and current.time() > NIGHT_END) or
-                (current.today().weekday() == 0 and current.time() < DAY_START)):
+                (current.today().weekday() == 5 and current.time() > self.NIGHT_END) or
+                (current.today().weekday() == 0 and current.time() < self.DAY_START)):
             return False
-        if current.time() <= DAY_END and current.time() >= DAY_START:
+        if self.DAY_END >= current.time() >= self.DAY_START:
             return True
-        if current.time() >= NIGHT_START:
+        if current.time() >= self.NIGHT_START:
             return True
-        if current.time() <= NIGHT_END:
+        if current.time() <= self.NIGHT_END:
             return True
         return False
 
@@ -235,8 +238,22 @@ class Hickey(object):
         else:
             raise ValueError("你传入的创建的func无法创建CtpBee变量, 请检查返回值")
 
-    def start_all(self, app_func):
-        """ 开始进程管理 """
+    @staticmethod
+    def add_seconds(tm, seconds, direction=False):
+        full_date = datetime(100, 1, 1, tm.hour, tm.minute, tm.second)
+        if not direction:
+            full_date = full_date - timedelta(seconds=seconds)
+        else:
+            full_date = full_date + timedelta(seconds=seconds)
+        return full_date.time()
+
+    def start_all(self, app_func, info=True, interface="ctp", in_front=300):
+        """
+        开始进程管理
+        * app_func: 创建app的函数
+        * interface: 接口名字
+        * in_front: 相较于开盘提前多少秒进行运行登陆.单位: seconds
+        """
         print("""
         Ctpbee 7*24 Manager started !
         Warning: program will automatic start at trade time ....
@@ -244,17 +261,23 @@ class Hickey(object):
         """)
         if not isfunction(app_func):
             raise TypeError(f"请检查你传入的app_func是否是创建app的函数,  而不是{type(app_func)}")
+        for i, v in self.open_trading[interface].items():
+            setattr(self, i, self.add_seconds(getattr(self, i), in_front))
         p = None
         while True:
-            """ """
             current = datetime.now()
+
             status = self.auth_time(current)
-            if p is None and status == True:
+
+            if info:
+                print("ctpbee manager running ---> ^_^ ")
+
+            if p is None and status:
                 p = Process(target=self.run_all_app, args=(app_func,))
                 p.start()
-                self.logger.info("启动程序")
+                print("program start successful")
             if not status and p is not None:
-                self.logger.info("查杀子进程")
+                print("invalid time, 查杀子进程")
                 import os
                 import platform
                 if platform.uname().system == "Windows":
@@ -267,7 +290,7 @@ class Hickey(object):
             sleep(30)
 
     def __repr__(self):
-        return "ctpbee 7*24 manager "
+        return "ctpbee 7*24 manager ^_^"
 
 
 hickey = Hickey()

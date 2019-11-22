@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from ctpbee import CtpbeeApi, helper, CtpBee
-from ctpbee.constant import ContractData, LogData, TickData, BarData, OrderType, Offset, OrderData, SharedData, \
+from ctpbee.constant import ContractData, LogData, TickData, BarData, OrderType, Offset, OrderData, \
     TradeData, PositionData, Direction, AccountData
 
 
@@ -13,6 +13,7 @@ class Demo(CtpbeeApi):
     def on_contract(self, contract: ContractData):
         """ 处理推送的合约信息 """
         if contract.local_symbol == "rb2001.SHFE":
+            print("nad")
             self.app.subscribe(contract.local_symbol)
 
     def on_log(self, log: LogData):
@@ -37,10 +38,11 @@ class Demo(CtpbeeApi):
 
     def on_order(self, order: OrderData) -> None:
         """ 报单回报 """
-        print(order)
+        pass
 
     def on_trade(self, trade: TradeData) -> None:
         """ 成交回报 """
+
     def on_position(self, position: PositionData) -> None:
         """ 处理持仓回报 """
 
@@ -48,12 +50,33 @@ class Demo(CtpbeeApi):
         """ 处理账户信息 """
 
 
+class Fancy(CtpbeeApi):
+
+    def __init__(self, name, instrument):
+        super().__init__(name)
+        self.instrument_set = instrument
+
+    def on_contract(self, contract: ContractData):
+        if contract.local_symbol in self.instrument_set:
+            self.app.action.subscribe(contract.local_symbol)
+
+    def on_bar(self, bar: BarData) -> None:
+        pass
+
+    def on_tick(self, tick: TickData) -> None:
+        pass
+
+
 def letsgo():
     app = CtpBee(name="demo", import_name=__name__)
     # 创建对象
     demo = Demo("test")
     # 添加对象, 你可以继承多个类 然后实例化不同的插件 再载入它, 这些都是极其自由化的操作
+
+    running = Fancy("fancy", ['ag2002.SHFE'])
+
     app.add_extension(demo)
+    app.add_extension(running)
     app.config.from_json("config.json")
     app.start(log_output=True)
     # 单独开一个线程来进行查询持仓和账户信息

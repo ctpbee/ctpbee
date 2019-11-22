@@ -9,16 +9,17 @@ from datetime import datetime, date
 
 class ReadFile:
     def __init__(self):
-        self.count = int                    # 数量
-        self.ret_data = None                # 总数据
-        self.ret_open = None                # 开盘价
-        self.ret_low = None                 # 最低价
-        self.ret_high = None                # 最高价
-        self.ret_date = None                # 时间
-        self.ret_close = None               # 收盘价
-        self.ret_volume = None              # 成交量
-        self.open_file_name = None          # 文件名
-        self.open_file_start = None         # 开始时间
+        self.count = 0                    # 数量
+        self.ret_data = []                # 总数据
+        self.ret_open = []                # 开盘价
+        self.ret_low = []                 # 最低价
+        self.ret_high = []                # 最高价
+        self.ret_date = []                # 时间
+        self.ret_close = []               # 收盘价
+        self.ret_volume = []              # 成交量
+        self.open_file_name = []          # 文件名
+        self.open_file_start = []         # 开始时间
+        self.inited = False               # 判断计算是否满足计算要求
 
     def update_bar(self, datas: dict, switch=False):
         """
@@ -30,8 +31,17 @@ class ReadFile:
         """
         if not datas:
             raise Warning("type error or type is None")
-        data = [datas["datetime"], datas["open_price"], datas["high_price"], datas["low_price"], datas["close_price"],
-                554]
+        if isinstance(datas, dict):
+            data = [datas["datetime"], datas["open_price"], datas["high_price"], datas["low_price"], datas["close_price"],
+                    1]
+        else:
+            try:
+                datas = datas._to_dict()
+            except:
+                raise TypeError("只支持 dict和BarData这个两种数据")
+            data = [datas["datetime"], datas["open_price"], datas["high_price"], datas["low_price"],
+                    datas["close_price"],
+                    1]
         if switch:
 
             if isinstance(data[0], datetime):
@@ -68,6 +78,8 @@ class ReadFile:
                 self.ret_low = self.ret_low[-max_value:]
                 self.ret_volume = self.ret_volume[-max_value:]
             self.count += 1
+            if self.count > 30:
+                self.inited = True
             self.ret_close = np.append(self.ret_close, data[4])
             self.ret_high = np.append(self.ret_high, data[2])
             self.ret_low = np.append(self.ret_low, data[3])

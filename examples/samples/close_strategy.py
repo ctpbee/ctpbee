@@ -7,7 +7,7 @@ from datetime import datetime, date
 
 from ctpbee import LooperApi, Vessel
 from ctpbee.constant import Direction
-from ctpbee.indicator import Interface
+from ctpbee.indicator import Indicator
 
 
 # def get_data(start, end, symbol, exchange, level):
@@ -52,8 +52,8 @@ def get_a_strategy():
         def __init__(self, name):
             super().__init__(name)
             self.count = 1
-            self.api = Interface()
-            self.api.open_json("../zn1912.SHFE.json")
+            self.api = Indicator()
+            # self.api.open_json("../zn1912.SHFE.json")
             self.pos = 0
 
         def on_bar(self, bar):
@@ -61,6 +61,8 @@ def get_a_strategy():
             """ """
             am = self.api
             am.add_bar(bar)
+            if not am.inited:
+                return
             # 收盘
             close = am.close
             # 允许最大价格小于当前收盘价

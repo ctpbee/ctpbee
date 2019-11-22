@@ -13,17 +13,18 @@ from ctpbee import __version__
 from ctpbee.config import Config
 from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
-from ctpbee.event_engine import EventEngine, AsyncEngine
+from ctpbee.event_engine import EventEngine, AsyncEngine, Event
+from ctpbee.event_engine.engine import EVENT_TIMER
 from ctpbee.exceptions import ConfigError
 from ctpbee.helpers import end_thread
 from ctpbee.helpers import locked_cached_property, find_package, refresh_query, graphic_pattern
 from ctpbee.interface import Interface
 from ctpbee.level import CtpbeeApi, Action
 from ctpbee.log import VLogger
-from ctpbee.record import Recorder, AsyncRecorder
+from ctpbee.record import Recorder
 from ctpbee.cprint_config import CP
 
-local_variable = locals()
+from ctpbee.signals import AppSignal, common_signals
 
 
 class CtpBee(object):
@@ -71,7 +72,8 @@ class CtpBee(object):
              INSTRUMENT_INDEPEND=False,  # 是否开启独立行情，策略对应相应的行情
              CLOSE_PATTERN="today",  # 面对支持平今的交易所，优先平今或者平昨 ---> today: 平今, yesterday: 平昨， 其他:处罚异常
              TODAY_EXCHANGE=[Exchange.SHFE.value, Exchange.INE.value],  # 需要支持平今的交易所代码列表
-             AFTER_TIMEOUT=3,  # 设置after线程执行超时
+             AFTER_TIMEOUT=3,  # 设置after线程执行超时,
+             TIMER_INTERVAL=1
              ))
 
     config_class = Config
@@ -107,12 +109,11 @@ class CtpBee(object):
             else:
                 self.logger = logger_class(CP, app_name=self.name)
             self.logger.set_default(name=self.logger.app_name, owner='App')
+
+        self.app_signal = AppSignal(self)
+
         if engine_method == "thread":
-            self.event_engine = EventEngine()
-            self.recorder = Recorder(self, self.event_engine)
-        elif engine_method == "async":
-            self.event_engine = AsyncEngine()
-            self.recorder = AsyncRecorder(self, self.event_engine)
+            self.recorder = Recorder(self)
         else:
             raise TypeError("引擎参数错误，只支持 thread 和 async，请检查代码")
 
@@ -204,7 +205,9 @@ class CtpBee(object):
         return self.market.md_status
 
     def _load_ext(self):
-        """根据当前配置文件下的信息载入行情api和交易api,记住这个api的选项是可选的"""
+        """
+        根据当前配置文件下的信息载入行情api和交易api,记住这个api的选项是可选的
+        """
         self.active = True
         if "CONNECT_INFO" in self.config.keys():
             info = self.config.get("CONNECT_INFO")
@@ -212,14 +215,14 @@ class CtpBee(object):
             raise ConfigError(message="没有相应的登录信息", args=("没有发现登录信息",))
         MdApi, TdApi = Interface.get_interface(self)
         if self.config.get("MD_FUNC"):
-            self.market = MdApi(self.event_engine)
+            self.market = MdApi(self.app_signal)
             self.market.connect(info)
 
         if self.config.get("TD_FUNC"):
             if self.config['INTERFACE'] == "looper":
-                self.trader = TdApi(self.event_engine, self)
+                self.trader = TdApi(self.app_signal, self)
             else:
-                self.trader = TdApi(self.event_engine)
+                self.trader = TdApi(self.app_signal)
             self.trader.connect(info)
 
         show_me = graphic_pattern(__version__, self.engine_method)
@@ -251,15 +254,18 @@ class CtpBee(object):
         :param debug: 是否开启调试模式 ----> 等待完成
         :return:
         """
-        if not self.event_engine.status:
-            self.event_engine.start()
+
+        def running_timer(common_signal):
+            while True:
+                event = Event(type=EVENT_TIMER)
+                common_signal.timer_signal.send(event)
+                sleep(self.config['TIMER_INTERVAL'])
+
+        p = Thread(target=running_timer, args=(common_signals,))
+        p.start()
+
         self.config["LOG_OUTPUT"] = log_output
         self._load_ext()
-
-    def stop(self):
-        """ 停止运行 """
-        if self.event_engine.status:
-            self.event_engine.stop()
 
     def remove_extension(self, extension_name: Text) -> None:
         """移除插件"""
@@ -295,7 +301,6 @@ class CtpBee(object):
         if self.trader is not None:
             self.trader.close()
         # 清空处理队列
-        self.event_engine._queue.empty()
         sleep(3)
         self.market, self.trader = None, None
         self._load_ext()
@@ -308,8 +313,6 @@ class CtpBee(object):
             if self.trader is not None:
                 self.trader.close()
             self.market, self.trader = None, None
-            self.event_engine.stop()
-            del self.event_engine
             if self.r is not None:
                 """ 强行终结掉线程 """
                 end_thread(self.r)

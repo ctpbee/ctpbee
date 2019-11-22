@@ -6,7 +6,7 @@ import json
 from datetime import datetime, date
 from ctpbee import LooperApi, Vessel
 from ctpbee.constant import Direction
-from ctpbee.indicator import Interface
+from ctpbee.indicator import Indicator
 
 
 def get_data(start, end, symbol, exchange, level):
@@ -49,7 +49,7 @@ def get_a_strategy():
             self.count = 1
             self.pos = 0
 
-            self.bar_3 = Interface()  # 3分钟bar线
+            self.bar_3 = Indicator()  # 3分钟bar线
             self.bar_3.open_json('../zn1912.SHFE.json')  # 读取本地数据
 
             self.allow_max_price = 5000  # 设置价格上限 当价格达到这个就卖出 防止突然跌
@@ -59,7 +59,8 @@ def get_a_strategy():
             # todo: RSI 相对强度指数
             """ """
             self.bar_3.add_bar(bar)
-
+            if not self.bar_3.inited:
+                return
             roc = self.bar_3.roc()
 
             if self.allow_max_price < bar.close_price and self.pos > 0:
