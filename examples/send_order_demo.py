@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from ctpbee import CtpbeeApi, helper, CtpBee
-from ctpbee.constant import ContractData, LogData, TickData, BarData, OrderType, Offset, OrderData, SharedData, \
+from ctpbee.constant import ContractData, LogData, TickData, BarData, OrderType, Offset, OrderData, \
     TradeData, PositionData, Direction, AccountData
 
 

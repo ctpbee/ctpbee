@@ -129,12 +129,13 @@ class DataRecorder(CtpbeeApi):
 
     def on_tick(self, tick):
         """tick processself-control  && kill your  function"""
-        print(tick)
+        # print(tick)
 
     def on_bar(self, bar):
         """bar process function"""
 
         self.action.buy(bar.high_price, 1, bar)
+        print(self.app.recorder.generators["rb2001.SHFE"].get_min_3_bar)
 
     def on_log(self, log: LogData):
         """ 可以用于将log信息推送到外部 """
@@ -190,6 +191,6 @@ def create_app():
 
 if __name__ == '__main__':
     # 7*24 小时运行模块
-    # hickey.start_all(app_func=create_app)
-    app = create_app()
-    app[0].start()
+    hickey.start_all(app_func=create_app)
+    # app = create_app()
+    # app[0].start()

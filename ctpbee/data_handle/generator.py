@@ -36,7 +36,7 @@ class DataGenerator:
 
         gen_func = lambda item: setattr(self, f"get_min_{item}_bar",
                                         property(
-                                            MethodType(lambda self: getattr(self, f"min_{item}_bar"), self)).fget())
+                                            fget=MethodType(lambda self: getattr(self, f"min_{item}_bar"), self)).fget)
         [gen_func(x) for x in self.XMIN]
 
     @property
