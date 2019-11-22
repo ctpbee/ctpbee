@@ -39,7 +39,7 @@ class RiskLevel:
             cls.mimo_thread()
 
         def connect_realtime(event):
-            cls.realtime_check()
+            classmethod(getattr(cls, "realtime_check")).__func__(self=cls)
 
         common_signals.timer_signal.connect(connect_mimo, weak=False)
 
@@ -105,6 +105,5 @@ class RiskLevel:
             res = types.MethodType(self, instance)
         return res
 
-    @classmethod
-    def realtime_check(cls):
+    def realtime_check(self):
         """ 一直检查 """

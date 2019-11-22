@@ -308,7 +308,7 @@ class CtpbeeApi(BeeApi):
             EVENT_TIMER: EVENT_TIMER,
             EVENT_INIT_FINISHED: EVENT_INIT_FINISHED,
             EVENT_POSITION: EVENT_POSITION,
-            EVEHappyNT_TRADE: EVENT_TRADE,
+            EVENT_TRADE: EVENT_TRADE,
             EVENT_BAR: EVENT_BAR,
             EVENT_TICK: EVENT_TICK,
             EVENT_ORDER: EVENT_ORDER,
