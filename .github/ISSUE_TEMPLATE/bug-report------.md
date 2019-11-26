@@ -2,7 +2,7 @@
 name: Bug report/ 错误报告
 about: Create a report to help us improve/ 创建一个报告以帮助我们了解情况
 title: Bugs
-labels: 'bugs'
+labels: ''
 assignees: ''
 
 ---
@@ -29,5 +29,3 @@ If applicable, add screenshots to help explain your problem./如果可能请将�
  - OS: [e.g. Linux]
  - Python Version: [e.g.Python36]
  - ctpbee Version: [e.g. 0.50]
-
-
