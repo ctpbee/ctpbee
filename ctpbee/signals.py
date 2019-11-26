@@ -25,14 +25,12 @@ from blinker import signal
 class CommonSignal:
     # 全局级别的signal
     def __init__(self):
-        self.event = ["timer", "tick", "bar", "error"]
+        self.event = ["timer", "tick", "bar"]
         self.timer_signal = signal("timer")
         # tick
         self.tick_signal = signal("tick")
         # bar
         self.bar_signal = signal("bar")
-
-        self.error_signal = signal("error")
 
 
 class AppSignal:
@@ -40,7 +38,7 @@ class AppSignal:
 
     def __init__(self, app):
         """ 账户级别的相关信号 """
-        self.event = ['order', "trade", "contract", "position", "init", "account", "last", "log"]
+        self.event = ['order', "trade", "contract", "position", "init", "account", "last", "log", "error"]
         self.app = app
         self.order_signal = signal("order")
         self.trade_signal = signal("trade")
@@ -50,6 +48,7 @@ class AppSignal:
         self.last_signal = signal("last")
         self.log_signal = signal("log")
         self.contract_signal = signal("contract")
+        self.error_signal = signal("error")
 
 
 # 发单监视器

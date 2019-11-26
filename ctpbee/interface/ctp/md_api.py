@@ -30,7 +30,7 @@ class BeeMdApi(MdApi):
         return self.login_status
 
     def on_event(self, type, data):
-        if type == EVENT_TICK or type == EVENT_ERROR:
+        if type == EVENT_TICK:
             event = Event(type=type, data=data)
             signal = getattr(common_signals, f"{type}_signal")
             signal.send(event)

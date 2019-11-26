@@ -1,8 +1,8 @@
 """
     for the future of  life
 """
-__version__ = '0.50'
-__status__ = '走向自闭!!!'
+__version__ = '0.54'
+__status__ = 'emmm'
 
 # About core
 from ctpbee.app import CtpBee
