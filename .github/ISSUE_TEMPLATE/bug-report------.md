@@ -2,13 +2,13 @@
 name: Bug report/ 错误报告
 about: Create a report to help us improve/ 创建一个报告以帮助我们了解情况
 title: Bugs
-labels: ''
+labels: 'bugs'
 assignees: ''
 
 ---
 
 **Describe the bug**
-> 此处描述问题
+> 请在此处描述问题
 
 **To Reproduce/ 复现步骤 **
 Steps to reproduce the behavior:
@@ -20,19 +20,13 @@ Steps to reproduce the behavior:
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+**Screenshots / 截图 **
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+If applicable, add screenshots to help explain your problem./如果可能请将截图放于此处
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+**Environment/ 你的运行环境*
+ - OS: [e.g. Linux]
+ - Python Version: [e.g.Python36]
+ - Ctpbee Version: [e.g. 0.50]
 
-**Additional context**
-Add any other context about the problem here.
+
