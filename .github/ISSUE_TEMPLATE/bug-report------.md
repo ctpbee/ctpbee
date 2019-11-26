@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-**Describe the bug**
+**Describe the bug /问题描述**
 > 请在此处描述问题
 
 **To Reproduce/ 复现步骤 **
@@ -17,7 +17,7 @@ Steps to reproduce the behavior:
 3. Scroll down to '....'
 4. See error
 
-**Expected behavior**
+**Expected behavior/ 期望结果**
 A clear and concise description of what you expected to happen.
 
 **Screenshots / 截图 **
