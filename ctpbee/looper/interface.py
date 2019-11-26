@@ -145,8 +145,8 @@ class LocalLooper():
 
         # 日志输出器
         self.logger = logger
-
-        self.strategy = strategy
+        # 策略池子
+        self.strategy_pools = []
         # 覆盖里面的action和logger属性
         # 涨跌停价格
         self.upper_price = 99999
