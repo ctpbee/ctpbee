@@ -26,6 +26,7 @@ from ctpbee.event_engine import Event
 from ctpbee.interface.ctp.lib import *
 from ctpbee.signals import common_signals
 
+
 class BeeTdApi(TdApi):
     """"""
 
@@ -71,7 +72,6 @@ class BeeTdApi(TdApi):
         event = Event(type=type, data=data)
         signal = getattr(self.app_signal, f"{type}_signal")
         signal.send(event)
-
 
     def onFrontConnected(self):
         """"""
