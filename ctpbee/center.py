@@ -4,7 +4,7 @@ ctpbee里面的核心数据访问模块
 此模块描述了ctpbee里面默认的数据访问中心，同时它也可以被回测模块所调用
 整齐高于混乱
 """
-from abc import ABCMeta, ABC
+from abc import ABC
 
 
 class Missing:
@@ -12,7 +12,19 @@ class Missing:
         return "属性缺失/ Attribute Missing"
 
 
-missing = Missing
+missing = Missing()
+
+
+class PositionModel:
+
+    def __init__(self, iterable):
+        pass
+
+    def pos_long(self):
+        """ 长头持仓 """
+
+    def pos_short(self):
+        """ 空头持仓 """
 
 
 class BasicCenterModel(ABC):
@@ -40,8 +52,37 @@ class Center(BasicCenterModel):
     def __str__(self):
         return "ctpbee 统一数据调用接口"
 
+    @property
+    def orders(self):
+        """ 返回所有的报单 """
+        return self.app.recorder.get_all_orders()
 
-if __name__ == '__main__':
-    a = Center(app="123")
-    print(a)
-    # print(a.b)
+    @property
+    def active_orders(self):
+        """ 返回所有的为成交单 """
+        return self.app.recorder.get_all_active_orders()
+
+    @property
+    def trades(self):
+        """ 返回所有的成交单 """
+        return self.app.recorder.get_all_trades()
+
+    @property
+    def account(self):
+        return self.app.recorder.get_account()
+
+    def get_tick(self, local_symbol):
+        """ 获取指定合约最近的一条tick"""
+        try:
+            return self.app.recorder.get_tick(local_symbol)[:-1]
+        except IndexError:
+            return missing
+
+    def get_active_order(self, local_symbol):
+        """ 拿到指定合约的最佳"""
+        return self.app.recorder.get_all_active_orders(local_symbol)
+
+    def get_position(self, local_symbol):
+        """ 返回指定合约的持仓信息 """
+
+
