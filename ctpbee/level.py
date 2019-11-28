@@ -401,6 +401,12 @@ class CtpbeeApi(BeeApi):
         return ActionProxy(self.app.action, self)
 
     @property
+    def center(self):
+        if self.app is None:
+            raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
+        return self.app.center
+
+    @property
     def logger(self):
         return self.app.logger
 

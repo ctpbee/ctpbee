@@ -10,6 +10,7 @@ from threading import local
 from werkzeug.datastructures import ImmutableDict
 
 from ctpbee import __version__
+from ctpbee.center import Center
 from ctpbee.config import Config
 from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
@@ -172,6 +173,7 @@ class CtpBee(object):
         self.r = None
         self.r_flag = True
 
+        self.center = Center(self)
         _app_context_ctx.push(self.name, self)
 
     def update_action_class(self, action_class):
