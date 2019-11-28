@@ -41,8 +41,8 @@ class Action(object):
         raise ValueError(f"请确保传入的func 类型为函数, 当前传入参数类型为{type(func)}")
 
     @property
-    def action(self):
-        return self.app.action
+    def center(self):
+        return self.app.center
 
     @property
     def recorder(self):
