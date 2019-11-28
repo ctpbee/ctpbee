@@ -139,16 +139,7 @@ class CtpBee(object):
         bind the function of action to CtpBee
         """
 
-        """ update """
-        if self.risk_decorator is not None:
-            self.risk_decorator.update_app(self)
 
-        for x in dir(self.action):
-            func = getattr(self.action, x)
-            if x.startswith("__"):
-                continue
-            if ismethod(func):
-                setattr(self, func.__name__, func)
         """
         If engine_method is specified by default, use the default EventEngine and Recorder or use the engine
             and recorder basis on your choice
@@ -174,6 +165,17 @@ class CtpBee(object):
         self.r_flag = True
 
         self.center = Center(self)
+        """ update """
+        if self.risk_decorator is not None:
+            self.risk_decorator.update_app(self)
+
+        for x in dir(self.action):
+            func = getattr(self.action, x)
+            if x.startswith("__"):
+                continue
+            if ismethod(func):
+                setattr(self, func.__name__, func)
+
         _app_context_ctx.push(self.name, self)
 
     def update_action_class(self, action_class):
