@@ -5,7 +5,6 @@ from inspect import ismethod
 from threading import Thread
 from time import sleep
 from typing import Text
-from threading import local
 
 from werkzeug.datastructures import ImmutableDict
 
@@ -14,7 +13,7 @@ from ctpbee.center import Center
 from ctpbee.config import Config
 from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
-from ctpbee.event_engine import EventEngine, AsyncEngine, Event
+from ctpbee.event_engine import Event
 from ctpbee.event_engine.engine import EVENT_TIMER
 from ctpbee.exceptions import ConfigError
 from ctpbee.helpers import end_thread
@@ -138,7 +137,6 @@ class CtpBee(object):
         根据action里面的函数更新到CtpBee上面来
         bind the function of action to CtpBee
         """
-
 
         """
         If engine_method is specified by default, use the default EventEngine and Recorder or use the engine
@@ -265,8 +263,8 @@ class CtpBee(object):
                 common_signal.timer_signal.send(event)
                 sleep(self.config['TIMER_INTERVAL'])
 
-        p = Thread(target=running_timer, args=(common_signals,))
-        p.start()
+        self.timer = Thread(target=running_timer, args=(common_signals,))
+        self.timer.start()
 
         self.config["LOG_OUTPUT"] = log_output
         self._load_ext()
@@ -320,5 +318,7 @@ class CtpBee(object):
             if self.r is not None:
                 """ 强行终结掉线程 """
                 end_thread(self.r)
+            if self.timer is not None:
+                end_thread(self.timer)
         except AttributeError:
             pass
