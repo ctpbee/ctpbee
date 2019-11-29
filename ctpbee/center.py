@@ -137,7 +137,6 @@ class Center(BasicCenterModel, dict):
         """
         position_long = self.app.recorder.position_manager.get_position_by_ld(local_symbol, Direction.LONG)
         position_short = self.app.recorder.position_manager.get_position_by_ld(local_symbol, Direction.SHORT)
-
         if position_short is None and position_long is None:
             return None
         else:

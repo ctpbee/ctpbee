@@ -134,7 +134,7 @@ class LocalLooper():
         -4: "资金不足"
     }
 
-    def __init__(self, logger, strategy=None, risk=None):
+    def __init__(self, logger, risk=None):
         """ 需要构建完整的成交回报以及发单报告,在account里面需要存储大量的存储 """
 
         # 活跃报单数量
@@ -146,7 +146,7 @@ class LocalLooper():
         # 日志输出器
         self.logger = logger
         # 策略池子
-        self.strategy_pools = []
+        self.strategy_mapping = dict()
         # 覆盖里面的action和logger属性
         # 涨跌停价格
         self.upper_price = 99999
@@ -182,13 +182,25 @@ class LocalLooper():
         self.price = None
 
     def update_strategy(self, strategy):
-        self.strategy = strategy
-        setattr(self.strategy, "action", Action(self))
-        setattr(self.strategy, "logger", self.logger)
-        setattr(self.strategy, "info", self.logger.info)
-        setattr(self.strategy, "debug", self.logger.debug)
-        setattr(self.strategy, "error", self.logger.error)
-        setattr(self.strategy, "warning", self.logger.warning)
+        setattr(strategy, "action", Action(self))
+        setattr(strategy, "logger", self.logger)
+        setattr(strategy, "info", self.logger.info)
+        setattr(strategy, "debug", self.logger.debug)
+        setattr(strategy, "error", self.logger.error)
+        setattr(strategy, "warning", self.logger.warning)
+        self.strategy_mapping[strategy.name] = strategy
+
+    def enable_extension(self, name):
+        if name in self.strategy_mapping.keys():
+            self.strategy_mapping.get(name).active = True
+        else:
+            return
+
+    def suspend_extension(self, name):
+        if name in self.strategy_mapping.keys():
+            self.strategy_mapping.get(name).active = False
+        else:
+            return
 
     def update_risk(self, risk):
         self.risk = risk

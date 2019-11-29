@@ -5,6 +5,7 @@ import os
 from threading import Thread
 from time import sleep
 
+from ctpbee.constant import ContractData, OrderData, TradeData, AccountData, PositionData, BarData
 from ctpbee.log import VLogger
 from ctpbee.looper.data import VessData
 from ctpbee.looper.interface import LocalLooper
@@ -12,8 +13,11 @@ from ctpbee.cprint_config import CP
 
 
 class LooperApi:
+    instrument_set = set()
+
     def __init__(self, name):
         self.name = name
+        self.active = True
 
     def on_bar(self, bar):
         raise NotImplemented
@@ -39,6 +43,29 @@ class LooperApi:
     def init_params(self, data):
         """ 用户需要继承此方法"""
         # print("我在设置策略参数")
+
+    def __call__(self, data):
+        """
+        你必须实现此方法以支持在此层进行中转
+        """
+        if data.local_symbol not in self.instrument_set:
+            return
+        if not self.active:
+            return
+        if isinstance(data, ContractData):
+            self.on_contract(data)
+        elif isinstance(data, OrderData):
+            self.on_order(data)
+        elif isinstance(data, TradeData):
+            self.on_trade(data)
+        elif isinstance(data, AccountData):
+            self.on_account(data)
+        elif isinstance(data, PositionData):
+            self.on_position(data)
+        elif isinstance(data, BarData):
+            self.on_bar(data)
+        else:
+            raise ValueError("unsupported data")
 
 
 class LooperLogger:
@@ -80,16 +107,36 @@ class Vessel:
 
     def __init__(self, logger_class=None, pattern="T0"):
         self.ready = False
-        self.looper_data: VessData = None
+
+        """
+        回测数据安放点/Data point
+        """
+        self.looper_data: [VessData] = set()
+
+        """
+        创建日志调试器
+        """
         if logger_class:
             self.logger = logger_class()
         else:
             self.logger = LooperLogger()
-
+        """ 
+        账户级别的风险控制
+        """
         self.risk = None
-        self.strategy = None
-        self.interface = LocalLooper(logger=self.logger, strategy=self.strategy, risk=self.risk)
+
+        """
+        回测主要接口
+        """
+        self.interface = LocalLooper(logger=self.logger, risk=self.risk)
+
+        """
+        参数配置
+        """
         self.params = dict()
+        """
+        回测模式
+        """
         self.looper_pattern = pattern
 
         """
@@ -108,19 +155,21 @@ class Vessel:
         self._strategy_status = False
         self._risk_status = True
 
-    def add_strategy(self, strategy):
+    def add_strategy(self, strategy: LooperApi):
         """ 添加策略到本容器 """
-        self.strategy = strategy
-
+        if not isinstance(strategy, LooperApi):
+            raise ValueError(f"你传入的策略类型出现问题，期望: LooperApi, 当前:{type(strategy)}")
         self.interface.update_strategy(strategy)
         self._strategy_status = True
-
         self.check_if_ready()
 
     def add_data(self, data):
-        """ 添加data到本容器, 如果没有经过处理 """
+        """
+        注意此处的Add Data,可以添加多个数据源 ---> 他们的长度应该是一开始就对齐！！！
+        ： ---> 必须在时间戳上进行对齐， 否则数据进行回放会出现问题。
+        """
         d = VessData(data)
-        self.looper_data = d
+        self.looper_data.add(d)
         self._data_status = True
         self.check_if_ready()
 
@@ -145,15 +194,16 @@ class Vessel:
         return self.interface.account.result
 
     def letsgo(self, parmas, ready):
-        if self.looper_data.init_flag:
+        if False not in [x.init_flag for x in self.looper_data]:
             self.logger.info(f"产品: {self.looper_data.product}")
             self.logger.info(f"回测模式: {self.looper_pattern}")
         for x in range(self.looper_data.length):
             if ready:
                 """ 如果处于就绪状态 那么直接开始继续回测 """
                 try:
-                    p = next(self.looper_data)
-                    self.interface(p, parmas)
+                    """ 注意开始回放每个数据源的数据 """
+                    for _origin_data in self.looper_data:
+                        self.interface(next(_origin_data), parmas)
 
                 except StopIteration:
                     self._looper_status = "finished"
