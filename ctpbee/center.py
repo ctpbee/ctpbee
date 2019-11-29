@@ -5,7 +5,8 @@ ctpbee里面的核心数据访问模块
 
 """
 from abc import ABC
-from typing import Mapping
+
+from ctpbee.constant import Direction
 
 
 class Missing:
@@ -27,10 +28,32 @@ class PositionModel(dict):
     """
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
+    v_ext = ['exchange', 'symbol', "local_symbol"]
+    u_ext = ['direction', 'local_position_id']
 
-    def __init__(self, mapping: Mapping):
+    def __init__(self, long, short):
         dict.__init__(self)
-        self.update(mapping)
+        self._update_attr(long, "long")
+        self._update_attr(short, "short")
+
+    def _update_attr(self, attr, direction):
+        if direction == "long":
+            for i, v in attr._to_dict().items():
+                if i in self.v_ext:
+                    setattr(self, i, v)
+                elif i in self.u_ext:
+                    continue
+                else:
+                    setattr(self, "long_" + i, v)
+
+        elif direction == "short":
+            for i, v in attr._to_dict().items():
+                if i in self.v_ext:
+                    setattr(self, i, v)
+                elif i in self.u_ext:
+                    continue
+                else:
+                    setattr(self, "short_" + i, v)
 
 
 class BasicCenterModel(ABC):
@@ -112,12 +135,10 @@ class Center(BasicCenterModel, dict):
             打印长头持仓数目
             print(ag_model.long_pos)
         """
-        positions = self.app.recorder.get_all_positions()
-        if local_symbol not in positions:
+        position_long = self.app.recorder.position_manager.get_position_by_ld(local_symbol, Direction.LONG)
+        position_short = self.app.recorder.position_manager.get_position_by_ld(local_symbol, Direction.SHORT)
+
+        if position_short is None and position_long is None:
             return None
         else:
-            return PositionModel(positions[local_symbol])
-
-
-if __name__ == '__main__':
-    a = Center(app=1)
+            return PositionModel(position_long, position_short)
