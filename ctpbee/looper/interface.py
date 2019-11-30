@@ -246,7 +246,7 @@ class LocalLooper():
             for order in self.pending:
                 if data.order_id == order.order_id:
                     order = deepcopy(order)
-                    self.strategy.on_order(order)
+                    [api(order) for api in self.strategy_mapping.values()]
                     self.pending.remove(order)
                     return 1
             return 0
@@ -303,8 +303,8 @@ class LocalLooper():
                     order.price = max(order.price, short_b)
                 trade = self._generate_trade_data_from_order(order)
                 order.status = Status.ALLTRADED
-                self.strategy.on_order(deepcopy(order))
-                self.strategy.on_trade(trade)
+                [api(deepcopy(order)) for api in self.strategy_mapping.values()]
+                [api(trade) for api in self.strategy_mapping.values()]
                 self.pending.remove(order)
 
                 # 成交，移除冻结
@@ -328,7 +328,7 @@ class LocalLooper():
                 p = self._generate_trade_data_from_order(data)
                 self.account.update_trade(p)
                 """ 调用strategy的on_trade """
-                self.strategy.on_trade(p)
+                [api(p) for api in self.strategy_mapping.values()]
                 self.today_volume += data.volume
                 # 已经成交，同时移除冻结
                 self.account.update_frozen(p, reverse=True)
@@ -360,7 +360,8 @@ class LocalLooper():
         """ 初始化参数设置  """
         if not isinstance(params, dict):
             raise AttributeError("回测参数类型错误，请检查是否为字典")
-        self.strategy.init_params(params.get("strategy"))
+
+        [strategy.init_params(params.get("strategy")) for strategy in self.strategy_mapping.values()]
         self.init_params(params.get("looper"))
 
     def __call__(self, *args, **kwargs):
@@ -369,10 +370,9 @@ class LocalLooper():
         self.price = p_data
         self.__init_params(params)
         if p_data.type == "tick":
-            self.strategy.on_tick(tick=p_data)
-
+            [api(p_data) for api in self.strategy_mapping.values()]
         if p_data.type == "bar":
-            self.strategy.on_bar(bar=p_data)
+            [api(p_data) for api in self.strategy_mapping.values()]
         # 更新接口的日期
         self.date = p_data.datetime.date()
         # 穿过接口日期检查
