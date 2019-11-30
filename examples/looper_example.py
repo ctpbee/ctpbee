@@ -67,6 +67,7 @@ def get_a_strategy():
             super().__init__(name)
             self.count = 1
             self.api = Indicator()
+            self.instrument_set = ['ag1912.SHFE']
             # self.api.open_json("zn1912.SHFE.json")
             self.pos = 0
 
@@ -143,6 +144,7 @@ def load_data():
 def run_main(data):
     vessel = Vessel()
     vessel.add_data(data)
+    # vessel.add_data(dat)
     stra = get_a_strategy()
     vessel.add_strategy(stra)
     vessel.set_params({"looper":

@@ -91,7 +91,7 @@ class CtpBee(object):
 
     def __init__(self, name: Text, import_name, action_class: Action = None, engine_method: str = "thread",
                  logger_class=None, logger_config=None,
-                 refresh: bool = False, risk=None,
+                 refresh: bool = False, risk=None, sim: bool = False,
                  instance_path=None):
         """ 初始化 """
         self.name = name if name else 'ctpbee'

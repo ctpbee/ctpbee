@@ -68,8 +68,8 @@ class DataRecorder(CtpbeeApi):
 
     def on_contract(self, contract):
         # 通过本地的
-        if contract.local_symbol in self.instrument_set:
-            self.app.action.subscribe(contract.local_symbol)
+        # if contract.local_symbol in self.instrument_set:
+        self.app.action.subscribe(contract.local_symbol)
 
     def on_order(self, order):
         """ """
@@ -85,7 +85,7 @@ class DataRecorder(CtpbeeApi):
 
     def on_tick(self, tick):
         """tick processself-control  && kill your  function"""
-        # print(tick)
+        print(tick)
 
     def on_bar(self, bar):
         """bar process function"""

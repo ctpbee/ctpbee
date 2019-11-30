@@ -5,7 +5,7 @@ import os
 from threading import Thread
 from time import sleep
 
-from ctpbee.constant import ContractData, OrderData, TradeData, AccountData, PositionData, BarData
+from ctpbee.constant import ContractData, OrderData, TradeData, AccountData, PositionData, BarData, TickData
 from ctpbee.log import VLogger
 from ctpbee.looper.data import VessData
 from ctpbee.looper.interface import LocalLooper
@@ -52,6 +52,7 @@ class LooperApi:
             return
         if not self.active:
             return
+
         if isinstance(data, ContractData):
             self.on_contract(data)
         elif isinstance(data, OrderData):
@@ -62,8 +63,10 @@ class LooperApi:
             self.on_account(data)
         elif isinstance(data, PositionData):
             self.on_position(data)
-        elif isinstance(data, BarData):
-            self.on_bar(data)
+        elif data['type'] == "bar":
+            self.on_bar(BarData(**data))
+        elif data['type'] == "tick":
+            self.on_tick(TickData(**data))
         else:
             raise ValueError("unsupported data")
 
@@ -111,7 +114,7 @@ class Vessel:
         """
         回测数据安放点/Data point
         """
-        self.looper_data: [VessData] = set()
+        self.looper_data: [VessData] = []
 
         """
         创建日志调试器
@@ -169,7 +172,7 @@ class Vessel:
         ： ---> 必须在时间戳上进行对齐， 否则数据进行回放会出现问题。
         """
         d = VessData(data)
-        self.looper_data.add(d)
+        self.looper_data.append(d)
         self._data_status = True
         self.check_if_ready()
 
@@ -195,15 +198,16 @@ class Vessel:
 
     def letsgo(self, parmas, ready):
         if False not in [x.init_flag for x in self.looper_data]:
-            self.logger.info(f"产品: {self.looper_data.product}")
+            # self.logger.info(f"产品: {self.looper_data.product}")
             self.logger.info(f"回测模式: {self.looper_pattern}")
-        for x in range(self.looper_data.length):
+        for x in range(self.looper_data[0].length):
             if ready:
                 """ 如果处于就绪状态 那么直接开始继续回测 """
                 try:
                     """ 注意开始回放每个数据源的数据 """
                     for _origin_data in self.looper_data:
-                        self.interface(next(_origin_data), parmas)
+                        p = next(_origin_data)
+                        self.interface(p, parmas)
 
                 except StopIteration:
                     self._looper_status = "finished"

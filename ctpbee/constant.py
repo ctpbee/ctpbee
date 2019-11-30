@@ -379,7 +379,12 @@ class BarData(BaseData):
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        l = getattr(self, "local_symbol", None)
+        if l is not None:
+            setattr(self, "symbol", l.split(".")[0])
+            setattr(self, "exchange", l.split(".")[1])
+        else:
+            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
 class OrderData(BaseData):
