@@ -57,7 +57,6 @@ from ctpbee.indicator import Indicator
 
 
 def get_a_strategy():
-
     class DoubleMaStrategy(LooperApi):
 
         allow_max_price = 5000  # 设置价格上限 当价格达到这个就卖出 防止突然跌 止盈
@@ -68,7 +67,7 @@ def get_a_strategy():
             self.count = 1
             self.api = Indicator()
             self.instrument_set = ['ag1912.SHFE']
-            # self.api.open_json("zn1912.SHFE.json")
+            self.api.open_json("zn1912.SHFE.json")
             self.pos = 0
 
         def on_bar(self, bar):
@@ -165,8 +164,7 @@ def run_main(data):
                        })
     vessel.run()
     from pprint import pprint
-    result = vessel.get_result()
-    pprint(result)
+    result = vessel.get_result(report=True, auto_open=True)
 
 
 if __name__ == '__main__':

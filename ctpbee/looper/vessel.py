@@ -10,6 +10,7 @@ from ctpbee.log import VLogger
 from ctpbee.looper.data import VessData
 from ctpbee.looper.interface import LocalLooper
 from ctpbee.cprint_config import CP
+from ctpbee.looper.report import render_result
 
 
 class LooperApi:
@@ -192,8 +193,16 @@ class Vessel:
             raise ValueError(f"配置信息格式出现问题， 你当前的配置信息为 {type(params)}")
         self.params = params
 
-    def get_result(self):
-        """ 计算回测结果，生成回测报告 """
+    def get_result(self, report=False, **kwargs):
+        """
+        计算回测结果，生成回测报告
+        :param report: bool ,指定是否输出策略报告
+        """
+        strategys = list(self.interface.strategy_mapping.keys())
+        if report:
+            path = render_result(self.interface.account.result, strategy=strategys, **kwargs)
+            print(f"请复制下面的路径到浏览器打开----> \n {path}")
+            return path
         return self.interface.account.result
 
     def letsgo(self, parmas, ready):

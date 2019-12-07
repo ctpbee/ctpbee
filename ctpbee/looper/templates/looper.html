@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <div class="container ui">
+        <div class="ui pointing menu">
+            <a class="active item" href="https://docs.ctpbee/com">
+                Docs
+            </a>
+            <a class="item" href="https://github.com/ctpbee/ctpbee">
+                Github
+            </a>
+            <a class="item" href="https://jq.qq.com/?_wv=1027&k=5xWbIq3">
+                QQ群
+            </a>
+
+            <div class="right menu">
+                <div class="item">
+                    技术支持
+                </div>
+            </div>
+        </div>
+        <div class="ui grid">
+            <div class="six wide column">
+                <h1 class="ui header">回测报告</h1>
+                <h2 class="ui header">策略名字</h2>
+                {% for x in strategy %}
+                    <a> {{ x }} </a> +
+                {% endfor %}
+
+            </div>
+            <div class="six wide column">
+                <h2 class="ui header">回测结果</h2>
+                <table class="ui celled table">
+                    <thead>
+                    <tr>
+                        <th>参数</th>
+                        <th>结果</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for i,v in result.items() %}
+                        <tr>
+                            <td data-label="参数">{{ i }}</td>
+                            <td data-label="结果">{{ v }}</td>
+                        </tr>
+                    {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+    </div>
+{% endblock %}
