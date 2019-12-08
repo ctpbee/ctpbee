@@ -15,6 +15,9 @@
 
             <div class="right menu">
                 <div class="item">
+                    打印至pdf
+                </div>
+                <div class="item">
                     技术支持
                 </div>
             </div>
@@ -54,7 +57,8 @@
                 </div>
 
                 <div class="ui divider"></div>
-                <div id="account" style="width: 100%;height:400px;"></div>
+                <div id="account" style="width: 100%;height:300px;"></div>
+                <div id="net_value" style="width: 100%;height:300px;"></div>
 
             </div>
             <div class="four wide column">
@@ -88,19 +92,18 @@
     <script>
         var accout_chart = echarts.init(document.getElementById('account'));
         // 指定图表的配置项和数据
-        var data = {{ account_data | tojson }};
+        var account_data = {{ account_data | tojson }};
         var _axis = [];
         var _ayis = [];
-        for(var i in data){
+        for (var i in account_data) {
             _axis.push(i);
-            _ayis.push(data[i]);
+            _ayis.push(account_data[i]);
         }
         var option = {
             title: {
                 text: '账户资金曲线图'
             },
             xAxis: {
-                type: 'category',
                 data: _axis
             },
             yAxis: {
@@ -108,6 +111,7 @@
             },
             series: [{
                 data: _ayis,
+                symbol: "none",
                 type: 'line'
             }]
         };
@@ -115,6 +119,49 @@
 
         // 使用刚指定的配置项和数据显示图表。
         accout_chart.setOption(option);
+
+    </script>
+    <script>
+        var net_pnl_data = {{ net_pnl | tojson }};
+        var net_pnl_chart = echarts.init(document.getElementById('net_value'));
+        var xAxisData = [];
+        var net_pnl_list = [];
+        for (var i in net_pnl_data) {
+            xAxisData.push(i);
+            net_pnl_list.push(net_pnl_data[i]);
+        }
+
+        net_option = {
+            title: {
+                text: '每日盈亏分布图'
+            },
+            legend: {
+                data: ['bar'],
+                align: 'left'
+            },
+            tooltip: {},
+            xAxis: {
+                data: xAxisData,
+                silent: false,
+                splitLine: {
+                    show: false
+                }
+            },
+            yAxis: {},
+            series: [{
+                name: '当日盈亏',
+                type: 'bar',
+                data: net_pnl_list,
+                animationDelay: function (idx) {
+                    return idx * 10;
+                }
+            }],
+            animationEasing: 'elasticOut',
+            animationDelayUpdate: function (idx) {
+                return idx * 5;
+            }
+        };
+        net_pnl_chart.setOption(net_option);
 
     </script>
 {% endblock %}

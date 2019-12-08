@@ -10,7 +10,7 @@ from ctpbee.constant import ContractData, OrderData, TradeData, AccountData, Pos
 from ctpbee.log import VLogger
 from ctpbee.looper.data import VessData
 from ctpbee.looper.interface import LocalLooper
-from ctpbee.cprint_config import CP
+from ctpbee.looper.colour_printing_config import CP
 from ctpbee.looper.report import render_result
 
 
@@ -208,8 +208,13 @@ class Vessel:
         cost_time = f"{str(end_time.hour - self.start_time.hour)}" \
                     f"h {str(end_time.minute - self.start_time.minute)}m " \
                     f"{str(end_time.second - self.start_time.second)}s"
+
+        net_pnl = self.interface.account.get_mapping("net_pnl")
+
         if report:
-            path = render_result(self.interface.account.result, strategy=strategys, account_data=account_data, cost_time=cost_time, **kwargs)
+            path = render_result(self.interface.account.result, strategy=strategys, net_pnl=net_pnl,
+                                 account_data=account_data,
+                                 cost_time=cost_time, **kwargs)
             print(f"请复制下面的路径到浏览器打开----> \n {path}")
             return path
         return self.interface.account.result

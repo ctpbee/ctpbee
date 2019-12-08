@@ -156,7 +156,6 @@ class Recorder(object):
         """"""
         position = event.data
         self.positions[position.local_position_id] = position
-        # 本地实时计算 --> todo :优化
         self.position_manager.update_position(position)
         for value in self.app.extensions.values():
             if self.app.config['INSTRUMENT_INDEPEND']:

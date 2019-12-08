@@ -252,6 +252,7 @@ class Account:
     def get_mapping(self, d):
         mapping = {}
         for i, v in self.daily_life.items():
+            print(v)
             mapping[str(i)] = v.get(d)
         return mapping
 
