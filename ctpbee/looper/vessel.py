@@ -2,6 +2,7 @@
 回测容器模块, 回测
 """
 import os
+from datetime import datetime
 from threading import Thread
 from time import sleep
 
@@ -159,6 +160,8 @@ class Vessel:
         self._strategy_status = False
         self._risk_status = True
 
+        self.start_time = None
+
     def add_strategy(self, strategy: LooperApi):
         """ 添加策略到本容器 """
         if not isinstance(strategy, LooperApi):
@@ -199,8 +202,14 @@ class Vessel:
         :param report: bool ,指定是否输出策略报告
         """
         strategys = list(self.interface.strategy_mapping.keys())
+        end_time = datetime.now()
+
+        account_data = self.interface.account.get_mapping("balance")
+        cost_time = f"{str(end_time.hour - self.start_time.hour)}" \
+                    f"h {str(end_time.minute - self.start_time.minute)}m " \
+                    f"{str(end_time.second - self.start_time.second)}s"
         if report:
-            path = render_result(self.interface.account.result, strategy=strategys, **kwargs)
+            path = render_result(self.interface.account.result, strategy=strategys, account_data=account_data, cost_time=cost_time, **kwargs)
             print(f"请复制下面的路径到浏览器打开----> \n {path}")
             return path
         return self.interface.account.result
@@ -258,6 +267,7 @@ class Vessel:
 
     def run(self):
         """ 开始运行回测 """
+        self.start_time = datetime.now()
         p = Thread(name="looper", target=self.letsgo, args=(self.params, self.ready,))
         p.start()
         p.join()

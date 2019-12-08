@@ -4,11 +4,23 @@
     <meta charset="UTF-8">
     <title>ctpbee回测结果</title>
     <link href="https://cdn.bootcss.com/semantic-ui/1.11.0/semantic.min.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="semantic/dist/semantic.min.css">
     <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdn.bootcss.com/semantic-ui/1.11.0/semantic.min.js"></script>
+    <script src="https://cdn.bootcss.com/echarts/4.4.0-rc.1/echarts.min.js"></script>
     {% block head %}
     {% endblock %}
+
+    <style>
+        .titled {
+            text-align: center;
+        }
+
+        .title_block {
+            padding-top: 10px;
+        }
+
+
+    </style>
 </head>
 <body>
 
@@ -20,4 +32,9 @@
 {% endblock %}
 
 </body>
+
+
+{% block script %}
+
+{% endblock %}
 </html>

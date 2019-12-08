@@ -16,11 +16,11 @@ env = Environment(
 template = env.get_template("looper.html")
 
 
-def render_result(result, kline=None, strategy=[], **kwargs):
+def render_result(result, kline=None, strategy=[], account_data=None,cost_time=None, **kwargs):
     """
     渲染结果并写入到本地html文件， 并返回htmk文件地址
     """
-    code_string = template.render(result=result, strategy=strategy)
+    code_string = template.render(result=result, strategy=strategy, account_data=account_data, cost_time=cost_time, datetime=str(datetime.now()))
     file_path = kwargs.get("file_path", None)
     if not file_path:
         path = get_ctpbee_path() + "/looper"
