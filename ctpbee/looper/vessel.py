@@ -1,7 +1,6 @@
 """
 回测容器模块, 回测
 """
-import os
 from datetime import datetime
 from threading import Thread
 from time import sleep
@@ -10,8 +9,9 @@ from ctpbee.constant import ContractData, OrderData, TradeData, AccountData, Pos
 from ctpbee.log import VLogger
 from ctpbee.looper.data import VessData
 from ctpbee.looper.interface import LocalLooper
-from ctpbee.looper.colour_printing_config import CP
+from ctpbee.cprint_config import CP
 from ctpbee.looper.report import render_result
+from ctpbee.jsond import dumps
 
 
 class LooperApi:
@@ -196,23 +196,36 @@ class Vessel:
             raise ValueError(f"配置信息格式出现问题， 你当前的配置信息为 {type(params)}")
         self.params = params
 
-    def get_result(self, report=False, **kwargs):
+    def get_result(self, report: bool = False, **kwargs):
         """
         计算回测结果，生成回测报告
         :param report: bool ,指定是否输出策略报告
+        :param auto_open: bool, 是否让浏览器自动打开回测报告
+        :param zh:bpol, 是否输出成中文报告
         """
         strategys = list(self.interface.strategy_mapping.keys())
         end_time = datetime.now()
-
+        """
+        账户数据
+        """
         account_data = self.interface.account.get_mapping("balance")
+        """
+        耗费时间
+        """
         cost_time = f"{str(end_time.hour - self.start_time.hour)}" \
                     f"h {str(end_time.minute - self.start_time.minute)}m " \
                     f"{str(end_time.second - self.start_time.second)}s"
-
+        """
+        每日盈利
+        """
         net_pnl = self.interface.account.get_mapping("net_pnl")
 
+        """
+        成交单数据
+        """
+        trade_data = list(map(dumps, self.interface.traded_order_mapping.values()))
         if report:
-            path = render_result(self.interface.account.result, strategy=strategys, net_pnl=net_pnl,
+            path = render_result(self.interface.account.result, trade_data=trade_data,strategy=strategys, net_pnl=net_pnl,
                                  account_data=account_data,
                                  cost_time=cost_time, **kwargs)
             print(f"请复制下面的路径到浏览器打开----> \n {path}")

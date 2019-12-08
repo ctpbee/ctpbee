@@ -598,7 +598,7 @@ class OrderRequest(BaseRequest):
         except AttributeError:
             self.local_symbol = f"{self.symbol}.{self.exchange}"
 
-    def _create_order_data(self, order_id: str, gateway_name: str):
+    def _create_order_data(self, order_id: str, gateway_name: str, time=None):
         """
         Create order data from request.
         """
@@ -612,6 +612,7 @@ class OrderRequest(BaseRequest):
             price=self.price,
             volume=self.volume,
             gateway_name=gateway_name,
+            time=time
         )
         return order
 

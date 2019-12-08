@@ -209,12 +209,12 @@ class LocalLooper():
         """ 将发单请求转换为发单数据 """
         self.order_ref += 1
         order_id = f"{self.frontid}-{self.sessionid}-{self.order_ref}"
-        return req._create_order_data(gateway_name="looper", order_id=order_id)
+        return req._create_order_data(gateway_name="looper", order_id=order_id, time=self.datetime)
 
     def _generate_trade_data_from_order(self, order_data: OrderData):
         """ 将orderdata转换成成交单 """
         p = TradeData(price=order_data.price, istraded=order_data.volume, volume=order_data.volume,
-                      tradeid=uuid.uuid1(), offset=order_data.offset, direction=order_data.direction,
+                      tradeid=str(uuid.uuid1()), offset=order_data.offset, direction=order_data.direction,
                       gateway_name=order_data.gateway_name, time=order_data.time,
                       order_id=order_data.order_id, symbol=order_data.symbol, exchange=order_data.exchange)
         return p
@@ -236,8 +236,10 @@ class LocalLooper():
                 """ 将成交单通过日志接口暴露出去"""
                 # self.logger.info(dumps(result))
                 self.logger.info(
-                    f"成交, 成交价格{str(result.price)}, 成交笔数: {str(result.volume)},"
+                    f"成交时间: {str(result.time)}, 成交价格{str(result.price)}, 成交笔数: {str(result.volume)},"
                     f" 成交方向: {str(result.direction.value)}，行为: {str(result.offset.value)}")
+                self.traded_order_mapping[result.order_id] = result
+
             else:
                 self.logger.info(self.message_box[result])
         if isinstance(data, CancelRequest):
@@ -368,6 +370,7 @@ class LocalLooper():
         """ 回测周期 """
         p_data, params = args
         self.price = p_data
+        self.datetime = p_data.datetime
         self.__init_params(params)
         if p_data.type == "tick":
             [api(p_data) for api in self.strategy_mapping.values()]

@@ -112,7 +112,10 @@
             series: [{
                 data: _ayis,
                 symbol: "none",
-                type: 'line'
+                type: 'line',
+                animationDelay: function (idx) {
+                    return idx * 10;
+                }
             }]
         };
 
@@ -163,5 +166,13 @@
         };
         net_pnl_chart.setOption(net_option);
 
+    </script>
+
+    <script>
+        var trade_data = {{ trade_data | tojson }};
+
+        for (var i in trade_data) {
+            console.log(trade_data[i]);
+        }
     </script>
 {% endblock %}

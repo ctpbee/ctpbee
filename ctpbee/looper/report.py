@@ -16,11 +16,14 @@ env = Environment(
 template = env.get_template("looper.html")
 
 
-def render_result(result, kline=None, strategy=[], account_data=None, net_pnl=None, cost_time=None, **kwargs):
+def render_result(result, kline=None, trades=None, trade_data=None, strategy=[],
+                  account_data=None, net_pnl=None, cost_time=None, **kwargs):
     """
     渲染结果并写入到本地html文件， 并返回htmk文件地址
     """
-    code_string = template.render(result=result, strategy=strategy, account_data=account_data, net_pnl=net_pnl,cost_time=cost_time,
+    code_string = template.render(result=result, strategy=strategy,
+                                  trade_data=trade_data,account_data=account_data,
+                                  net_pnl=net_pnl,cost_time=cost_time,
                                   datetime=str(datetime.now()))
     file_path = kwargs.get("file_path", None)
     if not file_path:
