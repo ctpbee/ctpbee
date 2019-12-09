@@ -159,6 +159,7 @@ def run_main(data):
                             "slippage_buy": 0,
                             "slippage_short": 0,
                             "close_pattern": "yesterday",
+
                             },
                        "strategy": {}
                        })

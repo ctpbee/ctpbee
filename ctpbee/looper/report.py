@@ -8,6 +8,8 @@ from jinja2 import Environment, PackageLoader, select_autoescape
 from ctpbee import get_ctpbee_path
 from datetime import datetime
 
+from ctpbee.func import join_path
+
 env = Environment(
     loader=PackageLoader('ctpbee', 'looper/templates'),
     autoescape=select_autoescape(['html', 'xml'])
@@ -23,7 +25,7 @@ def render_result(result, kline=None, trades=None, datetimed=None, trade_data=No
     渲染结果并写入到本地html文件， 并返回htmk文件地址
     """
 
-    datetimed = str(datetimed.strftime("%Y-%m-%d&%H:%M:%S"))
+    datetimed = str(datetimed.strftime("%Y-%m-%d_%H_%M_%S"))
     code_string = main_template.render(result=result, strategy=strategy,
                                        account_data=account_data,
                                        net_pnl=net_pnl, cost_time=cost_time,
@@ -37,18 +39,19 @@ def render_result(result, kline=None, trades=None, datetimed=None, trade_data=No
     trade_path = kwargs.get("trade_file_path", None)
 
     """默认回测文件存放文件夹地址"""
-    path = get_ctpbee_path() + "/looper"
+    path = join_path(get_ctpbee_path(), "looper")
     if not file_path:
         if not os.path.isdir(path):
             os.mkdir(path)
-        file_path = path + "/" + datetimed + ".html"
+
+        file_path = join_path(path, datetimed + ".html")
 
     if not trade_path:
-        trade_path = path + "/" + datetimed + "-trade.html"
+        trade_path = join_path(path, datetimed + "-trade.html")
     with open(file_path, "w") as f:
         f.write(code_string)
     with open(trade_path, "w") as f:
-        f.write(trade_code_string)
+        f.write(trade_code_string.encode(encoding="utf-8"))
     if kwargs.get("auto_open", None):
         webbrowser.open(file_path)
     return file_path
