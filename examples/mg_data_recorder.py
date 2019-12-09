@@ -56,10 +56,14 @@ class Market(CtpbeeApi):
             """ 过滤非交易时间段的数据 """
             return
 
-        if self.datetime_queue.empty():
+        if self.datetime_queue.empty() or self.datetime_queue.qsize() <= self.queue_length:
             self.datetime_queue.put(TimeIt(tick.datetime))
-
-
+        else:
+            q = self.datetime_queue.get()
+            interval = q - tick.datetime
+            if interval > 3600 * 4 or q < tick.datetime:
+                """ 如果出现间隔过大或者时间小于队列的里面的数据，那么代表着脏数据"""
+                return
 
 
 if __name__ == '__main__':
