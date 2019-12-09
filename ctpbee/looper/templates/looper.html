@@ -54,6 +54,13 @@
                             <p class="title_block titled"> 正在开发中 </p>
                         </div>
                     </div>
+
+                    <div class="card">
+                        <div class="content">
+                            <a id="trade_url" class="ui header titled">成交单明细</a>
+                        </div>
+                    </div>
+
                 </div>
 
                 <div class="ui divider"></div>
@@ -169,10 +176,9 @@
     </script>
 
     <script>
-        var trade_data = {{ trade_data | tojson }};
+        var trade_path = "./"+"{{ datetime | safe}}"+"-trade.html";
+        $("#trade_url").attr("href", trade_path);
 
-        for (var i in trade_data) {
-            console.log(trade_data[i]);
-        }
     </script>
+
 {% endblock %}

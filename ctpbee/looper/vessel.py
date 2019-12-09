@@ -192,6 +192,11 @@ class Vessel:
         self.check_if_ready()
 
     def set_params(self, params):
+        """
+        设置参数
+        :param params: 参数值 dict
+        :return:
+        """
         if not isinstance(params, dict):
             raise ValueError(f"配置信息格式出现问题， 你当前的配置信息为 {type(params)}")
         self.params = params
@@ -225,14 +230,22 @@ class Vessel:
         """
         trade_data = list(map(dumps, self.interface.traded_order_mapping.values()))
         if report:
-            path = render_result(self.interface.account.result, trade_data=trade_data,strategy=strategys, net_pnl=net_pnl,
-                                 account_data=account_data,
+            path = render_result(self.interface.account.result, trade_data=trade_data, strategy=strategys,
+                                 net_pnl=net_pnl,
+                                 account_data=account_data, datetimed=end_time,
                                  cost_time=cost_time, **kwargs)
             print(f"请复制下面的路径到浏览器打开----> \n {path}")
             return path
         return self.interface.account.result
 
     def letsgo(self, parmas, ready):
+
+        """
+        开始进行回测
+        :param parmas:  参数
+        :param ready:
+        :return:
+        """
         if False not in [x.init_flag for x in self.looper_data]:
             # self.logger.info(f"产品: {self.looper_data.product}")
             self.logger.info(f"回测模式: {self.looper_pattern}")

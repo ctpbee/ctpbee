@@ -13,26 +13,42 @@ env = Environment(
     autoescape=select_autoescape(['html', 'xml'])
 )
 
-template = env.get_template("looper.html")
+main_template = env.get_template("looper.html")
+trade_template = env.get_template("trade_record.html")
 
 
-def render_result(result, kline=None, trades=None, trade_data=None, strategy=[],
+def render_result(result, kline=None, trades=None, datetimed=None, trade_data=None, strategy=[],
                   account_data=None, net_pnl=None, cost_time=None, **kwargs):
     """
     渲染结果并写入到本地html文件， 并返回htmk文件地址
     """
-    code_string = template.render(result=result, strategy=strategy,
-                                  trade_data=trade_data,account_data=account_data,
-                                  net_pnl=net_pnl,cost_time=cost_time,
-                                  datetime=str(datetime.now()))
+
+    datetimed = str(datetimed.strftime("%Y-%m-%d&%H:%M:%S"))
+    code_string = main_template.render(result=result, strategy=strategy,
+                                       account_data=account_data,
+                                       net_pnl=net_pnl, cost_time=cost_time,
+                                       datetime=datetimed)
+    trade_code_string = trade_template.render(trade_data=trade_data)
+
+    """ 回测主文件存放地址"""
     file_path = kwargs.get("file_path", None)
+
+    """ 成交单文件存放地址 """
+    trade_path = kwargs.get("trade_file_path", None)
+
+    """默认回测文件存放文件夹地址"""
+    path = get_ctpbee_path() + "/looper"
     if not file_path:
-        path = get_ctpbee_path() + "/looper"
         if not os.path.isdir(path):
             os.mkdir(path)
-        file_path = path + "/" + str(datetime.now().strftime("%Y-%m-%d&%H:%M:%S")) + ".html"
+        file_path = path + "/" + datetimed + ".html"
+
+    if not trade_path:
+        trade_path = path + "/" + datetimed + "-trade.html"
     with open(file_path, "w") as f:
         f.write(code_string)
+    with open(trade_path, "w") as f:
+        f.write(trade_code_string)
     if kwargs.get("auto_open", None):
         webbrowser.open(file_path)
     return file_path
