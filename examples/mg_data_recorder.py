@@ -1,7 +1,4 @@
-import json
 from datetime import datetime
-from random import randint
-from time import sleep
 from functools import total_ordering
 from queue import Queue
 
@@ -76,7 +73,8 @@ class Market(CtpbeeApi):
                 """ 如果出现间隔过大或者时间小于队列的里面的数据，那么代表着脏数据"""
                 return
         self.datetime_queue.put(TimeIt(tick.datetime))
-        database_c[tick.local_symbol].insert(tick._to_dict())
+        database_c[tick.local_symbol].insert_one(tick._to_dict())
+        print(tick)
 
 
 def create_app():
@@ -95,43 +93,16 @@ def create_app():
         },
         "INTERFACE": "ctp",  # 登录期货生产环境接口
     }
+    # 载入配置信息
     app.config.from_mapping(info)
+    # 创建实例
     ext = Market("market")
+    # 载入容器
     app.add_extension(ext)
     return app
 
 
-# if __name__ == '__main__':
-#     """ 调用到24小时自动运维模块"""
-#     from ctpbee import hickey
-#
-#     hickey.start_all(create_app)
-
-result = {}
-result_d = []
-from datetime import datetime, timedelta
-
-count = 0
-
-
-def get_random():
-    return randint(3000, 4000)
-
-
-start = datetime.now()
-while True:
-    temp = {}
-    temp['local_symbol'] = "ag1912.SHFE"
-    temp['datetime'] = str(start)
-    temp['high_price'] = get_random()
-    temp['low_price'] = get_random()
-    temp['open_price'] = get_random()
-    temp['close_price'] = get_random()
-    result_d.append(temp)
-    start = start + timedelta(minutes=15)
-    if count > 1000:
-        break
-    count += 1
-with open("data.json", "w") as f:
-    result['data'] = result_d
-    json.dump(obj=result, fp=f)
+if __name__ == '__main__':
+    from ctpbee import hickey
+    # 使用24小时模块进行分发
+    hickey.start_all(create_app)

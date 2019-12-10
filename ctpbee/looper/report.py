@@ -48,10 +48,10 @@ def render_result(result, kline=None, trades=None, datetimed=None, trade_data=No
 
     if not trade_path:
         trade_path = join_path(path, datetimed + "-trade.html")
-    with open(file_path, "w") as f:
+    with open(file_path, "w", encoding="utf8") as f:
         f.write(code_string)
-    with open(trade_path, "w") as f:
-        f.write(trade_code_string.encode(encoding="utf-8"))
+    with open(trade_path, "w", encoding="utf8") as f:
+        f.write(trade_code_string)
     if kwargs.get("auto_open", None):
         webbrowser.open(file_path)
     return file_path

@@ -111,6 +111,9 @@ def get_a_strategy():
             else:
                 self.pos -= trade.volume
 
+        def on_order(self, order):
+            pass
+
         def init_params(self, data):
             """"""
             # print("我在设置策略参数")
@@ -136,8 +139,9 @@ def save_data_json(data):
 
 def load_data():
     with open("data.json", "r") as f:
-        data = json.load(f)
-    return data.get("result")
+        from json import load
+        data = load(f)
+    return data.get("data")
 
 
 def run_main(data):
@@ -169,9 +173,7 @@ def run_main(data):
 
 
 if __name__ == '__main__':
-    # data = get_data(start="2019-1-5", end="2019-9-1", symbol="ag1912", exchange="SHFE", level="15m")
-    # save_data_json(data)
     data = load_data()
     for x in data:
-        x['datetime'] = datetime.strptime(str(x['datetime']), "%Y-%m-%d %H:%M:%S")
+        x['datetime'] = datetime.strptime(str(x['datetime']), "%Y-%m-%d %H:%M:%S.%f")
     run_main(data)
