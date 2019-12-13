@@ -3,5 +3,5 @@
 include README.md
 recursive-include ctpbee/api *
 include ctpbee/holiday.json
-include ctpbee/looper/*
+recursive-include ctpbee/looper  *.html
 

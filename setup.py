@@ -21,6 +21,7 @@ if sys.version_info.major == 3 and sys.version_info.minor == 6:
 runtime_library_dir = []
 try:
     import pypandoc
+
     long_description = pypandoc.convert_file('README.md', 'rst')
 except Exception:
     long_description = ""
@@ -43,12 +44,16 @@ setup(
     package_dir={'ctpbee': 'ctpbee'},
     zip_safe=False,
     include_package_data=True,
-    package_data={'ctpbee': ['api/ctp/*', 'holiday.json',"looper/templates/*"]},
+    data_files=[],
+    package_data={'ctpbee': ['api/ctp/*', 'holiday.json', "*.html"]},
     ext_modules=[],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
     entry_points={
         'console_scripts': ['ctpbee = ctpbee.cmdline:execute']
