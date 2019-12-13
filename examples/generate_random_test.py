@@ -23,7 +23,7 @@ def generate_ramdom(local_symbol, path):
         temp['close_price'] = get_random()
         result_d.append(temp)
         start = start + timedelta(minutes=15)
-        if count > 100000:
+        if count > 1000:
             break
         count += 1
     with open(path, "w") as f:
