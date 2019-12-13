@@ -249,6 +249,12 @@ class Account:
         finally:
             return self._cal_result(df)
 
+    def get_mapping(self, d):
+        mapping = {}
+        for i, v in self.daily_life.items():
+            mapping[str(i)] = v.get(d)
+        return mapping
+
     def _cal_result(self, df: DataFrame) -> dict:
 
         result = dict()

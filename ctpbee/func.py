@@ -323,3 +323,10 @@ def get_ctpbee_path():
     if not os.path.exists(ctpbee_path):
         os.mkdir(ctpbee_path)
     return ctpbee_path
+
+
+def join_path(rootdir, *args):
+    """ 路径添加器 """
+    for i in args:
+        rootdir = os.path.join(rootdir, i)
+    return rootdir

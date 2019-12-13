@@ -43,7 +43,7 @@ setup(
     package_dir={'ctpbee': 'ctpbee'},
     zip_safe=False,
     include_package_data=True,
-    package_data={'ctpbee': ['api/ctp/*', 'holiday.json']},
+    package_data={'ctpbee': ['api/ctp/*', 'holiday.json',"looper/templates/*"]},
     ext_modules=[],
     classifiers=[
         'Development Status :: 4 - Beta',

@@ -20,8 +20,6 @@ class ActionMe(Action):
 
     def __init__(self, app):
         super().__init__(app)
-        self.add_risk_check(self.short)
-        self.add_risk_check(self.cancel)
 
 
 class RiskMe(RiskLevel):
@@ -85,12 +83,12 @@ class DataRecorder(CtpbeeApi):
 
     def on_tick(self, tick):
         """tick processself-control  && kill your  function"""
-        # print(tick)
 
     def on_bar(self, bar):
         """bar process function"""
 
-        self.action.short(bar.high_price, 1, bar)
+        # self.action.short(bar.high_price, 1, bar)
+        print(bar)
 
     def on_log(self, log: LogData):
         """ 可以用于将log信息推送到外部 """
@@ -98,6 +96,9 @@ class DataRecorder(CtpbeeApi):
 
     def on_realtime(self):
         """  """
+        # pos = self.center.get_position("rb2001.SHFE")
+        # if pos:
+        #     print(pos)
         # for x in self.app.recorder.get_all_active_orders():
         #     self.action.cancel(x.local_order_id)
         # print(self.app.recorder.generators["rb2001.SHFE"].get_min_1_bar)

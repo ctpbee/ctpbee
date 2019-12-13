@@ -31,19 +31,19 @@ class DataGenerator:
         self.app = app
 
         self.XMIN = app.config.get("XMIN")
-        self._generator()
+        self._generate_instance()
         self.rd = None
 
-        # gen_func = lambda item: setattr(self, f"get_min_{item}_bar",
-        #                                 property(
-        #                                     fget=MethodType(lambda self: getattr(self, f"min_{item}_bar"), self)).fget)
-        # [gen_func(x) for x in self.XMIN]
+        gen_func = lambda item: setattr(self, f"get_min_{item}_bar",
+                                        property(
+                                            fget=MethodType(lambda self: getattr(self, f"min_{item}_bar"), self)).fget)
+        [gen_func(x) for x in self.XMIN]
 
     @property
     def get_min_1_bar(self):
         return self.bar
 
-    def _generator(self):
+    def _generate_instance(self):
         for x in self.XMIN:
             setattr(self, "min_{}".format(x), x)
             setattr(self, "min_{}_bar".format(x), None)
@@ -53,6 +53,8 @@ class DataGenerator:
         Update new tick data into generator and new_shared time data.
         """
         new_minute = False
+
+        """ 更新价位 """
         self.last_price = tick.last_price
         self.open_interest = tick.open_interest
         self.volume = tick.volume
@@ -70,11 +72,10 @@ class DataGenerator:
             self.bar.interval = 1
             event = Event(type=EVENT_BAR, data=self.bar)
             common_signals.bar_signal.send(event)
-            [self.update_bar(x, getattr(self, "min_{}_bar".format(x)), self.bar) for x in self.XMIN]
+            [self.update_bar(x, self.bar) for x in self.XMIN]
             new_minute = True
         if new_minute:
             self.last_volume = tick.volume
-
             self.bar = BarData(
                 symbol=tick.symbol,
                 exchange=tick.exchange,
@@ -92,14 +93,16 @@ class DataGenerator:
             self.bar.datetime = tick.datetime
 
         if self.last_tick:
+            """ 更新volume的改变 """
             volume_change = tick.volume - self.last_tick.volume
             self.bar.volume += max(volume_change, 0)
         self.last_tick = tick
 
-    def update_bar(self, xmin, xmin_bar: BarData, bar: BarData):
+    def update_bar(self, xmin, bar: BarData):
         """
         Update 1 minute bar into generator
         """
+        xmin_bar = getattr(self, f"min_{xmin}_bar", None)
         if not xmin_bar:
             xmin_bar = BarData(
                 symbol=bar.symbol,

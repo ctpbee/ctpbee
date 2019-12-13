@@ -57,7 +57,6 @@ from ctpbee.indicator import Indicator
 
 
 def get_a_strategy():
-
     class DoubleMaStrategy(LooperApi):
 
         allow_max_price = 5000  # 设置价格上限 当价格达到这个就卖出 防止突然跌 止盈
@@ -67,7 +66,8 @@ def get_a_strategy():
             super().__init__(name)
             self.count = 1
             self.api = Indicator()
-            # self.api.open_json("zn1912.SHFE.json")
+            self.instrument_set = ['ag1912.SHFE']
+            self.api.open_json("zn1912.SHFE.json")
             self.pos = 0
 
         def on_bar(self, bar):
@@ -111,6 +111,9 @@ def get_a_strategy():
             else:
                 self.pos -= trade.volume
 
+        def on_order(self, order):
+            pass
+
         def init_params(self, data):
             """"""
             # print("我在设置策略参数")
@@ -136,13 +139,15 @@ def save_data_json(data):
 
 def load_data():
     with open("data.json", "r") as f:
-        data = json.load(f)
-    return data.get("result")
+        from json import load
+        data = load(f)
+    return data.get("data")
 
 
 def run_main(data):
     vessel = Vessel()
     vessel.add_data(data)
+    # vessel.add_data(dat)
     stra = get_a_strategy()
     vessel.add_strategy(stra)
     vessel.set_params({"looper":
@@ -158,19 +163,17 @@ def run_main(data):
                             "slippage_buy": 0,
                             "slippage_short": 0,
                             "close_pattern": "yesterday",
+
                             },
                        "strategy": {}
                        })
     vessel.run()
     from pprint import pprint
-    result = vessel.get_result()
-    pprint(result)
+    result = vessel.get_result(report=True, auto_open=True)
 
 
 if __name__ == '__main__':
-    # data = get_data(start="2019-1-5", end="2019-9-1", symbol="ag1912", exchange="SHFE", level="15m")
-    # save_data_json(data)
     data = load_data()
     for x in data:
-        x['datetime'] = datetime.strptime(str(x['datetime']), "%Y-%m-%d %H:%M:%S")
+        x['datetime'] = datetime.strptime(str(x['datetime']), "%Y-%m-%d %H:%M:%S.%f")
     run_main(data)

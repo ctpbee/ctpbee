@@ -160,9 +160,16 @@ class BeeMdApi(MdApi):
         Subscribe to tick data update.
         """
         result = None
-        if self.login_status:
+        if self.login_status and symbol not in self.subscribed:
             result = self.subscribeMarketData(symbol)
         self.subscribed.add(symbol)
+        return result
+
+    def unsubscribe(self, symbol):
+        result = None
+        if self.login_status and symbol in self.subscribed:
+            result = self.unSubscribeMarketData(symbol)
+        self.subscribed.remove(symbol)
         return result
 
     def close(self):
@@ -322,6 +329,13 @@ class BeeMdApiApp(MdApiApp):
         if self.login_status:
             result = self.subscribeMarketData(symbol)
         self.subscribed.add(symbol)
+        return result
+
+    def unsubscribe(self, symbol):
+        result = None
+        if self.login_status and symbol in self.subscribed:
+            result = self.unSubscribeMarketData(symbol)
+        self.subscribed.remove(symbol)
         return result
 
     def close(self):

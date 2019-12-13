@@ -134,7 +134,7 @@ class LocalLooper():
         -4: "资金不足"
     }
 
-    def __init__(self, logger, strategy=None, risk=None):
+    def __init__(self, logger, risk=None):
         """ 需要构建完整的成交回报以及发单报告,在account里面需要存储大量的存储 """
 
         # 活跃报单数量
@@ -145,8 +145,8 @@ class LocalLooper():
 
         # 日志输出器
         self.logger = logger
-
-        self.strategy = strategy
+        # 策略池子
+        self.strategy_mapping = dict()
         # 覆盖里面的action和logger属性
         # 涨跌停价格
         self.upper_price = 99999
@@ -182,13 +182,25 @@ class LocalLooper():
         self.price = None
 
     def update_strategy(self, strategy):
-        self.strategy = strategy
-        setattr(self.strategy, "action", Action(self))
-        setattr(self.strategy, "logger", self.logger)
-        setattr(self.strategy, "info", self.logger.info)
-        setattr(self.strategy, "debug", self.logger.debug)
-        setattr(self.strategy, "error", self.logger.error)
-        setattr(self.strategy, "warning", self.logger.warning)
+        setattr(strategy, "action", Action(self))
+        setattr(strategy, "logger", self.logger)
+        setattr(strategy, "info", self.logger.info)
+        setattr(strategy, "debug", self.logger.debug)
+        setattr(strategy, "error", self.logger.error)
+        setattr(strategy, "warning", self.logger.warning)
+        self.strategy_mapping[strategy.name] = strategy
+
+    def enable_extension(self, name):
+        if name in self.strategy_mapping.keys():
+            self.strategy_mapping.get(name).active = True
+        else:
+            return
+
+    def suspend_extension(self, name):
+        if name in self.strategy_mapping.keys():
+            self.strategy_mapping.get(name).active = False
+        else:
+            return
 
     def update_risk(self, risk):
         self.risk = risk
@@ -197,12 +209,12 @@ class LocalLooper():
         """ 将发单请求转换为发单数据 """
         self.order_ref += 1
         order_id = f"{self.frontid}-{self.sessionid}-{self.order_ref}"
-        return req._create_order_data(gateway_name="looper", order_id=order_id)
+        return req._create_order_data(gateway_name="looper", order_id=order_id, time=self.datetime)
 
     def _generate_trade_data_from_order(self, order_data: OrderData):
         """ 将orderdata转换成成交单 """
         p = TradeData(price=order_data.price, istraded=order_data.volume, volume=order_data.volume,
-                      tradeid=uuid.uuid1(), offset=order_data.offset, direction=order_data.direction,
+                      tradeid=str(uuid.uuid1()), offset=order_data.offset, direction=order_data.direction,
                       gateway_name=order_data.gateway_name, time=order_data.time,
                       order_id=order_data.order_id, symbol=order_data.symbol, exchange=order_data.exchange)
         return p
@@ -224,8 +236,10 @@ class LocalLooper():
                 """ 将成交单通过日志接口暴露出去"""
                 # self.logger.info(dumps(result))
                 self.logger.info(
-                    f"成交, 成交价格{str(result.price)}, 成交笔数: {str(result.volume)},"
+                    f"成交时间: {str(result.time)}, 成交价格{str(result.price)}, 成交笔数: {str(result.volume)},"
                     f" 成交方向: {str(result.direction.value)}，行为: {str(result.offset.value)}")
+                self.traded_order_mapping[result.order_id] = result
+
             else:
                 self.logger.info(self.message_box[result])
         if isinstance(data, CancelRequest):
@@ -234,7 +248,7 @@ class LocalLooper():
             for order in self.pending:
                 if data.order_id == order.order_id:
                     order = deepcopy(order)
-                    self.strategy.on_order(order)
+                    [api(order) for api in self.strategy_mapping.values()]
                     self.pending.remove(order)
                     return 1
             return 0
@@ -291,8 +305,8 @@ class LocalLooper():
                     order.price = max(order.price, short_b)
                 trade = self._generate_trade_data_from_order(order)
                 order.status = Status.ALLTRADED
-                self.strategy.on_order(deepcopy(order))
-                self.strategy.on_trade(trade)
+                [api(deepcopy(order)) for api in self.strategy_mapping.values()]
+                [api(trade) for api in self.strategy_mapping.values()]
                 self.pending.remove(order)
 
                 # 成交，移除冻结
@@ -316,7 +330,7 @@ class LocalLooper():
                 p = self._generate_trade_data_from_order(data)
                 self.account.update_trade(p)
                 """ 调用strategy的on_trade """
-                self.strategy.on_trade(p)
+                [api(p) for api in self.strategy_mapping.values()]
                 self.today_volume += data.volume
                 # 已经成交，同时移除冻结
                 self.account.update_frozen(p, reverse=True)
@@ -348,19 +362,20 @@ class LocalLooper():
         """ 初始化参数设置  """
         if not isinstance(params, dict):
             raise AttributeError("回测参数类型错误，请检查是否为字典")
-        self.strategy.init_params(params.get("strategy"))
+
+        [strategy.init_params(params.get("strategy")) for strategy in self.strategy_mapping.values()]
         self.init_params(params.get("looper"))
 
     def __call__(self, *args, **kwargs):
         """ 回测周期 """
         p_data, params = args
         self.price = p_data
+        self.datetime = p_data.datetime
         self.__init_params(params)
         if p_data.type == "tick":
-            self.strategy.on_tick(tick=p_data)
-
+            [api(p_data) for api in self.strategy_mapping.values()]
         if p_data.type == "bar":
-            self.strategy.on_bar(bar=p_data)
+            [api(p_data) for api in self.strategy_mapping.values()]
         # 更新接口的日期
         self.date = p_data.datetime.date()
         # 穿过接口日期检查

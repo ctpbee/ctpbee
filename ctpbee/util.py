@@ -34,6 +34,7 @@ class RiskLevel:
         cls.action = app.action
         cls.logger = app.logger
         cls.recorder = app.recorder
+        cls.center = app.center
 
         def connect_mimo(event):
             cls.mimo_thread()

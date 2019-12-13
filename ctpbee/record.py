@@ -89,8 +89,8 @@ class Recorder(object):
 
     def process_log_event(self, event: Event):
         self.logs[self.get_local_time()] = event.data
-        # if self.app.config.get("LOG_OUTPUT"):
-        self.app.logger.info(event.data)
+        if self.app.config.get("LOG_OUTPUT"):
+            self.app.logger.info(event.data)
 
     @value_call
     def process_bar_event(self, event: Event):
@@ -156,7 +156,6 @@ class Recorder(object):
         """"""
         position = event.data
         self.positions[position.local_position_id] = position
-        # 本地实时计算 --> todo :优化
         self.position_manager.update_position(position)
         for value in self.app.extensions.values():
             if self.app.config['INSTRUMENT_INDEPEND']:

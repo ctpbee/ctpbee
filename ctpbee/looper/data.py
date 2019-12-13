@@ -2,6 +2,9 @@
 回测数据模块
 
 数据应该是需要被特殊处理的， 这样才可以达到最佳访问速度
+
+
+todo: 优化数据访问速度
 --------- >
 """
 
@@ -16,9 +19,6 @@ class Bumblebee(dict):
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
     __getattribute__ = dict.get
-
-    # def __getattribute__(self, item):
-    #     return dict.get(item)
 
     def __init__(self, **kwargs):
         if "last_price" in kwargs:
