@@ -1,8 +1,8 @@
 """
     for the future of  life
 """
-__version__ = '0.54'
-__status__ = 'emmm'
+__version__ = '0.60'
+__status__ = 'ready'
 
 # About core
 from ctpbee.app import CtpBee
