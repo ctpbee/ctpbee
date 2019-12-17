@@ -7,8 +7,6 @@
 todo: 优化数据访问速度
 --------- >
 """
-
-# todo: 将各家数据转化为从ctpbee数据包 ^_^ alse it will be a good idea to
 from datetime import datetime
 from itertools import chain
 
