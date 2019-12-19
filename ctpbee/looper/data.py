@@ -27,23 +27,23 @@ class Bumblebee(dict):
         else:
             self['type'] = "bar"
         super().__init__(**kwargs)
-
         # 需要在此处自动转换datetime数据类型
-        self.datetime = self.covert_datetime(self.datetime)
+        self.datetime = Bumblebee.covert_datetime(self.datetime)
 
-    def covert_datetime(self, datetime_data):
+    @staticmethod
+    def covert_datetime(datetime_data):
         """
         此函数接受三种格式的数据转换过程
         :param datetime_data  str/int
         """
         if isinstance(datetime_data, datetime):
-            return
+            return datetime_data
         if isinstance(datetime_data, str):
             """ 支持.f 或者非.f的构建 """
             try:
-                return datetime.strptime(date_string=datetime_data, format="%Y-%m-%d %H:%M:%S")
+                return datetime.strptime(datetime_data, "%Y-%m-%d %H:%M:%S")
             except Exception:
-                return datetime.strptime(date_string=datetime_data, format="%Y-%m-%d %H:%M:%S.%f")
+                return datetime.strptime(datetime_data, "%Y-%m-%d %H:%M:%S.%f")
         if isinstance(datetime_data, int):
             """
             判断s/us/ns的转换
