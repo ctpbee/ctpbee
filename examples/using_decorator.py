@@ -12,7 +12,7 @@ class Vlog(VLogger):
 
     def handler_record(self, record):
         """ 处理日志信息代码 """
-        pass
+        print(record)
 
 
 class ActionMe(Action):
@@ -21,6 +21,8 @@ class ActionMe(Action):
         super().__init__(app)
         self.add_risk_check(self.short)
         self.add_risk_check(self.cancel)
+
+
 
 
 class RiskMe(RiskLevel):

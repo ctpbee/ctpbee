@@ -174,6 +174,4 @@ def run_main(data):
 
 if __name__ == '__main__':
     data = load_data()
-    for x in data:
-        x['datetime'] = datetime.strptime(str(x['datetime']), "%Y-%m-%d %H:%M:%S.%f")
     run_main(data)

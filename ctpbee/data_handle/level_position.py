@@ -3,10 +3,12 @@ import json
 import os
 from json import load, dump, JSONDecodeError
 
+from ctpbee.center import PositionModel
+
 from ctpbee.constant import TradeData, PositionData, Direction, Offset, Exchange
 
 
-class PositionModel:
+class SinglePositionModel:
 
     def __init__(self, local_symbol):
         self.local_symbol = local_symbol
@@ -15,10 +17,10 @@ class PositionModel:
         self.direction = None
 
         # 昨日持仓
-        self.y_pos: int = 0
+        self.yd_volume: int = 0
 
         # 今日持仓
-        self.t_pos: int = 0
+        self.td_volume: int = 0
 
         # 持仓均价
         self.price: float = 0
@@ -28,6 +30,9 @@ class PositionModel:
 
         # 交易所代码
         self.exchange = None
+
+        # 持仓盈利
+        self.pnl: float = 0
 
         # 网关名字
         self.gateway_name = None
@@ -45,26 +50,25 @@ class PositionModel:
             self.price = 0
 
         if trade.offset == Offset.OPEN:
-            self.t_pos += trade.volume
+            self.td_volume += trade.volume
         # 平今/home/somewheve/PycharmProjects/ctpbee_tutorial
         elif trade.offset == Offset.CLOSETODAY:
-            self.t_pos -= trade.volume
+            self.td_volume -= trade.volume
         # 平昨
         elif trade.offset == Offset.CLOSEYESTERDAY:
-            self.y_pos -= trade.volume
+            self.yd_volume -= trade.volume
         # 平仓
         elif trade.offset == Offset.CLOSE:
-            if trade.volume < self.t_pos:
-                self.t_pos -= trade.volume
+            if trade.volume < self.td_volume:
+                self.td_volume -= trade.volume
             else:
-                self.y_pos -= trade.volume - self.t_pos
-                self.t_pos = 0
-        self.volume = self.y_pos + self.t_pos
+                self.yd_volume -= trade.volume - self.td_volume
+                self.td_volume = 0
+        self.volume = self.yd_volume + self.td_volume
 
     def update_postition(self, position: PositionData):
         """ 根据返回的查询持仓信息来更新持仓信息 """
-        self.t_pos = position.volume - position.yd_volume
-        self.y_pos = position.yd_volume
+        self.yd_volume = position.yd_volume
         self.exchange = position.exchange
         self.price = position.price
         self.volume = position.volume
@@ -73,15 +77,28 @@ class PositionModel:
 
     def to_dict(self):
         """ 将持仓信息构建为字典的信息"""
+        if isinstance(self.direction, Direction):
+            direction = self.direction.value
+        else:
+            direction = self.direction
+
+        if isinstance(self.exchange, Exchange):
+            exchange = self.direction.value
+        else:
+            exchange = self.direction
+
         return {
-            "direction": self.direction.value,
-            "y_pos": self.y_pos,
-            "t_pos": self.t_pos,
+            "direction": direction,
+            "yd_volume": self.yd_volume,
             "local_symbol": self.local_symbol,
-            "exchange": self.exchange.value,
+            "exchange": exchange,
             "price": self.price,
             "volume": self.volume
         }
+
+    @property
+    def _to_dict(self):
+        return self.to_dict
 
     def to_position(self):
         """ 返回为持仓 """
@@ -125,7 +142,7 @@ class ApiPositionManager(dict):
                 data = {}
                 dump(data, f)
         except FileNotFoundError as e:
-            with open(self.file_path,'w') as f:
+            with open(self.file_path, 'w') as f:
                 data = {}
         self.init_data(data)
 
@@ -138,7 +155,7 @@ class ApiPositionManager(dict):
             """
             将地点数据解析为PositionModel
             """
-            return PositionModel.create_model(local, **data)
+            return SinglePositionModel.create_model(local, **data)
 
         if not data:
             return
@@ -170,7 +187,7 @@ class ApiPositionManager(dict):
         else:
             local = trade.local_symbol + "." + get_reverse(trade.direction).value
         if local not in self.keys():
-            self[local] = PositionModel(local_symbol=trade.local_symbol)
+            self[local] = SinglePositionModel(local_symbol=trade.local_symbol)
         self[local].update_trade(trade=trade)
         update_local_cache(self.file_path, local, self)
 
@@ -183,10 +200,18 @@ class ApiPositionManager(dict):
         """
         local = position.local_symbol + "." + position.direction.value
         if local not in self.keys():
-            self[local] = PositionModel(local_symbol=position.local_symbol)
+            self[local] = SinglePositionModel(local_symbol=position.local_symbol)
 
         self[local].update_position(position=position)
 
-    def get_position_by_ld(self, local_symbol, direction) -> PositionModel:
+    def get_position_by_ld(self, local_symbol, direction) -> SinglePositionModel:
         """ 通过local_symbol和direction获得持仓信息 """
-        return self[local_symbol + "." + direction.value]
+        return self.get(local_symbol + "." + direction.value, None)
+
+    def get_position(self, local_symbol) -> PositionModel or None:
+        long = self.get_position_by_ld(local_symbol, direction=Direction.LONG)
+        short = self.get_position_by_ld(local_symbol, direction=Direction.SHORT)
+        if long is None and short is None:
+            return None
+        else:
+            return PositionModel(long, short)

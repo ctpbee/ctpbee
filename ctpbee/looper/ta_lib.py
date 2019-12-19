@@ -1,5 +1,11 @@
 import numpy as np
-import talib
+import warnings
+
+try:
+    import talib
+except ImportError:
+    warnings.warn("please install ta-lib by yourself")
+
 
 def round_to(value: float, target: float) -> float:
     """

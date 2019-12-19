@@ -96,9 +96,9 @@ class DataRecorder(CtpbeeApi):
 
     def on_realtime(self):
         """  """
-        # pos = self.center.get_position("rb2001.SHFE")
-        # if pos:
-        #     print(pos)
+        pos = self.level_position_manager.get_position("rb2001.SHFE")
+        if pos:
+            print(pos)
         # for x in self.app.recorder.get_all_active_orders():
         #     self.action.cancel(x.local_order_id)
         # print(self.app.recorder.generators["rb2001.SHFE"].get_min_1_bar)

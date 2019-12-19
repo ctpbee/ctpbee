@@ -7,8 +7,7 @@
 todo: 优化数据访问速度
 --------- >
 """
-
-# todo: 将各家数据转化为从ctpbee数据包 ^_^ alse it will be a good idea to
+from datetime import datetime
 from itertools import chain
 
 
@@ -20,13 +19,36 @@ class Bumblebee(dict):
     __delattr__ = dict.__delitem__
     __getattribute__ = dict.get
 
+    datetime_type = "datetime"
+
     def __init__(self, **kwargs):
         if "last_price" in kwargs:
             self['type'] = "tick"
         else:
             self['type'] = "bar"
         super().__init__(**kwargs)
-        # [setattr(self, key, kwargs.get(key)) for key in kwargs if key in self.__slots__]
+        # 需要在此处自动转换datetime数据类型
+        self.datetime = Bumblebee.covert_datetime(self.datetime)
+
+    @staticmethod
+    def covert_datetime(datetime_data):
+        """
+        此函数接受三种格式的数据转换过程
+        :param datetime_data  str/int
+        """
+        if isinstance(datetime_data, datetime):
+            return datetime_data
+        if isinstance(datetime_data, str):
+            """ 支持.f 或者非.f的构建 """
+            try:
+                return datetime.strptime(datetime_data, "%Y-%m-%d %H:%M:%S")
+            except Exception:
+                return datetime.strptime(datetime_data, "%Y-%m-%d %H:%M:%S.%f")
+        if isinstance(datetime_data, int):
+            """
+            判断s/us/ns的转换
+            """
+            return datetime.fromtimestamp(datetime_data)
 
 
 class VessData:
