@@ -347,7 +347,7 @@ class CtpbeeApi(BeeApi):
         self.instrument_set: List or Set = set()
         self.extension_name = extension_name
         self.app = app
-
+        init = False
         if self.app is not None:
             self.init_app(self.app)
         # 是否冻结
