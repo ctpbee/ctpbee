@@ -45,7 +45,8 @@ class RiskMe(RiskLevel):
         self.info("我在执行short后的事后检查")
         while True:
             sleep(1)
-            if cal > 3: break
+            if cal > 3:
+                break
             cal += 1
             self.info("正在检查呢 ")
             # do something
@@ -55,7 +56,7 @@ class RiskMe(RiskLevel):
 
 class DataRecorder(CtpbeeApi):
     def __init__(self, name, app=None):
-        super().__init__(name, app)
+        super().__init__(name, app, init_position=True)
         self.instrument_set = set(["rb2001.SHFE"])
         self.comming_in = None
         self.id = None

@@ -9,6 +9,6 @@ from unittest import TestCase
 
 # test the  trading day
 class Test(TestCase):
-    pass
 
-
+    def test_looper(self):
+        pass
