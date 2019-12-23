@@ -5,6 +5,7 @@
 """
 import logging
 import os
+import platform
 from datetime import time, datetime, timedelta
 from inspect import isfunction
 from multiprocessing import Process
@@ -285,8 +286,6 @@ class Hickey(object):
                 print("program start successful")
             if not status and p is not None:
                 print("invalid time, 查杀子进程")
-                import os
-                import platform
                 if platform.uname().system == "Windows":
                     os.popen('taskkill /F /pid ' + str(p.pid))
                 else:
@@ -324,20 +323,17 @@ class Hickey(object):
 hickey = Hickey()
 
 
-class RLock:
-    def __init__(self, name, second=10):
-        """ 创建一个新锁 """
-        self._start = datetime.now().timestamp()
-        self._end = self._start + second
-
-    def release(self):
-        pass
+def join_path(rootdir, *args):
+    """ 路径添加器 """
+    for i in args:
+        rootdir = os.path.join(rootdir, i)
+    return rootdir
 
 
 def get_ctpbee_path():
-    """ 获取ctpbee的路径默认路径 """
-    import platform
-    import os
+    """
+    获取ctpbee的路径默认路径
+    """
     system_ = platform.system()
     if system_ == 'Linux':
         home_path = os.environ['HOME']
@@ -351,10 +347,3 @@ def get_ctpbee_path():
     if not os.path.exists(ctpbee_path):
         os.mkdir(ctpbee_path)
     return ctpbee_path
-
-
-def join_path(rootdir, *args):
-    """ 路径添加器 """
-    for i in args:
-        rootdir = os.path.join(rootdir, i)
-    return rootdir

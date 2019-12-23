@@ -97,6 +97,8 @@
 
 {% block script %}
     <script>
+        var upColor = '#00da3c';
+        var downColor = '#ec0000';
         var accout_chart = echarts.init(document.getElementById('account'));
         // 指定图表的配置项和数据
         var account_data = {{ account_data | tojson }};
@@ -158,14 +160,25 @@
                 }
             },
             yAxis: {},
-            series: [{
-                name: '当日盈亏',
-                type: 'bar',
-                data: net_pnl_list,
-                animationDelay: function (idx) {
-                    return idx * 10;
-                }
-            }],
+
+            series: [
+                {
+                    name: '当日盈亏',
+                    type: 'bar',
+                    data: net_pnl_list,
+                    animationDelay: function (idx) {
+                        return idx * 10;
+                    },
+                    itemStyle: {
+                        color: function (params) {
+                            if (params.value >= 0)
+                                return upColor;
+                            else
+                                return downColor;
+                        }
+                    }
+                },
+            ],
             animationEasing: 'elasticOut',
             animationDelayUpdate: function (idx) {
                 return idx * 5;
@@ -176,7 +189,7 @@
     </script>
 
     <script>
-        var trade_path = "./"+"{{ datetime | safe}}"+"-trade.html";
+        var trade_path = "./" + "{{ datetime | safe}}" + "-trade.html";
         $("#trade_url").attr("href", trade_path);
 
     </script>
