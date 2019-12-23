@@ -199,6 +199,13 @@ class Hickey(object):
     NIGHT_START = time(21, 0)  # 夜盘启动和停止时间
     NIGHT_END = time(2, 35)
 
+    TIME_MAPPING = {
+        "dy_st": "DAY_START",
+        "dy_ed": "DAY_END",
+        "ng_st": "NIGHT_START",
+        "ng_ed": "NIGHT_END"
+    }
+
     def __init__(self):
         self.names = []
         from datetime import time
@@ -288,6 +295,27 @@ class Hickey(object):
                 self.logger.info("关闭成功")
                 p = None
             sleep(30)
+
+    def update_time(self, timed: time, flag: str):
+        """
+        此函数被用来修改更新启动时间或者关闭时间
+
+        :param timed:
+        :param flag:需要修改的字段 仅仅
+                  "dy_st": "白天开始",
+                 "dy_ed": "白天结束",
+                "ng_st": "晚上开始",
+               "ng_ed": "晚上结束"
+    }
+        :return: None
+        """
+        if flag not in self.TIME_MAPPING.keys():
+            raise ValueError(f"注意你的flag是不被接受的，我们仅仅支持\n "
+                             f"{str(list(self.TIME_MAPPING.keys()))}四种")
+        if not isinstance(timed, time):
+            raise ValueError(f"timed错误的数据类型，期望 time, 当前{str(type(timed))}")
+
+        setattr(self, self.TIME_MAPPING[flag], timed)
 
     def __repr__(self):
         return "ctpbee 7*24 manager ^_^"
