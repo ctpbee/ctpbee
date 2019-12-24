@@ -1,6 +1,6 @@
 import io
 import re
-from distutils.command.install import install
+
 import copy
 import distutils.cmd
 import distutils.log
@@ -8,7 +8,7 @@ import subprocess
 import sys
 from urllib.parse import urlparse
 from setuptools import setup
-
+from pkg_resources import parse_version
 from setuptools.command.install import install
 
 
@@ -31,6 +31,7 @@ class Autofix(install):
         ("pytdx", ">=1.72"),
         ("pandas", "<=0.24"),
     ]
+    command_base = [sys.executable, "-m"]
 
     def initialize_options(self):
         install.initialize_options(self)
@@ -58,7 +59,8 @@ class Autofix(install):
             p = re.findall(r"\d+\.?\d*", ex)
             assert len(p) == 1
             end = ex.replace(p[0], "")
-            return eval(f"{v.split('.')}{end}{p[0].split('.')}")
+            express = f"parse_version('{v}'){end}parse_version('{p[0]}')"
+            return eval(express)
 
         for _ in expressions:
             if not cmpd(version, _):
@@ -67,9 +69,9 @@ class Autofix(install):
         return True
 
     def reinstall(self, name, required):
-        command_base = [sys.executable, "-m"]
-        command_un = copy.deepcopy(command_base) + ['pip', "uninstall", f"{name}", "-y"]
-        command_in = copy.deepcopy(command_base) + ['pip', "install", f"{name}{required}"]
+
+        command_un = copy.deepcopy(self.command_base) + ['pip', "uninstall", f"{name}", "-y"]
+        command_in = copy.deepcopy(self.command_base) + ['pip', "install", f"{name}{required}"]
         if self.fix == "true":
             if self.uri:
                 command_in += ["-i", self.uri, "--trusted-host", self.get_domian(self.uri)]
@@ -89,11 +91,9 @@ class Autofix(install):
         for _ in self.version_need:
             name, version = _
             r = self.check_version(name, version)
-            print(f"{name}, 检查结果: {str(r)}")
+            print(f"package: {name}, check result: {str(r)}")
             if not r:
                 self.reinstall(name, version)
-        else:
-            print("fix ")
 
     def finalize_options(self):
         install.finalize_options(self)
