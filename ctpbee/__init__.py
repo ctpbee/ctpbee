@@ -20,3 +20,10 @@ from ctpbee.func import hickey, get_ctpbee_path
 
 # About looper
 from ctpbee.looper import LooperApi, Vessel
+
+# About data_support
+try:
+    import QUANTAXIS as qa
+    from ctpbee.qa_suupport import QDataSupport
+except ImportError as e:
+    pass

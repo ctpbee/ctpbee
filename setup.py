@@ -1,8 +1,121 @@
 import io
-import platform
 import re
+from distutils.command.install import install
+import copy
+import distutils.cmd
+import distutils.log
+import subprocess
 import sys
+from urllib.parse import urlparse
 from setuptools import setup
+
+from setuptools.command.install import install
+
+
+class Autofix(install):
+    """
+    此文件用来描述修复安装QA_SUPPORT可能出现的冲突问题
+    第一个冲突，pytdx --> tushare 与 quantaxiss使用两个不同的版本的pytdx
+    第二个冲突，pandas--> tushare 使用的pandas被限制了版本
+
+    pip 调用示例:
+        pip install ctpbee[QA_SUPPORT] --install-option="fix=true" --install-option="uri=https://mirrors.aliyun.com/pypi/simple"
+    """
+
+    description = 'fix install '
+    user_options = install.user_options + [
+        ('fix=', None, 'whether to install fix'),
+        ("uri=", None, "trusted host to install package")
+    ]
+    version_need = [
+        ("pytdx", ">=1.72"),
+        ("pandas", "<=0.24"),
+    ]
+
+    def initialize_options(self):
+        install.initialize_options(self)
+        self.fix = "false"
+        self.uri = None
+
+    def check_version(self, name, express) -> bool:
+        """ 检查版本问题"""
+        output = subprocess.check_output([sys.executable, "-m", "pip", "freeze"]).decode('utf-8')
+        version_info = {}
+        for _ in map(lambda x: {x.split("==")[0]: x.split("==")[1]} if x != "" else {}, output.split("\n")):
+            version_info.update(_)
+        if name not in version_info.keys():
+            return False
+        else:
+            v = version_info.get(name)
+            return self.get_cmp_signal(v, express)
+
+    @staticmethod
+    def get_cmp_signal(version, signal):
+        # 根据,获取一个/两个表达式
+        expressions = signal.split(",")
+
+        def cmpd(v, ex):
+            p = re.findall(r"\d+\.?\d*", ex)
+            assert len(p) == 1
+            end = ex.replace(p[0], "")
+            return eval(f"{v.split('.')}{end}{p[0].split('.')}")
+
+        for _ in expressions:
+            if not cmpd(version, _):
+                """一旦出现不合法的表达式, 那么立即返回False"""
+                return False
+        return True
+
+    def reinstall(self, name, required):
+        command_base = [sys.executable, "-m"]
+        command_un = copy.deepcopy(command_base) + ['pip', "uninstall", f"{name}", "-y"]
+        command_in = copy.deepcopy(command_base) + ['pip', "install", f"{name}{required}"]
+        if self.fix == "true":
+            if self.uri:
+                command_in += ["-i", self.uri, "--trusted-host", self.get_domian(self.uri)]
+        else:
+            return
+        self.announce(
+            'Running uninstall command: %s' % " ".join(command_un),
+            level=distutils.log.INFO)
+        subprocess.check_call(command_un)
+        self.announce(
+            'Running reinstall pytdx: %s' % " ".join(command_in),
+            level=distutils.log.INFO)
+        subprocess.check_call(command_in)
+        self.announce(f"\n{name} version fix successfully, hope you can enjoy it", level=distutils.log.INFO)
+
+    def fix_install(self):
+        for _ in self.version_need:
+            name, version = _
+            r = self.check_version(name, version)
+            print(f"{name}, 检查结果: {str(r)}")
+            if not r:
+                self.reinstall(name, version)
+        else:
+            print("fix ")
+
+    def finalize_options(self):
+        install.finalize_options(self)
+        assert type(self.uri) == str or self.uri is None
+        assert self.fix in ['false', "true"]
+
+    @staticmethod
+    def get_domian(uri) -> str:
+        """
+        返回解析的的域名信息
+        """
+        parse = urlparse(uri)
+        return parse.netloc
+
+    def run(self):
+        """
+        Run
+        command.
+        """
+        install.run(self)
+        self.fix_install()
+
 
 with io.open('ctpbee/__init__.py', 'rt', encoding='utf8') as f:
     context = f.read()
@@ -55,7 +168,13 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
     ],
+    cmdclass={
+        "install": Autofix
+    },
     entry_points={
         'console_scripts': ['ctpbee = ctpbee.cmdline:execute']
     },
+    extras_require={
+        'QA_SUPPORT': ["quantaxis", "pandas<=0.24.2,>=0.16.2"],
+    }
 )

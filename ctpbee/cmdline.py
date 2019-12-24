@@ -1,6 +1,10 @@
 import argparse
+import copy
+import distutils.cmd
+import distutils.log
 import datetime
 import os
+import subprocess
 import sys
 
 from .trade_time import Papa
@@ -53,5 +57,3 @@ def execute():
         return
 
 
-if __name__ == '__main__':
-    execute()
