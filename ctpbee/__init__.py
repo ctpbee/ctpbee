@@ -23,7 +23,7 @@ from ctpbee.looper import LooperApi, Vessel
 
 # About data_support
 try:
-    import QUANTAXIS as qa
-    from ctpbee.qa_suupport import QDataSupport
+    import pymongo
+    from ctpbee.qa_support import QADataSupport
 except ImportError as e:
     pass
