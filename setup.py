@@ -19,7 +19,10 @@ class Autofix(install):
     第二个冲突，pandas--> tushare 使用的pandas被限制了版本
 
     pip 调用示例:
-        pip install ctpbee[QA_SUPPORT] --install-option="fix=true" --install-option="uri=https://mirrors.aliyun.com/pypi/simple"
+        linux：
+            pip install -r <(echo 'ctpbee[QA_SUPPORT] --install-option="--fix=true" --install-option="--uri=https://mirrors.aliyun.com/pypi/simple"') -i https://mirrors.aliyun.com/pypi/simple -v
+        windows:
+            >>>
     """
 
     description = 'fix install '
