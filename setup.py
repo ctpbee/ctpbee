@@ -79,21 +79,28 @@ class Autofix(install):
             return
         self.announce(
             'Running uninstall command: %s' % " ".join(command_un),
-            level=distutils.log.INFO)
+            level=distutils.log.WARN)
         subprocess.check_call(command_un)
         self.announce(
             'Running reinstall pytdx: %s' % " ".join(command_in),
-            level=distutils.log.INFO)
+            level=distutils.log.WARN)
         subprocess.check_call(command_in)
-        self.announce(f"\n{name} version fix successfully, hope you can enjoy it", level=distutils.log.INFO)
+        self.output(f"\n{name} version fix successfully, hope you can enjoy it", sig="-")
 
     def fix_install(self):
         for _ in self.version_need:
             name, version = _
             r = self.check_version(name, version)
-            print(f"package: {name}, check result: {str(r)}")
+            self.output(f"package: {name}, check result: {str(r)}", sig="-")
             if not r:
                 self.reinstall(name, version)
+
+        self.output("All package fixed finished, have a good luck! ")
+
+    def output(self, msg, number=100, sig="*", level=distutils.log.INFO):
+        self.announce(
+            f"{sig * number}\n                        {msg}\n{sig * number}",
+            level=level)
 
     def finalize_options(self):
         install.finalize_options(self)
@@ -113,6 +120,7 @@ class Autofix(install):
         Run
         command.
         """
+
         install.run(self)
         self.fix_install()
 
@@ -124,7 +132,7 @@ with io.open('ctpbee/__init__.py', 'rt', encoding='utf8') as f:
 if sys.version_info < (3, 6):
     raise RuntimeError('当前ctpbee只支持python36以及更高版本/ ctpbee only support python36 and highly only ')
 
-# 依赖
+# libraries
 install_requires = ['flask>=1.1.1', "blinker", "requests", "simplejson", "lxml", "pandas",
                     'colour_printing>=0.3.16', "ctpbee_api"]
 
