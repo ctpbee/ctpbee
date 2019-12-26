@@ -104,13 +104,10 @@ class QADataSupport:
         _iterable = self.quantaxis['future_min'].find(query, format_option, batch_size=10000)
 
         def pack(data: dict):
-            for key in data.keys():
-                if key in self.price:
-                    data[key + "_price"] = data.pop(key)
-                if key == "code":
-                    data['symbol'] = data.pop("code")
-            else:
-                data['local_symbol'] = data['symbol'] + "." + exchange
+            data['symbol'] = data.pop("code")
+            data['local_symbol'] = data['symbol'] + "." + exchange
+            for key in self.price:
+                data[key + "_price"] = data.pop(key)
             return data
 
         return list(map(pack, _iterable))
@@ -126,8 +123,8 @@ class QADataSupport:
 if __name__ == '__main__':
     support = QADataSupport(host="127.0.0.1")
     ctime = time.time()
-    rst = support.get_future_min("BBL8.SHFE", start="2018-8-1 10:00:10", end="2019-10-1 10:00:10")
-    print(rst)
+    rst = support.get_future_min("BBL8.DCE".upper(), start="2018-8-1 10:00:10", end="2019-10-1 10:00:10")
+    print(rst[0])
     print(f"cost: {time.time() - ctime}")
 
 # 7935
