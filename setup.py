@@ -62,7 +62,7 @@ class Autofix(install):
             p = re.findall(r"\d+\.?\d*", ex)
             assert len(p) == 1
             end = ex.replace(p[0], "")
-            express = f"parse_version('{v}'){end}parse_version('{p[0]}')"
+            express = f"parse_version('{str(v)}'){end}parse_version('{str(p[0])}')"
             return eval(express)
 
         for _ in expressions:
@@ -91,6 +91,8 @@ class Autofix(install):
         self.output(f"\n{name} version fix successfully, hope you can enjoy it", sig="-")
 
     def fix_install(self):
+        if self.fix == "false":
+            return
         for _ in self.version_need:
             name, version = _
             r = self.check_version(name, version)

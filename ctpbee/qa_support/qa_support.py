@@ -6,6 +6,7 @@ from ctpbee.qa_support.qa_func import QA_util_time_stamp
 
 
 class QADataSupport:
+    price = ["open", "high", "low", "close"]
 
     def __init__(self, **kwargs):
         """
@@ -103,13 +104,13 @@ class QADataSupport:
         _iterable = self.quantaxis['future_min'].find(query, format_option, batch_size=10000)
 
         def pack(data: dict):
-            price = ["open", "high", "low", "close"]
-
             for key in data.keys():
-                if key in price:
+                if key in self.price:
                     data[key + "_price"] = data.pop(key)
                 if key == "code":
                     data['symbol'] = data.pop("code")
+            else:
+                data['local_symbol'] = data['symbol'] + "." + exchange
             return data
 
         return list(map(pack, _iterable))
@@ -123,9 +124,9 @@ class QADataSupport:
 
 
 if __name__ == '__main__':
-    a = QADataSupport()
+    support = QADataSupport()
     ctime = time.time()
-    rst = a.get_future_min("BBL8.SHFE", start="2018-8-1 10:00:10", end="2019-10-1 10:00:10")
+    rst = support.get_future_min("BBL8.SHFE", start="2018-8-1 10:00:10", end="2019-10-1 10:00:10")
     print(f"cost: {time.time() - ctime}")
 
 # 7935
