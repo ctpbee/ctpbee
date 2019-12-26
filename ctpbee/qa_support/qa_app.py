@@ -90,7 +90,7 @@ class QADataSupport:
         end = kwargs.get("end")
 
         query = {
-            "code": symbol,
+            "code": symbol.upper(),
             "type": frq
         }
         if start and end:
@@ -100,12 +100,13 @@ class QADataSupport:
                     "$lte": QA_util_time_stamp(end)
                 }
         format_option = dict(open=1, close=1, high=1, low=1, datetime=1, code=1, price=1,
-                             amount=1, _id=0, tradetime=1)
+                             _id=0, tradetime=1, trade=1)
         _iterable = self.quantaxis['future_min'].find(query, format_option, batch_size=10000)
 
         def pack(data: dict):
             data['symbol'] = data.pop("code")
             data['local_symbol'] = data['symbol'] + "." + exchange
+            data['volume'] = data.pop("trade")
             for key in self.price:
                 data[key + "_price"] = data.pop(key)
             return data
@@ -123,9 +124,8 @@ class QADataSupport:
 if __name__ == '__main__':
     support = QADataSupport(host="127.0.0.1")
     ctime = time.time()
-    rst = support.get_future_min("BBL8.DCE".upper(), start="2018-8-1 10:00:10", end="2019-10-1 10:00:10")
-    print(rst[0])
-    print(f"cost: {time.time() - ctime}")
+    rst = support.get_future_min("rb2001.SHFE", start="2019-8-1 10:00:10", end="2019-10-1 10:00:10")
+    print(f"cost: {time.time() - ctime}s")
 
 # 7935
 # cost: 0.14893150329589844
