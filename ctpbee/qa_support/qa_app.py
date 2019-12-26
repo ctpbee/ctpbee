@@ -124,9 +124,10 @@ class QADataSupport:
 
 
 if __name__ == '__main__':
-    support = QADataSupport()
+    support = QADataSupport(host="127.0.0.1")
     ctime = time.time()
     rst = support.get_future_min("BBL8.SHFE", start="2018-8-1 10:00:10", end="2019-10-1 10:00:10")
+    print(rst)
     print(f"cost: {time.time() - ctime}")
 
 # 7935
