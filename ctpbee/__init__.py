@@ -24,6 +24,6 @@ from ctpbee.looper import LooperApi, Vessel
 # About data_support
 try:
     import pymongo
-    from ctpbee.qa_support import QADataSupport
+    from ctpbee.qa_support.qa_app import QADataSupport
 except ImportError as e:
     pass
