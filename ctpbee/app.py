@@ -94,7 +94,7 @@ class CtpBee(object):
     for developers:
         ctpbee发展至今，已经具备微小的基本核模型，我为你们开放了插件接口，
         用于你们自定义扩展接口，注意如果你有好的插件想分享，我会用上述基金发起奖励，并本人送出小礼物一份！！  
-    tiny but strong
+
     """
     tools = {}
 

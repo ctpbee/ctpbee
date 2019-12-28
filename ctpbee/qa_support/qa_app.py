@@ -1,8 +1,6 @@
 import time
 import pymongo as pg
 from pandas import DataFrame
-from werkzeug.datastructures import ImmutableDict
-
 from ctpbee.qa_support.abstract import DataSupport
 from ctpbee.qa_support.qa_func import QA_util_time_stamp
 
@@ -34,7 +32,16 @@ class QADataSupport(DataSupport):
         """
         self.config.update(kwargs)
         self.mongo_client = pg.MongoClient(self._get_link(**self.config))
-        {setattr(self, f"_{i}", v) if i.startswith("future") else i for i, v in self.config.items()}
+        _ = {setattr(self, f"_{i}", v) if i.startswith("future") else i for i, v in self.config.items()}
+
+    def init_app(self, app):
+        """
+        初始化App
+        todo:
+        当用户调用此接口时候， 会将历史数据和当前ctpbee中的内存中的数据同时返回
+        """
+        self._app = app
+        app.extensions['name'] = self
 
     @property
     def quantaxis(self):
@@ -53,8 +60,11 @@ class QADataSupport(DataSupport):
 
         return list(map(remove_id, list(self.quantaxis[self._future_list].find())))
 
+    def __str__(self):
+        return "ctpbee QA support instance !"
+
     def get_future_min(self, local_symbol: str, frq: str = "1min", **kwargs):
-        # 此处需要一个更加完善的参数检查器 ---> 也许我能通过阅读pip源码获取灵感。
+        # todo: 此处需要一个更加完善的参数检查器 ---> 也许我能通过阅读pip源码获取灵感。
 
         if local_symbol.count(".") > 1:
             raise ValueError("local_symbol格式错误, 期望: 合约代码.交易所")

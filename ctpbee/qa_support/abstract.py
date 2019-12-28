@@ -2,6 +2,7 @@
 抽象组件
 """
 
+
 class DataSupport:
     @staticmethod
     def _get_link(**kwargs):
