@@ -6,6 +6,8 @@
 Thanks for QUANTAXIS --> https://github.com/QUANTAXIS/QUANTAXIS
 
 函数我都会保持全名
+
+author: yutiansut (https://github.com/yutiansut)
 """
 import time
 
