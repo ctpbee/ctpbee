@@ -1,6 +1,9 @@
 import time
+import re
 import pymongo as pg
 from pandas import DataFrame
+
+from ctpbee.constant import Exchange
 from ctpbee.qa_support.abstract import DataSupport
 from ctpbee.qa_support.qa_func import QA_util_time_stamp
 
@@ -75,11 +78,15 @@ class QADataSupport(DataSupport):
         try:
             exchange = local_symbol.split(".")[1]
         except IndexError:
-            exchange = kwargs.get("exchange", None)
-            if not exchange:
+            if not kwargs.get("exchange", None):
                 raise ValueError("local_symbol中,你仅仅传入了合约名称，请通过exchange参数传入交易所代码")
+            exchange = kwargs.get("exchange")
+            if isinstance(exchange, Exchange):
+                exchange = exchange.value
         start = kwargs.get("start")
         end = kwargs.get("end")
+        if exchange == "CZCE":
+            symbol = re.sub("([a-zA-Z]+)([0-9]+)", lambda x: x.group(1) + "2" + x.group(2), symbol)
 
         query = {
             "code": symbol.upper(),
@@ -106,10 +113,6 @@ class QADataSupport(DataSupport):
         return list(map(pack, _iterable))
 
     def get_future_tick(self, local_symbol: str, **kwargs):
-        pass
-
-    def covert_index(self, type_="future"):
-        """ 更新下标"""
         pass
 
 

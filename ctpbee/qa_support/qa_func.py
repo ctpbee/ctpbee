@@ -27,3 +27,4 @@ def QA_util_time_stamp(time_):
     else:
         timestr = str(time_)[0:19]
         return time.mktime(time.strptime(timestr, '%Y-%m-%d %H:%M:%S'))
+
