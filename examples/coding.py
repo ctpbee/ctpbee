@@ -1,1 +1,0 @@
-from ctpbee import QADataSupport

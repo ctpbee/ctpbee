@@ -9,7 +9,6 @@ except ImportError:
     raise EnvironmentError("请安装ctpbee[QA_SUPPORT]版本，安装详见: https://docs.ctpbee.com/install\n"
                            "please install ctpbee[QA_SUPPORT] version. see the url before")
 
-QA.QA_fetch_future_min()
 
 class QARealTimeCollector(DataSupport):
     """

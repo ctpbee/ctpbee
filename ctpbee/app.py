@@ -13,8 +13,8 @@ from ctpbee.center import Center
 from ctpbee.config import Config
 from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
-from ctpbee.event_engine import Event
-from ctpbee.event_engine.engine import EVENT_TIMER
+from ctpbee.constant import Event
+from ctpbee.constant import EVENT_TIMER
 from ctpbee.exceptions import ConfigError
 from ctpbee.helpers import end_thread
 from ctpbee.helpers import locked_cached_property, find_package, refresh_query, graphic_pattern

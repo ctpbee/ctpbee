@@ -1,5 +1,7 @@
 import time
 import re
+from typing import List
+
 import pymongo as pg
 from pandas import DataFrame
 
@@ -66,9 +68,8 @@ class QADataSupport(DataSupport):
     def __str__(self):
         return "ctpbee QA support instance !"
 
-    def get_future_min(self, local_symbol: str, frq: str = "1min", **kwargs):
+    def get_future_min(self, local_symbol: str, frq: str = "1min", **kwargs) -> List[dict]:
         # todo: 此处需要一个更加完善的参数检查器 ---> 也许我能通过阅读pip源码获取灵感。
-
         if local_symbol.count(".") > 1:
             raise ValueError("local_symbol格式错误, 期望: 合约代码.交易所")
         if "." in local_symbol:
@@ -103,11 +104,12 @@ class QADataSupport(DataSupport):
         _iterable = self.quantaxis['future_min'].find(query, format_option, batch_size=10000)
 
         def pack(data: dict):
-            data['symbol'] = data.pop("code")
+            data['symbol'] = symbol
             data['local_symbol'] = data['symbol'] + "." + exchange
             data['volume'] = data.pop("trade")
             for key in self.price:
                 data[key + "_price"] = data.pop(key)
+            del data['code']
             return data
 
         return list(map(pack, _iterable))
