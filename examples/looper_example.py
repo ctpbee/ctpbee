@@ -32,7 +32,8 @@ class DoubleMaStrategy(LooperApi):
         super().__init__(name)
         self.count = 1
         self.api = Indicator()
-        self.instrument_set = ['ag1912.SHFE']
+
+        self.instrument_set = ['rb2001.SHFE']
         self.api.open_json("zn1912.SHFE.json")
         self.pos = 0
 
@@ -43,6 +44,8 @@ class DoubleMaStrategy(LooperApi):
         am.add_bar(bar)
         if not am.inited:
             return
+
+
         # 收盘
         close = am.close
         # 压力 平均 支撑
@@ -102,16 +105,15 @@ def run_main(data):
                            {"initial_capital": 100000,
                             "commission": 0.005,
                             "deal_pattern": "price",
-                            "size_map": {"ag1912.SHFE": 15},
+                            "size_map": {"rb2001.SHFE": 15},
                             "today_commission": 0.005,
-                            "yesterday_commission": 0.02,
+                            "yesterday_commission": 0.05,
                             "close_commission": 0.005,
                             "slippage_sell": 0,
                             "slippage_cover": 0,
                             "slippage_buy": 0,
                             "slippage_short": 0,
                             "close_pattern": "yesterday",
-
                             },
                        "strategy": {}
                        })
@@ -122,4 +124,7 @@ def run_main(data):
 
 if __name__ == '__main__':
     data = load_data()
+    from ctpbee import QADataSupport
+    su = QADataSupport()
+    data = su.get_future_min("rb2001.SHFE", frq="30min",start="2018-8-1 10:00:10", end="2019-10-1 10:00:10")
     run_main(data)

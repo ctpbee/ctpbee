@@ -5,6 +5,7 @@
 """
 import logging
 import os
+import platform
 from datetime import time, datetime, timedelta
 from inspect import isfunction
 from multiprocessing import Process
@@ -199,6 +200,13 @@ class Hickey(object):
     NIGHT_START = time(21, 0)  # 夜盘启动和停止时间
     NIGHT_END = time(2, 35)
 
+    TIME_MAPPING = {
+        "dy_st": "DAY_START",
+        "dy_ed": "DAY_END",
+        "ng_st": "NIGHT_START",
+        "ng_ed": "NIGHT_END"
+    }
+
     def __init__(self):
         self.names = []
         from datetime import time
@@ -278,8 +286,6 @@ class Hickey(object):
                 print("program start successful")
             if not status and p is not None:
                 print("invalid time, 查杀子进程")
-                import os
-                import platform
                 if platform.uname().system == "Windows":
                     os.popen('taskkill /F /pid ' + str(p.pid))
                 else:
@@ -289,6 +295,27 @@ class Hickey(object):
                 p = None
             sleep(30)
 
+    def update_time(self, timed: time, flag: str):
+        """
+        此函数被用来修改更新启动时间或者关闭时间
+
+        :param timed:
+        :param flag:需要修改的字段 仅仅
+                  "dy_st": "白天开始",
+                 "dy_ed": "白天结束",
+                "ng_st": "晚上开始",
+               "ng_ed": "晚上结束"
+    }
+        :return: None
+        """
+        if flag not in self.TIME_MAPPING.keys():
+            raise ValueError(f"注意你的flag是不被接受的，我们仅仅支持\n "
+                             f"{str(list(self.TIME_MAPPING.keys()))}四种")
+        if not isinstance(timed, time):
+            raise ValueError(f"timed错误的数据类型，期望 time, 当前{str(type(timed))}")
+
+        setattr(self, self.TIME_MAPPING[flag], timed)
+
     def __repr__(self):
         return "ctpbee 7*24 manager ^_^"
 
@@ -296,20 +323,17 @@ class Hickey(object):
 hickey = Hickey()
 
 
-class RLock:
-    def __init__(self, name, second=10):
-        """ 创建一个新锁 """
-        self._start = datetime.now().timestamp()
-        self._end = self._start + second
-
-    def release(self):
-        pass
+def join_path(rootdir, *args):
+    """ 路径添加器 """
+    for i in args:
+        rootdir = os.path.join(rootdir, i)
+    return rootdir
 
 
 def get_ctpbee_path():
-    """ 获取ctpbee的路径默认路径 """
-    import platform
-    import os
+    """
+    获取ctpbee的路径默认路径
+    """
     system_ = platform.system()
     if system_ == 'Linux':
         home_path = os.environ['HOME']
@@ -323,10 +347,3 @@ def get_ctpbee_path():
     if not os.path.exists(ctpbee_path):
         os.mkdir(ctpbee_path)
     return ctpbee_path
-
-
-def join_path(rootdir, *args):
-    """ 路径添加器 """
-    for i in args:
-        rootdir = os.path.join(rootdir, i)
-    return rootdir

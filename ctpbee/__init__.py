@@ -1,7 +1,7 @@
 """
     for the future of  life
 """
-__version__ = '1.0'
+__version__ = '1.0.3'
 __status__ = 'production level'
 
 # About core
@@ -20,3 +20,10 @@ from ctpbee.func import hickey, get_ctpbee_path
 
 # About looper
 from ctpbee.looper import LooperApi, Vessel
+
+# About data_support
+try:
+    import pymongo
+    from ctpbee.qa_support.qa_app import QADataSupport
+except ImportError as e:
+    pass

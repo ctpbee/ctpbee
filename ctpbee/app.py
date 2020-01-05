@@ -13,8 +13,8 @@ from ctpbee.center import Center
 from ctpbee.config import Config
 from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
-from ctpbee.event_engine import Event
-from ctpbee.event_engine.engine import EVENT_TIMER
+from ctpbee.constant import Event
+from ctpbee.constant import EVENT_TIMER
 from ctpbee.exceptions import ConfigError
 from ctpbee.helpers import end_thread
 from ctpbee.helpers import locked_cached_property, find_package, refresh_query, graphic_pattern
@@ -86,12 +86,27 @@ class CtpBee(object):
     # 插件Api系统 /Extension system
     extensions = {}
 
-    # 工具, 用于提供一些比较优秀的工具/ Toolbox, using by providing some good tools
+    """ 
+    工具, 用于提供一些比较优秀的工具/ Toolbox, using by providing some good tools
+    
+    注意当前社区接受捐赠，如果你有兴趣发起捐赠 ---> 支付宝 somewheve@gmail.com 
+                    注意你的捐赠都会被用到社区发展上面  
+    for developers:
+        ctpbee发展至今，已经具备微小的基本核模型，我为你们开放了插件接口，
+        用于你们自定义扩展接口，注意如果你有好的插件想分享，我会用上述基金发起奖励，并本人送出小礼物一份！！  
+
+    """
     tools = {}
 
-    def __init__(self, name: Text, import_name, action_class: Action = None, engine_method: str = "thread",
+    def __init__(self,
+                 name: Text,
+                 import_name,
+                 action_class: Action = None,
+                 engine_method: str = "thread",
                  logger_class=None, logger_config=None,
-                 refresh: bool = False, risk=None, sim: bool = False,
+                 refresh: bool = False,
+                 risk=None,
+                 sim: bool = False,
                  instance_path=None):
         """ 初始化 """
         self.name = name if name else 'ctpbee'

@@ -18,11 +18,10 @@ Notice : 神兽保佑 ，测试一次通过
 //          ┃ ┫ ┫   ┃ ┫ ┫
 //          ┗━┻━┛   ┗━┻━┛
 //
-"""
+"""                      
 from collections import defaultdict
 
 from ctpbee.constant import *
-from ctpbee.event_engine import Event
 from ctpbee.interface.ctp.lib import *
 from ctpbee.signals import common_signals
 

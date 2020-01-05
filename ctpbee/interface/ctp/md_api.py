@@ -1,7 +1,6 @@
 from datetime import date, datetime
 
 from ctpbee.constant import *
-from ctpbee.event_engine import Event
 from ctpbee.signals import common_signals
 from .lib import *
 
@@ -169,7 +168,8 @@ class BeeMdApi(MdApi):
         result = None
         if self.login_status and symbol in self.subscribed:
             result = self.unSubscribeMarketData(symbol)
-        self.subscribed.remove(symbol)
+        if symbol in self.subscribed:
+            self.subscribed.remove(symbol)
         return result
 
     def close(self):
@@ -183,14 +183,14 @@ class BeeMdApi(MdApi):
 class BeeMdApiApp(MdApiApp):
     """"""
 
-    def __init__(self, event_engine):
+    def __init__(self, app_signal):
         """Constructor"""
         super(BeeMdApiApp, self).__init__()
 
         self.gateway_name = "ctp"
 
         self.reqid = 0
-        self.event_engine = event_engine
+        self.app_signal = app_signal
         self.connect_status = False
         self.login_status = False
         self.subscribed = set()
@@ -204,8 +204,14 @@ class BeeMdApiApp(MdApiApp):
         return self.login_status
 
     def on_event(self, type, data):
-        event = Event(type=type, data=data)
-        self.event_engine.put(event)
+        if type == EVENT_TICK:
+            event = Event(type=type, data=data)
+            signal = getattr(common_signals, f"{type}_signal")
+            signal.send(event)
+        else:
+            event = Event(type=type, data=data)
+            signal = getattr(self.app_signal, f"{type}_signal")
+            signal.send(event)
 
     def onFrontConnected(self):
         """
@@ -335,7 +341,8 @@ class BeeMdApiApp(MdApiApp):
         result = None
         if self.login_status and symbol in self.subscribed:
             result = self.unSubscribeMarketData(symbol)
-        self.subscribed.remove(symbol)
+        if symbol in self.subscribed:
+            self.subscribed.remove(symbol)
         return result
 
     def close(self):

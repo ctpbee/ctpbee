@@ -687,6 +687,25 @@ class MarketDataRequest(BaseRequest):
     exchange: Exchange
 
 
+EVENT_TIMER = "timer"
+
+
+class Event:
+    """
+    Event object consists of a type string which is used
+    by event engine for distributing event, and a data
+    object which contains the real data.
+    """
+
+    def __init__(self, type: str, data: Any = None):
+        """"""
+        self.type = type
+        self.data = data
+
+    def __str__(self):
+        return "Event(type={})".format(self.type)
+
+
 data_class = [TickData, BarData, OrderData, TradeData, PositionData, AccountData, LogData, ContractData, SharedData]
 request_class = [SubscribeRequest, OrderRequest, CancelRequest, AccountRegisterRequest, AccountBanlanceRequest,
                  TransferRequest, TransferSerialRequest]

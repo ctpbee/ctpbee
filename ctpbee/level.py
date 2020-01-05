@@ -9,7 +9,7 @@ from ctpbee.constant import EVENT_INIT_FINISHED, EVENT_TICK, EVENT_BAR, EVENT_OR
     EVENT_POSITION, EVENT_ACCOUNT, EVENT_CONTRACT, OrderData, SharedData, BarData, TickData, TradeData, \
     PositionData, AccountData, ContractData, Offset, Direction, OrderType, Exchange
 from ctpbee.data_handle.level_position import ApiPositionManager
-from ctpbee.event_engine.engine import EVENT_TIMER, Event
+from ctpbee.constant import EVENT_TIMER, Event
 from ctpbee.exceptions import ConfigError
 from ctpbee.func import helper, get_ctpbee_path
 from ctpbee.helpers import check, exec_intercept

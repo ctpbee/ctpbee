@@ -1,5 +1,8 @@
 # ctpbee 
-bee bee .... 为二次开发而生 ~~
+bee bee .... 为二次开发而生 ~~ 
+
+>  tiny but strong
+
 
 ![ctpbee](source/ctpbee.jpg)
 
@@ -63,6 +66,15 @@ it will be fix in next version
 
 - [ ] 套利 ---> ready to support
 - [ ] 历史数据 support 
+
+
+## QA_SUPPORT
+当前针对[QUANTAXIS](http://github.com/QUANTAXIS/QUANTAXIS)的数据对接!
+ctpbee作为开发框架并不具有历史数据的功能，我们也因为条件所限无法提供，**但是现在这些都不是问题**
+我们提供了QA_SUPPORT版本支持，能让你轻松通过几个命令来获取历史数据。
+> 此处感谢[QA作者yutiansut](https://github.com/yutiansut)，阻止了我重复造轮子
+
+关于此个版本的支持，请参见[文档](https://docs.ctpbee.com/)中的[安装](https://docs.ctpbee.com/install)
 
 
 ## 一些可能会减少你工作量的工作
