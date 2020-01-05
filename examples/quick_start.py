@@ -84,7 +84,7 @@ class DataRecorder(CtpbeeApi):
 
     def on_tick(self, tick):
         """tick processself-control  && kill your  function"""
-        print("tick time: ", tick.datetime, " local time:", datetime.now())
+
 
     def on_bar(self, bar):
         """bar process function"""

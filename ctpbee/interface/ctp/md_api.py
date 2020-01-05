@@ -1,7 +1,6 @@
 from datetime import date, datetime
 
 from ctpbee.constant import *
-from ctpbee.event_engine import Event
 from ctpbee.signals import common_signals
 from .lib import *
 

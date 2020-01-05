@@ -7,6 +7,3 @@ from ctpbee import QADataSupport
 # print(data_support)
 # print(result)
 #
-
-
-print(symbol)

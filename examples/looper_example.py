@@ -32,6 +32,7 @@ class DoubleMaStrategy(LooperApi):
         super().__init__(name)
         self.count = 1
         self.api = Indicator()
+
         self.instrument_set = ['rb2001.SHFE']
         self.api.open_json("zn1912.SHFE.json")
         self.pos = 0
