@@ -84,7 +84,7 @@ class DataRecorder(CtpbeeApi):
 
     def on_tick(self, tick):
         """tick processself-control  && kill your  function"""
-
+        print(tick)
 
     def on_bar(self, bar):
         """bar process function"""
@@ -152,4 +152,3 @@ if __name__ == '__main__':
     # hickey.start_all(app_func=create_app, in_front=700)
     app = create_app()
     app[0].start()
-
