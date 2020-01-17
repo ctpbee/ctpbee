@@ -96,7 +96,6 @@ class BeeMdApi(MdApi):
             datetimed = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S.%f")
         except ValueError as e:
             datetimed = datetime.strptime(str(date.today()) + " " + timestamp, "%Y-%m-%d %H:%M:%S.%f")
-
         tick = TickData(
             symbol=symbol,
             exchange=exchange,
@@ -111,6 +110,7 @@ class BeeMdApi(MdApi):
             high_price=data["HighestPrice"],
             low_price=data["LowestPrice"],
             pre_close=data["PreClosePrice"],
+            turnover=data['Turnover'],
             bid_price_1=data["BidPrice1"],
             ask_price_1=data["AskPrice1"],
             bid_volume_1=data["BidVolume1"],

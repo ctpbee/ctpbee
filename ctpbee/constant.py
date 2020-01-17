@@ -332,6 +332,7 @@ class TickData(BaseData):
     high_price: float = 0
     low_price: float = 0
     pre_close: float = 0
+    turnover: float = 0
 
     bid_price_1: float = 0
     bid_price_2: float = 0
