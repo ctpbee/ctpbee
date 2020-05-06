@@ -11,9 +11,10 @@ from collections import defaultdict
 import numpy as np
 from pandas import DataFrame
 
-from ctpbee.constant import TradeData, OrderData, Offset, PositionData, Direction
+from ctpbee.constant import TradeData, OrderData, Offset, PositionData, Direction, AccountData
 from ctpbee.exceptions import ConfigError
 from ctpbee.looper.local_position import LocalPositionManager
+import uuid
 
 
 class AliasDayResult:
@@ -53,7 +54,8 @@ class Account:
     daily_limit = 20
     commission: float = 0
 
-    def __init__(self, interface):
+    def __init__(self, interface, name=None):
+        self.account_id = name if name is not None else uuid.uuid4()
         self.interface = interface
         self.pre_balance = 0
         self.daily_life = defaultdict(AliasDayResult)
@@ -72,6 +74,13 @@ class Account:
         self.occupation_margin = 0
         self.init_position_manager_flag = False
         self.init = False
+
+    @property
+    def to_object(self) -> AccountData:
+        return AccountData._create_class(dict(accountid=self.account_id,
+                                              local_account_id=f"{self.account_id}.SIM",
+                                              frozen=self.frozen,
+                                              balance=self.balance))
 
     @property
     def available(self) -> float:
@@ -146,7 +155,7 @@ class Account:
             self.date = self.interface.date
         if self.interface.date != self.date:
             """ 新的一天 """
-            self.get_new_day()
+            self.settle()
             self.date = self.interface.date
 
     def update_margin(self, data: OrderData or TradeData, reverse=False):
@@ -178,7 +187,7 @@ class Account:
             self.frozen += order.volume * order.price
             self.balance -= order.price * order.volume
 
-    def get_new_day(self, interface_date=None):
+    def settle(self, interface_date=None):
         """ 生成今天的交易数据， 同时更新前日数据 ，然后进行持仓结算 """
 
         if not self.date:
@@ -207,7 +216,7 @@ class Account:
     def via_aisle(self):
         self.position_manager.update_size_map(self.interface.params)
         if self.interface.date != self.date:
-            self.get_new_day(self.interface.date)
+            self.settle(self.interface.date)
             self.date = self.interface.date
         else:
             pass

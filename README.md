@@ -4,8 +4,6 @@ bee bee .... 为二次开发而生 ~~
 >  tiny but strong
 
 
-![ctpbee](source/ctpbee.jpg)
-
 ctpbee 提供了一个可供使用的交易微框架, 你可以通过这个微小的核心来构建值得信赖的工具， 
 当然这需要你的编程功力。 你所需要关心的是如何编程来处理行情和交易信息即可。
 
@@ -37,7 +35,8 @@ docker暂时不可用， 将在下一个大版本进行修复
 it will be fix in next version
 
 ## 文档
-文档中描述相关教程，请认真阅读。如有问题，请到底部加群或者邮件联系作者 ^_^
+文档中描述相关教程，请认真阅读。如有问题，请到底部加群或者邮件联系作者 ^_^  
+> 当前文档已经落后, 请等待作者进行更新 ~
 [文档](http://docs.ctpbee.com)
 
     
@@ -63,6 +62,8 @@ it will be fix in next version
 - [ ] 对接账户qifi格式
 - [ ] 对接qifi_struct
 - [ ] bug/维护
+- [ ] 模拟实现 ---> sim接口
+- [ ] ctpbee_flask 计划 ---> 描述为提供HTTP API进行实盘下单的解决方案
 
 ## 插件支持
 
@@ -77,6 +78,10 @@ ctpbee作为开发框架并不具有历史数据的功能，我们也因为条�
 > 此处感谢[QA作者yutiansut](https://github.com/yutiansut)，阻止了我重复造轮子
 
 关于此个版本的支持，请参见[文档](https://docs.ctpbee.com/)中的[安装](https://docs.ctpbee.com/install)
+
+## 模拟/SIM
+ctpbee基于回测的机制添加了`sim`接口， 通过配置的接口`INTERFACE`填入`sim`即可进行载入,
+此处描述为通过`ctpbee_flask`拉起一个模拟服务器，通过`HTTP API`来获取策略机制. 此项功能正在研发中~~ 欢迎通过`issue`来进行反馈!
 
 
 ## 一些可能会减少你工作量的工作
@@ -110,7 +115,7 @@ app.start()
 
 
 ## 发展计划
-ctpbee主要面对开发者, 希望能得到各位大佬的支持. 后续不再开发examples. 
+ctpbee主要面对开发者, 希望能得到各位大佬的支持.
 策略以及指标等工具都以ctpbee_** 形式发布. ctpbee只提供最小的内核. 本人崇尚开源, 无论你是交易者还是程序员, 只要你有新的想法以及对开源感兴趣, 欢迎基于ctpbee 开发出新的可用工具. 我会维护一个工具列表, 指引用户前往使用. 
 
 
