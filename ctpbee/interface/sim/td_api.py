@@ -38,5 +38,7 @@ class SimInterface(LocalLooper):
         [self.on_event(EVENT_POSITION, x) for x in self.account.position_manager.get_all_positions()]
         return 1
 
-    def connect(self, info):
+    def connect(self, info: dict):
         print("模拟器已经载入， 正在初始化历史资金数据")
+        if info.get("SIM_PRIMARY_CASH"):
+            self.account.initial_capital(info.get("SIM_PRIMARY_CASH"))
