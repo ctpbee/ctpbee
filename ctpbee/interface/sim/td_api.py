@@ -1,13 +1,14 @@
 """
 ctpbee里面内置模拟成交网关 ---> 主要调用回测接口进行处理
 """
-from ctpbee.constant import Event, EVENT_POSITION
+from ctpbee.constant import Event, EVENT_POSITION, AccountData, EVENT_ACCOUNT
 from ctpbee.looper.interface import LocalLooper
 
 
 class SimInterface(LocalLooper):
     """
     模拟成交接口网关， 负责向上提供API
+    三点之后发起结算
     """
 
     def __init__(self, app_signal):
@@ -17,7 +18,9 @@ class SimInterface(LocalLooper):
         super().__init__(logger=None, risk=None)
 
     def query_account(self):
-        pass
+        """ 查询账户信息API"""
+        self.on_event(EVENT_ACCOUNT, self.account.to_object())
+        return 1
 
     @property
     def td_status(self):
@@ -35,3 +38,5 @@ class SimInterface(LocalLooper):
         [self.on_event(EVENT_POSITION, x) for x in self.account.position_manager.get_all_positions()]
         return 1
 
+    def connect(self, info):
+        print("模拟器已经载入， 正在初始化历史资金数据")
