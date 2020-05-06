@@ -33,16 +33,13 @@ pip3 install ctpbee
 docker pull yutiansut/ctpbee:latest
 docker run -p 5000:5000 yutiansut/ctpbee:latest
 ```
-
+docker暂时不可用， 将在下一个大版本进行修复
 it will be fix in next version
 
 ## 文档
 文档中描述相关教程，请认真阅读。如有问题，请到底部加群或者邮件联系作者 ^_^
 [文档](http://docs.ctpbee.com)
 
-## 社区支持
-[地址](http://community.ctpbee.com)
-    
     
 ## 功能支持
 
@@ -61,6 +58,11 @@ it will be fix in next version
 - [x] cta support 
 - [x] 回测系统搭建  --> interface/looper
 
+## Todo
+- [ ] 对接自定义行情
+- [ ] 对接账户qifi格式
+- [ ] 对接qifi_struct
+- [ ] bug/维护
 
 ## 插件支持
 
