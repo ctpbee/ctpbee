@@ -223,9 +223,16 @@ class LocalLooper():
         """ 发单的操作"""
         self.intercept_gateway(order_req)
 
-    def cancel(self, cancel_req):
+    def _cancel(self, cancel_req):
         """ 撤单机制 """
         self.intercept_gateway(cancel_req)
+
+    def cancel(self, order_id):
+        for x in self.pending:
+            if x.order_id == order_id:
+                self.pending.remove(x)
+                return 1
+        return 0
 
     def intercept_gateway(self, data):
         """ 拦截网关 同时这里应该返回相应的水平"""
