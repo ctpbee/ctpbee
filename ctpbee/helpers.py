@@ -101,10 +101,10 @@ def check(type: AnyStr):
         def wrapper(*args, **kwargs):
             if type == "market":
                 if args[0].app.market is None:
-                    raise ValueError("当前账户行情api未连接")
+                    raise ValueError("当前账户行情api未连接,请检查你的代码中是否使用了行情接口API")
             elif type == "trader":
                 if args[0].app.market is None:
-                    raise ValueError("当前账户交易api未连接")
+                    raise ValueError("当前账户交易api未连接,请检查你的代码中是否使用了交易接口API")
             else:
                 raise ValueError("非法字符串")
             return func(*args, **kwargs)

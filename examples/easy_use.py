@@ -22,13 +22,16 @@ class JustUse(CtpbeeApi):
 
     def on_tick(self, tick: TickData) -> None:
         """ """
+        print(tick)
 
     def on_bar(self, bar: BarData) -> None:
         print(datetime.now().timestamp())
 
     def on_contract(self, contract: ContractData):
-        if contract.local_symbol in self.instrument_set:
-            self.app.subscribe(contract.local_symbol)
+        """ """
+        # if contract.local_symbol in self.instrument_set:
+            # self.app.subscribe(contract.local_symbol)
+        # self.app.subscribe(contract.local_symbol)
 
     def on_init(self, init: bool):
         pass
@@ -43,16 +46,21 @@ if __name__ == '__main__':
             "userid": "089131",
             "password": "350888",
             "brokerid": "9999",
-            "md_address": "tcp://218.202.237.33:10112",
-            "td_address": "tcp://218.202.237.33:10102",
+            # "md_address": "tcp://218.202.237.33:10112",
+            # "td_address": "tcp://218.202.237.33:10102",
+            "md_address": "tcp://180.168.146.187:10131",
+            "td_address": "tcp://180.168.146.187:10130",
             "product_info": "",
             "appid": "simnow_client_test",
             "auth_code": "0000000000000000",
         },
         "INTERFACE": "ctp",
         "TD_FUNC": True,
-        "MD_FUNC": True,
+        "MD_FUNC": False,
     }
     app.config.from_mapping(info)
     app.add_extension(just_use)
     app.start()
+    from time import sleep
+    sleep(3)
+    # app.subscribe("rb2010")

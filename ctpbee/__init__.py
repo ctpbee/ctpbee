@@ -18,9 +18,6 @@ from ctpbee.trade_time import TradingDay
 from ctpbee.util import RiskLevel
 from ctpbee.func import hickey, get_ctpbee_path
 
-# About looper
-from ctpbee.looper import LooperApi, Vessel
-
 # About data_support
 try:
     import pymongo
