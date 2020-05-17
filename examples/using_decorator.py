@@ -1,3 +1,8 @@
+"""
+使用装饰器示例
+"""
+
+
 from datetime import datetime
 from time import sleep
 

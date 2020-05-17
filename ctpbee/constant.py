@@ -8,8 +8,6 @@ from enum import Enum
 from logging import INFO
 from typing import Any
 
-from pandas import DataFrame
-
 
 class Missing:
     value = "属性缺失"
@@ -235,17 +233,20 @@ class BaseData:
         return temp
 
     def _to_df(self):
-        temp = {}
-        for x in dir(self):
-            if x.startswith("_") or x.startswith("create"):
-                continue
-            if isinstance(getattr(self, x), Enum):
-                temp[x] = getattr(self, x).value
-                continue
-            temp[x] = getattr(self, x)
-
-        return DataFrame([temp], columns=list(temp.keys()).remove("datetime")).set_index(['datetime']) if temp.get(
-            "datetime", None) is not None else DataFrame([temp], columns=list(temp.keys()))
+        try:
+            from pandas import DataFrame
+            temp = {}
+            for x in dir(self):
+                if x.startswith("_") or x.startswith("create"):
+                    continue
+                if isinstance(getattr(self, x), Enum):
+                    temp[x] = getattr(self, x).value
+                    continue
+                temp[x] = getattr(self, x)
+            return DataFrame([temp], columns=list(temp.keys()).remove("datetime")).set_index(['datetime']) if temp.get(
+                "datetime", None) is not None else DataFrame([temp], columns=list(temp.keys()))
+        except ImportError:
+            raise ImportError("请使用pip install pandas 以获取此特性")
 
     def _asdict(self):
         """ 转换为字典 里面会有enum """
