@@ -1,8 +1,9 @@
 # encoding: UTF-8
 from types import MethodType
 from ctpbee.signals import common_signals
-from ctpbee.constant import BarData, TickData, SharedData, EVENT_BAR, EVENT_SHARED
+from ctpbee.constant import BarData, TickData, EVENT_BAR
 from ctpbee.constant import Event
+
 
 class DataGenerator:
     """

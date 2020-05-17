@@ -35,6 +35,9 @@ class Interface:
         if interface == "xin":
             from ctpbee.interface.xin import XinTdApi, XinMdApi
             return (XinMdApi, XinTdApi)
+        if interface == "sim":
+            from ctpbee.interface.sim import SimInterface, SimMarket
+            return (SimMarket, SimInterface)
         else:
             raise ValueError("错误参数")
 

@@ -115,6 +115,10 @@ class Center(BasicCenterModel, dict):
     def account(self):
         return self.app.recorder.get_account()
 
+    @property
+    def positions(self):
+        return self.app.recorder.position_manager.get_all_positions()
+
     def get_tick(self, local_symbol):
         """ 获取指定合约最近的一条tick"""
         try:

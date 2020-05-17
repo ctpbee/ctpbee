@@ -1,5 +1,7 @@
+"""
+单纯的信号使用， 比如推送到redis或者啥的会比较ok
+"""
 from time import sleep
-
 from ctpbee import CtpBee
 from ctpbee import common_signals
 

@@ -230,6 +230,8 @@ class CtpBee(object):
             info = self.config.get("CONNECT_INFO")
         else:
             raise ConfigError(message="没有相应的登录信息", args=("没有发现登录信息",))
+        show_me = graphic_pattern(__version__, self.engine_method)
+        print(show_me)
         MdApi, TdApi = Interface.get_interface(self)
         if self.config.get("MD_FUNC"):
             self.market = MdApi(self.app_signal)
@@ -242,8 +244,6 @@ class CtpBee(object):
                 self.trader = TdApi(self.app_signal)
             self.trader.connect(info)
 
-        show_me = graphic_pattern(__version__, self.engine_method)
-        print(show_me)
         if self.refresh:
             if self.r is not None:
                 self.r_flag = False
