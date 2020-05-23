@@ -60,7 +60,4 @@ if __name__ == '__main__':
     }
     app.config.from_mapping(info)
     app.add_extension(just_use)
-    app.start()
-    from time import sleep
-    sleep(3)
-    # app.subscribe("rb2010")
+    app.start(log_output=False)

@@ -58,12 +58,13 @@ it will be fix in next version
 - [x] 回测系统搭建  --> interface/looper
 
 ## Todo
-- [ ] 对接自定义行情
+- [x] 对接自定义行情 
 - [ ] 对接账户qifi格式
 - [ ] 对接qifi_struct
 - [ ] bug/维护
-- [ ] 模拟实现 ---> sim接口
-- [ ] ctpbee_flask 计划 ---> 描述为提供HTTP API进行实盘下单的解决方案
+- [ ] 模拟实现 ---> sim interface ==> will send to next release
+- [ ] [fast_pub 计划](https://github.com/ctpbee/fast-pub) ---> 描述为提供HTTP API进行实盘下单的解决方案
+
 
 ## 插件支持
 

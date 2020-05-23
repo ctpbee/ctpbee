@@ -221,7 +221,7 @@ class CtpBee(object):
         """ 行情 API 都应该实现md_status"""
         return self.market.md_status
 
-    def _load_ext(self):
+    def _load_ext(self, logout=True):
         """
         根据当前配置文件下的信息载入行情api和交易api,记住这个api的选项是可选的
         """
@@ -231,7 +231,8 @@ class CtpBee(object):
         else:
             raise ConfigError(message="没有相应的登录信息", args=("没有发现登录信息",))
         show_me = graphic_pattern(__version__, self.engine_method)
-        print(show_me)
+        if logout:
+            print(show_me)
         MdApi, TdApi = Interface.get_interface(self)
         if self.config.get("MD_FUNC"):
             self.market = MdApi(self.app_signal)
@@ -282,7 +283,7 @@ class CtpBee(object):
         self.timer.start()
 
         self.config["LOG_OUTPUT"] = log_output
-        self._load_ext()
+        self._load_ext(logout=log_output)
 
     def remove_extension(self, extension_name: Text) -> None:
         """移除插件"""
