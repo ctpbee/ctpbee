@@ -19,36 +19,39 @@ Notice : 神兽保佑 ，测试一次通过
 //          ┗━┻━┛   ┗━┻━┛
 //
 """
-from blinker import signal
+from uuid import uuid4
+
+from blinker import signal, NamedSignal
 
 
 class CommonSignal:
     # 全局级别的signal
     def __init__(self):
         self.event = ["timer", "tick", "bar"]
-        self.timer_signal = signal("timer")
+        self.timer_signal = NamedSignal("timer")
         # tick
-        self.tick_signal = signal("tick")
+        self.tick_signal = NamedSignal("tick")
         # bar
-        self.bar_signal = signal("bar")
+        self.bar_signal = NamedSignal("bar")
 
 
 class AppSignal:
     """ Here """
 
-    def __init__(self, app):
+    def __init__(self, app_name, ids=uuid4()):
         """ 账户级别的相关信号 """
+        self.app_name = app_name
+        self.id = ids
         self.event = ['order', "trade", "contract", "position", "init", "account", "last", "log", "error"]
-        self.app = app
-        self.order_signal = signal("order")
-        self.trade_signal = signal("trade")
-        self.position_signal = signal("position")
-        self.init_signal = signal("init")
-        self.account_signal = signal("account")
-        self.last_signal = signal("last")
-        self.log_signal = signal("log")
-        self.contract_signal = signal("contract")
-        self.error_signal = signal("error")
+        self.order_signal = NamedSignal(f"{ids}+order")
+        self.trade_signal = NamedSignal(f"{ids}+trade")
+        self.position_signal = NamedSignal(f"{ids}+position")
+        self.init_signal = NamedSignal(f"{ids}+init")
+        self.account_signal = NamedSignal(f"{ids}+account")
+        self.last_signal = NamedSignal(f"{ids}+last")
+        self.log_signal = NamedSignal(f"{ids}+log")
+        self.contract_signal = NamedSignal(f"{ids}+contract")
+        self.error_signal = NamedSignal(f"{ids}+error")
 
 
 # 发单监视器
