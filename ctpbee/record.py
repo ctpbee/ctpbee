@@ -40,16 +40,17 @@ class Recorder(object):
         from datetime import datetime
         return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
+    def get_func(self, name):
+        return getattr(self, f"process_{name}_event")
+
     def register_event(self):
         """ bind process function """
-
-        function = lambda name: lambda event: getattr(self, f"process_{name}_event")(event)
 
         def connect(data):
             name = data[0]
             signal = data[1]
             temp_sig = getattr(signal, f"{name}_signal")
-            temp_sig.connect(function(name=name), weak=False)
+            temp_sig.connect(self.get_func(name=name), weak=False)
             return name
 
         def generate_params(data, signal):
@@ -102,7 +103,6 @@ class Recorder(object):
 
     @value_call
     def process_tick_event(self, event: Event):
-        """"""
         tick = event.data
         self.ticks[tick.local_symbol] = tick
         self.position_manager.update_tick(tick)

@@ -9,14 +9,15 @@ from typing import Text
 from werkzeug.datastructures import ImmutableDict
 
 from ctpbee import __version__
+from ctpbee.util import RiskLevel
 from ctpbee.center import Center
 from ctpbee.config import Config
 from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
-from ctpbee.constant import Event
-from ctpbee.constant import EVENT_TIMER
+from ctpbee.constant import Event, EVENT_TIMER
 from ctpbee.exceptions import ConfigError
 from ctpbee.helpers import end_thread
+from ctpbee.context import current_app
 from ctpbee.helpers import locked_cached_property, find_package, refresh_query, graphic_pattern
 from ctpbee.interface import Interface
 from ctpbee.level import CtpbeeApi, Action
@@ -73,7 +74,8 @@ class CtpBee(object):
              CLOSE_PATTERN="today",  # 面对支持平今的交易所，优先平今或者平昨 ---> today: 平今, yesterday: 平昨， 其他:处罚异常
              TODAY_EXCHANGE=[Exchange.SHFE.value, Exchange.INE.value],  # 需要支持平今的交易所代码列表
              AFTER_TIMEOUT=3,  # 设置after线程执行超时,
-             TIMER_INTERVAL=1
+             TIMER_INTERVAL=1,
+             SIM=False
              ))
 
     config_class = Config
@@ -105,7 +107,7 @@ class CtpBee(object):
                  engine_method: str = "thread",
                  logger_class=None, logger_config=None,
                  refresh: bool = False,
-                 risk=None,
+                 risk: RiskLevel = None,
                  sim: bool = False,
                  instance_path=None):
         """ 初始化 """
@@ -117,7 +119,7 @@ class CtpBee(object):
         # 是否加载以使用默认的logger类/ choose if use the default logging class
         if logger_class is None:
             self.logger = VLogger(CP, app_name=self.name)
-            self.logger.set_default(name=self.logger.app_name, owner='App')
+            self.logger.set_default(name=self.logger.app_name, owner=self.name)
         else:
             if logger_config:
                 self.logger = logger_class(logger_config, app_name=self.name)
@@ -125,7 +127,7 @@ class CtpBee(object):
                 self.logger = logger_class(CP, app_name=self.name)
             self.logger.set_default(name=self.logger.app_name, owner='App')
 
-        self.app_signal = AppSignal(self)
+        self.app_signal = AppSignal(self.name)
 
         if engine_method == "thread":
             self.recorder = Recorder(self)
@@ -272,15 +274,15 @@ class CtpBee(object):
         :param debug: 是否开启调试模式 ----> 等待完成
         :return:
         """
+        if current_app is None:
+            def running_timer(common_signal):
+                while True:
+                    event = Event(type=EVENT_TIMER)
+                    common_signal.timer_signal.send(event)
+                    sleep(self.config['TIMER_INTERVAL'])
 
-        def running_timer(common_signal):
-            while True:
-                event = Event(type=EVENT_TIMER)
-                common_signal.timer_signal.send(event)
-                sleep(self.config['TIMER_INTERVAL'])
-
-        self.timer = Thread(target=running_timer, args=(common_signals,))
-        self.timer.start()
+            self.timer = Thread(target=running_timer, args=(common_signals,))
+            self.timer.start()
 
         self.config["LOG_OUTPUT"] = log_output
         self._load_ext(logout=log_output)

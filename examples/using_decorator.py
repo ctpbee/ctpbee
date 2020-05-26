@@ -17,7 +17,7 @@ class Vlog(VLogger):
 
     def handler_record(self, record):
         """ 处理日志信息代码 """
-        print(record)
+        print("处理日志信息", record)
 
 
 class ActionMe(Action):
@@ -87,8 +87,8 @@ def handle_tick(self, tick):
 
 @api.route(handler="contract")
 def handle_contract(self, contract):
-    if contract.local_symbol == "zn1911.SHFE":
-        self.app.subscribe(contract.local_symbol)
+
+    self.app.subscribe(contract.local_symbol)
 
 
 @api.route(handler="timer")

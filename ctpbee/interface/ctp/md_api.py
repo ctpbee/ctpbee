@@ -1,5 +1,7 @@
 from datetime import date, datetime
 
+from blinker import NamedSignal
+
 from ctpbee.constant import *
 from ctpbee.signals import common_signals
 from .lib import *
@@ -35,7 +37,7 @@ class BeeMdApi(MdApi):
             signal.send(event)
         else:
             event = Event(type=type, data=data)
-            signal = getattr(self.app_signal, f"{type}_signal")
+            signal: NamedSignal = getattr(self.app_signal, f"{type}_signal")
             signal.send(event)
 
     def onFrontConnected(self):
