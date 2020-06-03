@@ -58,12 +58,13 @@ it will be fix in next version
 - [x] 回测系统搭建  --> interface/looper
 
 ## Todo
-- [ ] 对接自定义行情
+- [x] 对接自定义行情 
 - [ ] 对接账户qifi格式
 - [ ] 对接qifi_struct
 - [ ] bug/维护
-- [ ] 模拟实现 ---> sim接口
-- [ ] ctpbee_flask 计划 ---> 描述为提供HTTP API进行实盘下单的解决方案
+- [ ] 模拟实现 ---> sim interface ==> will send to next release
+- [ ] [fast_pub 计划](https://github.com/ctpbee/fast-pub) ---> 描述为提供HTTP API进行实盘下单的解决方案
+
 
 ## 插件支持
 
@@ -81,14 +82,14 @@ ctpbee作为开发框架并不具有历史数据的功能，我们也因为条�
 
 ## 模拟/SIM
 ctpbee基于回测的机制添加了`sim`接口， 通过配置的接口`INTERFACE`填入`sim`即可进行载入,
-此处描述为通过`ctpbee_flask`拉起一个模拟服务器，通过`HTTP API`来获取策略机制. 此项功能正在研发中~~ 欢迎通过`issue`来进行反馈!
+此处描述为通过[fast-pub](https://github.com/ctpbee/fast-pub)拉起一个模拟服务器，通过`HTTP API`来获取策略机制. 此项功能正在研发中~~ 欢迎通过`issue`来进行反馈!
 
 
 ## 一些可能会减少你工作量的工作
 - [x] 7×24小时无人值守 (可选)
 - [x] 定时查持仓和账户信息  (可选)
 - [x] 策略对应订阅行情 (可选)
-- [x] 对接多种指标计算                     
+- [ ] 对接多种指标计算                     
 - [ ] 优化代码  / Hope for your work ^_^
 
 ## 快速开始 
@@ -112,13 +113,6 @@ info = {
 app.config.from_mapping(info)  # 从dict中载入信息 对于更多配置载入方式, 请参阅文档或者阅读代码
 app.start() 
 ```
-
-
-## 发展计划
-ctpbee主要面对开发者, 希望能得到各位大佬的支持.
-策略以及指标等工具都以ctpbee_** 形式发布. ctpbee只提供最小的内核. 本人崇尚开源, 无论你是交易者还是程序员, 只要你有新的想法以及对开源感兴趣, 欢迎基于ctpbee 开发出新的可用工具. 我会维护一个工具列表, 指引用户前往使用. 
-
-
 
 ## 贡献代码
 如果你希望贡献代码，请遵循以下步骤，注意我们仅仅接受向dev`分支提交代码 ! ! ! ! 
