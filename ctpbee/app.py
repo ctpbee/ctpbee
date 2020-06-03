@@ -274,15 +274,15 @@ class CtpBee(object):
         :param debug: 是否开启调试模式 ----> 等待完成
         :return:
         """
-        if current_app is None:
-            def running_timer(common_signal):
-                while True:
-                    event = Event(type=EVENT_TIMER)
-                    common_signal.timer_signal.send(event)
-                    sleep(self.config['TIMER_INTERVAL'])
 
-            self.timer = Thread(target=running_timer, args=(common_signals,))
-            self.timer.start()
+        def running_timer(common_signal):
+            while True:
+                event = Event(type=EVENT_TIMER)
+                common_signal.timer_signal.send(event)
+                sleep(self.config['TIMER_INTERVAL'])
+
+        self.timer = Thread(target=running_timer, args=(common_signals,))
+        self.timer.start()
 
         self.config["LOG_OUTPUT"] = log_output
         self._load_ext(logout=log_output)

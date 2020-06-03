@@ -103,7 +103,7 @@ class Center(BasicCenterModel, dict):
 
     @property
     def active_orders(self):
-        """ 返回所有的为成交单 """
+        """ 返回所有的未成交单 """
         return self.app.recorder.get_all_active_orders()
 
     @property
@@ -127,7 +127,7 @@ class Center(BasicCenterModel, dict):
             return Missing.create_obj("get_tick")
 
     def get_active_order(self, local_symbol):
-        """ 拿到指定合约的最佳"""
+        """ 拿到指定合约的未成交单子"""
         return self.app.recorder.get_all_active_orders(local_symbol)
 
     def get_position(self, local_symbol):

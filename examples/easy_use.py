@@ -22,15 +22,15 @@ class JustUse(CtpbeeApi):
 
     def on_tick(self, tick: TickData) -> None:
         """ """
-        print(tick)
+        if tick.symbol == "ag2010":
+            print(self.center.active_orders)
 
     def on_bar(self, bar: BarData) -> None:
-        print(datetime.now().timestamp())
-
+        """ """
     def on_contract(self, contract: ContractData):
         """ """
         # if contract.local_symbol in self.instrument_set:
-            # self.app.subscribe(contract.local_symbol)
+        self.app.subscribe(contract.local_symbol)
         # self.app.subscribe(contract.local_symbol)
 
     def on_init(self, init: bool):
@@ -56,8 +56,8 @@ if __name__ == '__main__':
         },
         "INTERFACE": "ctp",
         "TD_FUNC": True,
-        "MD_FUNC": False,
+        "MD_FUNC": True,
     }
     app.config.from_mapping(info)
     app.add_extension(just_use)
-    app.start(log_output=False)
+    app.start(log_output=True)
