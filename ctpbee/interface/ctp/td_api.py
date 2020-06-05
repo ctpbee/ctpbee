@@ -18,7 +18,7 @@ Notice : 神兽保佑 ，测试一次通过
 //          ┃ ┫ ┫   ┃ ┫ ┫
 //          ┗━┻━┛   ┗━┻━┛
 //
-"""                      
+"""
 from collections import defaultdict
 
 from ctpbee.constant import *
@@ -601,13 +601,13 @@ class BeeTdApi(TdApi):
 class BeeTdApiApp(TdApiApp):
     """ 申请穿透式网关 """
 
-    def __init__(self, event_engine):
+    def __init__(self, app_signal):
         """Constructor"""
         super().__init__()
         self.gateway_name = "ctp"
         self.reqid = 0
         self.order_ref = 0
-        self.event_engine = event_engine
+        self.app_signal = app_signal
 
         self.connect_status = False
         self.login_status = False
@@ -631,7 +631,8 @@ class BeeTdApiApp(TdApiApp):
 
     def on_event(self, type, data):
         event = Event(type=type, data=data)
-        self.event_engine.put(event)
+        signal = getattr(self.app_signal, f"{type}_signal")
+        signal.send(event)
 
     def onFrontConnected(self):
         """"""
