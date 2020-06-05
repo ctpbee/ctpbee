@@ -117,7 +117,7 @@ def handle_trade(self, trade):
 
 
 def create_app():
-    app = CtpBee("last", __name__, action_class=ActionMe, logger_class=Vlog, refresh=True,
+    app = CtpBee("last", __name__, action_class=ActionMe,
                  risk=RiskMe)
 
     """ 
@@ -137,4 +137,6 @@ def create_app():
 
 
 if __name__ == '__main__':
-    hickey.start_all(app_func=create_app)
+    # hickey.start_all(app_func=create_app)
+    app = create_app()
+    app[0].start()
