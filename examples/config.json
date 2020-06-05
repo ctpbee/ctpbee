@@ -1,13 +1,13 @@
 {
   "CONNECT_INFO": {
-    "userid": "089131",
-    "password": "350888",
-    "brokerid": "9999",
-    "md_address": "tcp://218.202.237.33:10112",
-    "td_address": "tcp://218.202.237.33:10102",
+    "userid": "6669006",
+    "password": "cytz123",
+    "brokerid": "6666",
+    "md_address": "tcp://180.166.103.34:51218",
+    "td_address": "tcp://180.166.103.34:51215",
     "product_info": "",
-    "appid": "simnow_client_test",
-    "auth_code": "0000000000000000"
+    "appid": "CY_CY_1.0",
+    "auth_code": "BHDPYR7Y9UZZROU5"
   },
   "INTERFACE": "ctp",
   "TD_FUNC": true,
