@@ -378,6 +378,8 @@ class BarData(BaseData):
     high_price: float = 0
     low_price: float = 0
     close_price: float = 0
+    is_next: bool = False
+    is_last: bool = False
 
     def __post_init__(self):
         """"""
