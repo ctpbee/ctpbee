@@ -332,8 +332,11 @@ def exec_intercept(self, func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        result = func(*args, **kwargs)
-        self.api.resolve_callback(func.__name__, result)
-        return result
+        if func:
+            result = func(*args, **kwargs)
+            self.api.resolve_callback(func.__name__, result)
+            return result
+        else:
+            return None
 
     return wrapper

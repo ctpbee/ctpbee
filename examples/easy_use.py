@@ -1,4 +1,4 @@
-from ctpbee import CtpbeeApi, CtpBee
+from ctpbee import CtpbeeApi, CtpBee, helper
 from ctpbee.constant import *
 
 
@@ -6,7 +6,7 @@ class JustUse(CtpbeeApi):
 
     def __init__(self, name):
         super().__init__(name)
-        self.instrument_set = set(['rb1910.SHFE'])
+        self.i = 0
 
     def on_account(self, account: AccountData) -> None:
         pass
@@ -22,42 +22,60 @@ class JustUse(CtpbeeApi):
 
     def on_tick(self, tick: TickData) -> None:
         """ """
-        if tick.symbol == "ag2010":
-            print(self.center.active_orders)
+        # print(tick)
 
     def on_bar(self, bar: BarData) -> None:
         """ """
+        if bar.symbol == "jm2009":
+            self.action.buy(bar.high_price, 1, bar)
+
     def on_contract(self, contract: ContractData):
         """ """
         # if contract.local_symbol in self.instrument_set:
-        self.app.subscribe(contract.local_symbol)
+        # self.app.subscribe(contract.local_symbol)
         # self.app.subscribe(contract.local_symbol)
 
     def on_init(self, init: bool):
         pass
 
 
+class Main(CtpbeeApi):
+    def on_tick(self, tick: TickData) -> None:
+        """ """
+        # print(tick)
+
+    def on_bar(self, bar: BarData) -> None:
+        pass
+
+    def on_contract(self, contract: ContractData):
+        self.action.subscribe(contract.local_symbol)
+
+
 if __name__ == '__main__':
     app = CtpBee("test", __name__)
     just_use = JustUse("Hi")
-
+    app.config.from_json("config.json")
+    app.add_extension(just_use)
+    app.start(log_output=True)
+    print("one start")
     info = {
         "CONNECT_INFO": {
             "userid": "089131",
             "password": "350888",
             "brokerid": "9999",
-            # "md_address": "tcp://218.202.237.33:10112",
-            # "td_address": "tcp://218.202.237.33:10102",
-            "md_address": "tcp://180.168.146.187:10131",
-            "td_address": "tcp://180.168.146.187:10130",
+            "md_address": "tcp://218.202.237.33:10112",
+            "td_address": "tcp://218.202.237.33:10102",
             "product_info": "",
             "appid": "simnow_client_test",
-            "auth_code": "0000000000000000",
+            "auth_code": "0000000000000000"
         },
-        "INTERFACE": "ctp",
-        "TD_FUNC": True,
-        "MD_FUNC": True,
+        "INTERFACE": "ctp",  # 接口声明
+        "TD_FUNC": True,  # 开启交易功能
+        "MD_FUNC":True
     }
-    app.config.from_mapping(info)
-    app.add_extension(just_use)
-    app.start(log_output=True)
+    market = CtpBee("market", __name__)
+    main = Main("main")
+    market.config.from_mapping(info)
+    market.add_extension(main)
+    market.start(log_output=False)
+    print("second start")

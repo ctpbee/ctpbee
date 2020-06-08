@@ -695,8 +695,8 @@ class BeeTdApiApp(TdApiApp):
             status=Status.REJECTED,
             gateway_name=self.gateway_name
         )
-        self.gateway.on_order(order)
-
+        self.on_event(type=EVENT_ORDER, data=order)
+        error['detail'] = "交易委托失败"
         self.on_event(type=EVENT_ERROR, data=error)
 
     def onRspOrderAction(self, data: dict, error: dict, reqid: int, last: bool):
@@ -900,7 +900,6 @@ class BeeTdApiApp(TdApiApp):
             self.createFtdcTraderApi(str(path) + "\\Td")
             self.subscribePrivateTopic(0)
             self.subscribePublicTopic(0)
-
             self.registerFront(info.get("td_address"))
             self.init()
 
@@ -928,7 +927,7 @@ class BeeTdApiApp(TdApiApp):
         try:
             exchange = self.symbol_exchange_mapping[data['InstrumentID']]
         except KeyError:
-            return分钟
+            return
         market = LastData(
             symbol=data['InstrumentID'],
             exchange=exchange,
