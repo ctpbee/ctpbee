@@ -214,6 +214,7 @@ class BeeMdApiApp(MdApiApp):
             event = Event(type=type, data=data)
             signal = getattr(self.app_signal, f"{type}_signal")
             signal.send(event)
+            signal.send(event)
 
     def onFrontConnected(self):
         """
@@ -254,6 +255,7 @@ class BeeMdApiApp(MdApiApp):
 
     def onRspSubMarketData(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
+
         if not error or not error["ErrorID"]:
             return
         error['detail'] = "行情订阅失败"
@@ -263,6 +265,7 @@ class BeeMdApiApp(MdApiApp):
         """
         Callback of tick data update.
         """
+
         symbol = data["InstrumentID"]
         exchange = symbol_exchange_map.get(symbol, "")
         if not exchange:

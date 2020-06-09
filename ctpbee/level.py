@@ -133,6 +133,8 @@ class Action(object):
     def cancel(self, id: Text, origin: [BarData, TickData, TradeData, OrderData, PositionData] = None, **kwargs):
         if "." in id:
             orderid = id.split(".")[1]
+        else:
+            orderid = id
         if origin is None:
             exchange = kwargs.get("exchange")
             if isinstance(exchange, Exchange):
