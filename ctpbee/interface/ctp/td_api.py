@@ -532,7 +532,7 @@ class BeeTdApi(TdApi):
             "TimeCondition": THOST_FTDC_TC_GFD,
             "VolumeCondition": THOST_FTDC_VC_AV,
             "MinVolume": 1,
-            "ExchangeID": req.exchange.value
+            "ExchangeID": req.exchange.value if isinstance(req.exchange, Exchange) else req.exchange
         }
 
         if req.type == OrderType.FAK:

@@ -76,7 +76,7 @@ def letsgo():
     demo = Demo("test")
     # 添加对象, 你可以继承多个类 然后实例化不同的插件 再载入它, 这些都是极其自由化的操作
 
-    running = Fancy("fancy", ['ag2002.SHFE'])
+    running = Fancy("fancy", ['rb2010.SHFE'])
 
     app.add_extension(demo)
     app.add_extension(running)
