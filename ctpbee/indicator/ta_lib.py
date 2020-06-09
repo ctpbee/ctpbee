@@ -1,3 +1,10 @@
+"""
+Vnpy里面提高的指标系统
+需要你自行安装TA-LIB
+
+I
+"""
+
 import numpy as np
 import warnings
 
