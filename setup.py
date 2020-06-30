@@ -138,7 +138,7 @@ if sys.version_info < (3, 6):
     raise RuntimeError('当前ctpbee只支持python36以及更高版本/ ctpbee only support python36 and highly only ')
 
 # libraries
-install_requires = ['flask>=1.1.1', "blinker", "requests", "simplejson", "lxml", "pandas",
+install_requires = ['flask>=1.1.1', "blinker", "requests", "simplejson", "lxml",
                     'colour_printing>=0.3.16', "ctpbee_api"]
 
 if sys.version_info.major == 3 and sys.version_info.minor == 6:
