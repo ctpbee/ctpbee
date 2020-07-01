@@ -189,7 +189,6 @@ class Account:
 
     def settle(self, interface_date=None):
         """ 生成今天的交易数据， 同时更新前日数据 ，然后进行持仓结算 """
-
         if not self.date:
             date = interface_date
         else:

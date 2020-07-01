@@ -324,6 +324,13 @@ class CtpbeeApi(BeeApi):
 
     def __call__(self, event: Event = None):
         # 特别处理两种情况
+        if event and (event.type == EVENT_TICK or event.type == EVENT_BAR) and len(self.func) != 0:
+            args = list(self.func[0][1])
+            args.insert(0, event.data)
+            result = self.func[0][0](*args)
+            if result == self.complete:
+                self.func.clear()
+            return None
         if event and event.type == EVENT_ORDER:
             if event.data.local_order_id in self.order_id_mapping:
                 self.level_position_manager.on_order(event.data)
@@ -340,6 +347,17 @@ class CtpbeeApi(BeeApi):
             if not self.frozen:
                 func(self, event.data)
 
+    @property
+    def complete(cls):
+        """ 结束当前任务 """
+        return "end"
+
+    def run_until_complete(self, target=None, *args):
+        """ 越过函数检查， 进行循环判断,  目前只支持单步队列
+        """
+        self.func.clear()
+        self.func.append((target, *args))
+
     def __init__(self, extension_name, app=None, **kwargs):
         """
         init function
@@ -349,6 +367,7 @@ class CtpbeeApi(BeeApi):
         self.instrument_set: List or Set = set()
         self.extension_name = extension_name
         self.app = app
+        self.func = []
         init = False
         if self.app is not None:
             self.init_app(self.app)
