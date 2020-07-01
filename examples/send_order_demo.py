@@ -2,7 +2,6 @@
 下单示例
 """
 
-
 from ctpbee import CtpbeeApi, helper, CtpBee
 from ctpbee.constant import ContractData, LogData, TickData, BarData, OrderType, Offset, OrderData, \
     TradeData, PositionData, Direction, AccountData
@@ -12,6 +11,7 @@ class Demo(CtpbeeApi):
     instrument_set = ["rb2001.SHFE"]
 
     # 当前插件绑定的CtpBee的数据记录信息都在self.app.recorder下面
+    count = 1
 
     def on_contract(self, contract: ContractData):
         """ 处理推送的合约信息 """
@@ -23,15 +23,23 @@ class Demo(CtpbeeApi):
         """ 处理日志信息 ,特殊需求才用到 """
         pass
 
+    def print_tick(self, tick, name):
+        self.count += 1
+        if self.count < 10:
+            self.info(tick.last_price)
+        else:
+            return self.complete
+
     def on_tick(self, tick: TickData) -> None:
         """ 处理推送的tick """
-        print(tick)
+        print("--- tick ", tick)
+        self.run_until_complete(self.print_tick, ("somewheve",))
 
     def on_bar(self, bar: BarData) -> None:
         """ 处理ctpbee生成的bar """
         # 调用绑定的app进行发单
-        id = self.action.buy(bar.high_price, 1, bar)
-        print("返回id", id)
+        # id = self.action.buy(bar.high_price, 1, bar)
+        # print("返回id", id)
 
     def on_init(self, init):
 
@@ -76,7 +84,7 @@ def letsgo():
     demo = Demo("test")
     # 添加对象, 你可以继承多个类 然后实例化不同的插件 再载入它, 这些都是极其自由化的操作
 
-    running = Fancy("fancy", ['rb2010.SHFE'])
+    running = Fancy("fancy", ['ag2010.SHFE'])
 
     app.add_extension(demo)
     app.add_extension(running)

@@ -28,19 +28,19 @@ class LooperApi:
         raise NotImplemented
 
     def on_trade(self, trade):
-        raise NotImplemented
+        pass
 
     def on_order(self, order):
-        raise NotImplemented
+        pass
 
     def on_position(self, position):
-        raise NotImplemented
+        pass
 
     def on_account(self, account):
-        raise NotImplemented
+        pass
 
     def on_contract(self, contract):
-        raise NotImplemented
+        pass
 
     def init_params(self, data):
         """ 用户需要继承此方法"""

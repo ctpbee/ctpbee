@@ -181,6 +181,9 @@ class LocalLooper():
         # 行情
         self.price = None
 
+    def get_trades(self):
+        return list(self.traded_order_mapping.values())
+
     def update_strategy(self, strategy):
         setattr(strategy, "action", Action(self))
         setattr(strategy, "logger", self.logger)
@@ -315,6 +318,7 @@ class LocalLooper():
                 [api(deepcopy(order)) for api in self.strategy_mapping.values()]
                 [api(trade) for api in self.strategy_mapping.values()]
                 self.pending.remove(order)
+
 
                 # 成交，移除冻结
                 self.account.update_frozen(order=order, reverse=True)
