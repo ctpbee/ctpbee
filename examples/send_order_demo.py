@@ -38,8 +38,8 @@ class Demo(CtpbeeApi):
     def on_bar(self, bar: BarData) -> None:
         """ 处理ctpbee生成的bar """
         # 调用绑定的app进行发单
-        id = self.action.buy(bar.high_price, 1, bar)
-        print("返回id", id)
+        # id = self.action.buy(bar.high_price, 1, bar)
+        # print("返回id", id)
 
     def on_init(self, init):
 
