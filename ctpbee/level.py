@@ -1,5 +1,7 @@
 import inspect
 import os
+import sys
+import types
 from functools import partial
 from types import MethodType
 from typing import Set, List, AnyStr, Text
@@ -324,6 +326,7 @@ class CtpbeeApi(BeeApi):
 
     def __call__(self, event: Event = None):
         # 特别处理两种情况
+
         if event and event.type == EVENT_ORDER:
             if event.data.local_order_id in self.order_id_mapping:
                 self.level_position_manager.on_order(event.data)
@@ -336,9 +339,32 @@ class CtpbeeApi(BeeApi):
             if not self.frozen:
                 self.map[EVENT_TIMER](self)
         else:
+            if event and not self.frozen and (event.type == EVENT_TICK or event.type == EVENT_BAR) and len(self.func) != 0:
+                args = list(self.func[0][2])
+                if event.type == self.func[0][1]:
+                    """ 如果数据类型"""
+                    args.insert(0, event.data)
+                    result = self.func[0][0](*args)
+                    if result == self.complete:
+                        self.func.clear()
+                    return None
             func = self.map[event.type]
             if not self.frozen:
+
                 func(self, event.data)
+
+    @property
+    def complete(cls):
+        """ 结束当前任务 """
+        return "end"
+
+    def run_until_complete(self, target=None, *args, typed=EVENT_TICK):
+        """ 越过函数检查， 进行循环判断,  目前只支持单步队列
+        """
+        self.func.clear()
+        if not isinstance(target, types.MethodType) and not isinstance(target, types.FunctionType):
+            raise TypeError("target参数类型应该为一个函数")
+        self.func.append((target, typed, *args))
 
     def __init__(self, extension_name, app=None, **kwargs):
         """
@@ -349,6 +375,7 @@ class CtpbeeApi(BeeApi):
         self.instrument_set: List or Set = set()
         self.extension_name = extension_name
         self.app = app
+        self.func = []
         init = False
         if self.app is not None:
             self.init_app(self.app)

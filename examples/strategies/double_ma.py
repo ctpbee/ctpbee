@@ -14,9 +14,23 @@ class DoubleMa(CtpbeeApi):
         # 初始化策略参数
         super().init_app(name)
         self.indicator = ArrayManager()
+        self.fast_windows = 5
+        self.slow_window = 10
 
     def on_bar(self, bar: BarData) -> None:
-        pass
+        self.indicator.update_bar(bar)
+
+        if self.indicator.inited:
+            return
+
+        ma, sig, his = self.indicator.macd(fast_period=self.fast_windows, slow_period=self.slow_window, signal_period=1)
+        if ma
 
     def on_realtime(self):
         pass
+
+
+
+
+if __name__ == '__main__':
+

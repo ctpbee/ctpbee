@@ -55,7 +55,6 @@ class VessData:
     """
         本类存在的意义就是整合各家数据， 提供数据统一的解决方案 ^_^ hope you will relax it
         如果数据想接进来, 请提交pr
-
     """
 
     def __init__(self, data):
