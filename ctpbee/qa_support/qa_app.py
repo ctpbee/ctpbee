@@ -48,6 +48,9 @@ class QADataSupport(DataSupport):
         self._app = app
         app.extensions['name'] = self
 
+    def get_qifi_value(self, account_name: str):
+        """ 获取QIFI的初始化数据信息"""
+
     @property
     def quantaxis(self):
         return self.mongo_client['quantaxis']

@@ -179,7 +179,7 @@ class CtpBee(object):
         self.r = None
         self.r_flag = True
 
-        self.center = Center(self)
+        self.center:Center = Center(self)
         """ update """
         if self.risk_decorator is not None:
             self.risk_decorator.update_app(self)
