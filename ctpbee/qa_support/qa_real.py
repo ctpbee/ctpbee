@@ -353,15 +353,17 @@ class QIFIManager:
                 # reload
                 pass
 
-    def from_(self, account: AccountData, orders: List[OrderData], deals: List[TradeData]):
-        """ 从数据中导入 """
+    def from_app(self):
+        """ 从数据中导入 读取App里面的核心数据
+        todo: 注意目前是单账户级别的 并没有做策略层级的优化
+        """
 
     def insert_trade(self, trade):
         """ 插入成交单　"""
         self.instance.trades[trade.local_trade_id] = trade
 
     def insert_order(self, order):
-        """ 创建order注意需要按照顺序进行插入 """
+        """ 创建order注意需要 按照顺序进行插入 """
         self.instance.orders[order.local_order_id] = order
 
     def cancel(self, order_id):
