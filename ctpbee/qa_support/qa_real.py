@@ -1,33 +1,72 @@
 """
-
-
-
 """
+import json
 import uuid
 import datetime
+import warnings
+from dataclasses import dataclass
 from typing import List
 from collections import OrderedDict
 
 from qaenv import mongo_ip
-
-from ctpbee.constant import AccountData, OrderData, TradeData
+from ctpbee.constant import AccountData, OrderData, TradeData, PositionData
 
 try:
     import QUANTAXIS as QA
 except ImportError:
-    raise EnvironmentError("请安装ctpbee[QA_SUPPORT]版本，安装详见: https://docs.ctpbee.com/install\n"
-                           "please install ctpbee[QA_SUPPORT] version. see the url before")
+    warnings.warn("请安装ctpbee[QA_SUPPORT]版本，安装详见: https://docs.ctpbee.com/install\n"
+                  "please install ctpbee[QA_SUPPORT] version. see the url before")
+
+
+class Basic:
+    @classmethod
+    def from_dict(cls, dit: dict):
+        """ 从字典中载入 """
+        data = cls()
+        for key, var in dit.values():
+            setattr(data, key, var)
+        return data
+
+    @classmethod
+    def from_json(cls, json_name):
+        with open(json_name, "r") as f:
+            data = json.load(f)
+        return cls.from_dict(data)
+
+
+@dataclass
+class Position(Basic):
+    pass
+
+
+@dataclass
+class Order(Basic):
+    pass
+
+
+@dataclass
+class Trade(Basic):
+    pass
+
+
+def create_order(order: OrderData) -> Order:
+    """
+    :type order: object
+    """
+    return Order()
+
+
+def create_position(position: PositionData) -> Position:
+    return Position()
+
+
+def create_trade(trade: TradeData) -> Trade:
+    return Trade()
 
 
 class QIFI:
     def __init__(self, username, password, model="SIM", broker_name="QAPaperTrading", trade_host=mongo_ip,
                  init_cash=1000000, taskid=str(uuid.uuid4())):
-        """Initial
-        QIFI Account是一个基于 DIFF/ QIFI/ QAAccount后的一个实盘适用的Account基类
-        1. 兼容多持仓组合
-        2. 动态计算权益
-        使用 model = SIM/ REAL来切换
-        """
         try:
             import pymongo
         except Exception as e:
@@ -78,12 +117,11 @@ class QIFI:
         self.frozen = {}
 
         self.event = {}
-        self.positions = {}
+        self.positions = OrderedDict()
         self.trades = OrderedDict()
         self.orders = OrderedDict()
 
     def to_dict(self):
-
         return {
             # // 账户号(兼容QUANTAXIS QAAccount)// 实盘的时候是 账户id
             "account_cookie": self.user_id,
@@ -120,6 +158,7 @@ class QIFI:
 
     @property
     def float_profit(self):
+        """  """
         return sum([pos.float_profit for pos in self.positions.values()])
 
     @property
@@ -175,7 +214,7 @@ class QIFI:
             "frozen_commission": 0.0,
             "frozen_premium": 0.0,
             "available": self.available,
-            "risk_ratio": 1 - self.available / self.balance
+            "risk_ratio": 1 - self.available / self.balance if self.balance != 0 else 0
         }
 
 
@@ -188,26 +227,26 @@ class QIFIManager:
     def __init__(self, app):
         """
         """
-        self.qpp = app
+        self.app = app
         try:
             config = app.config.get("QA_SETUP", None)
             if config is None:
                 raise TypeError("你已经使用了QIFI参数配置, 请通过设置QA_SETUP传入mongodb配置信息")
-            self.qifi_instance = QIFI(app.name, *config)
+            self.instance = QIFI(app.name, *config)
             result = self.detect_if_exist()
             if result:
                 self._reload(app.name)
-                self.app.logger.info("账户已经恢复")
+                self.app.logger.info(f"QIFIAccount: {app.name} 账户已经恢复")
         except ImportError:
             raise TypeError("你使用了qifi支持，但是似乎你没有安装qifiaccount, 请执行pip install qifiaccount，然后重新运行")
 
     def detect_if_exist(self) -> bool:
-        return self.qifi_instance.db.account.find_one(
-            {'account_cookie': self.qifi_instance.user_id, 'password': self.qifi_instance.password}) is not None
+        return self.instance.db.account.find_one(
+            {'account_cookie': self.instance.user_id, 'password': self.instance.password}) is not None
 
     def _reload(self, name):
-        message = self.qifi_instance.db.account.find_one(
-            {'account_cookie': self.qifi_instance.user_id, 'password': self.qifi_instance.password})
+        message = self.instance.db.account.find_one(
+            {'account_cookie': self.instance.user_id, 'password': self.instance.password})
 
         time = datetime.datetime.now()
         # resume/settle
@@ -221,24 +260,24 @@ class QIFIManager:
                 self.trading_day = time.date() + datetime.timedelta(days=(7 - time.weekday()))
         if message is not None:
             accpart = message.get('accounts')
-            self.qifi_instance.money = message.get('money')
-            self.qifi_instance.source_id = message.get('sourceid')
+            self.instance.money = message.get('money')
+            self.instance.source_id = message.get('sourceid')
 
-            self.qifi_instance.pre_balance = accpart.get('pre_balance')
-            self.qifi_instance.deposit = accpart.get('deposit')
-            self.qifi_instance.withdraw = accpart.get('withdraw')
-            self.qifi_instance.withdrawQuota = accpart.get('WithdrawQuota')
-            self.qifi_instance.close_profit = accpart.get('close_profit')
-            self.qifi_instance.static_balance = accpart.get('static_balance')
-            self.qifi_instance.event = message.get('event')
-            self.qifi_instance.trades = message.get('trades')
-            self.qifi_instance.transfers = message.get('transfers')
-            self.qifi_instance.orders = message.get('orders')
-            self.qifi_instance.taskid = message.get('taskid', str(uuid.uuid4()))
+            self.instance.pre_balance = accpart.get('pre_balance')
+            self.instance.deposit = accpart.get('deposit')
+            self.instance.withdraw = accpart.get('withdraw')
+            self.instance.withdrawQuota = accpart.get('WithdrawQuota')
+            self.instance.close_profit = accpart.get('close_profit')
+            self.instance.static_balance = accpart.get('static_balance')
+            self.instance.event = message.get('event')
+            self.instance.trades = message.get('trades')
+            self.instance.transfers = message.get('transfers')
+            self.instance.orders = message.get('orders')
+            self.instance.taskid = message.get('taskid', str(uuid.uuid4()))
 
             positions = message.get('positions')
             for position in positions.values():
-                self.qifi_instance.positions[position.get('instrument_id')] = position
+                self.instance.positions[position.get('instrument_id')] = position
 
             self.banks = message.get('banks')
 
@@ -254,28 +293,39 @@ class QIFIManager:
 
     def insert_trade(self, trade):
         """ 插入成交单　"""
-        self.qifi_instance.trades[trade.local_trade_id] = trade
+        self.instance.trades[trade.local_trade_id] = trade
 
     def insert_order(self, order):
         """ 创建order注意需要按照顺序进行插入 """
-        self.qifi_instance.orders[order.local_order_id] = order
+        self.instance.orders[order.local_order_id] = order
 
     def cancel(self, order_id):
         """　撤单　"""
         try:
-            self.qifi_instance.orders.pop(order_id)
+            self.instance.orders.pop(order_id)
         except IndexError:
             self.app.logger.warning("撤单不存在,已经被撤或者已经成交ｋ")
 
     def update(self):
-        """更新到mongodb数据库中"""
-        self.qifi_instance.db.account.update(
-            {'account_cookie': self.qifi_instance.user_id, 'password': self.qifi_instance.password}, {
-                '$set': self.qifi_instance.to_dict()}, upsert=True)
-        self.qifi_instance.db.hisaccount.insert_one(
-            {'updatetime': self.now, 'account_cookie': self.qifi_instance.user_id,
-             'accounts': self.qifi_instance.account_msg})
+        """ 更新到mongodb数据库中 """
+        self.instance.db.account.update(
+            {'account_cookie': self.instance.user_id, 'password': self.instance.password}, {
+                '$set': self.instance.to_dict()}, upsert=True)
+        self.instance.db.hisaccount.insert_one(
+            {'updatetime': self.now, 'account_cookie': self.instance.user_id,
+             'accounts': self.instance.account_msg})
 
     @property
     def now(self):
-        return datetime.datetime.now().replace(".", "_")
+        """ 返回最新的时间 """
+        return str(datetime.datetime.now()).replace(".", "_")
+
+
+if __name__ == '__main__':
+    from ctpbee import CtpBee
+
+    app = CtpBee("some", "")
+    app.config.from_mapping({"QA_SETUP": {"password": "somex"}})
+    manager = QIFIManager(app)
+
+    manager.update()
