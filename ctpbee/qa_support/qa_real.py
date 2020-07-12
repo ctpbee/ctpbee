@@ -36,17 +36,83 @@ class Basic:
 
 @dataclass
 class Position(Basic):
-    pass
+    user_id: str
+    exchange_id: str
+    instrument_id: str
+    volume_long_today: float
+    volume_long_his: float
+    volume_long: float
+    volume_long_frozen_today: float
+    volume_long_frozen_his: float
+    volume_long_frozen: float
+    volume_short_today: float
+    volume_short_his: float
+    volume_short: float
+    volume_short_frozen_today: float
+    volume_short_frozen_his: float
+    volume_short_frozen: float
+    volume_long_yd: float
+    volume_short_yd: float
+    pos_long_his: float
+    pos_long_today: float
+    pos_short_his: float
+    pos_short_today: float
+    open_price_long: float
+    open_price_short: float
+    open_cost_long: float
+    open_cost_short: float
+    position_price_long: float
+    position_price_short: float
+    position_cost_long: float
+    position_cost_short: float
+    last_price: float
+    float_profit_long: float
+    float_profit_short: float
+    float_profit: float
+    position_profit_long: float
+    position_profit_short: float
+    position_profit: float
+    margin_long: float
+    margin_short: float
+    margin: float
 
 
 @dataclass
 class Order(Basic):
-    pass
+    seqno: int
+    user_id: str
+    order_id: str
+    exchange_id: str
+    instrument_id: str
+    direction: str
+    offset: str
+    volume_orign: int
+    price_type: str
+    limit_price: float
+    time_condition: str
+    volume_condition: str
+    insert_date_time: int
+    exchange_order_id: str
+    status: str
+    volume_left: int
+    last_msg: str
 
 
 @dataclass
 class Trade(Basic):
-    pass
+    seqno: int
+    user_id: str
+    trade_id: str
+    exchange_id: str
+    instrument_id: str
+    order_id: str
+    exchange_trade_id: str
+    direction: str
+    offset: str
+    volume: float
+    price: float
+    trade_date_time: int
+    commission: float
 
 
 def create_order(order: OrderData) -> Order:
@@ -270,15 +336,14 @@ class QIFIManager:
             self.instance.close_profit = accpart.get('close_profit')
             self.instance.static_balance = accpart.get('static_balance')
             self.instance.event = message.get('event')
-            self.instance.trades = message.get('trades')
             self.instance.transfers = message.get('transfers')
-            self.instance.orders = message.get('orders')
+            self.instance.trades.update(
+                {sig.get("exchange_trade_id"): Order.from_dict(sig) for sig in message.get('trades')})
+            self.instance.orders.update(
+                {sig.get("order_id"): Order.from_dict(sig) for sig in message.get('orders')})
             self.instance.taskid = message.get('taskid', str(uuid.uuid4()))
-
-            positions = message.get('positions')
-            for position in positions.values():
-                self.instance.positions[position.get('instrument_id')] = position
-
+            self.instance.positions.update(
+                {sig.get("instrument_id"): Position.from_dict(sig) for sig in message.get('positions')})
             self.banks = message.get('banks')
 
             self.status = message.get('status')
