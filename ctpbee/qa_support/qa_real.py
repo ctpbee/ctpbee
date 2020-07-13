@@ -1,7 +1,5 @@
 """
-
-
-
+Here is from https://github.com/yutiansut/QIFIAccount
 """
 import uuid
 import datetime
