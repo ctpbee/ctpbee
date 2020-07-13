@@ -350,7 +350,6 @@ class CtpbeeApi(BeeApi):
                     return None
             func = self.map[event.type]
             if not self.frozen:
-
                 func(self, event.data)
 
     @property
