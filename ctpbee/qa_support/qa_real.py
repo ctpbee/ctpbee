@@ -145,9 +145,10 @@ def get_offset(offseted):
 
 
 def create_trade(trade: TradeData, name: str) -> Trade:
-    return Trade(seqno=trade.order_id.split("_")[2], user_id=name, trade_id=trade.tradeid.lstrip(), volume=trade.volume,
+    return Trade(seqno=int(trade.order_id.split("_")[-1]), user_id=name, trade_id=trade.tradeid.lstrip(),
+                 volume=trade.volume,
                  order_id=trade.order_id, exchange_trade_id=trade.tradeid.lstrip(), instrument_id=trade.symbol,
-                 exchange_id=trade.exchange.value, direction="long" if trade.direction == Direction.LONG else "short",
+                 exchange_id=trade.exchange.value, direction="BUY" if trade.direction == Direction.LONG else "SELL",
                  offset=get_offset(trade.offset),
                  price=trade.price, trade_date_time=int(
             transform_dt(times=str(datetime.datetime.now().date()) + " {}".format(trade.time))))
@@ -159,7 +160,8 @@ def create_order(order: OrderData, name: str) -> Order:
     """
     return Order(seqno=int(order.order_id.split("_")[-1]), user_id=name, order_id=order.order_id,
                  exchange_id=order.exchange.value, instrument_id=order.symbol,
-                 direction=order.direction.value, offset=get_offset(order.offset), volume_orign=order.volume,
+                 direction="BUY" if order.direction == Direction.LONG else "SELL", offset=get_offset(order.offset),
+                 volume_orign=order.volume,
                  price_type=order.type.value, limit_price=order.price, exchange_order_id=order.order_id,
                  status=order.status.value,
                  insert_date_time=int(
