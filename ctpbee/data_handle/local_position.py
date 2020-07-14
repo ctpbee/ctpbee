@@ -22,7 +22,7 @@ Notice : 神兽保佑 ，测试一次通过
 from typing import Text
 
 """ 本地持仓对象 """
-
+import warnings
 from copy import copy
 
 from ctpbee.constant import PositionData, Offset, Direction, OrderRequest, OrderData, \
@@ -59,10 +59,10 @@ class PositionHolding:
         self.active_orders = {}
         self.size = 1
         if app.recorder.get_contract(self.local_symbol) is not None:
+
             self.size = app.recorder.get_contract(self.local_symbol).size
         else:
-            raise ValueError("获取合约信息失败")
-
+            raise ValueError("获取合约信息失败, 持仓盈亏计算失败")
         self.app = app
         self.long_pos = 0
         self.long_yd = 0

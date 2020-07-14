@@ -55,6 +55,14 @@ class PositionModel(dict):
                 else:
                     setattr(self, "short_" + i, v)
 
+    def __str__(self):
+        s = "<"
+        for x in dir(self):
+            if not s.startswith("_"):
+                s += f"{x}-> {getattr(self, x)}"
+        s += " >"
+        return s
+
 
 class BasicCenterModel(ABC):
     __dict__ = {}
@@ -130,7 +138,7 @@ class Center(BasicCenterModel, dict):
         """ 拿到指定合约的未成交单子"""
         return self.app.recorder.get_all_active_orders(local_symbol)
 
-    def get_position(self, local_symbol):
+    def get_position(self, local_symbol) -> PositionModel:
         """
         返回指定合约的持仓信息
         注意你返回是一个PositionModel对象

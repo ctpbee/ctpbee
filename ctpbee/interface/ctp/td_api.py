@@ -63,6 +63,8 @@ class BeeTdApi(TdApi):
         self.sysid_orderid_map = {}
         self.open_cost_dict = defaultdict(dict)
 
+        self.contact_data = {}
+
     @property
     def td_status(self):
         return self.login_status
@@ -777,7 +779,6 @@ class BeeTdApiApp(TdApiApp):
             gateway_name=self.gateway_name
         )
         account.available = data["Available"]
-
         self.on_event(type=EVENT_ACCOUNT, data=account)
 
     def onRspQryInstrument(self, data: dict, error: dict, reqid: int, last: bool):
@@ -868,6 +869,7 @@ class BeeTdApiApp(TdApiApp):
         if not exchange:
             self.trade_data.append(data)
             return
+        print(data)
 
         order_id = self.sysid_orderid_map[data["OrderSysID"]]
 
