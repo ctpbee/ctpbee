@@ -23,7 +23,6 @@ from collections import defaultdict
 
 from ctpbee.constant import *
 from ctpbee.interface.ctp.lib import *
-from ctpbee.signals import common_signals
 
 
 class BeeTdApi(TdApi):
@@ -869,8 +868,6 @@ class BeeTdApiApp(TdApiApp):
         if not exchange:
             self.trade_data.append(data)
             return
-        print(data)
-
         order_id = self.sysid_orderid_map[data["OrderSysID"]]
 
         trade = TradeData(

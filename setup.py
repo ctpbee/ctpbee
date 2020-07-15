@@ -139,7 +139,7 @@ if sys.version_info < (3, 6):
 
 # libraries
 install_requires = ['flask>=1.1.1', "blinker", "requests", "simplejson", "lxml",
-                    'colour_printing>=0.3.16', "ctpbee_api", 'qaenv']
+                    'colour_printing>=0.3.16', "ctpbee_api", 'qaenv', "pymongo"]
 
 if sys.version_info.major == 3 and sys.version_info.minor == 6:
     install_requires.append("dataclasses")

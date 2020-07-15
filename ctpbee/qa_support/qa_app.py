@@ -46,7 +46,7 @@ class QADataSupport(DataSupport):
         当用户调用此接口时候， 会将历史数据和当前ctpbee中的内存中的数据同时返回
         """
         self._app = app
-        app.extensions['name'] = self
+        app._extensions['name'] = self
 
     def get_qifi_value(self, account_name: str):
         """ 获取QIFI的初始化数据信息"""

@@ -490,7 +490,7 @@ class CtpbeeApi(BeeApi):
     def init_app(self, app):
         if app is not None:
             self.app = app
-            self.app.extensions[self.extension_name] = self
+            self.app._extensions[self.extension_name] = self
 
     def route(self, handler):
         """ """

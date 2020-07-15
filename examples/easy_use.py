@@ -48,8 +48,7 @@ class Main(CtpbeeApi):
         pass
 
     def on_contract(self, contract: ContractData):
-        self.action.subscribe(contract.local_symbol)
-
+        x = self.action.subscribe(contract.local_symbol)
 
 if __name__ == '__main__':
     app = CtpBee("test", __name__)

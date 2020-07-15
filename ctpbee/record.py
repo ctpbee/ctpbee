@@ -6,7 +6,7 @@ from datetime import datetime
 from ctpbee.data_handle import generator
 from ctpbee.data_handle.local_position import LocalPositionManager
 from ctpbee.constant import Event
-from ctpbee.helpers import value_call
+from ctpbee.helpers import helper_call
 
 import ctpbee.signals as signal
 
@@ -59,18 +59,18 @@ class Recorder(object):
                 temp.append((x, signal))
             return temp
 
-        p = list(map(connect, generate_params(signal.common_signals.event, signal.common_signals)))
+        x = list(map(connect, generate_params(signal.common_signals.event, signal.common_signals)))
         p = list(map(connect, generate_params(self.app.app_signal.event, self.app.app_signal)))
 
     def process_timer_event(self, event):
-        for x in self.app.extensions.values():
+        for x in self.app._extensions.values():
             x()
 
     def process_init_event(self, event):
         """ 处理初始化完成事件 """
         if event.data:
             self.app.init_finished = True
-        for x in self.app.extensions.values():
+        for x in self.app._extensions.values():
             x(deepcopy(event))
 
     def process_last_event(self, event):
@@ -90,7 +90,7 @@ class Recorder(object):
         if self.app.config.get("LOG_OUTPUT"):
             self.app.logger.info(event.data)
 
-    @value_call
+    @helper_call
     def process_bar_event(self, event: Event):
         bar = event.data
         local = self.bar.get(bar.local_symbol)
@@ -101,7 +101,7 @@ class Recorder(object):
                 self.bar[bar.local_symbol] = {bar.interval: []}
         self.bar[bar.local_symbol][bar.interval].append(bar)
 
-    @value_call
+    @helper_call
     def process_tick_event(self, event: Event):
         tick = event.data
         self.ticks[tick.local_symbol] = tick
@@ -119,7 +119,7 @@ class Recorder(object):
             self.generators[tick.local_symbol] = generator(self.app)
             self.generators[tick.local_symbol].update_tick(tick)
 
-    @value_call
+    @helper_call
     def process_order_event(self, event: Event):
         """"""
         order = event.data
@@ -132,14 +132,14 @@ class Recorder(object):
             self.active_orders.pop(order.local_order_id)
         self.position_manager.update_order(order)
 
-    @value_call
+    @helper_call
     def process_trade_event(self, event: Event):
         """"""
         trade = event.data
         self.trades[trade.local_trade_id] = trade
 
         self.position_manager.update_trade(trade)
-        for value in self.app.extensions.values():
+        for value in self.app._extensions.values():
             if self.app.config['INSTRUMENT_INDEPEND']:
                 if len(value.instrument_set) == 0:
                     warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
@@ -148,13 +148,13 @@ class Recorder(object):
             else:
                 value(deepcopy(event))
 
-    @value_call
+    @helper_call
     def process_position_event(self, event: Event):
         """"""
         position = event.data
         self.positions[position.local_position_id] = position
         self.position_manager.update_position(position)
-        for value in self.app.extensions.values():
+        for value in self.app._extensions.values():
             if self.app.config['INSTRUMENT_INDEPEND']:
                 if len(value.instrument_set) == 0:
                     warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
@@ -168,14 +168,14 @@ class Recorder(object):
         account = event.data
         self.account = account
 
-        for value in self.app.extensions.values():
+        for value in self.app._extensions.values():
             value(deepcopy(event))
 
     def process_contract_event(self, event: Event):
         """"""
         contract = event.data
         self.contracts[contract.local_symbol] = contract
-        for value in self.app.extensions.values():
+        for value in self.app._extensions.values():
             value(deepcopy(event))
 
     def get_bar(self, local_symbol):

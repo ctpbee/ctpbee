@@ -41,7 +41,6 @@ class CtpBee(object):
         'eos_bar': False,
         'filler': None,
         "commision": 0.01,
-        # slippage options
         'slip_percent': 0.0,
         'slip_fixed': 0.0,
         'slip_open': False,
@@ -86,8 +85,6 @@ class CtpBee(object):
     trader = None
 
     # 插件Api系统 /Extension system
-    extensions = {}
-
     """ 
     工具, 用于提供一些比较优秀的工具/ Toolbox, using by providing some good tools
     
@@ -111,6 +108,7 @@ class CtpBee(object):
                  sim: bool = False,
                  instance_path=None):
         """ 初始化 """
+        self._extensions = {}
         self.name = name if name else 'ctpbee'
         self.import_name = import_name
         self.engine_method = engine_method
@@ -223,7 +221,7 @@ class CtpBee(object):
         """ 行情 API 都应该实现md_status"""
         return self.market.md_status
 
-    def _load_ext(self, logout=True):
+    def _running(self, logout=True):
         """
         根据当前配置文件下的信息载入行情api和交易api,记住这个api的选项是可选的
         """
@@ -258,14 +256,14 @@ class CtpBee(object):
                 self.r.start()
             self.r_flag = True
 
-    @locked_cached_property
-    def name(self):
-        if self.import_name == '__main__':
-            fn = getattr(sys.modules['__main__'], '__file__', None)
-            if fn is None:
-                return '__main__'
-            return os.path.splitext(os.path.basename(fn))[0]
-        return self.import_name
+    # @locked_cached_property
+    # def name(self):
+    #     if self.import_name == '__main__':
+    #         fn = getattr(sys.modules['__main__'], '__file__', None)
+    #         if fn is None:
+    #             return '__main__'
+    #         return os.path.splitext(os.path.basename(fn))[0]
+    #     return self.import_name
 
     def start(self, log_output=True, debug=False):
         """
@@ -285,34 +283,35 @@ class CtpBee(object):
         self.timer.start()
 
         self.config["LOG_OUTPUT"] = log_output
-        self._load_ext(logout=log_output)
+        self._running(logout=log_output)
 
     def remove_extension(self, extension_name: Text) -> None:
         """移除插件"""
-        if extension_name in self.extensions:
-            del self.extensions[extension_name]
+        if extension_name in self._extensions:
+            del self._extensions[extension_name]
 
     def add_extension(self, extension: CtpbeeApi):
         """添加插件"""
-        self.extensions.pop(extension.extension_name, None)
+        self._extensions.pop(extension.extension_name, None)
         extension.init_app(self)
+        # self._extensions[extension.extension_name] = extension
 
     def suspend_extension(self, extension_name):
-        extension = self.extensions.get(extension_name, None)
+        extension = self._extensions.get(extension_name, None)
         if not extension:
             return False
         extension.frozen = True
         return True
 
     def enable_extension(self, extension_name):
-        extension = self.extensions.get(extension_name, None)
+        extension = self._extensions.get(extension_name, None)
         if not extension:
             return False
         extension.frozen = False
         return True
 
     def del_extension(self, extension_name):
-        self.extensions.pop(extension_name, None)
+        self._extensions.pop(extension_name, None)
 
     def reload(self):
         """ 重新载入接口 """
@@ -323,7 +322,7 @@ class CtpBee(object):
         # 清空处理队列
         sleep(3)
         self.market, self.trader = None, None
-        self._load_ext()
+        self._running()
 
     def release(self):
         """ 释放账户,安全退出 """

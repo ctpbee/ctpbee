@@ -94,7 +94,7 @@ class Center(BasicCenterModel, dict):
         """ 重写此处API
             item应该作为插件名字
         """
-        return self.app.extensions.get(extension_name, None)
+        return self.app._extensions.get(extension_name, None)
 
     def __delitem__(self, key):
         import warnings
