@@ -19,12 +19,18 @@ class M(CtpbeeApi):
         super().__init__(name)
         self.a = 0
         self.sta = False
+        self.flag = True
 
     def on_bar(self, bar: BarData) -> None:
         pass
+        # self.action.buy(bar.close_price + 10, 10, bar)
 
     def on_tick(self, tick: TickData) -> None:
-        print(tick)
+        pass
+        # print(tick)
+        # if self.flag:
+        #     self.action.buy(tick.last_price + 10, 10, tick)
+        #     self.flag = False
 
     def on_contract(self, contract: ContractData):
         if contract.symbol == "jm2009":
@@ -36,7 +42,9 @@ class M(CtpbeeApi):
 
         pass
 
-
+    def on_realtime(self):
+        print(self.center.positions)
+        print(self.center.active_orders)
 
 def create_app():
     app = CtpBee("last", __name__, refresh=True)
@@ -55,13 +63,13 @@ def create_app():
     app.add_extension(m)
 
     """ 启动 """
-    return [app]
+    return app
 
 
 if __name__ == '__main__':
     # hickey.start_all(app_func=create_app)
     app = create_app()
-    app[0].start()
+    app.start()
 
     # def generate_order_req_by_str(cls, symbol: str, exchange: str, direction: str, offset: str, type: str, volume,
     #                               price: float):

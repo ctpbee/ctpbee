@@ -139,7 +139,7 @@ if sys.version_info < (3, 6):
 
 # libraries
 install_requires = ['flask>=1.1.1', "blinker", "requests", "simplejson", "lxml",
-                    'colour_printing>=0.3.16', "ctpbee_api"]
+                    'colour_printing>=0.3.16', "ctpbee_api", 'qaenv', "pymongo"]
 
 if sys.version_info.major == 3 and sys.version_info.minor == 6:
     install_requires.append("dataclasses")
@@ -189,6 +189,6 @@ setup(
         'console_scripts': ['ctpbee = ctpbee.cmdline:execute']
     },
     extras_require={
-        'QA_SUPPORT': ["quantaxis", "pandas<=0.24.2,>=0.16.2"],
+        'QA_SUPPORT': ["quantaxis", "qifiaccount", "pandas<=0.24.2,>=0.16.2"],
     }
 )

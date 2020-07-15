@@ -3,7 +3,7 @@ from datetime import date, datetime
 from blinker import NamedSignal
 
 from ctpbee.constant import *
-from ctpbee.signals import common_signals
+import ctpbee.signals
 from .lib import *
 
 
@@ -33,7 +33,7 @@ class BeeMdApi(MdApi):
     def on_event(self, type, data):
         if type == EVENT_TICK:
             event = Event(type=type, data=data)
-            signal = getattr(common_signals, f"{type}_signal")
+            signal = getattr(ctpbee.signals.common_signals, f"{type}_signal")
             signal.send(event)
         else:
             event = Event(type=type, data=data)
@@ -113,10 +113,26 @@ class BeeMdApi(MdApi):
             low_price=data["LowestPrice"],
             pre_close=data["PreClosePrice"],
             turnover=data['Turnover'],
-            bid_price_1=data["BidPrice1"],
-            ask_price_1=data["AskPrice1"],
-            bid_volume_1=data["BidVolume1"],
-            ask_volume_1=data["AskVolume1"],
+            bid_price_1=data.get("BidPrice1", 0),
+            bid_price_2=data.get("BidPrice2", 0),
+            bid_price_3=data.get("BidPrice3", 0),
+            bid_price_4=data.get("BidPrice4", 0),
+            bid_price_5=data.get("BidPrice5", 0),
+            ask_price_1=data.get("AskPrice1", 0),
+            ask_price_2=data.get("AskPrice2", 0),
+            ask_price_3=data.get("AskPrice3", 0),
+            ask_price_4=data.get("AskPrice4", 0),
+            ask_price_5=data.get("AskPrice5", 0),
+            bid_volume_1=data.get("BidVolume1", 0),
+            bid_volume_2=data.get("BidVolume2", 0),
+            bid_volume_3=data.get("BidVolume3", 0),
+            bid_volume_4=data.get("BidVolume4", 0),
+            bid_volume_5=data.get("BidVolume5", 0),
+            ask_volume_1=data.get("AskVolume1", 0),
+            ask_volume_2=data.get("AskVolume2", 0),
+            ask_volume_3=data.get("AskVolume3", 0),
+            ask_volume_4=data.get("AskVolume4", 0),
+            ask_volume_5=data.get("AskVolume5", 0),
             average_price=data['AveragePrice'],
             pre_settlement_price=data['PreSettlementPrice'],
             settlement_price=data['SettlementPrice'],
@@ -208,12 +224,11 @@ class BeeMdApiApp(MdApiApp):
     def on_event(self, type, data):
         if type == EVENT_TICK:
             event = Event(type=type, data=data)
-            signal = getattr(common_signals, f"{type}_signal")
+            signal = getattr(ctpbee.signals.common_signals, f"{type}_signal")
             signal.send(event)
         else:
             event = Event(type=type, data=data)
             signal = getattr(self.app_signal, f"{type}_signal")
-            signal.send(event)
             signal.send(event)
 
     def onFrontConnected(self):
@@ -255,7 +270,6 @@ class BeeMdApiApp(MdApiApp):
 
     def onRspSubMarketData(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
-
         if not error or not error["ErrorID"]:
             return
         error['detail'] = "行情订阅失败"
@@ -265,7 +279,6 @@ class BeeMdApiApp(MdApiApp):
         """
         Callback of tick data update.
         """
-
         symbol = data["InstrumentID"]
         exchange = symbol_exchange_map.get(symbol, "")
         if not exchange:

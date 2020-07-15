@@ -24,7 +24,7 @@ class DoubleMa(CtpbeeApi):
             return
 
         ma, sig, his = self.indicator.macd(fast_period=self.fast_windows, slow_period=self.slow_window, signal_period=1)
-        if ma
+
 
     def on_realtime(self):
         pass
@@ -33,4 +33,4 @@ class DoubleMa(CtpbeeApi):
 
 
 if __name__ == '__main__':
-
+    pass

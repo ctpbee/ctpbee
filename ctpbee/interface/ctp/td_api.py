@@ -23,7 +23,6 @@ from collections import defaultdict
 
 from ctpbee.constant import *
 from ctpbee.interface.ctp.lib import *
-from ctpbee.signals import common_signals
 
 
 class BeeTdApi(TdApi):
@@ -62,6 +61,8 @@ class BeeTdApi(TdApi):
         self.symbol_exchange_mapping = {}
         self.sysid_orderid_map = {}
         self.open_cost_dict = defaultdict(dict)
+
+        self.contact_data = {}
 
     @property
     def td_status(self):
@@ -777,7 +778,6 @@ class BeeTdApiApp(TdApiApp):
             gateway_name=self.gateway_name
         )
         account.available = data["Available"]
-
         self.on_event(type=EVENT_ACCOUNT, data=account)
 
     def onRspQryInstrument(self, data: dict, error: dict, reqid: int, last: bool):
@@ -868,7 +868,6 @@ class BeeTdApiApp(TdApiApp):
         if not exchange:
             self.trade_data.append(data)
             return
-
         order_id = self.sysid_orderid_map[data["OrderSysID"]]
 
         trade = TradeData(

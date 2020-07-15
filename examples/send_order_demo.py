@@ -33,7 +33,9 @@ class Demo(CtpbeeApi):
     def on_tick(self, tick: TickData) -> None:
         """ 处理推送的tick """
         print("--- tick ", tick)
-        self.run_until_complete(self.print_tick, ("somewheve",))
+        if self.count == 10:
+            self.action.buy(tick.last_price+10, 10, tick)
+        self.count += 1
 
     def on_bar(self, bar: BarData) -> None:
         """ 处理ctpbee生成的bar """
@@ -60,6 +62,10 @@ class Demo(CtpbeeApi):
     def on_account(self, account: AccountData) -> None:
         """ 处理账户信息 """
 
+    def on_realtime(self):
+        print(self.app.center.active_orders)
+        print(self.app.center.positions)
+
 
 class Fancy(CtpbeeApi):
 
@@ -83,7 +89,22 @@ def letsgo():
     # 创建对象
     demo = Demo("test")
     # 添加对象, 你可以继承多个类 然后实例化不同的插件 再载入它, 这些都是极其自由化的操作
-
+    # info = {
+    #     "CONNECT_INFO": {
+    #         "userid": "089131",
+    #         "password": "350888",
+    #         "brokerid": "9999",
+    #         "md_address": "tcp://180.168.146.187:10131",
+    #         "td_address": "tcp://180.168.146.187:10130",
+    #         "product_info": "",
+    #         "appid": "simnow_client_test",
+    #         "auth_code": "0000000000000000"
+    #     },
+    #     "INTERFACE": "ctp",  # 接口声明
+    #     "TD_FUNC": True,  # 开启交易功能
+    #     "MD_FUNC": True,
+    #     "QA_SETUP": {"password": "somex"}
+    # }
     running = Fancy("fancy", ['ag2010.SHFE'])
 
     app.add_extension(demo)

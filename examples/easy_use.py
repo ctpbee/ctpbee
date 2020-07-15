@@ -26,7 +26,7 @@ class JustUse(CtpbeeApi):
 
     def on_bar(self, bar: BarData) -> None:
         """ """
-        if bar.symbol == "jm2009":
+        if bar.symbol == "rb2010":
             self.action.buy(bar.high_price, 1, bar)
 
     def on_contract(self, contract: ContractData):
@@ -48,8 +48,7 @@ class Main(CtpbeeApi):
         pass
 
     def on_contract(self, contract: ContractData):
-        self.action.subscribe(contract.local_symbol)
-
+        x = self.action.subscribe(contract.local_symbol)
 
 if __name__ == '__main__':
     app = CtpBee("test", __name__)
@@ -73,6 +72,7 @@ if __name__ == '__main__':
         "TD_FUNC": True,  # 开启交易功能
         "MD_FUNC":True
     }
+
     market = CtpBee("market", __name__)
     main = Main("main")
     market.config.from_mapping(info)
