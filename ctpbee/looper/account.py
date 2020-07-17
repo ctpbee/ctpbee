@@ -46,13 +46,6 @@ class Account:
     支持成交之后修改资金 ， 对外提供API
 
     """
-    # 每日资金情况
-    balance = 100000
-    frozen = 0
-    size = 5
-    pricetick = 10
-    daily_limit = 20
-    commission: float = 0
 
     def __init__(self, interface, name=None):
         self.account_id = name if name is not None else uuid.uuid4()
@@ -60,6 +53,11 @@ class Account:
         self.pre_balance = 0
         self.daily_life = defaultdict(AliasDayResult)
         # 日期
+        self.frozen = 0
+        self.size = 5
+        self.pricetick = 10
+        self.daily_limit = 20
+        self.balance = 100000
         self.date = None
         # 手续费
         self.commission = 0
@@ -193,8 +191,10 @@ class Account:
             date = interface_date
         else:
             date = self.date
+        print(self.balance, self.occupation_margin, self.position_manager.position_profit)
         p = AliasDayResult(
-            **{"balance": self.balance + self.position_manager.position_profit, "frozen": self.frozen,
+            **{"balance": self.balance + self.occupation_margin + self.position_manager.position_profit,
+               "frozen": self.frozen,
                "available": self.balance - self.frozen,
                "date": date, "commission": self.commission_expense - self.pre_commission_expense,
                "net_pnl": self.balance - self.pre_balance,

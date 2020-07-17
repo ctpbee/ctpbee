@@ -307,25 +307,13 @@ class PositionHolding:
     def calculate_pnl(self):
         """ 计算浮动盈亏 """
         try:
-            # if self.long_pos == self.long_yd:
-            #     self.long_pnl = self.long_pos * (
-            #             self.last_price - single.long / (self.size * self.long_pos)) * self.size
-            if self.long_pos == self.long_yd:
-                self.long_pnl = self.long_pos * (
-                        self.last_price - self.long_price / (self.size * self.long_pos)) * self.size
-
-            if self.long_pos != self.long_yd:
-                self.long_pnl = self.long_pos * (self.last_price - self.long_price) * self.size
+            self.long_pnl = self.long_pos * (self.last_price - self.long_price) * self.size
         except ZeroDivisionError:
             self.long_pnl = 0
         except AttributeError:
             self.long_pnl = 0
         try:
-            if self.short_pos == self.short_yd:
-                self.short_pnl = self.short_pos * (
-                        self.short_price / (self.size * self.short_pos) - self.last_price) * self.size
-            if self.short_pos != self.short_yd:
-                self.short_pnl = self.short_pos * (self.short_price - self.last_price) * self.size
+            self.short_pnl = self.short_pos * (self.short_price - self.last_price) * self.size
         except ZeroDivisionError:
             self.short_pnl = 0
         except AttributeError:
@@ -335,21 +323,13 @@ class PositionHolding:
         """计算盯市盈亏"""
         ## 昨日结算价
         try:
-            if self.long_pos == self.long_yd:
-                self.long_stare_pnl = self.long_pos * (
-                        self.last_price - self.pre_close_price / (self.size * self.long_pos)) * self.size
-            if self.long_pos != self.long_yd:
-                self.long_stare_pnl = self.long_pos * (self.last_price - self.pre_close_price) * self.size
+            self.long_stare_pnl = self.long_pos * (self.last_price - self.pre_close_price) * self.size
         except ZeroDivisionError:
             self.long_pnl = 0
         except AttributeError:
             self.long_pnl = 0
         try:
-            if self.short_pos == self.short_yd:
-                self.short_stare_pnl = self.short_pos * (
-                        self.pre_close_price / (self.size * self.short_pos) - self.last_price) * self.size
-            if self.short_pos != self.short_yd:
-                self.short_stare_pnl = self.short_pos * (self.pre_close_price - self.last_price) * self.size
+            self.short_stare_pnl = self.short_pos * (self.pre_close_price - self.last_price) * self.size
         except ZeroDivisionError:
             self.short_pnl = 0
         except AttributeError:
@@ -412,10 +392,10 @@ class LocalPositionManager(dict):
 
     @property
     def position_profit(self):
-        return sum([x["position_profit"] + x["price"] * x["volume"] for x in self.get_all_positions()])
+        print(self.get_all_positions())
+        return sum([x["position_profit"] for x in self.get_all_positions()])
 
     def update_size_map(self, params):
-
         self.size_map = params.get("size_map")
 
     def update_tick(self, tick: TickData, pre_close):

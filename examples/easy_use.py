@@ -48,6 +48,8 @@ class Main(CtpbeeApi):
         pass
 
     def on_contract(self, contract: ContractData):
+        if contract.symbol == "rb2010":
+            print(contract)
         x = self.action.subscribe(contract.local_symbol)
 
 

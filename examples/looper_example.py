@@ -14,13 +14,12 @@ class DoubleMa(LooperApi):
         self.pos = 0
         self.open = False
 
-
     def on_bar(self, bar):
         self.manager.update_bar(bar)
         if not self.manager.inited:
             return
-        print(self.position_manager.get_all_positions())
-        print(bar.close_price)
+        # print(self.position_manager.get_all_positions())
+        # print(bar.close_price)
         fast_ma = self.manager.sma(self.fast_window, array=True)
         self.fast_ma0 = fast_ma[-1]
         self.fast_ma1 = fast_ma[-2]
@@ -38,8 +37,6 @@ class DoubleMa(LooperApi):
         elif cross_below and self.open:
             self.action.cover(bar.close_price, 1, bar)
             self.open = False
-
-        print(self)
         # elif cross_below:
         #     if self.pos == 0:
         #         self.action.short(bar.close_price, 1, bar)
@@ -52,7 +49,7 @@ class DoubleMa(LooperApi):
 
 
 if __name__ == '__main__':
-    data_support = QADataSupport(host="192.168.2.118")
+    data_support = QADataSupport(host="quantaxis.tech", port=27007)
     runnning = Vessel()
     strategy = DoubleMa("ma")
     data = data_support.get_future_min("rb2010.SHFE", frq="1min", start="2020-03-01", end="2020-07-15")
@@ -63,7 +60,7 @@ if __name__ == '__main__':
                 "initial_capital": 100000,
                 "commission": 0.005,
                 "deal_pattern": "price",
-                "size_map": {"rb2010.SHFE": 15},
+                "size_map": {"rb2010.SHFE": 10},
                 "today_commission": 0.005,
                 "yesterday_commission": 0.02,
                 "close_commission": 0.005,
