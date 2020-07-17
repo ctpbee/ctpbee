@@ -50,8 +50,9 @@ class Main(CtpbeeApi):
     def on_contract(self, contract: ContractData):
         x = self.action.subscribe(contract.local_symbol)
 
+
 if __name__ == '__main__':
-    app = CtpBee("test", __name__)
+    app = CtpBee("test", __name__, refresh=True)
     just_use = JustUse("Hi")
     app.config.from_json("config.json")
     app.add_extension(just_use)
@@ -70,7 +71,7 @@ if __name__ == '__main__':
         },
         "INTERFACE": "ctp",  # 接口声明
         "TD_FUNC": True,  # 开启交易功能
-        "MD_FUNC":True
+        "MD_FUNC": True
     }
 
     market = CtpBee("market", __name__)

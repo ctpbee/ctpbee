@@ -145,9 +145,9 @@ class CtpBee(object):
         如果默认不指定action参数， 那么使用默认的Action类 
         """
         if action_class is None:
-            self.action = Action(self)
+            self.action: Action = Action(self)
         else:
-            self.action = action_class(self)
+            self.action: Action = action_class(self)
         """
         根据action里面的函数更新到CtpBee上面来
         bind the function of action to CtpBee

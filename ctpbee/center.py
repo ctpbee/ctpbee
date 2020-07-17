@@ -55,14 +55,6 @@ class PositionModel(dict):
                 else:
                     setattr(self, "short_" + i, v)
 
-    def __str__(self):
-        s = "<"
-        for x in dir(self):
-            if not s.startswith("_"):
-                s += f"{x}-> {getattr(self, x)}"
-        s += " >"
-        return s
-
 
 class BasicCenterModel(ABC):
     __dict__ = {}

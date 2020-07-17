@@ -167,13 +167,16 @@ class BeeTdApi(TdApi):
         key = f"{data['InstrumentID'], data['PosiDirection']}"
         position = self.positions.get(key, None)
         if not position:
-            position = PositionData(
-                symbol=data["InstrumentID"],
-                exchange=symbol_exchange_map[data["InstrumentID"]],
-                direction=DIRECTION_CTP2VT[data["PosiDirection"]],
-                gateway_name=self.gateway_name
-            )
-            self.positions[key] = position
+            try:
+                position = PositionData(
+                    symbol=data["InstrumentID"],
+                    exchange=symbol_exchange_map[data["InstrumentID"]],
+                    direction=DIRECTION_CTP2VT[data["PosiDirection"]],
+                    gateway_name=self.gateway_name
+                )
+                self.positions[key] = position
+            except KeyError:
+                return
 
         # For SHFE position data update
         if position.exchange == Exchange.SHFE:
@@ -726,14 +729,16 @@ class BeeTdApiApp(TdApiApp):
         key = f"{data['InstrumentID'], data['PosiDirection']}"
         position = self.positions.get(key, None)
         if not position:
-            position = PositionData(
+            try:
+                position = PositionData(
                 symbol=data["InstrumentID"],
                 exchange=symbol_exchange_map[data["InstrumentID"]],
                 direction=DIRECTION_CTP2VT[data["PosiDirection"]],
                 gateway_name=self.gateway_name
-            )
-            self.positions[key] = position
-
+                )
+                self.positions[key] = position
+            except KeyError:
+                return
         # For SHFE position data update
         if position.exchange == Exchange.SHFE:
             if data["YdPosition"] and not data["TodayPosition"]:

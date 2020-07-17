@@ -339,7 +339,8 @@ class CtpbeeApi(BeeApi):
             if not self.frozen:
                 self.map[EVENT_TIMER](self)
         else:
-            if event and not self.frozen and (event.type == EVENT_TICK or event.type == EVENT_BAR) and len(self.func) != 0:
+            if event and not self.frozen and (event.type == EVENT_TICK or event.type == EVENT_BAR) and len(
+                    self.func) != 0:
                 args = list(self.func[0][2])
                 if event.type == self.func[0][1]:
                     """ 如果数据类型"""
@@ -353,7 +354,7 @@ class CtpbeeApi(BeeApi):
                 func(self, event.data)
 
     @property
-    def complete(cls):
+    def complete(self):
         """ 结束当前任务 """
         return "end"
 

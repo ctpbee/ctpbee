@@ -255,9 +255,9 @@ def refresh_query(app):
         cur = datetime.now()
         if not TradingDay.is_trading_day(cur) or not auth_check_time(cur):
             continue
-        app.query_position()
+        app.trader.query_position()
         sleep(app.config['REFRESH_INTERVAL'])
-        app.query_account()
+        app.trader.query_account()
         if not app.r_flag:
             break
 
