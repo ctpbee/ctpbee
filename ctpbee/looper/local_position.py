@@ -26,7 +26,7 @@ from typing import Text
 from copy import copy
 
 from ctpbee.constant import PositionData, Offset, Direction, OrderRequest, OrderData, \
-    Exchange, TickData, EXCHANGE_MAPPING
+    Exchange, TickData, EXCHANGE_MAPPING, BarData
 
 
 class LocalVariable:
@@ -177,10 +177,17 @@ class PositionHolding:
         order = req._create_order_data(orderid, gateway_name)
         self.update_order(order)
 
-    def update_tick(self, tick):
+    def update_tick(self, tick, pre_close):
         """行情更新"""
-        self.pre_close_price = tick.pre_close
+        self.pre_close_price = pre_close
         self.last_price = tick.last_price
+        self.calculate_pnl()
+        self.calculate_stare_pnl()
+
+    def update_bar(self, bar, pre_close):
+        """行情更新"""
+        self.pre_close_price = pre_close
+        self.last_price = bar.close_price
         self.calculate_pnl()
         self.calculate_stare_pnl()
 
@@ -299,11 +306,6 @@ class PositionHolding:
 
     def calculate_pnl(self):
         """ 计算浮动盈亏 """
-        # try:
-        #     open_cost = self.app.trader.open_cost_dict.get(self.symbol)
-        #     single = LocalVariable(open_cost)
-        # except AttributeError as e:
-        #     single = None
         try:
             # if self.long_pos == self.long_yd:
             #     self.long_pnl = self.long_pos * (
@@ -408,15 +410,24 @@ class LocalPositionManager(dict):
 
         self.size_map = params.get("size_map")
 
+    @property
+    def position_profit(self):
+        return sum([x["position_profit"] + x["price"] * x["volume"] for x in self.get_all_positions()])
+
     def update_size_map(self, params):
 
         self.size_map = params.get("size_map")
 
-    def update_tick(self, tick: TickData):
+    def update_tick(self, tick: TickData, pre_close):
         """ 更新tick  """
         if tick.local_symbol not in self:
             return
-        self.get(tick.local_symbol).update_tick(tick)
+        self.get(tick.local_symbol).update_tick(tick, pre_close)
+
+    def update_bar(self, bar: BarData, pre_close):
+        if bar.local_symbol not in self:
+            return
+        self.get(bar.local_symbol).update_bar(bar, pre_close)
 
     def is_convert_required(self, local_symbol: str):
         """

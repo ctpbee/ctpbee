@@ -194,7 +194,8 @@ class Account:
         else:
             date = self.date
         p = AliasDayResult(
-            **{"balance": self.balance, "frozen": self.frozen, "available": self.balance - self.frozen,
+            **{"balance": self.balance + self.position_manager.position_profit, "frozen": self.frozen,
+               "available": self.balance - self.frozen,
                "date": date, "commission": self.commission_expense - self.pre_commission_expense,
                "net_pnl": self.balance - self.pre_balance,
                "count": self.count_statistics - self.pre_count

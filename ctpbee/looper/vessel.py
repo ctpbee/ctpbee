@@ -20,6 +20,11 @@ class LooperApi:
     def __init__(self, name):
         self.name = name
         self.active = True
+        self.app = None
+
+    @property
+    def position_manager(self):
+        return self.app.account.position_manager
 
     def on_bar(self, bar):
         raise NotImplemented

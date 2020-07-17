@@ -49,7 +49,7 @@ class Action:
         if not isinstance(self.looper.params['slippage_cover'], float) and not isinstance(
                 self.looper.params['slippage_cover'], int):
             raise ConfigError(message="滑点配置应为浮点小数")
-        price = price + self.looper.exec_intercept['slippage_cover']
+        price = price + self.looper.params['slippage_cover']
         req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.LONG,
                                                      type=price_type, exchange=origin.exchange,
                                                      symbol=origin.symbol) for x in
@@ -179,7 +179,9 @@ class LocalLooper():
 
         self.date = None
         # 行情
-        self.price = None
+        self.data_entity = None
+
+        self.pre_close_price = collections.defaultdict(list)
 
     def get_trades(self):
         return list(self.traded_order_mapping.values())
@@ -191,6 +193,7 @@ class LocalLooper():
         setattr(strategy, "debug", self.logger.debug)
         setattr(strategy, "error", self.logger.error)
         setattr(strategy, "warning", self.logger.warning)
+        setattr(strategy, "app", self)
         self.strategy_mapping[strategy.name] = strategy
 
     def enable_extension(self, name):
@@ -294,10 +297,10 @@ class LocalLooper():
             self.account.update_frozen(data)
 
             # 进行成交判断
-            long_c = self.price.low_price if self.price.low_price is not None else self.price.ask_price_1
-            short_c = self.price.high_price if self.price.low_price is not None else self.price.bid_price_1
-            long_b = self.price.open_price if self.price.low_price is not None else long_c
-            short_b = self.price.open_price if self.price.low_price is not None else short_c
+            long_c = self.data_entity.low_price if self.data_entity.low_price is not None else self.data_entity.ask_price_1
+            short_c = self.data_entity.high_price if self.data_entity.low_price is not None else self.data_entity.bid_price_1
+            long_b = self.data_entity.open_price if self.data_entity.low_price is not None else long_c
+            short_b = self.data_entity.open_price if self.data_entity.low_price is not None else short_c
             long_cross = data.direction == Direction.LONG and data.price >= long_c > 0
             short_cross = data.direction == Direction.SHORT and data.price <= short_c and short_c > 0
 
@@ -318,7 +321,6 @@ class LocalLooper():
                 [api(deepcopy(order)) for api in self.strategy_mapping.values()]
                 [api(trade) for api in self.strategy_mapping.values()]
                 self.pending.remove(order)
-
 
                 # 成交，移除冻结
                 self.account.update_frozen(order=order, reverse=True)
@@ -346,7 +348,6 @@ class LocalLooper():
                 # 已经成交，同时移除冻结
                 self.account.update_frozen(p, reverse=True)
                 self.update_account_margin(p)
-
                 return p
             else:
                 """ 当前账户不足以支撑成交 """
@@ -380,13 +381,23 @@ class LocalLooper():
     def __call__(self, *args, **kwargs):
         """ 回测周期 """
         p_data, params = args
-        self.price = p_data
+        # 日期不相等时,　更新前日结算价格　
+        if p_data.datetime.date() != self.date:
+            if self.data_entity is None:
+                self.pre_close_price = p_data.close_price if p_data.type == "bar" else p_data.last_price
+                self.data_entity = p_data
+            else:
+                self.pre_close_price = self.data_entity.close_price if p_data.type == "bar"\
+                    else self.data_entity.last_price
+        self.data_entity = p_data
         self.datetime = p_data.datetime
         self.__init_params(params)
         if p_data.type == "tick":
             [api(p_data) for api in self.strategy_mapping.values()]
+            self.account.position_manager.update_tick(self.data_entity, self.pre_close_price)
         if p_data.type == "bar":
             [api(p_data) for api in self.strategy_mapping.values()]
+            self.account.position_manager.update_bar(self.data_entity, self.pre_close_price)
         # 更新接口的日期
         self.date = p_data.datetime.date()
         # 穿过接口日期检查
