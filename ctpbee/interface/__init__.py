@@ -28,16 +28,16 @@ class Interface:
     def load_interface(cls, interface):
         if interface == "ctp":
             from ctpbee.interface.ctp import BeeTdApi, BeeMdApi
-            return (BeeMdApi, BeeTdApi)
+            return BeeMdApi, BeeTdApi
         if interface == "ctp_se":
             from ctpbee.interface.ctp import BeeTdApiApp, BeeMdApiApp
-            return (BeeMdApiApp, BeeTdApiApp)
+            return BeeMdApiApp, BeeTdApiApp
         if interface == "xin":
             from ctpbee.interface.xin import XinTdApi, XinMdApi
-            return (XinMdApi, XinTdApi)
+            return XinMdApi, XinTdApi
         if interface == "sim":
             from ctpbee.interface.sim import SimInterface, SimMarket
-            return (SimMarket, SimInterface)
+            return SimMarket, SimInterface
         else:
             raise ValueError("错误参数")
 
