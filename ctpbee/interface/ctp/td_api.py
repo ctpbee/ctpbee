@@ -166,8 +166,8 @@ class BeeTdApi(TdApi):
         # Get buffered position object
         key = f"{data['InstrumentID'], data['PosiDirection']}"
         position = self.positions.get(key, None)
-        if not position:
-            try:
+        try:
+            if not position:
                 position = PositionData(
                     symbol=data["InstrumentID"],
                     exchange=symbol_exchange_map[data["InstrumentID"]],
@@ -175,42 +175,41 @@ class BeeTdApi(TdApi):
                     gateway_name=self.gateway_name
                 )
                 self.positions[key] = position
-            except KeyError:
-                return
 
-        # For SHFE position data update
-        if position.exchange == Exchange.SHFE:
-            if data["YdPosition"] and not data["TodayPosition"]:
-                position.yd_volume = data["Position"]
-        # For other exchange position data update
-        else:
-            position.yd_volume = data["Position"] - data["TodayPosition"]
+            # For SHFE position data update
+            if position.exchange == Exchange.SHFE:
+                if data["YdPosition"] and not data["TodayPosition"]:
+                    position.yd_volume = data["Position"]
+            # For other exchange position data update
+            else:
+                position.yd_volume = data["Position"] - data["TodayPosition"]
 
-        # Get contract size (spread contract has no size value)
-        size = symbol_size_map.get(position.symbol, 0)
+            # Get contract size (spread contract has no size value)
+            size = symbol_size_map.get(position.symbol, 0)
 
-        # Calculate previous position cost
-        cost = position.price * position.volume * size
+            # Calculate previous position cost
+            cost = position.price * position.volume * size
 
-        # Update new position volume
-        position.volume += data["Position"]
-        position.pnl += data["PositionProfit"]
+            # Update new position volume
+            position.volume += data["Position"]
+            position.pnl += data["PositionProfit"]
 
-        if position.direction == Direction.LONG:
-            self.open_cost_dict[position.symbol]["long"] = data['OpenCost']
-        elif position.direction == Direction.SHORT:
-            self.open_cost_dict[position.symbol]["short"] = data['OpenCost']
-        # Calculate average position price
-        if position.volume and size:
-            cost += data["PositionCost"]
-            position.price = cost / (position.volume * size)
+            if position.direction == Direction.LONG:
+                self.open_cost_dict[position.symbol]["long"] = data['OpenCost']
+            elif position.direction == Direction.SHORT:
+                self.open_cost_dict[position.symbol]["short"] = data['OpenCost']
+            # Calculate average position price
+            if position.volume and size:
+                cost += data["PositionCost"]
+                position.price = cost / (position.volume * size)
 
-        # Get frozen volume
-        if position.direction == Direction.LONG:
-            position.frozen += data["ShortFrozen"]
-        else:
-            position.frozen += data["LongFrozen"]
-
+            # Get frozen volume
+            if position.direction == Direction.LONG:
+                position.frozen += data["ShortFrozen"]
+            else:
+                position.frozen += data["LongFrozen"]
+        except KeyError:
+            pass
         if last:
             for position in self.positions.values():
                 self.on_event(type=EVENT_POSITION, data=position)
@@ -728,50 +727,53 @@ class BeeTdApiApp(TdApiApp):
         # Get buffered position object
         key = f"{data['InstrumentID'], data['PosiDirection']}"
         position = self.positions.get(key, None)
-        if not position:
-            try:
+        try:
+            if not position:
                 position = PositionData(
-                symbol=data["InstrumentID"],
-                exchange=symbol_exchange_map[data["InstrumentID"]],
-                direction=DIRECTION_CTP2VT[data["PosiDirection"]],
-                gateway_name=self.gateway_name
+                    symbol=data["InstrumentID"],
+                    exchange=symbol_exchange_map[data["InstrumentID"]],
+                    direction=DIRECTION_CTP2VT[data["PosiDirection"]],
+                    gateway_name=self.gateway_name
                 )
                 self.positions[key] = position
-            except KeyError:
-                return
-        # For SHFE position data update
-        if position.exchange == Exchange.SHFE:
-            if data["YdPosition"] and not data["TodayPosition"]:
-                position.yd_volume = data["Position"]
-        # For other exchange position data update
-        else:
-            position.yd_volume = data["Position"] - data["TodayPosition"]
 
-        # Get contract size (spread contract has no size value)
-        size = symbol_size_map.get(position.symbol, 0)
+            # For SHFE position data update
+            if position.exchange == Exchange.SHFE:
+                if data["YdPosition"] and not data["TodayPosition"]:
+                    position.yd_volume = data["Position"]
+            # For other exchange position data update
+            else:
+                position.yd_volume = data["Position"] - data["TodayPosition"]
 
-        # Calculate previous position cost
-        cost = position.price * position.volume * size
+            # Get contract size (spread contract has no size value)
+            size = symbol_size_map.get(position.symbol, 0)
 
-        # Update new position volume
-        position.volume += data["Position"]
-        position.pnl += data["PositionProfit"]
+            # Calculate previous position cost
+            cost = position.price * position.volume * size
 
-        # Calculate average position price
-        if position.volume and size:
-            cost += data["PositionCost"]
-            position.price = cost / (position.volume * size)
+            # Update new position volume
+            position.volume += data["Position"]
+            position.pnl += data["PositionProfit"]
 
-        # Get frozen volume
-        if position.direction == Direction.LONG:
-            position.frozen += data["ShortFrozen"]
-        else:
-            position.frozen += data["LongFrozen"]
+            if position.direction == Direction.LONG:
+                self.open_cost_dict[position.symbol]["long"] = data['OpenCost']
+            elif position.direction == Direction.SHORT:
+                self.open_cost_dict[position.symbol]["short"] = data['OpenCost']
+            # Calculate average position price
+            if position.volume and size:
+                cost += data["PositionCost"]
+                position.price = cost / (position.volume * size)
 
+            # Get frozen volume
+            if position.direction == Direction.LONG:
+                position.frozen += data["ShortFrozen"]
+            else:
+                position.frozen += data["LongFrozen"]
+        except KeyError:
+            pass
         if last:
             for position in self.positions.values():
                 self.on_event(type=EVENT_POSITION, data=position)
-
             self.positions.clear()
 
     def onRspQryTradingAccount(self, data: dict, error: dict, reqid: int, last: bool):
