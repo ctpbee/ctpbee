@@ -102,6 +102,14 @@ class Center(BasicCenterModel, dict):
         return self.app.recorder.get_all_orders()
 
     @property
+    def last_order_id(self):
+        return self.orders[-1].order_id
+
+    @property
+    def last_order(self):
+        return self.orders[-1]
+
+    @property
     def active_orders(self):
         """ 返回所有的未成交单 """
         return self.app.recorder.get_all_active_orders()

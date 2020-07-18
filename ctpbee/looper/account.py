@@ -191,7 +191,6 @@ class Account:
             date = interface_date
         else:
             date = self.date
-        print(self.balance, self.occupation_margin, self.position_manager.position_profit)
         p = AliasDayResult(
             **{"balance": self.balance + self.occupation_margin + self.position_manager.position_profit,
                "frozen": self.frozen,
@@ -200,6 +199,7 @@ class Account:
                "net_pnl": self.balance - self.pre_balance,
                "count": self.count_statistics - self.pre_count
                })
+        print(p)
 
         self.interface.today_volume = 0
         self.pre_commission_expense = self.commission_expense

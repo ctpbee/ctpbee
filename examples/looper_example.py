@@ -52,7 +52,7 @@ if __name__ == '__main__':
     data_support = QADataSupport(host="quantaxis.tech", port=27007)
     runnning = Vessel()
     strategy = DoubleMa("ma")
-    data = data_support.get_future_min("rb2010.SHFE", frq="1min", start="2020-03-01", end="2020-07-15")
+    data = data_support.get_future_min("rb2010.SHFE", frq="1min", start="2019-08-01", end="2020-07-15")
     runnning.add_data(data)
     params = {
         "looper":
@@ -77,4 +77,4 @@ if __name__ == '__main__':
     runnning.add_strategy(strategy)
     runnning.params = params
     runnning.run()
-    result = runnning.get_result()
+    result = runnning.get_result(report=True)
