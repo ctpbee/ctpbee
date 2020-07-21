@@ -44,6 +44,7 @@ class Main(CtpbeeApi):
         """ """
         # print(tick)
 
+
     def on_bar(self, bar: BarData) -> None:
         pass
 

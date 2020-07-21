@@ -4,6 +4,7 @@ from ctpbee.qa_support import QADataSupport
 from ctpbee.indicator.ta_lib import ArrayManager
 
 
+
 class DoubleMa(LooperApi):
     def __init__(self, name):
         super(DoubleMa, self).__init__(name)

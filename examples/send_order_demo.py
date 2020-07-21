@@ -15,9 +15,8 @@ class Demo(CtpbeeApi):
 
     def on_contract(self, contract: ContractData):
         """ 处理推送的合约信息 """
-        if contract.local_symbol == "rb2001.SHFE":
-            print("nad")
-            self.app.subscribe(contract.local_symbol)
+
+        self.app.subscribe(contract.local_symbol)
 
     def on_log(self, log: LogData):
         """ 处理日志信息 ,特殊需求才用到 """
@@ -89,27 +88,28 @@ def letsgo():
     # 创建对象
     demo = Demo("test")
     # 添加对象, 你可以继承多个类 然后实例化不同的插件 再载入它, 这些都是极其自由化的操作
-    # info = {
-    #     "CONNECT_INFO": {
-    #         "userid": "089131",
-    #         "password": "350888",
-    #         "brokerid": "9999",
-    #         "md_address": "tcp://180.168.146.187:10131",
-    #         "td_address": "tcp://180.168.146.187:10130",
-    #         "product_info": "",
-    #         "appid": "simnow_client_test",
-    #         "auth_code": "0000000000000000"
-    #     },
-    #     "INTERFACE": "ctp",  # 接口声明
-    #     "TD_FUNC": True,  # 开启交易功能
-    #     "MD_FUNC": True,
-    #     "QA_SETUP": {"password": "somex"}
-    # }
+    info = {
+        "CONNECT_INFO": {
+            "userid": "089131",
+            "password": "350888",
+            "brokerid": "9999",
+            "md_address": "tcp://180.168.146.187:10131",
+            "td_address": "tcp://180.168.146.187:10130",
+            "product_info": "",
+            "appid": "simnow_client_test",
+            "auth_code": "0000000000000000"
+        },
+        "INTERFACE": "ctp",  # 接口声明
+        "TD_FUNC": True,  # 开启交易功能
+        "MD_FUNC": True,
+        "QA_SETUP": {"password": "somex"}
+    }
     running = Fancy("fancy", ['ag2010.SHFE'])
 
     app.add_extension(demo)
-    app.add_extension(running)
-    app.config.from_json("config.json")
+    # app.add_extension(running)
+    # app.config.from_json("config.json")
+    app.config.from_mapping(info)
     app.start(log_output=True)
     # 单独开一个线程来进行查询持仓和账户信息
 
