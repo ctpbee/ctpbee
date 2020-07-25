@@ -44,10 +44,13 @@ class Main(CtpbeeApi):
         """ """
         # print(tick)
 
+
     def on_bar(self, bar: BarData) -> None:
         pass
 
     def on_contract(self, contract: ContractData):
+        if contract.symbol == "rb2010":
+            print(contract)
         x = self.action.subscribe(contract.local_symbol)
 
 

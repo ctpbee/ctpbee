@@ -73,6 +73,17 @@ class Action(object):
     def __init__(self, app=None):
         self.app = app
 
+    def cancel_all(self):
+        """ 撤掉所有的报单信息 """
+        for order in self.app.center.active_orders:
+            self.cancel(order.order_id)
+
+    def close_all(self):
+        """ 平全部仓位
+        API 需要进行一个大的ct
+        """
+        raise ValueError("此API 暂时未被启用， 将在1.3.1启用")
+
     def buy(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
             price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
         """

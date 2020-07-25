@@ -97,14 +97,14 @@ class QADataSupport(DataSupport):
             "type": frq
         }
         if start and end:
-            query['time_stamp'] = \
+            query['datetime'] = \
                 {
-                    "$gte": QA_util_time_stamp(start),
-                    "$lte": QA_util_time_stamp(end)
+                    "$gte": start,
+                    "$lte": end
                 }
         format_option = dict(open=1, close=1, high=1, low=1, datetime=1, code=1, price=1,
                              _id=0, tradetime=1, trade=1)
-        _iterable = self.quantaxis['future_min'].find(query, format_option, batch_size=10000)
+        _iterable = self.quantaxis['future_min'].find(query, format_option, batch_size=10000).sort("datetime", 1)
 
         def pack(data: dict):
             data['symbol'] = symbol
