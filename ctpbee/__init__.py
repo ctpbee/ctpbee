@@ -1,7 +1,7 @@
 """
     for the future of  life
 """
-__version__ = '1.1.3'
+__version__ = '1.1.5'
 __status__ = 'development level'
 
 # About core

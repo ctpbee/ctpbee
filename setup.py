@@ -152,7 +152,7 @@ try:
 except Exception:
     long_description = ""
 
-pkgs = ['ctpbee', 'ctpbee.api', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.interface',
+pkgs = ['ctpbee', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.interface',
         'ctpbee.interface.ctp', 'ctpbee.jsond', "ctpbee.looper",
         "ctpbee.qa_support"]
 

@@ -106,8 +106,19 @@ class CtpBee(object):
                  refresh: bool = False,
                  risk: RiskLevel = None,
                  sim: bool = False,
+                 qifi=False,
                  instance_path=None):
-        """ 初始化 """
+        """
+        name: 创建运行核心的名字
+        import_name: 导入包的名字， 用__name__即可'
+        action_class: 执行器 > 默认使用系统自带的Action, 或者由用户继承，然后传入类
+        engine_method: Actor模型采用的底层的引擎
+        logger_class: logger类，可以自己定义
+        refresh: 是否自己主动持仓
+        risk: 风险管理类, 可以自己继承RiskLevel进行定制
+        sim: 是否进行模拟
+        qifi: bool 启用QUANTAXIS的qifi支持， 注意开启此参数即可在你的QUANTAXIS的界面上看到打点信息
+        """
         self._extensions = {}
         self.name = name if name else 'ctpbee'
         self.import_name = import_name
@@ -169,7 +180,7 @@ class CtpBee(object):
         self.instance_path = instance_path
         self.config = self.make_config()
         self.init_finished = False
-
+        self.qifi = None
         # default monitor and flag
         self.p = None
         self.p_flag = True
@@ -189,6 +200,12 @@ class CtpBee(object):
             if ismethod(func):
                 setattr(self, func.__name__, func)
 
+        if qifi:
+            try:
+                from ctpbee.qa_support.qa_real import QIFIManager
+                self.qifi = QIFIManager(app=self)
+            except ImportError:
+                raise ImportError("未安装QUANTAXIS 请使用docker")
         _app_context_ctx.push(self.name, self)
 
     def update_action_class(self, action_class):
@@ -256,14 +273,6 @@ class CtpBee(object):
                 self.r.start()
             self.r_flag = True
 
-    # @locked_cached_property
-    # def name(self):
-    #     if self.import_name == '__main__':
-    #         fn = getattr(sys.modules['__main__'], '__file__', None)
-    #         if fn is None:
-    #             return '__main__'
-    #         return os.path.splitext(os.path.basename(fn))[0]
-    #     return self.import_name
 
     def start(self, log_output=True, debug=False):
         """

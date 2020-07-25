@@ -175,7 +175,6 @@ class BeeTdApi(TdApi):
                     gateway_name=self.gateway_name
                 )
                 self.positions[key] = position
-
             # For SHFE position data update
             if position.exchange == Exchange.SHFE:
                 if data["YdPosition"] and not data["TodayPosition"]:
