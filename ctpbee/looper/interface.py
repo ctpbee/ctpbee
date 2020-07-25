@@ -18,11 +18,17 @@ class Action:
         self.looper = looper
 
     def buy(self, price, volume, origin, price_type: OrderType = OrderType.LIMIT, **kwargs):
+        if not isinstance(self.looper.params['slippage_buy'], float) and not isinstance(
+                self.looper.params['slippage_buy'], int):
+            raise ConfigError(message="滑点配置应为浮点小数")
         req = OrderRequest(price=price, volume=volume, exchange=origin.exchange, offset=Offset.OPEN,
                            direction=Direction.LONG, type=price_type, symbol=origin.symbol)
         return self.looper.send_order(req)
 
     def short(self, price, volume, origin, price_type: OrderType = OrderType.LIMIT, **kwargs):
+        if not isinstance(self.looper.params['slippage_short'], float) and not isinstance(
+                self.looper.params['slippage_short'], int):
+            raise ConfigError(message="滑点配置应为浮点小数")
         req = OrderRequest(price=price, volume=volume, exchange=origin.exchange, offset=Offset.OPEN,
                            direction=Direction.SHORT, type=price_type, symbol=origin.symbol)
         return self.looper.send_order(req)
