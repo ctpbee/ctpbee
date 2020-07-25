@@ -9,7 +9,7 @@ todo: 优化数据访问速度
 """
 from datetime import datetime
 from itertools import chain
-from typing import List
+from typing import List, Iterable, Tuple
 
 
 class Bumblebee(dict):
@@ -54,34 +54,57 @@ class Bumblebee(dict):
 
 
 class VessData:
-    """
-        本类存在的意义就是整合各家数据， 提供数据统一的解决方案 ^_^ hope you will relax it
-        如果数据想接进来, 请提交pr
-    """
-
-    def __init__(self, data):
+    def __init__(self, *data):
+        self.inner_data = {}
         self.init_flag = False
-        self.data = data
+        self.data: Tuple[Iterable] = data
         # 数据供应商默认设置为ctpbee
         self.data_provider = "ctpbee"
         # 数据类型默认设置为tick
         # 默认的产品类型
         self.product_type = "future"
+        if not isinstance(data, Iterable):
+            raise ValueError("数据应为可迭代的数据")
         # 应该是个生成器
-        self.data_type = Bumblebee(**data[0]).type
+        """ 根据每个data """
+        self.data_type = Bumblebee(**data[0][0]).type
+
         try:
-            self.inner_data = chain(map(lambda x: Bumblebee(**x), data))
+            for i in data:
+                self.inner_data[i[0].local_symbol] = chain(map(lambda x: Bumblebee(**x), i))
             self.init_flag = True
         except Exception:
-            pass
-
+            raise ValueError("数据格式不合法")
         self.slice = 0
+        self.the_buffer = {}
+        self.date_pointer: datetime = None
+        for x in self.inner_data:
+            origin = next(x)
+            self.the_buffer[origin.local_symbol] = origin
+
+    @property
+    def last_bar(self):
+        """ 时间缓冲器
+        实现同步回放多个数据源， 实现过程为
+        先找到实现数据时间探针
+        每次pop 第一个时间轴最小的data_entity。
+        """
+        ax = min(self.the_buffer, lambda x: x.datetime)
+        for key, value in self.the_buffer.items():
+            if ax == value:
+                """ 如果找到了值相等  那么更新里面的值 """
+                self.the_buffer[key] = next(self.inner_data[key])
+        return ax
 
     def __next__(self):
-        """ 实现生成器协议使得这个类可以被next函数不断调用 """
-        # 实际上是不断调用 inner_data的__next__协议
-        result = next(self.inner_data)
-        return result
+        """
+        实现生成器协议使得这个类可以被next函数不断调用
+        主要用来数据的回放控制， 基于此你可以有序的对数据进行回放,实现多个行情的同时进行回放，
+        比如A B A A B A
+        他们的时间是按照顺序进行回放的
+        注意他不是并发推入的 而是一个一个的进行回放。
+        """
+        return self.last_bar
 
     def __iter__(self):
         return iter(self.inner_data)

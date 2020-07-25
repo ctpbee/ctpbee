@@ -6,7 +6,6 @@ import os
 import webbrowser
 from jinja2 import Environment, PackageLoader, select_autoescape
 from ctpbee import get_ctpbee_path
-from datetime import datetime
 
 from ctpbee.func import join_path
 

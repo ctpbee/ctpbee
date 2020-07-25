@@ -223,7 +223,8 @@ class LocalLooper():
         order_id = f"{self.frontid}-{self.sessionid}-{self.order_ref}"
         return req._create_order_data(gateway_name="looper", order_id=order_id, time=self.datetime)
 
-    def _generate_trade_data_from_order(self, order_data: OrderData):
+    @staticmethod
+    def _generate_trade_data_from_order(order_data: OrderData):
         """ 将orderdata转换成成交单 """
         p = TradeData(price=order_data.price, istraded=order_data.volume, volume=order_data.volume,
                       tradeid=str(uuid.uuid1()), offset=order_data.offset, direction=order_data.direction,
@@ -393,7 +394,7 @@ class LocalLooper():
                 self.pre_close_price = p_data.close_price if p_data.type == "bar" else p_data.last_price
                 self.data_entity = p_data
             else:
-                self.pre_close_price = self.data_entity.close_price if p_data.type == "bar"\
+                self.pre_close_price = self.data_entity.close_price if p_data.type == "bar" \
                     else self.data_entity.last_price
         self.data_entity = p_data
         self.datetime = p_data.datetime
