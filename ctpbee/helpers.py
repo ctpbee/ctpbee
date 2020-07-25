@@ -258,6 +258,9 @@ def refresh_query(app):
         app.trader.query_position()
         sleep(app.config['REFRESH_INTERVAL'])
         app.trader.query_account()
+        if app.qifi:
+            app.qifi.from_app()
+            app.update()
         if not app.r_flag:
             break
 

@@ -9,11 +9,13 @@ todo: 优化数据访问速度
 """
 from datetime import datetime
 from itertools import chain
+from typing import List
 
 
 class Bumblebee(dict):
     """  """
-    __slots__ = ['last_price', 'datetime', 'open_price', "high_price", "low_price", "close_price", "volume", "type"]
+    __slots__ = ['last_price', 'datetime', 'open_price', "high_price", "low_price", "close_price", "volume", "type",
+                 "ask_price_1", "bid_price_1", "last_price"]
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
