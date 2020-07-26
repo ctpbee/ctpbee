@@ -71,15 +71,14 @@ class VessData:
 
         try:
             for i in data:
-                self.inner_data[i[0].local_symbol] = chain(map(lambda x: Bumblebee(**x), i))
+                self.inner_data[i[0]["local_symbol"]] = chain(map(lambda x: Bumblebee(**x), i))
             self.init_flag = True
         except Exception:
             raise ValueError("数据格式不合法")
         self.slice = 0
         self.the_buffer = {}
-        self.date_pointer: datetime = None
         for x in self.inner_data:
-            origin = next(x)
+            origin = next(self.inner_data[x])
             self.the_buffer[origin.local_symbol] = origin
 
     @property
@@ -89,12 +88,13 @@ class VessData:
         先找到实现数据时间探针
         每次pop 第一个时间轴最小的data_entity。
         """
-        ax = min(self.the_buffer, lambda x: x.datetime)
+        ax = min([x.datetime for x in self.the_buffer.values()])
         for key, value in self.the_buffer.items():
-            if ax == value:
+            if ax == value.datetime:
                 """ 如果找到了值相等  那么更新里面的值 """
+                nx = value
                 self.the_buffer[key] = next(self.inner_data[key])
-        return ax
+                return nx
 
     def __next__(self):
         """
@@ -111,7 +111,7 @@ class VessData:
 
     @property
     def length(self):
-        return len(self.data)
+        return max([len(x) for x in self.data])
 
     @property
     def type(self):
