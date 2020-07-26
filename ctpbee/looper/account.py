@@ -49,29 +49,54 @@ class Account:
 
     def __init__(self, interface, name=None):
         self.account_id = name if name is not None else uuid.uuid4()
+        # 成交接口
         self.interface = interface
-        self.pre_balance = 0
+        # 每日成交单信息
         self.daily_life = defaultdict(AliasDayResult)
-        # 日期
-        self.frozen = 0
+
+        # 合约乘数
         self.size = 5
+        # 每跳价格变化
         self.pricetick = 10
+        # 每日下单限制
         self.daily_limit = 20
+        # 账户权益
         self.balance = 100000
+        # 账户当前的日期
         self.date = None
         # 手续费
-        self.commission = 0
         self.commission_expense = 0
-        # 昨日手续费
-        self.pre_commission_expense = 0
         self.count_statistics = 0
-        self.pre_count = 0
+
         # 初始资金
         self.initial_capital = 0
         # 占用保证金
         self.occupation_margin = 0
+
+        # 仓位是否初始化 static_balance= None
+        # 静态权益 （静态权益 = 昨日结算的权益 + 今日入金 - 今日出金, 以服务器查询ctp后返回的金额为准）(不包含期权)
+        self.static_balance = 100000
+        # 平仓盈亏
+        self.close_profit = 0
+        # 浮动盈亏
+        self.float_profit = 0
+        # 权利金
+        self.premium = 0
+        # 期权市值
+        self.option_value = 0
+        # 冻结
+        self.frozen = 0
+
+        # balance= None
+        # 账户权益 （账户权益 = 动态权益 = 静态权益 + 平仓盈亏 + 持仓盈亏 - 手续费 + 权利金 + 期权市值）
+        # available= None
+
+        # 可用资金（可用资金 = 账户权益 - 冻结保证金 - 保证金 - 冻结权利金 - 冻结手续费 - 期权市值）
+        # ctp_balance= None
+        # 期货公司返回的balance（ctp_balance = 静态权益 + 平仓盈亏 + 持仓盈亏 - 手续费 + 权利金）
         self.init_position_manager_flag = False
         self.init = False
+        self.position_manager = None
 
     @property
     def to_object(self) -> AccountData:
@@ -82,15 +107,14 @@ class Account:
 
     @property
     def available(self) -> float:
-        return self.balance - self.frozen - self.occupation_margin
+        return self.balance - self.frozen - self.occupation_margin - self.frozen_margin - self.frozen_premiu
 
     def is_traded(self, order: OrderData) -> bool:
         """ 当前账户是否足以支撑成交 """
         # 根据传入的单子判断当前的账户可用资金是否足以成交此单
-        if order.price * order.volume * (1 + self.commission) > self.available:
+        if order.price * order.volume * (1 + self.commission) < self.available:
             """ 可用不足"""
             return False
-
         return True
 
     def update_trade(self, trade: TradeData) -> None:
@@ -149,13 +173,6 @@ class Account:
         self.count_statistics += 1
         self.position_manager.update_trade(trade=trade)
 
-        if not self.date:
-            self.date = self.interface.date
-        if self.interface.date != self.date:
-            """ 新的一天 """
-            self.settle()
-            self.date = self.interface.date
-
     def update_margin(self, data: OrderData or TradeData, reverse=False):
         """
             更新保证金
@@ -191,27 +208,37 @@ class Account:
             date = interface_date
         else:
             date = self.date
+        """ 结算撤掉所有单 归还冻结 """
+        for order in self.interface.pending:
+            self.update_frozen(order, reverse=True)
+        self.interface.pending.clear()
         p = AliasDayResult(
-            **{"balance": self.balance + self.occupation_margin + self.position_manager.position_profit,
+            **{"balance": self.balance + self.occupation_margin,
                "frozen": self.frozen,
                "available": self.balance - self.frozen,
                "date": date, "commission": self.commission_expense - self.pre_commission_expense,
                "net_pnl": self.balance - self.pre_balance,
                "count": self.count_statistics - self.pre_count
                })
-        print(p)
-
-        self.interface.today_volume = 0
+        # self._account["static_balance"] = self._account["balance"]
+        # self._account["position_profit"] = 0
+        # self._account["close_profit"] = 0
+        # self._account["commission"] = 0
+        # self._account["premium"] = 0
         self.pre_commission_expense = self.commission_expense
         self.pre_balance = self.balance
         self.pre_count = self.count_statistics
+
+        self.commission = 0
+        self.interface.today_volume = 0
+        self.count_statistics = 0
+
         self.position_manager.covert_to_yesterday_holding()
         self.daily_life[date] = p._to_dict()
-        # 结算撤掉所有单
-        self.interface.pending.clear()
         # 归还所有的冻结
         self.balance += self.frozen
         self.frozen = 0
+        self.date = interface_date
 
     def via_aisle(self):
         self.position_manager.update_size_map(self.interface.params)
@@ -298,3 +325,50 @@ class Account:
         result['daily_return'] = df["return"].mean() * 100
         result['return_std'] = df["return"].std() * 100
         return result
+
+
+"""
+ def __init__(self, api):
+        self._api = api
+        #: 币种
+        self.currency = ""
+        #: 昨日账户权益(不包含期权)
+        self.pre_balance = float("nan")
+        #: 静态权益 （静态权益 = 昨日结算的权益 + 今日入金 - 今日出金, 以服务器查询ctp后返回的金额为准）(不包含期权)
+        self.static_balance = float("nan")
+        #: 账户权益 （账户权益 = 动态权益 = 静态权益 + 平仓盈亏 + 持仓盈亏 - 手续费 + 权利金 + 期权市值）
+        self.balance = float("nan")
+        #: 可用资金（可用资金 = 账户权益 - 冻结保证金 - 保证金 - 冻结权利金 - 冻结手续费 - 期权市值）
+        self.available = float("nan")
+        #: 期货公司返回的balance（ctp_balance = 静态权益 + 平仓盈亏 + 持仓盈亏 - 手续费 + 权利金）
+        self.ctp_balance = float("nan")
+        #: 期货公司返回的available（ctp_available = ctp_balance - 保证金 - 冻结保证金 - 冻结手续费 - 冻结权利金）
+        self.ctp_available = float("nan")
+        #: 浮动盈亏
+        self.float_profit = float("nan")
+        #: 持仓盈亏
+        self.position_profit = float("nan")
+        #: 本交易日内平仓盈亏
+        self.close_profit = float("nan")
+        #: 冻结保证金
+        self.frozen_margin = float("nan")
+        #: 保证金占用
+        self.margin = float("nan")
+        #: 冻结手续费
+        self.frozen_commission = float("nan")
+        #: 本交易日内交纳的手续费
+        self.commission = float("nan")
+        #: 冻结权利金
+        self.frozen_premium = float("nan")
+        #: 本交易日内收入-交纳的权利金
+        self.premium = float("nan")
+        #: 本交易日内的入金金额
+        self.deposit = float("nan")
+        #: 本交易日内的出金金额
+        self.withdraw = float("nan")
+        #: 风险度（风险度 = 保证金 / 账户权益）
+        self.risk_ratio = float("nan")
+        #: 期权市值
+        self.market_value = float("nan")
+
+"""

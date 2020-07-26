@@ -280,9 +280,7 @@ class LocalLooper():
             -3: 未成交
             -4: 资金不足
             p : 成交回报
-
             todo: 处理冻结 ??
-
         """
         if self.params.get("deal_pattern") == "match":
             """ 撮合成交 """
@@ -387,8 +385,14 @@ class LocalLooper():
     def __call__(self, *args, **kwargs):
         """ 回测周期 """
         p_data, params = args
-        # 日期不相等时,　更新前日结算价格　
+        # 日期不相等时,　更新前日结算价格
+        self.__init_params(params)
+        if self.account.date is None:
+            self.account.date = self.date
+
         if p_data.datetime.date() != self.date:
+            print("开始结算----> 前日", self.date)
+            self.account.settle(p_data.datetime.date())
             if self.data_entity is None:
                 self.pre_close_price = p_data.close_price if p_data.type == "bar" else p_data.last_price
                 self.data_entity = p_data
@@ -397,7 +401,7 @@ class LocalLooper():
                     else self.data_entity.last_price
         self.data_entity = p_data
         self.datetime = p_data.datetime
-        self.__init_params(params)
+
         if p_data.type == "tick":
             [api(p_data) for api in self.strategy_mapping.values()]
             self.account.position_manager.update_tick(self.data_entity, self.pre_close_price)
