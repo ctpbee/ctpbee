@@ -24,15 +24,6 @@ git clone https://github.com/ctpbee/ctpbee && cd ctpbee && python3 setup.py inst
 pip3 install ctpbee
 ```
 
-## docker 快速部署
-
-```
-docker pull yutiansut/ctpbee:latest
-docker run -p 5000:5000 yutiansut/ctpbee:latest
-```
-docker暂时不可用， 将在下一个大版本进行修复
-it will be fix in next version
-
 ## 文档
 文档中描述相关教程，请认真阅读。如有问题，请到底部加群或者邮件联系作者 ^_^  
 > 当前文档已经落后, 请等待作者进行更新 ~
