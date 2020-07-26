@@ -9,13 +9,13 @@ todo: 优化数据访问速度
 """
 from datetime import datetime
 from itertools import chain
-from typing import List, Iterable, Tuple
+from typing import List, Iterable, Tuple, Sized
 
 
 class Bumblebee(dict):
     """  """
     __slots__ = ['last_price', 'datetime', 'open_price', "high_price", "low_price", "close_price", "volume", "type",
-                 "ask_price_1", "bid_price_1", "last_price"]
+                 "ask_price_1", "bid_price_1"]
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
@@ -57,7 +57,7 @@ class VessData:
     def __init__(self, *data):
         self.inner_data = {}
         self.init_flag = False
-        self.data: Tuple[Iterable] = data
+        self.data: Tuple[Iterable, Sized] = data
         # 数据供应商默认设置为ctpbee
         self.data_provider = "ctpbee"
         # 数据类型默认设置为tick
@@ -86,7 +86,7 @@ class VessData:
         """ 时间缓冲器
         实现同步回放多个数据源， 实现过程为
         先找到实现数据时间探针
-        每次pop 第一个时间轴最小的data_entity。
+        每次pop第一个时间轴最小的data_entity。
         """
         ax = min([x.datetime for x in self.the_buffer.values()])
         for key, value in self.the_buffer.items():

@@ -259,7 +259,6 @@ class LocalLooper():
                     f"成交时间: {str(result.time)}, 成交价格{str(result.price)}, 成交笔数: {str(result.volume)},"
                     f" 成交方向: {str(result.direction.value)}，行为: {str(result.offset.value)}")
                 self.traded_order_mapping[result.order_id] = result
-
             else:
                 self.logger.info(self.message_box[result])
         if isinstance(data, CancelRequest):
