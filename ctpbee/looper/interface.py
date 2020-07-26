@@ -56,10 +56,10 @@ class Action:
                 self.looper.params['slippage_cover'], int):
             raise ConfigError(message="滑点配置应为浮点小数")
         price = price + self.looper.params['slippage_cover']
-        req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.LONG,
+        req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.SHORT,
                                                      type=price_type, exchange=origin.exchange,
                                                      symbol=origin.symbol) for x in
-                    self.get_req(origin.local_symbol, Direction.SHORT, volume, self.looper)]
+                    self.get_req(origin.local_symbol, Direction.LONG, volume, self.looper)]
         return [self.looper.send_order(req) for req in req_list if req.volume != 0]
 
     def cancel(self, id: Text, origin: [BarData, TickData, TradeData, OrderData, PositionData] = None, **kwargs):
