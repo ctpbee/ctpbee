@@ -7,7 +7,6 @@ from pandas import DataFrame
 
 from ctpbee.constant import Exchange
 from ctpbee.qa_support.abstract import DataSupport
-from ctpbee.qa_support.qa_func import QA_util_time_stamp
 
 
 class QADataSupport(DataSupport):

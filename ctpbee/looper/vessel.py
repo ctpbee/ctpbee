@@ -175,12 +175,12 @@ class Vessel:
         self._strategy_status = True
         self.check_if_ready()
 
-    def add_data(self, data):
+    def add_data(self, *data):
         """
         注意此处的Add Data,可以添加多个数据源 ---> 他们的长度应该是一开始就对齐！！！
         ： ---> 必须在时间戳上进行对齐， 否则数据进行回放会出现问题。
         """
-        d = VessData(data)
+        d = VessData(*data)
         self.looper_data.append(d)
         self._data_status = True
         self.check_if_ready()

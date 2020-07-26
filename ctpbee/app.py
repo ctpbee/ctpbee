@@ -106,7 +106,6 @@ class CtpBee(object):
                  refresh: bool = False,
                  risk: RiskLevel = None,
                  sim: bool = False,
-                 qifi=False,
                  instance_path=None):
         """
         name: 创建运行核心的名字
@@ -117,7 +116,6 @@ class CtpBee(object):
         refresh: 是否自己主动持仓
         risk: 风险管理类, 可以自己继承RiskLevel进行定制
         sim: 是否进行模拟
-        qifi: bool 启用QUANTAXIS的qifi支持， 注意开启此参数即可在你的QUANTAXIS的界面上看到打点信息
         """
         self._extensions = {}
         self.name = name if name else 'ctpbee'
@@ -199,13 +197,6 @@ class CtpBee(object):
                 continue
             if ismethod(func):
                 setattr(self, func.__name__, func)
-
-        if qifi:
-            try:
-                from ctpbee.qa_support.qa_real import QIFIManager
-                self.qifi = QIFIManager(app=self)
-            except ImportError:
-                raise ImportError("未安装QUANTAXIS 请使用docker")
         _app_context_ctx.push(self.name, self)
 
     def update_action_class(self, action_class):
