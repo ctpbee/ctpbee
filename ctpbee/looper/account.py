@@ -55,7 +55,7 @@ class Account:
         self.daily_life = defaultdict(AliasDayResult)
 
         # 合约乘数
-        self.size = 5
+        self.sizemap = {}
         # 每跳价格变化
         self.pricetick = 10
         # 每日下单限制
@@ -68,17 +68,25 @@ class Account:
         self.initial_capital = 0
         # 账户权益
         self.balance = 100000
-
-        self.margin = 0
-        self.frozen_margin = 0
+        self.long_margin = 0
+        self.short_margin = 0
+        self.long_frozen_margin = 0
+        self.short_frozen_margin = 0
         self.frozen_fee = 0
         self.frozen_premium = 0
 
         self.init_position_manager_flag = False
         self.init = False
         self.position_manager = None
-
         self.margin_ratio = {}
+
+    @property
+    def margin(self):
+        return self.long_margin + self.short_margin
+
+    @property
+    def frozen_margin(self):
+        return self.long_frozen_margin + self.short_frozen_margin
 
     @property
     def to_object(self) -> AccountData:
@@ -92,28 +100,37 @@ class Account:
     def release_margin(self):
         """ 当日平仓需要释放的保证金 """
         pos = self.position_manager.get_all_positions()
-        return sum([x['price'] * x['volume'] * self.size * self.margin_ratio.get(x['local_symbol']) for x in pos])
+        return sum(
+            [x['price'] * x['volume'] * self.sizemap.get(x["local_symbol"]) * self.margin_ratio.get(x['local_symbol'])
+             for x in pos])
 
     @property
     def available(self) -> float:
         return self.balance - self.margin - self.frozen_margin - self.frozen_fee - self.frozen_premium
 
     def update_attr(self, data: TradeData or OrderData):
-        """ 更新基础属性方法 """
+        """ 更新基础属性方法
+        # 下单更新冻结的保证金
+        # 成交更新持仓的保证金
+        """
         if isinstance(data, TradeData):
             """ 成交属性 """
             if data.offset == Offset.OPEN:
+                """  开仓增加保证金 """
                 if data.direction == Direction.LONG:
-                    pass
+                    self.long_margin += self.margin_ratio.get(
+                        data.local_symbol) * data.price * data.volume * self.sizemap.get(data.local_symbol)
                 else:
-                    pass
+                    self.short_margin += self.margin_ratio.get(
+                        data.local_symbol) * data.price * data.volume * self.sizemap.get(data.local_symbol)
             else:
+                """ todo: 平仓移除保证金 """
                 if data.direction == Direction.LONG:
                     pass
                 else:
                     pass
         if isinstance(data, OrderData):
-            """ 发单属性 todo: 撤单时候归还冻结   """
+            """ 发单属性 todo: 发单增加冻结 撤单时候归还冻结   """
             if data.offset == Offset.OPEN:
                 if data.direction == Direction.LONG:
                     pass
@@ -126,8 +143,10 @@ class Account:
                     pass
 
     def reset_attr(self):
-        self.margin = 0
-        self.frozen_margin = 0
+        self.long_margin = 0
+        self.short_margin = 0
+        self.long_frozen_margin = 0
+        self.short_frozen_margin = 0
         self.frozen_fee = 0
         self.frozen_premium = 0
 
@@ -156,8 +175,6 @@ class Account:
         else:
             date = self.date
         """ 结算撤掉所有单 归还冻结 """
-
-
 
         self.interface.pending.clear()
         p = AliasDayResult(
@@ -269,50 +286,3 @@ class Account:
         result['daily_return'] = df["return"].mean() * 100
         result['return_std'] = df["return"].std() * 100
         return result
-
-
-"""
- def __init__(self, api):
-        self._api = api
-        #: 币种
-        self.currency = ""
-        #: 昨日账户权益(不包含期权)
-        self.pre_balance = float("nan")
-        #: 静态权益 （静态权益 = 昨日结算的权益 + 今日入金 - 今日出金, 以服务器查询ctp后返回的金额为准）(不包含期权)
-        self.static_balance = float("nan")
-        #: 账户权益 （账户权益 = 动态权益 = 静态权益 + 平仓盈亏 + 持仓盈亏 - 手续费 + 权利金 + 期权市值）
-        self.balance = float("nan")
-        #: 可用资金（可用资金 = 账户权益 - 冻结保证金 - 保证金 - 冻结权利金 - 冻结手续费 - 期权市值）
-        self.available = float("nan")
-        #: 期货公司返回的balance（ctp_balance = 静态权益 + 平仓盈亏 + 持仓盈亏 - 手续费 + 权利金）
-        self.ctp_balance = float("nan")
-        #: 期货公司返回的available（ctp_available = ctp_balance - 保证金 - 冻结保证金 - 冻结手续费 - 冻结权利金）
-        self.ctp_available = float("nan")
-        #: 浮动盈亏
-        self.float_profit = float("nan")
-        #: 持仓盈亏
-        self.position_profit = float("nan")
-        #: 本交易日内平仓盈亏
-        self.close_profit = float("nan")
-        #: 冻结保证金
-        self.frozen_margin = float("nan")
-        #: 保证金占用
-        self.margin = float("nan")
-        #: 冻结手续费
-        self.frozen_commission = float("nan")
-        #: 本交易日内交纳的手续费
-        self.commission = float("nan")
-        #: 冻结权利金
-        self.frozen_premium = float("nan")
-        #: 本交易日内收入-交纳的权利金
-        self.premium = float("nan")
-        #: 本交易日内的入金金额
-        self.deposit = float("nan")
-        #: 本交易日内的出金金额
-        self.withdraw = float("nan")
-        #: 风险度（风险度 = 保证金 / 账户权益）
-        self.risk_ratio = float("nan")
-        #: 期权市值
-        self.market_value = float("nan")
-
-"""
