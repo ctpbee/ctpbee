@@ -42,9 +42,6 @@ class LocalVariable:
             self.short = 0
 
 
-# local position support
-
-
 class PositionHolding:
     """ 单个合约的持仓 """
 
@@ -387,8 +384,7 @@ class LocalPositionManager(dict):
 
     def __init__(self, params: dict):
         """ 传入参数进行参数设置 """
-
-        self.size_map = params.get("size_map")
+        self.size_map: dict = params.get("size_map")
 
     @property
     def position_profit(self):
@@ -421,7 +417,7 @@ class LocalPositionManager(dict):
 
         holding = self.get(req.local_symbol, None)
         if not holding:
-            self[req.local_symbol] = PositionHolding(req.local_symbol)
+            self[req.local_symbol] = PositionHolding(req.local_symbol, self.size_map.get(req.local_symbol))
         self[req.local_symbol].update_order_request(req, local_orderid)
 
     def convert_order_request(self, req: OrderRequest, lock: bool):
@@ -431,7 +427,7 @@ class LocalPositionManager(dict):
 
         holding = self.get(req.local_symbol, None)
         if not holding:
-            self[req.local_symbol] = PositionHolding(req.local_symbol)
+            self[req.local_symbol] = PositionHolding(req.local_symbol, self.size_map.get(req.local_symbol))
         if lock:
             return self[req.local_symbol].convert_order_request_lock(req)
         elif req.exchange == Exchange.SHFE:

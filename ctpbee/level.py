@@ -76,7 +76,7 @@ class Action(object):
     def cancel_all(self):
         """ 撤掉所有的报单信息 """
         for order in self.app.center.active_orders:
-            self.cancel(order.order_id)
+            self.cancel(order.order_id, order)
 
     def close_all(self):
         """ 平全部仓位
