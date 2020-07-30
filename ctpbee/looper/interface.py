@@ -299,7 +299,6 @@ class LocalLooper():
 
             # 发单立即冻结
             self.account.update_frozen(data)
-
             # 进行成交判断
             long_c = self.data_entity.low_price if self.data_entity.low_price is not None else self.data_entity.ask_price_1
             short_c = self.data_entity.high_price if self.data_entity.low_price is not None else self.data_entity.bid_price_1

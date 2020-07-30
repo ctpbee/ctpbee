@@ -105,13 +105,13 @@ class Account:
                                               balance=self.balance,
                                               ))
 
-    @property
-    def release_margin(self):
-        """ 当日平仓需要释放的保证金 """
-        pos = self.position_manager.get_all_positions()
-        return sum(
-            [x['price'] * x['volume'] * self.sizemap.get(x["local_symbol"]) * self.margin_ratio.get(x['local_symbol'])
-             for x in pos])
+    def release_margin(self, volume, direction, local_symbol):
+        """ 平仓需要释放的保证金 """
+        pos = self.position_manager.get_position_by_ld(local_symbol=local_symbol, direction=direction)
+        if pos:
+            return pos.price * volume * self.sizemap.get(local_symbol) * self.margin_ratio.get(local_symbol)
+        else:
+            print("无此仓位")
 
     @property
     def available(self) -> float:
@@ -121,8 +121,7 @@ class Account:
         """ 更新基础属性方法
         # 下单更新冻结的保证金
         # 成交更新持仓的保证金
-        开仓手续费 == 平仓手续费
-        平仓手续费
+        开仓手续费 /平仓手续费 平今手续费
         """
         if isinstance(data, TradeData):
             """ 成交属性 """
@@ -148,12 +147,18 @@ class Account:
                 else:
                     self.short_margin += self.margin_ratio.get(
                         data.local_symbol) * data.price * data.volume * self.sizemap.get(data.local_symbol)
+
+                self.balance -= data.price * data.volume
             else:
                 """ todo: 平仓移除保证金 """
                 if data.direction == Direction.LONG:
-                    pass
+                    release_margin_amount = self.release_margin(data.volume, Direction.SHORT, data.local_symbol)
+                    self.short_margin += release_margin_amount
                 else:
-                    pass
+                    release_margin_amount = self.release_margin(data.volume, Direction.LONG, data.local_symbol)
+                    self.long_margin += release_margin_amount
+                self.balance += data.price * data.volume
+
         if isinstance(data, OrderData):
             """ 发单属性 todo: 发单增加冻结 撤单时候归还冻结  """
             if data.offset == Offset.OPEN:
@@ -167,151 +172,142 @@ class Account:
                 else:
                     pass
 
+    def reset_attr(self):
+        self.long_margin = 0
+        self.short_margin = 0
+        self.long_frozen_margin = 0
+        self.short_frozen_margin = 0
+        self.frozen_fee = 0
+        self.frozen_premium = 0
 
-def reset_attr(self):
-    self.long_margin = 0
-    self.short_margin = 0
-    self.long_frozen_margin = 0
-    self.short_frozen_margin = 0
-    self.frozen_fee = 0
-    self.frozen_premium = 0
+    def is_traded(self, order: OrderData) -> bool:
+        """ 当前账户是否足以支撑成交 """
+        # 根据传入的单子判断当前的账户可用资金是否足以成交此单
+        if order.price * order.volume * (1 + self.commission) < self.available:
+            """ 可用不足"""
+            return False
+        return True
 
+    def update_trade(self, trade: TradeData) -> None:
+        """
+        当前选择调用这个接口的时候就已经确保了这个单子是可以成交的，
+        make sure it can be traded if you choose to call this method,
+        :param trade:交易单子/trade
+        :return:
+        """
+        self.update_attr(trade)
+        self.position_manager.update_trade(trade=trade)
 
-def is_traded(self, order: OrderData) -> bool:
-    """ 当前账户是否足以支撑成交 """
-    # 根据传入的单子判断当前的账户可用资金是否足以成交此单
-    if order.price * order.volume * (1 + self.commission) < self.available:
-        """ 可用不足"""
-        return False
-    return True
+    def settle(self, interface_date=None):
+        """ 生成今天的交易数据， 同时更新前日数据 ，然后进行持仓结算 """
+        if not self.date:
+            date = interface_date
+        else:
+            date = self.date
+        """ 结算撤掉所有单 归还冻结 """
 
+        self.interface.pending.clear()
+        p = AliasDayResult(
+            **{"balance": self.balance + self.occupation_margin,
+               "frozen": self.frozen,
+               "available": self.balance - self.frozen,
+               "date": date, "commission": self.commission_expense - self.pre_commission_expense,
+               "net_pnl": self.balance - self.pre_balance,
+               "count": self.count_statistics - self.pre_count
+               })
 
-def update_trade(self, trade: TradeData) -> None:
-    """
-    当前选择调用这个接口的时候就已经确保了这个单子是可以成交的，
-    make sure it can be traded if you choose to call this method,
-    :param trade:交易单子/trade
-    :return:
-    """
-    self.update_attr(trade)
-    self.position_manager.update_trade(trade=trade)
+        self.pre_commission_expense = self.commission_expense
+        self.pre_balance = self.balance
+        self.commission = 0
+        self.interface.today_volume = 0
+        self.position_manager.covert_to_yesterday_holding()
+        self.daily_life[date] = p._to_dict()
+        # 归还所有的冻结
+        self.balance += self.frozen
+        self.frozen = 0
+        self.date = interface_date
 
-
-def settle(self, interface_date=None):
-    """ 生成今天的交易数据， 同时更新前日数据 ，然后进行持仓结算 """
-    if not self.date:
-        date = interface_date
-    else:
-        date = self.date
-    """ 结算撤掉所有单 归还冻结 """
-
-    self.interface.pending.clear()
-    p = AliasDayResult(
-        **{"balance": self.balance + self.occupation_margin,
-           "frozen": self.frozen,
-           "available": self.balance - self.frozen,
-           "date": date, "commission": self.commission_expense - self.pre_commission_expense,
-           "net_pnl": self.balance - self.pre_balance,
-           "count": self.count_statistics - self.pre_count
-           })
-
-    self.pre_commission_expense = self.commission_expense
-    self.pre_balance = self.balance
-    self.commission = 0
-    self.interface.today_volume = 0
-    self.position_manager.covert_to_yesterday_holding()
-    self.daily_life[date] = p._to_dict()
-    # 归还所有的冻结
-    self.balance += self.frozen
-    self.frozen = 0
-    self.date = interface_date
-
-
-def via_aisle(self):
-    self.position_manager.update_size_map(self.interface.params)
-    if self.interface.date != self.date:
-        self.settle(self.interface.date)
-        self.date = self.interface.date
-    else:
-        pass
-
-
-def update_params(self, params: dict):
-    """ 更新本地账户回测参数 """
-    for i, v in params.items():
-        if i == "initial_capital" and not self.init:
-            self.balance = v
-            self.pre_balance = v
-            self.initial_capital = v
-            self.init = True
-            continue
+    def via_aisle(self):
+        self.position_manager.update_size_map(self.interface.params)
+        if self.interface.date != self.date:
+            self.settle(self.interface.date)
+            self.date = self.interface.date
         else:
             pass
-        setattr(self, i, v)
-    if not self.init_position_manager_flag:
-        self.position_manager = LocalPositionManager(params)
-        self.init_position_manager_flag = True
-    else:
-        pass
 
+    def update_params(self, params: dict):
+        """ 更新本地账户回测参数 """
+        for i, v in params.items():
+            if i == "initial_capital" and not self.init:
+                self.balance = v
+                self.pre_balance = v
+                self.initial_capital = v
+                self.init = True
+                continue
+            else:
+                pass
+            setattr(self, i, v)
+        if not self.init_position_manager_flag:
+            self.position_manager = LocalPositionManager(params)
+            self.init_position_manager_flag = True
+        else:
+            pass
 
-@property
-def result(self):
-    # 根据daily_life里面的数据 获取最后的结果
-    result = defaultdict(list)
-    for daily in self.daily_life.values():
-        for key, value in daily.items():
-            result[key].append(value)
+    @property
+    def result(self):
+        # 根据daily_life里面的数据 获取最后的结果
+        result = defaultdict(list)
+        for daily in self.daily_life.values():
+            for key, value in daily.items():
+                result[key].append(value)
 
-    df = DataFrame.from_dict(result).set_index("date")
-    try:
-        import matplotlib.pyplot as plt
-        df['balance'].plot()
-        plt.show()
+        df = DataFrame.from_dict(result).set_index("date")
+        try:
+            import matplotlib.pyplot as plt
+            df['balance'].plot()
+            plt.show()
 
-    except ImportError as e:
-        pass
-    finally:
-        return self._cal_result(df)
+        except ImportError as e:
+            pass
+        finally:
+            return self._cal_result(df)
 
+    def get_mapping(self, d):
+        mapping = {}
+        for i, v in self.daily_life.items():
+            mapping[str(i)] = v.get(d)
+        return mapping
 
-def get_mapping(self, d):
-    mapping = {}
-    for i, v in self.daily_life.items():
-        mapping[str(i)] = v.get(d)
-    return mapping
-
-
-def _cal_result(self, df: DataFrame) -> dict:
-    result = dict()
-    df["return"] = np.log(df["balance"] / df["balance"].shift(1)).fillna(0)
-    df["high_level"] = (
-        df["balance"].rolling(
-            min_periods=1, window=len(df), center=False).max()
-    )
-    df["draw_down"] = df["balance"] - df["high_level"]
-    df["dd_percent"] = df["draw_down"] / df["high_level"] * 100
-    result['initial_capital'] = self.initial_capital
-    result['start_date'] = df.index[0]
-    result['end_date'] = df.index[-1]
-    result['total_days'] = len(df)
-    result['profit_days'] = len(df[df["net_pnl"] > 0])
-    result['loss_days'] = len(df[df["net_pnl"] < 0])
-    result['end_balance'] = df["balance"].iloc[-1]
-    result['max_draw_down'] = df["draw_down"].min()
-    result['max_dd_percent'] = df["dd_percent"].min()
-    result['total_pnl'] = df["net_pnl"].sum()
-    result['daily_pnl'] = result['total_pnl'] / result['total_days']
-    result['total_commission'] = df["commission"].sum()
-    result['daily_commission'] = result['total_commission'] / result['total_days']
-    # result['total_slippage'] = df["slippage"].sum()
-    # result['daily_slippage'] = result['total_slippage'] / result['total_days']
-    # result['total_turnover'] = df["turnover"].sum()
-    # result['daily_turnover'] = result['total_turnover'] / result['total_days']
-    result['total_count'] = df["count"].sum()
-    result['daily_count'] = result['total_count'] / result['total_days']
-    result['total_return'] = (result['end_balance'] / self.initial_capital - 1) * 100
-    result['annual_return'] = result['total_return'] / result['total_days'] * 240
-    result['daily_return'] = df["return"].mean() * 100
-    result['return_std'] = df["return"].std() * 100
-    return result
+    def _cal_result(self, df: DataFrame) -> dict:
+        result = dict()
+        df["return"] = np.log(df["balance"] / df["balance"].shift(1)).fillna(0)
+        df["high_level"] = (
+            df["balance"].rolling(
+                min_periods=1, window=len(df), center=False).max()
+        )
+        df["draw_down"] = df["balance"] - df["high_level"]
+        df["dd_percent"] = df["draw_down"] / df["high_level"] * 100
+        result['initial_capital'] = self.initial_capital
+        result['start_date'] = df.index[0]
+        result['end_date'] = df.index[-1]
+        result['total_days'] = len(df)
+        result['profit_days'] = len(df[df["net_pnl"] > 0])
+        result['loss_days'] = len(df[df["net_pnl"] < 0])
+        result['end_balance'] = df["balance"].iloc[-1]
+        result['max_draw_down'] = df["draw_down"].min()
+        result['max_dd_percent'] = df["dd_percent"].min()
+        result['total_pnl'] = df["net_pnl"].sum()
+        result['daily_pnl'] = result['total_pnl'] / result['total_days']
+        result['total_commission'] = df["commission"].sum()
+        result['daily_commission'] = result['total_commission'] / result['total_days']
+        # result['total_slippage'] = df["slippage"].sum()
+        # result['daily_slippage'] = result['total_slippage'] / result['total_days']
+        # result['total_turnover'] = df["turnover"].sum()
+        # result['daily_turnover'] = result['total_turnover'] / result['total_days']
+        result['total_count'] = df["count"].sum()
+        result['daily_count'] = result['total_count'] / result['total_days']
+        result['total_return'] = (result['end_balance'] / self.initial_capital - 1) * 100
+        result['annual_return'] = result['total_return'] / result['total_days'] * 240
+        result['daily_return'] = df["return"].mean() * 100
+        result['return_std'] = df["return"].std() * 100
+        return result
