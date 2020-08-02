@@ -147,7 +147,6 @@ class Account:
                 else:
                     self.short_margin += self.margin_ratio.get(
                         data.local_symbol) * data.price * data.volume * self.sizemap.get(data.local_symbol)
-
                 self.balance -= data.price * data.volume
             else:
                 """ todo: 平仓移除保证金 """
@@ -208,23 +207,21 @@ class Account:
 
         self.interface.pending.clear()
         p = AliasDayResult(
-            **{"balance": self.balance + self.occupation_margin,
-               "frozen": self.frozen,
-               "available": self.balance - self.frozen,
-               "date": date, "commission": self.commission_expense - self.pre_commission_expense,
+            **{"balance": self.balance,
+               "frozen": self.frozen_margin,
+               "available": self.balance - self.frozen_margin,
+               "date": date, "commission":self.commission,
                "net_pnl": self.balance - self.pre_balance,
-               "count": self.count_statistics - self.pre_count
+               "count": 0
                })
 
-        self.pre_commission_expense = self.commission_expense
+        self.pre_commission_expense = self.commission
         self.pre_balance = self.balance
         self.commission = 0
         self.interface.today_volume = 0
         self.position_manager.covert_to_yesterday_holding()
         self.daily_life[date] = p._to_dict()
         # 归还所有的冻结
-        self.balance += self.frozen
-        self.frozen = 0
         self.date = interface_date
 
     def via_aisle(self):

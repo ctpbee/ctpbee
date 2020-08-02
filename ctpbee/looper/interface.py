@@ -296,9 +296,6 @@ class LocalLooper():
             if data.price < self.drop_price or data.price > self.upper_price:
                 """ 超出涨跌价格 """
                 return -2
-
-            # 发单立即冻结
-            self.account.update_frozen(data)
             # 进行成交判断
             long_c = self.data_entity.low_price if self.data_entity.low_price is not None else self.data_entity.ask_price_1
             short_c = self.data_entity.high_price if self.data_entity.low_price is not None else self.data_entity.bid_price_1
@@ -324,9 +321,6 @@ class LocalLooper():
                 [api(deepcopy(order)) for api in self.strategy_mapping.values()]
                 [api(trade) for api in self.strategy_mapping.values()]
                 self.pending.remove(order)
-
-                # 成交，移除冻结
-                self.account.update_frozen(order=order, reverse=True)
                 self.update_account_margin(trade)
 
             if not long_cross and not short_cross:
@@ -348,8 +342,6 @@ class LocalLooper():
                 """ 调用strategy的on_trade """
                 [api(p) for api in self.strategy_mapping.values()]
                 self.today_volume += data.volume
-                # 已经成交，同时移除冻结
-                self.account.update_frozen(p, reverse=True)
                 self.update_account_margin(p)
                 return p
             else:
@@ -357,12 +349,6 @@ class LocalLooper():
                 return -4
         else:
             raise TypeError("未支持的成交机制")
-
-    def update_account_margin(self, p):
-        if p.offset == Offset.OPEN:
-            self.account.update_margin(p, reverse=True)
-        else:
-            self.account.update_margin(p)
 
     def init_params(self, params):
         """ 回测参数设置 """

@@ -16,7 +16,7 @@ class DoubleMa(LooperApi):
         self.open = False
 
     def on_bar(self, bar):
-        # print(bar.local_symbol, bar.datetime)
+        print(bar.local_symbol, bar.datetime)
         self.manager.update_bar(bar)
         if not self.manager.inited:
             return
@@ -52,8 +52,8 @@ if __name__ == '__main__':
     data_support = QADataSupport(host="quantaxis.tech", port=27027)
     runnning = Vessel()
     strategy = DoubleMa("ma")
-    data = data_support.get_future_min("rb2010.SHFE", frq="1min", start="2019-08-01", end="2020-07-15")
-    # ag_data = data_support.get_future_min("ag2010.SHFE", frq="1min", start="2019-08-01", end="2020-07-15")
+    data = data_support.get_future_min("rb2010.SHFE", frq="1min", start="2020-05 -01", end="2020-07-15")
+    # ag_data = data_support.get_futurehhhhhhhhhhhhhhhhhhhv  _min("ag2010.SHFE", frq="1min", start="2019-08-01", end="2020-07-15")
     print(data)
     runnning.add_data(data)
     params = {
