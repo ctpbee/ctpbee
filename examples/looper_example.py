@@ -4,7 +4,6 @@ from ctpbee.qa_support import QADataSupport
 from ctpbee.indicator.ta_lib import ArrayManager
 
 
-
 class DoubleMa(LooperApi):
     def __init__(self, name):
         super(DoubleMa, self).__init__(name)
@@ -60,12 +59,17 @@ if __name__ == '__main__':
         "looper":
             {
                 "initial_capital": 100000,
-                "commission": 0.005,
                 "deal_pattern": "price",
+                # 合约乘数
                 "size_map": {"rb2010.SHFE": 10},
-                "today_commission": 0.005,
-                "yesterday_commission": 0.02,
-                "close_commission": 0.005,
+                # 手续费收费
+                "commission_ratio": {
+                    "rb2010.SHFE": {"close": 0.0005, "close_today": 0.0003}
+                },
+                # 保证金占用
+                "margin_ratio": {
+                    "rb2010.SHFE": 0.1
+                },
                 "slippage_sell": 0,
                 "slippage_cover": 0,
                 "slippage_buy": 0,
@@ -74,6 +78,7 @@ if __name__ == '__main__':
             },
         "strategy":
             {
+
             }
     }
     runnning.add_strategy(strategy)

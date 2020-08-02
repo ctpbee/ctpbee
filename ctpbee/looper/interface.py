@@ -342,7 +342,6 @@ class LocalLooper():
                 """ 调用strategy的on_trade """
                 [api(p) for api in self.strategy_mapping.values()]
                 self.today_volume += data.volume
-                self.update_account_margin(p)
                 return p
             else:
                 """ 当前账户不足以支撑成交 """

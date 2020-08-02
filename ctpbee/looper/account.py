@@ -55,7 +55,7 @@ class Account:
         self.daily_life = defaultdict(AliasDayResult)
 
         # 合约乘数
-        self.sizemap = {}
+        self.size_map = {}
         # 每跳价格变化
         self.pricetick = 10
         # 每日下单限制
@@ -101,7 +101,7 @@ class Account:
     def to_object(self) -> AccountData:
         return AccountData._create_class(dict(accountid=self.account_id,
                                               local_account_id=f"{self.account_id}.SIM",
-                                              frozen=self.frozen,
+                                              frozen=self.margin,
                                               balance=self.balance,
                                               ))
 
@@ -109,7 +109,7 @@ class Account:
         """ 平仓需要释放的保证金 """
         pos = self.position_manager.get_position_by_ld(local_symbol=local_symbol, direction=direction)
         if pos:
-            return pos.price * volume * self.sizemap.get(local_symbol) * self.margin_ratio.get(local_symbol)
+            return pos.price * volume * self.size_map.get(local_symbol) * self.margin_ratio.get(local_symbol)
         else:
             print("无此仓位")
 
@@ -117,7 +117,7 @@ class Account:
     def available(self) -> float:
         return self.balance - self.margin - self.frozen_margin - self.frozen_fee - self.frozen_premium
 
-    def update_attr(self, data: TradeData or OrderData):
+    def update_account_from_trade(self, data: TradeData or OrderData):
         """ 更新基础属性方法
         # 下单更新冻结的保证金
         # 成交更新持仓的保证金
@@ -128,48 +128,49 @@ class Account:
             try:
                 if data.offset == Offset.CLOSETODAY:
                     ratio = self.commission_ratio.get(data.local_symbol)["close_today"]
-                elif data.offset == Offset.OPEN:
-                    ratio = self.commission_ratio.get(data.local_symbol)["open"]
                 else:
                     ratio = self.commission_ratio.get(data.local_symbol)["close"]
             except KeyError:
                 raise ValueError("请在对应品种设置合理的手续费")
             if self.fee.get(data.local_symbol) is None:
-                self.fee[data.local_symbol] = data.price * data.volume * ratio
+                self.fee[data.local_symbol] = data.price * data.volume * ratio * self.size_map.get(data.local_symbol)
             else:
-                self.fee[data.local_symbol] += data.price * data.volume * ratio
+                self.fee[data.local_symbol] += data.price * data.volume * ratio * self.size_map.get(data.local_symbol)
 
+            self.balance -= data.price * data.volume * ratio * self.size_map.get(data.local_symbol)
+            print("成交产生手续费: {}".format(data.price * data.volume * ratio * self.size_map.get(data.local_symbol)))
             if data.offset == Offset.OPEN:
                 """  开仓增加保证金 """
                 if data.direction == Direction.LONG:
                     self.long_margin += self.margin_ratio.get(
-                        data.local_symbol) * data.price * data.volume * self.sizemap.get(data.local_symbol)
+                        data.local_symbol) * data.price * data.volume * self.size_map.get(data.local_symbol)
                 else:
                     self.short_margin += self.margin_ratio.get(
-                        data.local_symbol) * data.price * data.volume * self.sizemap.get(data.local_symbol)
+                        data.local_symbol) * data.price * data.volume * self.size_map.get(data.local_symbol)
                 self.balance -= data.price * data.volume
+
+                print("开仓增加保证金: {}".format(self.margin_ratio.get(
+                    data.local_symbol) * data.price * data.volume * self.size_map.get(data.local_symbol)))
             else:
                 """ todo: 平仓移除保证金 """
                 if data.direction == Direction.LONG:
                     release_margin_amount = self.release_margin(data.volume, Direction.SHORT, data.local_symbol)
-                    self.short_margin += release_margin_amount
+                    self.short_margin -= release_margin_amount
                 else:
                     release_margin_amount = self.release_margin(data.volume, Direction.LONG, data.local_symbol)
-                    self.long_margin += release_margin_amount
+                    self.long_margin -= release_margin_amount
                 self.balance += data.price * data.volume
+                print("释放保证金: {}".format(release_margin_amount))
 
-        if isinstance(data, OrderData):
-            """ 发单属性 todo: 发单增加冻结 撤单时候归还冻结  """
-            if data.offset == Offset.OPEN:
-                if data.direction == Direction.LONG:
-                    pass
-                else:
-                    pass
-            else:
-                if data.direction == Direction.LONG:
-                    pass
-                else:
-                    pass
+        else:
+            raise TypeError("错误的数据类型，期望成交单数据 TradeData 而不是 {}".format(type(data)))
+
+    def update_account_from_order(self, order: OrderData):
+        """
+        从order里面更新订单信息
+        手续费同时
+        开仓冻结一部分 保证金成交后进行归还
+        """
 
     def reset_attr(self):
         self.long_margin = 0
@@ -178,11 +179,15 @@ class Account:
         self.short_frozen_margin = 0
         self.frozen_fee = 0
         self.frozen_premium = 0
+        self.interface.today_volume = 0
+        for x in self.fee.keys():
+            self.fee[x] = 0
 
     def is_traded(self, order: OrderData) -> bool:
         """ 当前账户是否足以支撑成交 """
         # 根据传入的单子判断当前的账户可用资金是否足以成交此单
-        if order.price * order.volume * (1 + self.commission) < self.available:
+        print(self.available, order.price * order.volume * self.size_map.get(order.local_symbol))
+        if order.price * order.volume * :
             """ 可用不足"""
             return False
         return True
@@ -194,7 +199,7 @@ class Account:
         :param trade:交易单子/trade
         :return:
         """
-        self.update_attr(trade)
+        self.update_account_from_trade(trade)
         self.position_manager.update_trade(trade=trade)
 
     def settle(self, interface_date=None):
@@ -210,15 +215,14 @@ class Account:
             **{"balance": self.balance,
                "frozen": self.frozen_margin,
                "available": self.balance - self.frozen_margin,
-               "date": date, "commission":self.commission,
+               "date": date, "commission": sum([x for x in self.fee.values()]),
                "net_pnl": self.balance - self.pre_balance,
                "count": 0
                })
 
-        self.pre_commission_expense = self.commission
         self.pre_balance = self.balance
-        self.commission = 0
-        self.interface.today_volume = 0
+        print("每日重置属性")
+        self.reset_attr()
         self.position_manager.covert_to_yesterday_holding()
         self.daily_life[date] = p._to_dict()
         # 归还所有的冻结
