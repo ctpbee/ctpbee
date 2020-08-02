@@ -75,13 +75,11 @@ class Account:
         self.frozen_fee = 0
         self.frozen_premium = 0
         """ 
-        fee应该是一个
-        {
-        ag2012.SHFE: 200.1
-        }的是字典"""
-        self.fee = {
-
+        fee应该是一个 {
+            ag2012.SHFE: 200.1
         }
+        """
+        self.fee = {}
         self.init_position_manager_flag = False
         self.init = False
         self.position_manager = None
@@ -136,7 +134,7 @@ class Account:
                 self.fee[data.local_symbol] = data.price * data.volume * ratio * self.size_map.get(data.local_symbol)
             else:
                 self.fee[data.local_symbol] += data.price * data.volume * ratio * self.size_map.get(data.local_symbol)
-
+            """ 余额减去实际发生手续费用 """
             self.balance -= data.price * data.volume * ratio * self.size_map.get(data.local_symbol)
             print("成交产生手续费: {}".format(data.price * data.volume * ratio * self.size_map.get(data.local_symbol)))
             if data.offset == Offset.OPEN:
@@ -161,7 +159,6 @@ class Account:
                     self.long_margin -= release_margin_amount
                 self.balance += data.price * data.volume
                 print("释放保证金: {}".format(release_margin_amount))
-
         else:
             raise TypeError("错误的数据类型，期望成交单数据 TradeData 而不是 {}".format(type(data)))
 
@@ -186,8 +183,10 @@ class Account:
     def is_traded(self, order: OrderData) -> bool:
         """ 当前账户是否足以支撑成交 """
         # 根据传入的单子判断当前的账户可用资金是否足以成交此单
-        print(self.available, order.price * order.volume * self.size_map.get(order.local_symbol))
-        if order.price * order.volume * :
+        order_amount = order.price * order.volume * self.size_map.get(order.local_symbol) * self.margin_ratio.get(
+            order.local_symbol) + order.price * order.volume
+        print("发单价格: {}_{}, amount: {}".format(order.price, order.volume, order_amount))
+        if self.available < order_amount:
             """ 可用不足"""
             return False
         return True
@@ -214,12 +213,11 @@ class Account:
         p = AliasDayResult(
             **{"balance": self.balance,
                "frozen": self.frozen_margin,
-               "available": self.balance - self.frozen_margin,
+               "available": self.available,
                "date": date, "commission": sum([x for x in self.fee.values()]),
                "net_pnl": self.balance - self.pre_balance,
                "count": 0
                })
-
         self.pre_balance = self.balance
         print("每日重置属性")
         self.reset_attr()

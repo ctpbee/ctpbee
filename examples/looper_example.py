@@ -15,12 +15,9 @@ class DoubleMa(LooperApi):
         self.open = False
 
     def on_bar(self, bar):
-        print(bar.local_symbol, bar.datetime)
         self.manager.update_bar(bar)
         if not self.manager.inited:
             return
-        # print(self.position_manager.get_all_positions())
-        # print(bar.close_price)
         fast_ma = self.manager.sma(self.fast_window, array=True)
         self.fast_ma0 = fast_ma[-1]
         self.fast_ma1 = fast_ma[-2]
