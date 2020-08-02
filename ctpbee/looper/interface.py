@@ -189,6 +189,8 @@ class LocalLooper():
 
         self.pre_close_price = collections.defaultdict(list)
 
+        self.if_next_day = False
+
     def get_trades(self):
         return list(self.traded_order_mapping.values())
 
@@ -368,31 +370,32 @@ class LocalLooper():
 
     def __call__(self, *args, **kwargs):
         """ 回测周期 """
-        p_data, params = args
+        entity, params = args
         # 日期不相等时,　更新前日结算价格
         self.__init_params(params)
         if self.account.date is None:
             self.account.date = self.date
-
-        if p_data.datetime.date() != self.date:
+        seconds = (entity.datetime - self.datetime).seconds
+        if seconds >= 60 * 60 * 6 and (entity.datetime.hour >= 21 or entity.datetime.date() != self.datetime.date()):
             print("开始结算----> 前日", self.date)
-            self.account.settle(p_data.datetime.date())
+            print(entity.datetime)
+            self.account.settle(entity.datetime.date())
             if self.data_entity is None:
-                self.pre_close_price = p_data.close_price if p_data.type == "bar" else p_data.last_price
-                self.data_entity = p_data
+                self.pre_close_price = entity.close_price if entity.type == "bar" else entity.last_price
+                self.data_entity = entity
             else:
-                self.pre_close_price = self.data_entity.close_price if p_data.type == "bar" \
+                self.pre_close_price = self.data_entity.close_price if entity.type == "bar" \
                     else self.data_entity.last_price
-        self.data_entity = p_data
-        self.datetime = p_data.datetime
+        self.data_entity = entity
+        self.datetime = entity.datetime
 
-        if p_data.type == "tick":
-            [api(p_data) for api in self.strategy_mapping.values()]
+        if entity.type == "tick":
+            [api(entity) for api in self.strategy_mapping.values()]
             self.account.position_manager.update_tick(self.data_entity, self.pre_close_price)
-        if p_data.type == "bar":
-            [api(p_data) for api in self.strategy_mapping.values()]
+        if entity.type == "bar":
+            [api(entity) for api in self.strategy_mapping.values()]
             self.account.position_manager.update_bar(self.data_entity, self.pre_close_price)
         # 更新接口的日期
-        self.date = p_data.datetime.date()
+        self.date = entity.datetime.date()
         # 穿过接口日期检查
         self.account.via_aisle()

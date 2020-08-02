@@ -186,7 +186,7 @@ class Account:
         order_amount = order.price * order.volume * self.size_map.get(order.local_symbol) * self.margin_ratio.get(
             order.local_symbol) + order.price * order.volume
         print("发单价格: {}_{}, amount: {}".format(order.price, order.volume, order_amount))
-        if self.available < order_amount:
+        if self.available < order_amount or self.available < 0:
             """ 可用不足"""
             return False
         return True
