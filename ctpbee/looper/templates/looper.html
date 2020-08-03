@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <div class="container ui">
+        <div class="ui pointing menu">
+            <a class="active item" href="https://docs.ctpbee.com">
+                Docs
+            </a>
+            <a class="item" href="https://github.com/ctpbee/ctpbee">
+                Github
+            </a>
+            <a class="item" href="https://jq.qq.com/?_wv=1027&k=5xWbIq3">
+                QQ群
+            </a>
+
+            <div class="right menu">
+                <div class="item">
+                    打印至pdf
+                </div>
+                <div class="item">
+                    技术支持
+                </div>
+            </div>
+        </div>
+        <div class="ui grid">
+            <div class="twelve wide column">
+                <h1 class="ui header titled">回测报告</h1>
+
+                <div class="ui link cards">
+                    <div class="card">
+                        <div class="content">
+                            <h3 class="ui header titled">策略名字</h3>
+                            {% for x in strategy %}
+                                <a class="title_block titled"> {{ x }} </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="content">
+                            <h3 class="ui header titled">回测报告生成时间</h3>
+                            <p class="title_block titled">{{ datetime }} </p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="content">
+                            <h3 class="ui header titled">回测耗时</h3>
+                            <p class="title_block titled">{{ cost_time }} </p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="content">
+                            <h3 class="ui header titled">回测分析报告</h3>
+                            <p class="title_block titled"> 正在开发中 </p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="content">
+                            <a id="trade_url" class="ui header titled">成交单明细</a>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="ui divider"></div>
+                <div id="account" style="width: 100%;height:300px;"></div>
+                <div id="net_value" style="width: 100%;height:300px;"></div>
+
+            </div>
+            <div class="four wide column">
+                <h2 class="ui header">回测结果</h2>
+                <table class="ui celled table">
+                    <thead>
+                    <tr>
+                        <th>参数</th>
+                        <th>结果</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for i,v in result.items() %}
+                        <tr>
+                            <td data-label="参数">{{ i }}</td>
+                            <td data-label="结果">{{ v }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+
+{% endblock %}
+
+
+{% block script %}
+    <script>
+        var upColor = '#ec0000';
+        var downColor = '#00da3c';
+        var accout_chart = echarts.init(document.getElementById('account'));
+        // 指定图表的配置项和数据
+        var account_data = {{ account_data | tojson }};
+        var _axis = [];
+        var _ayis = [];
+        for (var i in account_data) {
+            _axis.push(i);
+            _ayis.push(account_data[i]);
+        }
+        var option = {
+            title: {
+                text: '账户资金曲线图'
+            },
+            xAxis: {
+                data: _axis
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [{
+                data: _ayis,
+                symbol: "none",
+                type: 'line',
+                animationDelay: function (idx) {
+                    return idx * 10;
+                }
+            }]
+        };
+
+
+        // 使用刚指定的配置项和数据显示图表。
+        accout_chart.setOption(option);
+
+    </script>
+    <script>
+        var net_pnl_data = {{ net_pnl | tojson }};
+        var net_pnl_chart = echarts.init(document.getElementById('net_value'));
+        var xAxisData = [];
+        var net_pnl_list = [];
+        for (var i in net_pnl_data) {
+            xAxisData.push(i);
+            net_pnl_list.push(net_pnl_data[i]);
+        }
+
+        net_option = {
+            title: {
+                text: '每日盈亏分布图'
+            },
+            legend: {
+                data: ['bar'],
+                align: 'left'
+            },
+            tooltip: {},
+            xAxis: {
+                data: xAxisData,
+                silent: false,
+                splitLine: {
+                    show: false
+                }
+            },
+            yAxis: {},
+
+            series: [
+                {
+                    name: '当日盈亏',
+                    type: 'bar',
+                    data: net_pnl_list,
+                    animationDelay: function (idx) {
+                        return idx * 10;
+                    },
+                    itemStyle: {
+                        color: function (params) {
+                            if (params.value >= 0)
+                                return upColor;
+                            else
+                                return downColor;
+                        }
+                    }
+                },
+            ],
+            animationEasing: 'elasticOut',
+            animationDelayUpdate: function (idx) {
+                return idx * 5;
+            }
+        };
+        net_pnl_chart.setOption(net_option);
+
+    </script>
+
+    <script>
+        var trade_path = "./" + "{{ datetime | safe}}" + "-trade.html";
+        $("#trade_url").attr("href", trade_path);
+
+    </script>
+
+{% endblock %}

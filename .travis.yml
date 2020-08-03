@@ -1,0 +1,26 @@
+language: python
+os: "ubuntu" # set the system
+
+matrix:
+  include:
+    - python: 3.6
+    - python: 3.7
+    - python: 3.8
+
+script:
+  - python setup.py install
+
+before_install:
+  - sudo locale-gen zh_CN.GB18030
+  - sudo apt install gcc
+  - pip install ctpbee_api
+  - pip install flask
+  - pip install simplejson
+  - pip install pandas
+
+
+# running test after install
+after_script:
+  - sudo ctpbee -auto generate
+  - python ./ci_script/test_module.py
+  - python ./examples/looper_example.py

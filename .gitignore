@@ -1,0 +1,26 @@
+# Python:
+*.py[c]
+# *.so
+*.egg
+*.egg-info
+.pytest_cache
+dist
+build
+
+workspace
+
+
+# pycharm
+*.idea
+
+# ctp
+temp
+
+# txt
+*.txt
+
+# virturalenv
+venv
+
+# personal info
+test.py
