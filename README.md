@@ -104,6 +104,9 @@ app.config.from_mapping(info)  # 从dict中载入信息 对于更多配置载入
 app.start() 
 ```
 
+## 命令行运行截图 
+![avatar](source/运行.png)
+
 ## 贡献代码
 如果你希望贡献代码，请遵循以下步骤，注意我们仅仅接受向dev`分支提交代码 ! ! ! ! 
 
