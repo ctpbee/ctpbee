@@ -137,7 +137,6 @@ class Recorder(object):
         """"""
         trade = event.data
         self.trades[trade.local_trade_id] = trade
-
         self.position_manager.update_trade(trade)
         for value in self.app._extensions.values():
             if self.app.config['INSTRUMENT_INDEPEND']:

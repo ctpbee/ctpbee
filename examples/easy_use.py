@@ -73,7 +73,8 @@ if __name__ == '__main__':
         },
         "INTERFACE": "ctp",  # 接口声明
         "TD_FUNC": True,  # 开启交易功能
-        "MD_FUNC": True
+        "MD_FUNC": True,
+        "XMIN": [1, 3, 6]
     }
 
     market = CtpBee("market", __name__)

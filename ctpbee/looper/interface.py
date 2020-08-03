@@ -251,7 +251,9 @@ class LocalLooper():
         """ 拦截网关 同时这里应该返回相应的水平"""
         if isinstance(data, OrderRequest):
             """ 发单请求处理 """
-            self.pending.append(self._generate_order_data_from_req(data))
+            order_data = self._generate_order_data_from_req(data)
+            self.pending.append(order_data)
+            self.account.update_account_from_order(order_data)
             return 1
         if isinstance(data, CancelRequest):
             """ 撤单请求处理 
@@ -261,9 +263,9 @@ class LocalLooper():
                     order = deepcopy(order)
                     [api(order) for api in self.strategy_mapping.values()]
                     self.pending.remove(order)
+                    self.account.pop_order(order)
                     return 1
             return 0
-
 
     def match_deal(self):
         """ 撮合成交
@@ -276,7 +278,8 @@ class LocalLooper():
             todo: 处理冻结 ??
         """
         for data in self.pending:
-
+            if data.local_symbol != self.data_entity.local_symbol:  # 针对多品种，实现拆分。 更新当前的价格，确保多个
+                continue
             if self.params.get("deal_pattern") == "match":
                 """ 撮合成交 """
                 # todo: 是否可以模拟一定量的市场冲击响应？ 以靠近更加逼真的回测效果 ？？？？
@@ -346,7 +349,6 @@ class LocalLooper():
             else:
                 raise TypeError("未支持的成交机制")
 
-
     def init_params(self, params):
         """ 回测参数设置 """
         self.params.update(params)
@@ -381,7 +383,6 @@ class LocalLooper():
                 if self.data_entity is None:
                     self.pre_close_price[
                         self.data_entity.local_symbol] = entity.close_price if entity.type == "bar" else entity.last_price
-                    self.data_entity = entity
                 else:
                     self.pre_close_price[
                         self.data_entity.local_symbol] = self.data_entity.close_price if entity.type == "bar" \
