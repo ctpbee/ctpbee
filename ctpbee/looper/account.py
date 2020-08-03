@@ -99,7 +99,6 @@ class Account:
     def frozen_margin(self):
         return sum(list(self.long_frozen_margin.values())) + sum(list(self.short_frozen_margin.values()))
 
-
     @property
     def to_object(self) -> AccountData:
         return AccountData._create_class(dict(accountid=self.account_id,
@@ -120,7 +119,6 @@ class Account:
     def available(self) -> float:
         return self.balance - self.margin - self.frozen_margin - sum(self.frozen_fee.values()) - self.frozen_premium
 
-
     def update_account_from_trade(self, data: TradeData or OrderData):
         """ 更新基础属性方法
         # 下单更新冻结的保证金
@@ -129,8 +127,8 @@ class Account:
         """
         if isinstance(data, TradeData):
             """ 成交属性 """
-            if data.local_order_id in self.frozen_fee.keys():  # 如果已经成交那么清除手续费冻结..
-                self.frozen_fee.pop(data.local_order_id)
+            if data.order_id in self.frozen_fee.keys():  # 如果已经成交那么清除手续费冻结..
+                self.frozen_fee.pop(data.order_id)
 
             try:
                 if data.offset == Offset.CLOSETODAY:
@@ -149,13 +147,13 @@ class Account:
             if data.offset == Offset.OPEN:
                 """  开仓增加保证金 """
                 if data.direction == Direction.LONG:
-                    if data.local_order_id in self.long_frozen_margin.keys():  # 如果成交, 那么清除多头的保证金冻结
-                        self.long_frozen_margin.pop(data.local_order_id)
+                    if data.order_id in self.long_frozen_margin.keys():  # 如果成交, 那么清除多头的保证金冻结
+                        self.long_frozen_margin.pop(data.order_id)
                     self.long_margin += self.margin_ratio.get(
                         data.local_symbol) * data.price * data.volume * self.size_map.get(data.local_symbol)
                 else:
-                    if data.local_order_id in self.short_frozen_margin.keys():  # 如果成交, 那么清除空头的保证金冻结
-                        self.short_frozen_margin.pop(data.local_order_id)
+                    if data.order_id in self.short_frozen_margin.keys():  # 如果成交, 那么清除空头的保证金冻结
+                        self.short_frozen_margin.pop(data.order_id)
                     self.short_margin += self.margin_ratio.get(
                         data.local_symbol) * data.price * data.volume * self.size_map.get(data.local_symbol)
                 self.balance -= data.price * data.volume
@@ -174,20 +172,31 @@ class Account:
         else:
             raise TypeError("错误的数据类型，期望成交单数据 TradeData 而不是 {}".format(type(data)))
 
+    def pop_order(self, order: OrderData):
+        if order.direction == Direction.LONG:
+            self.long_frozen_margin.pop(order.order_id)
+        if order.direction == Direction.SHORT:
+            self.short_frozen_margin.pop(order.order_id)
+        self.frozen_fee.pop(order.order_id)
+
     def update_account_from_order(self, order: OrderData):
         """
         从order里面更新订单信息
-        开仓冻结保证金和手续费
+
         """
-        self.frozen_fee[order.local_order_id] = self.commission_ratio.get(
-            order.local_symbol) * order.price * order.volume * self.size_map.get(order.local_symbol)
+        if order.offset == Offset.CLOSETODAY:
+            self.frozen_fee[order.order_id] = self.commission_ratio.get(
+                order.local_symbol)["close_today"] * order.price * order.volume * self.size_map.get(order.local_symbol)
+        else:
+            self.frozen_fee[order.order_id] = self.commission_ratio.get(
+                order.local_symbol)["close"] * order.price * order.volume * self.size_map.get(order.local_symbol)
         if order.offset == Offset.OPEN:
             """ 开仓增加保证金占用 """
             if order.direction == Direction.LONG:
-                self.long_frozen_margin[order.local_order_id] = self.margin_ratio.get(
+                self.long_frozen_margin[order.order_id] = self.margin_ratio.get(
                     order.local_symbol) * order.price * order.volume * self.size_map.get(order.local_symbol)
             else:
-                self.short_frozen_margin[order.local_order_id] = self.margin_ratio.get(
+                self.short_frozen_margin[order.order_id] = self.margin_ratio.get(
                     order.local_symbol) * order.price * order.volume * self.size_map.get(order.local_symbol)
 
     def clear_frozen(self):
@@ -196,9 +205,6 @@ class Account:
         self.frozen_fee.clear()
         self.long_frozen_margin.clear()
         self.short_frozen_margin.clear()
-
-
-
 
     def reset_attr(self):
         self.frozen_premium = 0
