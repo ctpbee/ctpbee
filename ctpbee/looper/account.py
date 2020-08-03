@@ -56,11 +56,9 @@ class Account:
 
         # 合约乘数
         self.size_map = {}
-        # 每跳价格变化
-        self.pricetick = 10
         # 每日下单限制
         self.daily_limit = 20
-
+        self.pre_balance = 0
         # 账户当前的日期
         self.date = None
         self.count_statistics = 0
@@ -76,7 +74,10 @@ class Account:
         self.short_frozen_margin = {}
         # 冻结的手续费
         self.frozen_fee = {}
-
+        # 多头净值
+        self.long_balance = 0
+        # 空头净值
+        self.short_balance = 0
         self.frozen_premium = 0
         """ 
         fee应该是一个 {
@@ -248,11 +249,16 @@ class Account:
             **{"balance": self.balance,
                "frozen": self.margin,
                "available": self.available,
-               "date": date, "commission": sum([x for x in self.fee.values()]),
+               "short_balance": self.short_balance,
+               "long_balance": self.long_balance,
+               "date": date,
+               "commission": sum([x for x in self.fee.values()]),
                "net_pnl": self.balance - self.pre_balance,
                "count": 0
                })
         self.pre_balance = self.balance
+        self.long_balance = self.balance
+        self.short_balance = self.balance
         print("每日重置属性")
         self.reset_attr()
         self.position_manager.covert_to_yesterday_holding()
@@ -275,6 +281,8 @@ class Account:
                 self.balance = v
                 self.pre_balance = v
                 self.initial_capital = v
+                self.long_balance = v
+                self.short_balance = v
                 self.init = True
                 continue
             else:

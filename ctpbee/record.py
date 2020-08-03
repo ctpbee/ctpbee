@@ -223,7 +223,6 @@ class Recorder(object):
         """
         Get all position data.
         """
-        # return list(self.positions.values())
         return self.position_manager.get_all_positions()
 
     def get_errors(self):

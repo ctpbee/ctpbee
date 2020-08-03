@@ -83,18 +83,6 @@ class CtpBee(object):
     # 交易api与行情api / trade api and market api
     market = None
     trader = None
-
-    # 插件Api系统 /Extension system
-    """ 
-    工具, 用于提供一些比较优秀的工具/ Toolbox, using by providing some good tools
-    
-    注意当前社区接受捐赠，如果你有兴趣发起捐赠 ---> 支付宝 somewheve@gmail.com 
-                    注意你的捐赠都会被用到社区发展上面  
-    for developers:
-        ctpbee发展至今，已经具备微小的基本核模型，我为你们开放了插件接口，
-        用于你们自定义扩展接口，注意如果你有好的插件想分享，我会用上述基金发起奖励，并本人送出小礼物一份！！  
-
-    """
     tools = {}
 
     def __init__(self,
@@ -263,7 +251,6 @@ class CtpBee(object):
                 self.r = Thread(target=refresh_query, args=(self,), daemon=True)
                 self.r.start()
             self.r_flag = True
-
 
     def start(self, log_output=True, debug=False):
         """
