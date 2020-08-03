@@ -157,6 +157,7 @@ class Account:
                     self.short_margin += self.margin_ratio.get(
                         data.local_symbol) * data.price * data.volume * self.size_map.get(data.local_symbol)
                 self.balance -= data.price * data.volume
+                print("{} : 开仓金额:{}".format(data.time, data.price * data.volume))
                 print("开仓增加保证金: {}".format(self.margin_ratio.get(
                     data.local_symbol) * data.price * data.volume * self.size_map.get(data.local_symbol)))
             else:
@@ -167,6 +168,7 @@ class Account:
                 else:
                     release_margin_amount = self.release_margin(data.volume, Direction.LONG, data.local_symbol)
                     self.long_margin -= release_margin_amount
+                print("{} : 平仓金额:{}".format(data.time, data.price * data.volume))
                 self.balance += data.price * data.volume
                 print("释放保证金: {}".format(release_margin_amount))
         else:
@@ -182,7 +184,6 @@ class Account:
     def update_account_from_order(self, order: OrderData):
         """
         从order里面更新订单信息
-
         """
         if order.offset == Offset.CLOSETODAY:
             self.frozen_fee[order.order_id] = self.commission_ratio.get(
