@@ -76,7 +76,7 @@ class Action:
 
         if origin is None and len(kwargs) == 0:
             """ 如果两个都不传"""
-            order = self.app.recorder.get_order(id)
+            order = self.looper.get_order(id)
             if not order:
                 print("找不到订单啦... 撤不了哦")
                 return None
@@ -301,26 +301,6 @@ class LocalLooper():
                 short_b = self.data_entity.open_price if self.data_entity.low_price is not None else short_c
                 long_cross = data.direction == Direction.LONG and data.price >= long_c > 0
                 short_cross = data.direction == Direction.SHORT and data.price <= short_c and short_c > 0
-                # 处理未成交的单子
-                # for order in self.pending:
-                #     long_cross = data.direction == Direction.LONG and order.price >= long_c > 0
-                #     short_cross = data.direction == Direction.SHORT and order.price <= short_c and short_c > 0
-                #     if not long_cross and not short_cross:
-                #         """ 不成交 """
-                #         continue
-                #     if long_cross:
-                #         order.price = min(order.price, long_b)
-                #     else:
-                #         order.price = max(order.price, short_b)
-                #     trade = self._generate_trade_data_from_order(order)
-                #     order.status = Status.ALLTRADED
-                #     [api(deepcopy(order)) for api in self.strategy_mapping.values()]
-                #     [api(trade) for api in self.strategy_mapping.values()]
-                #     self.pending.remove(order)
-                # if not long_cross and not short_cross:
-                #     # 未成交单, 提交到pending里面去
-                #     self.pending.append(data)
-                #     return -3
                 if long_cross:
                     data.price = min(data.price, long_b)
                 else:
@@ -376,7 +356,10 @@ class LocalLooper():
         try:
             seconds = (entity.datetime - self.datetime).seconds
             if seconds >= 60 * 60 * 6 and (
-                    entity.datetime.hour >= 21 or entity.datetime.date() != self.datetime.date()):
+                    entity.datetime.hour >= 21 or (
+                    (self.datetime.hour == 15) and entity.datetime.date() != self.datetime.date())):
+                print(self.datetime)
+                print(entity.datetime)
                 print("开始结算----> 前日", self.date)
                 print(entity.datetime)
                 self.account.settle(entity.datetime.date())
