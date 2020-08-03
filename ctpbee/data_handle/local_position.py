@@ -313,7 +313,7 @@ class PositionHolding:
         except AttributeError:
             self.long_pnl = 0
         try:
-             self.short_pnl = round(self.short_pos * (self.short_price - self.last_price) * self.size)
+            self.short_pnl = round(self.short_pos * (self.short_price - self.last_price) * self.size)
         except ZeroDivisionError:
             self.short_pnl = 0
         except AttributeError:
@@ -445,7 +445,8 @@ class LocalPositionManager(dict):
         if trade.local_symbol not in self:
             self[trade.local_symbol] = PositionHolding(trade.local_symbol, self.app)
             self[trade.local_symbol].update_trade(trade)
-        self.get(trade.local_symbol).update_trade(trade)
+        else:
+            self.get(trade.local_symbol).update_trade(trade)
 
     def update_position(self, position):
         """ 更新持仓 """

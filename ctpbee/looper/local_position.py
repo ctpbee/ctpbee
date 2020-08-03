@@ -82,7 +82,7 @@ class PositionHolding:
         self.last_price = 0
 
     def update_trade(self, trade):
-        """成交更新"""
+        """ 成交更新 """
         # 多头
         if trade.direction == Direction.LONG:
             # 开仓
@@ -447,7 +447,8 @@ class LocalPositionManager(dict):
         if trade.local_symbol not in self:
             self[trade.local_symbol] = PositionHolding(trade.local_symbol, self.size_map.get(trade.local_symbol))
             self[trade.local_symbol].update_trade(trade)
-        self.get(trade.local_symbol).update_trade(trade)
+        else:
+            self.get(trade.local_symbol).update_trade(trade)
 
     def update_position(self, position):
         """ 更新持仓 """
