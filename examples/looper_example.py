@@ -80,3 +80,4 @@ if __name__ == '__main__':
     runnning.params = params
     runnning.run()
     result = runnning.get_result(report=True, auto_open=True)
+

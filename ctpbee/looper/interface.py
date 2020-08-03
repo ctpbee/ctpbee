@@ -181,14 +181,12 @@ class LocalLooper():
         self.today_volume = 0
 
         self.pre_close_price = dict()
-
         # 所有的报单数量
         self.order_buffer = dict()
 
         self.date = None
         # 行情
         self.data_entity = None
-
         self.if_next_day = False
 
     def get_trades(self):
@@ -255,7 +253,6 @@ class LocalLooper():
             """ 发单请求处理 """
             self.pending.append(self._generate_order_data_from_req(data))
             return 1
-
         if isinstance(data, CancelRequest):
             """ 撤单请求处理 
             """
@@ -267,6 +264,7 @@ class LocalLooper():
                     return 1
             return 0
 
+
     def match_deal(self):
         """ 撮合成交
             维护一个返回状态
@@ -277,7 +275,6 @@ class LocalLooper():
             p : 成交回报
             todo: 处理冻结 ??
         """
-
         for data in self.pending:
 
             if self.params.get("deal_pattern") == "match":
@@ -348,6 +345,7 @@ class LocalLooper():
                     continue
             else:
                 raise TypeError("未支持的成交机制")
+
 
     def init_params(self, params):
         """ 回测参数设置 """

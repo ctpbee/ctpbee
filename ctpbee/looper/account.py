@@ -76,6 +76,7 @@ class Account:
         self.short_frozen_margin = {}
         # 冻结的手续费
         self.frozen_fee = {}
+
         self.frozen_premium = 0
         """ 
         fee应该是一个 {
@@ -98,6 +99,7 @@ class Account:
     def frozen_margin(self):
         return sum(list(self.long_frozen_margin.values())) + sum(list(self.short_frozen_margin.values()))
 
+
     @property
     def to_object(self) -> AccountData:
         return AccountData._create_class(dict(accountid=self.account_id,
@@ -118,6 +120,7 @@ class Account:
     def available(self) -> float:
         return self.balance - self.margin - self.frozen_margin - sum(self.frozen_fee.values()) - self.frozen_premium
 
+
     def update_account_from_trade(self, data: TradeData or OrderData):
         """ 更新基础属性方法
         # 下单更新冻结的保证金
@@ -128,6 +131,7 @@ class Account:
             """ 成交属性 """
             if data.local_order_id in self.frozen_fee.keys():  # 如果已经成交那么清除手续费冻结..
                 self.frozen_fee.pop(data.local_order_id)
+
             try:
                 if data.offset == Offset.CLOSETODAY:
                     ratio = self.commission_ratio.get(data.local_symbol)["close_today"]
@@ -144,7 +148,6 @@ class Account:
             print("成交产生手续费: {}".format(data.price * data.volume * ratio * self.size_map.get(data.local_symbol)))
             if data.offset == Offset.OPEN:
                 """  开仓增加保证金 """
-
                 if data.direction == Direction.LONG:
                     if data.local_order_id in self.long_frozen_margin.keys():  # 如果成交, 那么清除多头的保证金冻结
                         self.long_frozen_margin.pop(data.local_order_id)
@@ -194,6 +197,9 @@ class Account:
         self.long_frozen_margin.clear()
         self.short_frozen_margin.clear()
 
+
+
+
     def reset_attr(self):
         self.frozen_premium = 0
         self.interface.today_volume = 0
@@ -230,6 +236,7 @@ class Account:
         """ 结算撤掉所有单 归还冻结 """
 
         self.clear_frozen()
+
         p = AliasDayResult(
             **{"balance": self.balance,
                "frozen": self.margin,
