@@ -56,10 +56,10 @@ class Action:
                 self.looper.params['slippage_cover'], int):
             raise ConfigError(message="滑点配置应为浮点小数")
         price = price + self.looper.params['slippage_cover']
-        req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.LONG,
+        req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.SHORT,
                                                      type=price_type, exchange=origin.exchange,
                                                      symbol=origin.symbol) for x in
-                    self.get_req(origin.local_symbol, Direction.SHORT, volume, self.looper)]
+                    self.get_req(origin.local_symbol, Direction.LONG, volume, self.looper)]
         return [self.looper.send_order(req) for req in req_list if req.volume != 0]
 
     def cancel(self, id: Text, origin: [BarData, TickData, TradeData, OrderData, PositionData] = None, **kwargs):
@@ -180,14 +180,14 @@ class LocalLooper():
         # 当日成交笔数, 需要如果是第二天的数据，那么需要被清空
         self.today_volume = 0
 
+        self.pre_close_price = dict()
         # 所有的报单数量
         self.order_buffer = dict()
 
         self.date = None
         # 行情
         self.data_entity = None
-
-        self.pre_close_price = collections.defaultdict(list)
+        self.if_next_day = False
 
     def get_trades(self):
         return list(self.traded_order_mapping.values())
@@ -251,16 +251,8 @@ class LocalLooper():
         """ 拦截网关 同时这里应该返回相应的水平"""
         if isinstance(data, OrderRequest):
             """ 发单请求处理 """
-            result = self.match_deal(self._generate_order_data_from_req(data))
-            if isinstance(result, TradeData):
-                """ 将成交单通过日志接口暴露出去"""
-                # self.logger.info(dumps(result))
-                self.logger.info(
-                    f"成交时间: {str(result.time)}, 成交价格{str(result.price)}, 成交笔数: {str(result.volume)},"
-                    f" 成交方向: {str(result.direction.value)}，行为: {str(result.offset.value)}")
-                self.traded_order_mapping[result.order_id] = result
-            else:
-                self.logger.info(self.message_box[result])
+            self.pending.append(self._generate_order_data_from_req(data))
+            return 1
         if isinstance(data, CancelRequest):
             """ 撤单请求处理 
             """
@@ -272,7 +264,8 @@ class LocalLooper():
                     return 1
             return 0
 
-    def match_deal(self, data: OrderData) -> int or TradeData:
+
+    def match_deal(self):
         """ 撮合成交
             维护一个返回状态
             -1: 超出下单限制
@@ -280,92 +273,79 @@ class LocalLooper():
             -3: 未成交
             -4: 资金不足
             p : 成交回报
-
             todo: 处理冻结 ??
-
         """
-        if self.params.get("deal_pattern") == "match":
-            """ 撮合成交 """
-            # todo: 是否可以模拟一定量的市场冲击响应？ 以靠近更加逼真的回测效果 ？？？？
+        for data in self.pending:
 
-        elif self.params.get("deal_pattern") == "price":
-            """ 见价成交 """
-            # 先判断价格和手数是否满足限制条件
-            if data.volume > self.params.get("single_order_limit") or self.today_volume > self.params.get(
-                    "single_day_limit"):
-                """ 超出限制 直接返回不允许成交 """
-                return -1
-            if data.price < self.drop_price or data.price > self.upper_price:
-                """ 超出涨跌价格 """
-                return -2
+            if self.params.get("deal_pattern") == "match":
+                """ 撮合成交 """
+                # todo: 是否可以模拟一定量的市场冲击响应？ 以靠近更加逼真的回测效果 ？？？？
 
-            # 发单立即冻结
-            self.account.update_frozen(data)
-
-            # 进行成交判断
-            long_c = self.data_entity.low_price if self.data_entity.low_price is not None else self.data_entity.ask_price_1
-            short_c = self.data_entity.high_price if self.data_entity.low_price is not None else self.data_entity.bid_price_1
-            long_b = self.data_entity.open_price if self.data_entity.low_price is not None else long_c
-            short_b = self.data_entity.open_price if self.data_entity.low_price is not None else short_c
-            long_cross = data.direction == Direction.LONG and data.price >= long_c > 0
-            short_cross = data.direction == Direction.SHORT and data.price <= short_c and short_c > 0
-
-            # 处理未成交的单子
-            for order in self.pending:
-                index = self.pending.index(order)
-                long_cross = data.direction == Direction.LONG and order.price >= long_c > 0
-                short_cross = data.direction == Direction.SHORT and order.price <= short_c and short_c > 0
-                if not long_cross and not short_cross:
-                    """ 不成交 """
+            elif self.params.get("deal_pattern") == "price":
+                """ 见价成交 """
+                # 先判断价格和手数是否满足限制条件
+                if data.volume > self.params.get("single_order_limit") or self.today_volume > self.params.get(
+                        "single_day_limit"):
+                    """ 超出限制 直接返回不允许成交 """
                     continue
+                if data.price < self.drop_price or data.price > self.upper_price:
+                    """ 超出涨跌价格 """
+                    continue
+                # 进行成交判断
+                long_c = self.data_entity.low_price if self.data_entity.low_price is not None else self.data_entity.ask_price_1
+                short_c = self.data_entity.high_price if self.data_entity.low_price is not None else self.data_entity.bid_price_1
+                long_b = self.data_entity.open_price if self.data_entity.low_price is not None else long_c
+                short_b = self.data_entity.open_price if self.data_entity.low_price is not None else short_c
+                long_cross = data.direction == Direction.LONG and data.price >= long_c > 0
+                short_cross = data.direction == Direction.SHORT and data.price <= short_c and short_c > 0
+                # 处理未成交的单子
+                # for order in self.pending:
+                #     long_cross = data.direction == Direction.LONG and order.price >= long_c > 0
+                #     short_cross = data.direction == Direction.SHORT and order.price <= short_c and short_c > 0
+                #     if not long_cross and not short_cross:
+                #         """ 不成交 """
+                #         continue
+                #     if long_cross:
+                #         order.price = min(order.price, long_b)
+                #     else:
+                #         order.price = max(order.price, short_b)
+                #     trade = self._generate_trade_data_from_order(order)
+                #     order.status = Status.ALLTRADED
+                #     [api(deepcopy(order)) for api in self.strategy_mapping.values()]
+                #     [api(trade) for api in self.strategy_mapping.values()]
+                #     self.pending.remove(order)
+                # if not long_cross and not short_cross:
+                #     # 未成交单, 提交到pending里面去
+                #     self.pending.append(data)
+                #     return -3
                 if long_cross:
-                    order.price = min(order.price, long_b)
+                    data.price = min(data.price, long_b)
                 else:
-                    order.price = max(order.price, short_b)
-                trade = self._generate_trade_data_from_order(order)
-                order.status = Status.ALLTRADED
-                [api(deepcopy(order)) for api in self.strategy_mapping.values()]
-                [api(trade) for api in self.strategy_mapping.values()]
-                self.pending.remove(order)
+                    data.price = max(data.price, short_b)
 
-                # 成交，移除冻结
-                self.account.update_frozen(order=order, reverse=True)
-                self.update_account_margin(trade)
-
-            if not long_cross and not short_cross:
-                # 未成交单, 提交到pending里面去
-                self.pending.append(data)
-                return -3
-
-            if long_cross:
-                data.price = min(data.price, long_b)
+                """ 判断账户资金是否足以支撑成交 """
+                if self.account.is_traded(data):
+                    """ 调用API生成成交单 """
+                    # 同时这里需要处理是否要进行
+                    trade = self._generate_trade_data_from_order(data)
+                    self.account.update_trade(trade)
+                    """ 调用strategy的on_trade """
+                    self.pending.remove(data)
+                    data.status = Status.ALLTRADED
+                    [api(deepcopy(data)) for api in self.strategy_mapping.values()]
+                    [api(trade) for api in self.strategy_mapping.values()]
+                    self.traded_order_mapping[trade.order_id] = trade
+                    self.today_volume += data.volume
+                    self.logger.info(
+                        f"成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
+                        f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
+                    continue
+                else:
+                    """ 当前账户不足以支撑成交 """
+                    continue
             else:
-                data.price = max(data.price, short_b)
+                raise TypeError("未支持的成交机制")
 
-            """ 判断账户资金是否足以支撑成交 """
-            if self.account.is_traded(data):
-                """ 调用API生成成交单 """
-                # 同时这里需要处理是否要进行
-                p = self._generate_trade_data_from_order(data)
-                self.account.update_trade(p)
-                """ 调用strategy的on_trade """
-                [api(p) for api in self.strategy_mapping.values()]
-                self.today_volume += data.volume
-                # 已经成交，同时移除冻结
-                self.account.update_frozen(p, reverse=True)
-                self.update_account_margin(p)
-                return p
-            else:
-                """ 当前账户不足以支撑成交 """
-                return -4
-        else:
-            raise TypeError("未支持的成交机制")
-
-    def update_account_margin(self, p):
-        if p.offset == Offset.OPEN:
-            self.account.update_margin(p, reverse=True)
-        else:
-            self.account.update_margin(p)
 
     def init_params(self, params):
         """ 回测参数设置 """
@@ -386,25 +366,45 @@ class LocalLooper():
 
     def __call__(self, *args, **kwargs):
         """ 回测周期 """
-        p_data, params = args
-        # 日期不相等时,　更新前日结算价格　
-        if p_data.datetime.date() != self.date:
-            if self.data_entity is None:
-                self.pre_close_price = p_data.close_price if p_data.type == "bar" else p_data.last_price
-                self.data_entity = p_data
-            else:
-                self.pre_close_price = self.data_entity.close_price if p_data.type == "bar" \
-                    else self.data_entity.last_price
-        self.data_entity = p_data
-        self.datetime = p_data.datetime
+        entity, params = args
+        # 日期不相等时,　更新前日结算价格
         self.__init_params(params)
-        if p_data.type == "tick":
-            [api(p_data) for api in self.strategy_mapping.values()]
-            self.account.position_manager.update_tick(self.data_entity, self.pre_close_price)
-        if p_data.type == "bar":
-            [api(p_data) for api in self.strategy_mapping.values()]
-            self.account.position_manager.update_bar(self.data_entity, self.pre_close_price)
+        if self.account.date is None:
+            self.account.date = self.date
+        try:
+            seconds = (entity.datetime - self.datetime).seconds
+            if seconds >= 60 * 60 * 6 and (
+                    entity.datetime.hour >= 21 or entity.datetime.date() != self.datetime.date()):
+                print("开始结算----> 前日", self.date)
+                print(entity.datetime)
+                self.account.settle(entity.datetime.date())
+                if self.data_entity is None:
+                    self.pre_close_price[
+                        self.data_entity.local_symbol] = entity.close_price if entity.type == "bar" else entity.last_price
+                    self.data_entity = entity
+                else:
+                    self.pre_close_price[
+                        self.data_entity.local_symbol] = self.data_entity.close_price if entity.type == "bar" \
+                        else self.data_entity.last_price
+        except KeyError:
+            pass
+        except AttributeError:
+            pass
+        self.data_entity = entity
+        if self.pre_close_price.get(self.data_entity.local_symbol) is None:
+            self.pre_close_price[
+                self.data_entity.local_symbol] = self.data_entity.last_price if entity.type == "tick" else self.data_entity.close_price
+        self.datetime = entity.datetime
+        self.match_deal()
+        if entity.type == "tick":
+            [api(entity) for api in self.strategy_mapping.values()]
+            self.account.position_manager.update_tick(self.data_entity,
+                                                      self.pre_close_price[self.data_entity.local_symbol])
+        if entity.type == "bar":
+            [api(entity) for api in self.strategy_mapping.values()]
+            self.account.position_manager.update_bar(self.data_entity,
+                                                     self.pre_close_price[self.data_entity.local_symbol])
         # 更新接口的日期
-        self.date = p_data.datetime.date()
+        self.date = entity.datetime.date()
         # 穿过接口日期检查
         self.account.via_aisle()
