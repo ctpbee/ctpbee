@@ -18,6 +18,7 @@ class DoubleMa(LooperApi):
         self.manager.update_bar(bar)
         if not self.manager.inited:
             return
+        # print(self.position_manager.get_all_positions())
         fast_ma = self.manager.sma(self.fast_window, array=True)
         self.fast_ma0 = fast_ma[-1]
         self.fast_ma1 = fast_ma[-2]
@@ -26,19 +27,14 @@ class DoubleMa(LooperApi):
         self.slow_ma1 = slow_ma[-2]
         cross_over = self.fast_ma0 > self.slow_ma0 and self.fast_ma1 < self.slow_ma1
         cross_below = self.fast_ma0 < self.slow_ma0 and self.fast_ma1 > self.slow_ma1
-
-        if cross_over and not self.open:
+        # print(cross_below)
+        if cross_over:
             self.action.buy(bar.close_price, 1, bar)
             self.open = True
-        elif cross_below and self.open:
-            self.action.cover(bar.close_price, 1, bar)
-            self.open = False
-        elif cross_below:
-            if self.pos == 0:
-                self.action.short(bar.close_price, 1, bar)
-            elif self.pos > 0:
-                self.action.sell(bar.close_price, 1, bar)
-                self.action.short(bar.close_price, 1, bar)
+        # elif cross_below and self.open:
+        #     self.action.cover(bar.close_price, 1, bar)
+        #     self.open = False
+
 
     def on_tick(self, tick):
         pass
@@ -48,7 +44,7 @@ if __name__ == '__main__':
     data_support = QADataSupport(host="quantaxis.tech", port=27027)
     runnning = Vessel()
     strategy = DoubleMa("ma")
-    data = data_support.get_future_min("rb2010.SHFE", frq="1min", start="2020-07 -01", end="2020-07-15")
+    data = data_support.get_future_min("rb2010.SHFE", frq="1min", start="2020-07-01", end="2020-07-15")
     runnning.add_data(data)
     params = {
         "looper":
@@ -80,4 +76,3 @@ if __name__ == '__main__':
     runnning.params = params
     runnning.run()
     result = runnning.get_result(report=True, auto_open=True)
-

@@ -11,6 +11,7 @@ class Demo(CtpbeeApi):
     def __init__(self, name):
         super().__init__(name)
         self.instrument_set = ["IF2012.CFFEX"]
+        self.isok = False
 
     def on_contract(self, contract: ContractData):
         """ 处理推送的合约信息 """
@@ -22,15 +23,16 @@ class Demo(CtpbeeApi):
 
     def on_tick(self, tick: TickData) -> None:
         """ 处理推送的tick """
-        print(self.center.positions)
-        self.info(f"收到tick了: price {tick.last_price} ")
+        # print(self.center.positions)
+        if not self.isok:
+            return
 
     def on_bar(self, bar: BarData) -> None:
         """ 处理ctpbee生成的bar """
 
     def on_init(self, init):
-        self.app.recorder.get_all_contracts()
         if init:
+            self.isok = True
             print("初始化完成")
 
     def on_order(self, order: OrderData) -> None:
@@ -48,7 +50,7 @@ class Demo(CtpbeeApi):
 
 
 def letsgo():
-    app = CtpBee(name="demo", import_name=__name__)
+    app = CtpBee(name="demo", import_name=__name__, refresh=True)
     # 创建对象
     demo = Demo("test")
     # 添加对象, 你可以继承多个类 然后实例化不同的插件 再载入它, 这些都是极其自由化的操作

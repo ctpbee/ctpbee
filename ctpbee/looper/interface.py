@@ -189,6 +189,8 @@ class LocalLooper():
         self.data_entity = None
         self.if_next_day = False
 
+        self.price_mapping = dict()
+
     def get_trades(self):
         return list(self.traded_order_mapping.values())
 
@@ -357,11 +359,7 @@ class LocalLooper():
             seconds = (entity.datetime - self.datetime).seconds
             if seconds >= 60 * 60 * 6 and (
                     entity.datetime.hour >= 21 or (
-                    (self.datetime.hour == 15) and entity.datetime.date() != self.datetime.date())):
-                print(self.datetime)
-                print(entity.datetime)
-                print("开始结算----> 前日", self.date)
-                print(entity.datetime)
+                    (14 <= self.datetime.hour <= 15) and entity.datetime.date() != self.datetime.date())):
                 self.account.settle(entity.datetime.date())
                 if self.data_entity is None:
                     self.pre_close_price[
@@ -375,6 +373,9 @@ class LocalLooper():
         except AttributeError:
             pass
         self.data_entity = entity
+        # 维护一个最新的价格
+        self.price_mapping[self.data_entity.local_symbol] = self.data_entity.close_price if entity.type == "bar" \
+            else self.data_entity.last_price
         if self.pre_close_price.get(self.data_entity.local_symbol) is None:
             self.pre_close_price[
                 self.data_entity.local_symbol] = self.data_entity.last_price if entity.type == "tick" else self.data_entity.close_price
