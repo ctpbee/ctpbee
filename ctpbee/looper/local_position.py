@@ -438,7 +438,7 @@ class LocalPositionManager(dict):
     def update_order(self, order):
         """ 更新order """
         if order.local_symbol not in self:
-            self[order.local_symbol] = PositionHolding(order.local_symbol)
+            self[order.local_symbol] = PositionHolding(order.local_symbol, self.size_map.get(order.local_symbol))
         else:
             self.get(order.local_symbol).update_order(order)
 
@@ -497,6 +497,8 @@ class LocalPositionManager(dict):
                 temp['local_symbol'] = x.local_symbol
                 temp['price'] = x.long_price
                 temp['volume'] = x.long_pos
+                temp["frozen"] = x.long_pos_frozen
+                temp["available"] = x.long_pos - x.long_pos_frozen
                 temp['yd_volume'] = x.long_yd
                 temp['stare_position_profit'] = x.long_stare_pnl
                 if x.long_pos == x.long_yd:
@@ -510,10 +512,12 @@ class LocalPositionManager(dict):
                 temp['direction'] = "short"
                 temp['position_profit'] = x.short_pnl
                 temp['symbol'] = x.symbol
-                temp['locpositionsal_symbol'] = x.local_symbol
+                temp['local_symbol'] = x.local_symbol
                 temp['price'] = x.short_price
                 temp['volume'] = x.short_pos
                 temp['yd_volume'] = x.short_yd
+                temp["frozen"] = x.short_pos_frozen
+                temp["available"] = x.short_pos - x.short_pos_frozen
                 temp['stare_position_profit'] = x.short_stare_pnl
                 if x.short_pos == x.short_yd:
                     temp['position_date'] = 2

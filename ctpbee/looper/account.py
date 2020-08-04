@@ -157,13 +157,6 @@ class Account:
         else:
             raise TypeError("错误的数据类型，期望成交单数据 TradeData 而不是 {}".format(type(data)))
 
-    def pop_order(self, order: OrderData):
-        if order.direction == Direction.LONG:
-            self.long_frozen_margin.pop(order.order_id)
-        if order.direction == Direction.SHORT:
-            self.short_frozen_margin.pop(order.order_id)
-        self.frozen_fee.pop(order.order_id)
-
     def update_account_from_order(self, order: OrderData):
         """
         从order里面更新订单信息
@@ -183,6 +176,15 @@ class Account:
                 self.short_frozen_margin[order.order_id] = self.margin_ratio.get(
                     order.local_symbol) * order.price * order.volume * self.size_map.get(order.local_symbol)
 
+        self.position_manager.update_order(order)
+
+    def pop_order(self, order: OrderData):
+        if order.direction == Direction.LONG:
+            self.long_frozen_margin.pop(order.order_id)
+        if order.direction == Direction.SHORT:
+            self.short_frozen_margin.pop(order.order_id)
+        self.frozen_fee.pop(order.order_id)
+
     def clear_frozen(self):
         """ 撤单的时候应该要清除所有的单子 并同时清除保证金占用和手续费冻结 """
         self.interface.pending.clear()
@@ -200,7 +202,7 @@ class Account:
 
     @property
     def position_amount(self):
-        return sum([x["price"] * x["volume"] for x in self.position_manager.get_all_positions()])
+        return sum([self.interface.price_mapping.get(x['local_symbol']) * x["volume"] for x in self.position_manager.get_all_positions()])
 
     def is_traded(self, order: OrderData) -> bool:
         """ 当前账户是否足以支撑成交 """

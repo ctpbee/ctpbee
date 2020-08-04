@@ -62,6 +62,10 @@ class BeeTdApi(TdApi):
         self.sysid_orderid_map = {}
         self.open_cost_dict = defaultdict(dict)
 
+        self.position_init_flag = False
+        self.instrunment_init_flag = False
+        self.position_instrument_mapping = dict()
+        self.init_status = False
         self.contact_data = {}
 
     @property
@@ -212,7 +216,18 @@ class BeeTdApi(TdApi):
         if last:
             for position in self.positions.values():
                 self.on_event(type=EVENT_POSITION, data=position)
+                self.position_instrument_mapping[position.symbol] = False
             self.positions.clear()
+            self.position_init_flag = True
+            if self.instrunment_init_flag and self.position_init_flag and not self.init_status:
+                self.reqid += 1
+                from time import sleep
+                for x in self.position_instrument_mapping.keys():
+                    if self.position_instrument_mapping[x]:
+                        continue
+                    self.reqQryDepthMarketData({"InstrumentID": x, "ExchangeID": self.symbol_exchange_mapping[x].value},
+                                               self.reqid)
+                    sleep(0.15)
 
     def onRspQryTradingAccount(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
@@ -286,8 +301,7 @@ class BeeTdApi(TdApi):
 
         if last:
             # 请求计算所有合约所用到的具体数据
-            self.reqid += 1
-            self.reqQryDepthMarketData({}, self.reqid)
+            self.instrunment_init_flag = True
             self.on_event(EVENT_LOG, data="合约信息查询成功")
 
             for data in self.order_data:
@@ -312,7 +326,6 @@ class BeeTdApi(TdApi):
         order_ref = data["OrderRef"]
         if int(order_ref) > self.order_ref:
             self.order_ref = int(order_ref) + 1
-
         order_id = f"{frontid}_{sessionid}_{order_ref}"
         if data['OrderPriceType'] in ORDERTYPE_VT2CTP.values():
             ordertype = ORDERTYPE_CTP2VT[data["OrderPriceType"]]
@@ -501,9 +514,12 @@ class BeeTdApi(TdApi):
             last_price=data['LastPrice']
         )
         self.on_event(type=EVENT_LAST, data=market)
+        self.position_instrument_mapping[market.symbol] = True
         if last:
             # 回调初始化完成
-            self.on_event(type=EVENT_INIT_FINISHED, data=True)
+            if False not in self.position_instrument_mapping.values():
+                self.init_status = True
+                self.on_event(type=EVENT_INIT_FINISHED, data=True)
 
     def request_market_data(self, req: object):
         """ 请求市场数据 """

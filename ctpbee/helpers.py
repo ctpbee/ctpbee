@@ -251,13 +251,14 @@ def run_forever(app):
 def refresh_query(app):
     """ 循环查询 """
     while True:
-        sleep(1)
         cur = datetime.now()
-        if not TradingDay.is_trading_day(cur) or not auth_check_time(cur):
-            continue
+        # if not TradingDay.is_trading_day(cur) or not auth_check_time(cur):
+        #     continue
+        sleep(1)
         app.trader.query_position()
         sleep(app.config['REFRESH_INTERVAL'])
         app.trader.query_account()
+
         if not app.r_flag:
             break
 
