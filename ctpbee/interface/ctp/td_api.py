@@ -221,13 +221,9 @@ class BeeTdApi(TdApi):
             self.position_init_flag = True
             if self.instrunment_init_flag and self.position_init_flag and not self.init_status:
                 self.reqid += 1
-                from time import sleep
-                for x in self.position_instrument_mapping.keys():
-                    if self.position_instrument_mapping[x]:
-                        continue
-                    self.reqQryDepthMarketData({"InstrumentID": x, "ExchangeID": self.symbol_exchange_mapping[x].value},
-                                               self.reqid)
-                    sleep(0.15)
+                self.init_status = True
+                self.reqQryDepthMarketData({}, self.reqid)
+                self.on_event(type=EVENT_INIT_FINISHED, data=True)
 
     def onRspQryTradingAccount(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
