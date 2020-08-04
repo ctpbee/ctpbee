@@ -485,6 +485,8 @@ class LocalPositionManager(dict):
                 temp['price'] = x.long_price
                 temp['volume'] = x.long_pos
                 temp['yd_volume'] = x.long_yd
+                temp["frozen"] = x.long_pos_frozen
+                temp["available"] = x.long_pos - x.long_pos_frozen
                 temp['stare_position_profit'] = x.long_stare_pnl
                 if x.long_pos == x.long_yd:
                     temp['position_date'] = 2
@@ -501,6 +503,8 @@ class LocalPositionManager(dict):
                 temp['price'] = x.short_price
                 temp['volume'] = x.short_pos
                 temp['yd_volume'] = x.short_yd
+                temp["frozen"] = x.short_pos_frozen
+                temp["available"] = x.short_pos - x.short_pos_frozen
                 temp['stare_position_profit'] = x.short_stare_pnl
                 if x.short_pos == x.short_yd:
                     temp['position_date'] = 2

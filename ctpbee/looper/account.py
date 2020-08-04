@@ -284,7 +284,6 @@ class Account:
         # 根据daily_life里面的数据 获取最后的结果
         result = defaultdict(list)
         for daily in self.daily_life.values():
-            print(daily)
             for key, value in daily.items():
                 result[key].append(value)
         df = DataFrame.from_dict(result).set_index("date")
