@@ -24,7 +24,7 @@
         </div>
         <div class="ui grid">
             <div class="twelve wide column">
-                <h1 class="ui header titled">回测报告</h1>
+                <h1 class="ui header titled"><a href="https://github.com/ctpbee/ctpbee">ctpbee</a>回测报告</h1>
 
                 <div class="ui link cards">
                     <div class="card">
@@ -104,7 +104,16 @@
         var account_data = {{ account_data | tojson }};
         var _axis = [];
         var _ayis = [];
+        var min_value = account_data[0];
+        var max_value = account_data[0];
+
         for (var i in account_data) {
+            if (min_value >= account_data[i]) {
+                min_value = account_data[i]
+            }
+            if (max_value <= account_data[i]) {
+                max_value = account_data[i]
+            }
             _axis.push(i);
             _ayis.push(account_data[i]);
         }
@@ -113,10 +122,15 @@
                 text: '账户资金曲线图'
             },
             xAxis: {
-                data: _axis
+                data: _axis,
+                name: "日期"
             },
             yAxis: {
-                type: 'value'
+                type: 'value',
+                max: max_value * 1.1,
+                min: min_value * 0.9,
+                minInterval: 1,
+                name: '净值',
             },
             series: [{
                 data: _ayis,
