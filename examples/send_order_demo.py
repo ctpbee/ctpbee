@@ -10,7 +10,7 @@ from ctpbee.constant import ContractData, LogData, TickData, BarData, OrderType,
 class Demo(CtpbeeApi):
     def __init__(self, name):
         super().__init__(name)
-        self.instrument_set = ["rb2010.SHFE"]
+        self.instrument_set = ["IF2012.CFFEX"]
 
     def on_contract(self, contract: ContractData):
         """ 处理推送的合约信息 """
