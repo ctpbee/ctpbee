@@ -27,20 +27,21 @@ class DoubleMa(LooperApi):
             self.price.clear()
 
     def on_bar(self, bar):
-        if len(self.price) == 0:
-            self.price.append(bar.close_price)
-        else:
-            if bar.close_price < self.price[-1]:
-                self.price.append(bar.close_price)
-            else:
-                self.price.clear()
-        if len(self.price) >= 5:
-            if not self.open:
-                self.action.short(bar.close_price, 3, bar)
-                self.open = True
-            else:
-                if abs(bar.close_price - self.open_price) > 10:
-                    self.action.sell(bar.close_price, 3, bar)
+        # if len(self.price) == 0:
+        #     self.price.append(bar.close_price)
+        # else:
+        #     if bar.close_price < self.price[-1]:
+        #         self.price.append(bar.close_price)
+        #     else:
+        #         self.price.clear()
+        # if len(self.price) >= 5:
+        #     if not self.open:
+        #         self.action.short(bar.close_price, 3, bar)
+        #         self.open = True
+        #     else:
+        #         if abs(bar.close_price - self.open_price) > 10:
+        #             self.action.sell(bar.close_price, 3, bar)
+        self.action.buy(bar.close_price, 3, bar)
 
     def on_tick(self, tick):
         pass
