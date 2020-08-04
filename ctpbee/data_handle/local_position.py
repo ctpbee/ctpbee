@@ -484,7 +484,7 @@ class LocalPositionManager(dict):
                 temp['local_symbol'] = x.local_symbol
                 temp['price'] = x.long_price
                 temp['volume'] = x.long_pos
-                temp['yd_volume'] = x.long_yd
+                temp['yd_volume'] = x.long_yd,
                 temp["frozen"] = x.long_pos_frozen
                 temp["available"] = x.long_pos - x.long_pos_frozen
                 temp['stare_position_profit'] = x.long_stare_pnl

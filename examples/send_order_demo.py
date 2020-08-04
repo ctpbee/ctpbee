@@ -23,6 +23,7 @@ class Demo(CtpbeeApi):
     def on_tick(self, tick: TickData) -> None:
         """ 处理推送的tick """
         print(self.center.positions)
+        self.info(f"收到tick了: price {tick.last_price} ")
 
     def on_bar(self, bar: BarData) -> None:
         """ 处理ctpbee生成的bar """
