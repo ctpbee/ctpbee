@@ -92,16 +92,6 @@ class Account:
         self.margin_ratio = {}
         # commission_ratio 应该为{"ag2012.SHFE": {"close_today": 0.005, "close":0.005 }
         self.commission_ratio = defaultdict(dict)
-
-        """ 当日开仓记录 
-        {
-            "rb2012.SHFE": {"long":"volume":3, price: 3600, "short": {}}
-        }
-        按照开仓成本 
-        """
-        self.long_open_position_record = {}
-        self.short_open_position_record = {}
-
         self.close_profit = {}
 
     @property
@@ -217,24 +207,9 @@ class Account:
                 if data.direction == Direction.LONG:
                     if data.order_id in self.long_frozen_margin.keys():  # 如果成交, 那么清除多头的保证金冻结
                         self.long_frozen_margin.pop(data.order_id)
-                    if self.long_open_position_record.get(data.local_symbol) is None:
-                        self.long_open_position_record[data.local_symbol] = {"volume": data.volume, "price": data.price}
-                    else:
-                        volume = data.volume + self.long_open_position_record[data.local_symbol]["volume"]
-                        price = (data.price * data.volume + self.long_open_position_record[data.local_symbol]["price"] +
-                                 self.long_open_position_record[data.local_symbol]["volume"]) / volume
-                        self.long_open_position_record[data.local_symbol] = {"volume": volume, "price": price}
                 else:
                     if data.order_id in self.short_frozen_margin.keys():  # 如果成交, 那么清除空头的保证金冻结
                         self.short_frozen_margin.pop(data.order_id)
-                    if self.short_open_position_record.get(data.local_symbol) is None:
-                        self.short_open_position_record[data.local_symbol] = {"volume": data.volume,
-                                                                              "price": data.price}
-                    else:
-                        volume = data.volume + self.short_open_position_record[data.local_symbol]["volume"]
-                        price = (data.price * data.volume + self.short_open_position_record[data.local_symbol][
-                            "price"] + self.short_open_position_record[data.local_symbol]["volume"]) / volume
-                        self.short_open_position_record[data.local_symbol] = {"volume": volume, "price": price}
 
             else:
 
@@ -254,71 +229,13 @@ class Account:
                 if data.direction == Direction.LONG:
                     print("结束空头持仓")
                     pos = self.position_manager.get_position_by_ld(data.local_symbol, Direction.SHORT)
-                    if self.short_open_position_record.get(data.local_symbol) is None:
-                        """ 如果没有今日仓位  那么直接平仓 """
-                        if data.volume > pos.volume:
-                            raise ValueError("回测出现异常, 平仓数量大于已有仓位")
-                        close_profit = (self.interface.pre_close_price[
-                                            data.local_symbol] - data.price) * data.volume * self.size_map.get(
-                            data.local_symbol)
+                    assert pos.volume >= data.volume
+                    close_profit = (pos.price - data.price) * data.volume * self.size_map.get(data.local_symbol)
 
-                    else:
-                        """ 如果有今天的仓位 """
-                        if data.volume > self.short_open_position_record[data.local_symbol]["volume"] + pos.volume:
-                            raise ValueError("回测出现异常, 平仓数量大于已有仓位")
-                        if data.volume > self.short_open_position_record[data.local_symbol]["volume"]:
-                            """如果平仓的仓位要大于今仓的仓位"""
-                            close_profit = self.short_open_position_record["volume"] * (
-                                    self.short_open_position_record["price"] - data.price) * \
-                                           self.size_map[data.local_symbol] + (
-                                                   data.volume - self.short_open_position_record["volume"]) * \
-                                           self.size_map[
-                                               data.local_symbol] * (
-                                                   self.interface.pre_close_price[data.local_symbol] - data.price)
-                            self.short_open_position_record[data.local_symbol] = None
-                        elif data.volume == self.short_open_position_record[data.local_symbol]['volume']:
-                            close_profit = self.short_open_position_record[data.local_symbol]["volume"] * (
-                                    self.short_open_position_record[data.local_symbol]["price"] - data.price) * \
-                                           self.size_map[data.local_symbol]
-                            self.short_open_position_record[data.local_symbol] = None
-                        else:
-                            close_profit = data.volume * (
-                                    self.short_open_position_record["price"] - data.price) * \
-                                           self.size_map[data.local_symbol]
-                            self.short_open_position_record[data.local_symbol]['volume'] -= data.volume
                 else:
                     pos = self.position_manager.get_position_by_ld(data.local_symbol, Direction.LONG)
-                    if self.long_open_position_record.get(data.local_symbol) is None:
-                        """ 如果没有今日仓位  那么直接平仓 """
-                        if data.volume > pos.volume:
-                            raise ValueError("回测出现异常, 平仓数量大于已有仓位")
-                        close_profit = (data.price - self.interface.pre_close_price[
-                            data.local_symbol]) * data.volume * self.size_map.get(
-                            data.local_symbol)
-                    else:
-                        """ 如果有今天的仓位 那么进行判断 """
-                        if data.volume > self.long_open_position_record[data.local_symbol]["volume"] + pos.volume:
-                            raise ValueError("回测出现异常, 平仓数量大于已有仓位")
-                        if data.volume > self.long_open_position_record[data.local_symbol]["volume"]:
-                            """如果平仓的仓位要大于今仓的仓位"""
-                            close_profit = self.long_open_position_record[data.local_symbol]["volume"] * (
-                                    data.price - self.long_open_position_record[data.local_symbol]["price"]) * \
-                                           self.size_map[data.local_symbol] + (
-                                                   data.volume - self.long_open_position_record[data.local_symbol][
-                                               "volume"]) * self.size_map[
-                                               data.local_symbol] * (
-                                                   data.price - self.interface.pre_close_price[data.local_symbol])
-                            self.long_open_position_record[data.local_symbol] = None
-                        elif data.volume == self.long_open_position_record[data.local_symbol]['volume']:
-                            close_profit = self.long_open_position_record["volume"] * (
-                                    data.price - self.long_open_position_record["price"]) * \
-                                           self.size_map[data.local_symbol]
-                            self.long_open_position_record[data.local_symbol] = None
-                        else:
-                            close_profit = data.volume * (
-                                    data.price - self.long_open_position_record["price"]) * \
-                                           self.size_map[data.local_symbol]
-                            self.long_open_position_record[data.local_symbol]['volume'] -= data.volume
+                    assert pos.volume >= data.volume
+                    close_profit = (data.price - pos.price) * data.volume * self.size_map.get(data.local_symbol)
                 if self.close_profit.get(data.local_symbol) is None:
                     self.close_profit[data.local_symbol] = close_profit
                 else:
