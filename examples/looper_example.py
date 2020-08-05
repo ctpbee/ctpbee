@@ -37,11 +37,11 @@ class DoubleMa(LooperApi):
                 self.price.clear()
         if len(self.price) >= 3:
             if not self.open:
-                self.action.short(bar.close_price, 3, bar)
+                self.action.buy(bar.close_price, 3, bar)
                 self.open = True
             else:
                 if abs(bar.close_price - self.open_price) > 5:
-                    self.action.sell(bar.close_price, 3, bar)
+                    self.action.cover(bar.close_price, 3, bar)
         # self.action.buy(bar.close_price, 3, bar)
 
     def on_tick(self, tick):
