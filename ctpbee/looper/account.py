@@ -283,6 +283,7 @@ class Account:
         self.frozen_premium = 0
         self.count = 0
         self.pnl_of_every_symbol.clear()
+        self.close_profit.clear()
         self.interface.today_volume = 0
         for x in self.fee.keys():
             self.fee[x] = 0
