@@ -51,10 +51,10 @@ class DoubleMa(LooperApi):
 if __name__ == '__main__':
 
     from ctpbee import QADataSupport
-    data_support = QADataSupport(host="127.0.0.1", port=27017)
+    data_support = QADataSupport(host="quantaxis.tech", port=27027)
     runnning = Vessel()
     strategy = DoubleMa("ma")
-    data = data_support.get_future_min("rb2010.SHFE", frq="1min", start="2020-06-01", end="2020-06-02")
+    data = data_support.get_future_min("rb2010.SHFE", frq="1min", start="2020-06-01", end="2020-06-03")
     runnning.add_data(data)
     params = {
         "looper":
