@@ -164,9 +164,9 @@ class Account:
 
     @property
     def available(self):
-        """ 可用资金 = 前日权益 + 平仓盈亏 + 浮动盈亏  - 手续费  - 冻结手续费 """
+        """ 可用资金 = 前日权益 + 平仓盈亏 + 浮动盈亏  - 手续费  - 冻结手续费 - 保证金 """
         return self.pre_balance + sum(self.close_profit.values()) + self.float_pnl - sum(
-            self.fee.values()) - self.frozen - self.margin
+            self.fee.values()) - self.frozen - self.margin - self.frozen_margin
 
     @property
     def logger(self):
