@@ -27,21 +27,22 @@ class DoubleMa(LooperApi):
             self.price.clear()
 
     def on_bar(self, bar):
-        # if len(self.price) == 0:
-        #     self.price.append(bar.close_price)
-        # else:
-        #     if bar.close_price < self.price[-1]:
-        #         self.price.append(bar.close_price)
-        #     else:
-        #         self.price.clear()
-        # if len(self.price) >= 5:
-        #     if not self.open:
-        #         self.action.short(bar.close_price, 3, bar)
-        #         self.open = True
-        #     else:
-        #         if abs(bar.close_price - self.open_price) > 10:
-        #             self.action.sell(bar.close_price, 3, bar)
-        self.action.buy(bar.close_price, 3, bar)
+        """ """
+        if len(self.price) == 0:
+            self.price.append(bar.close_price)
+        else:
+            if bar.close_price < self.price[-1]:
+                self.price.append(bar.close_price)
+            else:
+                self.price.clear()
+        if len(self.price) >= 3:
+            if not self.open:
+                self.action.short(bar.close_price, 3, bar)
+                self.open = True
+            else:
+                if abs(bar.close_price - self.open_price) > 5:
+                    self.action.sell(bar.close_price, 3, bar)
+        # self.action.buy(bar.close_price, 3, bar)
 
     def on_tick(self, tick):
         pass
@@ -51,7 +52,7 @@ if __name__ == '__main__':
     data_support = QADataSupport(host="quantaxis.tech", port=27027)
     runnning = Vessel()
     strategy = DoubleMa("ma")
-    data = data_support.get_future_min("rb2010.SHFE", frq="1min", start="2020-03-01", end="2020-07-15")
+    data = data_support.get_future_min("rb2010.SHFE", frq="1min", start="2020-06-01", end="2020-06-02")
     runnning.add_data(data)
     params = {
         "looper":

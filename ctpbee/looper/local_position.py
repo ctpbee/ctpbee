@@ -81,6 +81,9 @@ class PositionHolding:
         self.pre_close_price = 0
         self.last_price = 0
 
+    def __str__(self):
+        return f"PositionHold local_symbol At: \n     <long_volume: {self.long_pos}\n      long_price: {self.long_price}\n      short_volume: {self.short_pos}\n      short_price: {self.short_price}>"
+
     def update_trade(self, trade):
         """ 成交更新 """
         # 多头
