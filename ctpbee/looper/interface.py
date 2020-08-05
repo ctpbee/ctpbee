@@ -313,6 +313,9 @@ class LocalLooper():
                     """ 调用API生成成交单 """
                     # 同时这里需要处理是否要进行
                     trade = self._generate_trade_data_from_order(data)
+                    self.logger.info(
+                        f"成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
+                        f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
                     self.account.update_trade(trade)
                     """ 调用strategy的on_trade """
                     self.pending.remove(data)
@@ -321,9 +324,6 @@ class LocalLooper():
                     [api(trade) for api in self.strategy_mapping.values()]
                     self.traded_order_mapping[trade.order_id] = trade
                     self.today_volume += data.volume
-                    self.logger.info(
-                        f"成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
-                        f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
                     continue
                 else:
                     """ 当前账户不足以支撑成交 """

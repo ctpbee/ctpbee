@@ -66,7 +66,7 @@ class Account:
         # 初始资金
         self.initial_capital = 0
         # 账户权益
-        self.balance = 100000
+        self.available = 100000
         # 保证金占用
         self.long_margin = 0
         self.short_margin = 0
@@ -80,6 +80,7 @@ class Account:
         # 空头净值
         self.short_balance = 0
         self.frozen_premium = 0
+        self.count = 0
         """ 
         fee应该是一个 {
             ag2012.SHFE: 200.1
@@ -93,11 +94,27 @@ class Account:
         # commission_ratio 应该为{"ag2012.SHFE": {"close_today": 0.005, "close":0.005 }
         self.commission_ratio = defaultdict(dict)
 
+        """ 特殊属性 """
+        # 每日单品种盈亏
+        self.pnl_of_every_symbol = {}
+
+        """ 当日开仓记录 
+        {
+            "rb2012.SHFE": {"long":"volume":3, price: 3600, "short": {}}
+        }
+        按照开仓成本 
+        """
+        self.long_open_position_record = {}
+        self.short_open_position_record = {}
+
+        self.close_profit = {}
+
     @property
     def margin(self):
         result = 0
         for x in self.position_manager.get_all_positions():
-            result += x["price"] * x["volume"] * self.size_map.get(x["local_symbol"]) * self.margin_ratio.get(
+            result += self.interface.price_mapping[x["local_symbol"]] * x["volume"] * self.size_map.get(
+                x["local_symbol"]) * self.margin_ratio.get(
                 x["local_symbol"])
         return result
 
@@ -109,13 +126,25 @@ class Account:
     def to_object(self) -> AccountData:
         return AccountData._create_class(dict(accountid=self.account_id,
                                               local_account_id=f"{self.account_id}.SIM",
-                                              frozen=self.margin,
+                                              frozen=self.frozen,
                                               balance=self.balance,
                                               ))
 
     @property
-    def available(self) -> float:
-        return self.balance - self.margin - self.frozen_margin - sum(self.frozen_fee.values()) - self.frozen_premium
+    def frozen(self):
+        return sum(self.frozen_fee.values())
+
+    @property
+    def balance(self) -> float:
+        return self.available + self.available
+
+    @property
+    def available(self):
+        return self.pre_balance + sum(self.close_profit.values()) + self
+
+    @property
+    def logger(self):
+        return self.interface.logger
 
     def update_account_from_trade(self, data: TradeData or OrderData):
         """ 更新基础属性方法
@@ -139,20 +168,149 @@ class Account:
             else:
                 self.fee[data.local_symbol] += data.price * data.volume * ratio * self.size_map.get(data.local_symbol)
             """ 余额减去实际发生手续费用 """
-            self.balance -= data.price * data.volume * ratio * self.size_map.get(data.local_symbol)
-
+            if self.pnl_of_every_symbol.get(data.local_symbol) is None:
+                self.pnl_of_every_symbol[data.local_symbol] = data.price * data.volume * ratio * self.size_map.get(
+                    data.local_symbol)
+            else:
+                self.pnl_of_every_symbol[data.local_symbol] += data.price * data.volume * ratio * self.size_map.get(
+                    data.local_symbol)
+            self.available -= data.price * data.volume * ratio * self.size_map.get(data.local_symbol)
             if data.offset == Offset.OPEN:
                 """  开仓增加保证金 """
+                self.count += data.volume
                 if data.direction == Direction.LONG:
                     if data.order_id in self.long_frozen_margin.keys():  # 如果成交, 那么清除多头的保证金冻结
                         self.long_frozen_margin.pop(data.order_id)
+                    self.long_margin += self.margin_ratio.get(data.local_symbol) * self.size_map.get(
+                        data.local_symbol) * data.volume * data.price
+                    self.available -= self.margin_ratio.get(data.local_symbol) * self.size_map.get(
+                        data.local_symbol) * data.volume * data.price
+                    if self.long_open_position_record.get(data.local_symbol) is None:
+                        self.long_open_position_record[data.local_symbol] = {"volume": data.volume, "price": data.price}
+                    else:
+                        volume = data.volume + self.long_open_position_record[data.local_symbol]["volume"]
+                        price = (data.price * data.volume + self.long_open_position_record[data.local_symbol]["price"] +
+                                 self.long_open_position_record[data.local_symbol]["volume"]) / volume
+                        self.long_open_position_record[data.local_symbol] = {"volume": volume, "price": price}
                 else:
                     if data.order_id in self.short_frozen_margin.keys():  # 如果成交, 那么清除空头的保证金冻结
                         self.short_frozen_margin.pop(data.order_id)
-                self.balance -= data.price * data.volume
+                    """ 更新余额和保证金占用 """
+                    self.short_margin += self.margin_ratio.get(data.local_symbol) * self.size_map.get(
+                        data.local_symbol) * data.volume * data.price
+                    self.available -= self.margin_ratio.get(data.local_symbol) * self.size_map.get(
+                        data.local_symbol) * data.volume * data.price
+                    print("增加冻结", self.margin_ratio.get(data.local_symbol) * self.size_map.get(
+                        data.local_symbol) * data.volume * data.price)
+                    """ ------------  """
+                    if self.short_open_position_record.get(data.local_symbol) is None:
+                        self.short_open_position_record[data.local_symbol] = {"volume": data.volume,
+                                                                              "price": data.price}
+                    else:
+                        volume = data.volume + self.short_open_position_record[data.local_symbol]["volume"]
+                        price = (data.price * data.volume + self.short_open_position_record[data.local_symbol][
+                            "price"] + self.short_open_position_record[data.local_symbol]["volume"]) / volume
+                        self.short_open_position_record[data.local_symbol] = {"volume": volume, "price": price}
 
             else:
-                self.balance += data.price * data.volume
+
+                """ 计算平仓产生的盈亏"""
+
+                """ 注意此处需要判断是否是当天持仓当天平还是当天持仓隔日平
+                1. 因为每天都进行了自动结算机制,账户都用了收盘价成为仓位的一个成本，所以账户在平仓的时候计算盈亏需要计算他是否是当天平仓，
+                那这个时候需要判断这个仓位是否已经过了多少天
+                2. 因此当日某个品种开仓的一个成本还有手数需要被记录下来
+                如果一个场景下存在螺纹钢昨日开仓3手,收盘价p1.今日开仓3手开仓价 p2, 平3手平仓价p3,再开3手开仓价p4 ,今日收盘价p5
+                那么今日单个品种的盈亏按照优先平今或者优先平昨天规则分别进行计算
+                优先平今
+                pnl = (p3 - p2) * 3 + (p5 - p4) * 3 + (p5 - p1) * 3 +  ]       3p3  + 6p5 - 3p4 - 3p1 -3p2
+                优先平昨
+                pnl = (p3 - p1) * 3 + (p5 - p2) * 3 + (p5 - p4) * 3 + 手续费    6p5 + 3p3 -3p1 - 3p2 + 3p4
+                """
+                if data.direction == Direction.LONG:
+                    print("结束空头持仓")
+                    self.short_margin -= self.margin_ratio.get(data.local_symbol) * self.size_map.get(
+                        data.local_symbol) * data.volume * data.price
+                    self.available += self.margin_ratio.get(data.local_symbol) * self.size_map.get(
+                        data.local_symbol) * data.volume * data.price
+                    print("归还冻结: ", self.margin_ratio.get(data.local_symbol) * self.size_map.get(
+                        data.local_symbol) * data.volume * data.price)
+                    pos = self.position_manager.get_position_by_ld(data.local_symbol, Direction.SHORT)
+                    if self.short_open_position_record.get(data.local_symbol) is None:
+                        """ 如果没有今日仓位  那么直接平仓 """
+                        if data.volume > pos.volume:
+                            raise ValueError("回测出现异常, 平仓数量大于已有仓位")
+                        close_profit = (self.interface.pre_close_price[
+                                            data.local_symbol] - data.price) * data.volume * self.size_map.get(
+                            data.local_symbol)
+
+                    else:
+                        """ 如果有今天的仓位 """
+                        if data.volume > self.short_open_position_record[data.local_symbol]["volume"] + pos.volume:
+                            raise ValueError("回测出现异常, 平仓数量大于已有仓位")
+                        if data.volume > self.short_open_position_record[data.local_symbol]["volume"]:
+                            """如果平仓的仓位要大于今仓的仓位"""
+                            close_profit = self.short_open_position_record["volume"] * (
+                                    self.short_open_position_record["price"] - data.price) * \
+                                           self.size_map[data.local_symbol] + (
+                                                   data.volume - self.short_open_position_record["volume"]) * \
+                                           self.size_map[
+                                               data.local_symbol] * (
+                                                   self.interface.pre_close_price[data.local_symbol] - data.price)
+                            self.short_open_position_record[data.local_symbol] = None
+                        elif data.volume == self.short_open_position_record[data.local_symbol]['volume']:
+                            close_profit = self.short_open_position_record[data.local_symbol]["volume"] * (
+                                    self.short_open_position_record[data.local_symbol]["price"] - data.price) * \
+                                           self.size_map[data.local_symbol]
+                            self.short_open_position_record[data.local_symbol] = None
+                        else:
+                            close_profit = data.volume * (
+                                    self.short_open_position_record["price"] - data.price) * \
+                                           self.size_map[data.local_symbol]
+                            self.short_open_position_record[data.local_symbol]['volume'] -= data.volume
+                    print("2", close_profit)
+                else:
+                    self.long_margin -= self.margin_ratio.get(data.local_symbol) * self.size_map.get(
+                        data.local_symbol) * data.volume * data.price
+                    self.available += self.margin_ratio.get(data.local_symbol) * self.size_map.get(
+                        data.local_symbol) * data.volume * data.price
+                    pos = self.position_manager.get_position_by_ld(data.local_symbol, Direction.LONG)
+                    if self.long_open_position_record.get(data.local_symbol) is None:
+                        """ 如果没有今日仓位  那么直接平仓 """
+                        if data.volume > pos.volume:
+                            raise ValueError("回测出现异常, 平仓数量大于已有仓位")
+                        close_profit = (data.price - self.interface.pre_close_price[
+                            data.local_symbol]) * data.volume * self.size_map.get(
+                            data.local_symbol)
+                    else:
+                        """ 如果有今天的仓位 那么进行判断 """
+                        if data.volume > self.long_open_position_record[data.local_symbol]["volume"] + pos.volume:
+                            raise ValueError("回测出现异常, 平仓数量大于已有仓位")
+                        if data.volume > self.long_open_position_record[data.local_symbol]["volume"]:
+                            """如果平仓的仓位要大于今仓的仓位"""
+                            close_profit = self.long_open_position_record[data.local_symbol]["volume"] * (
+                                    data.price - self.long_open_position_record[data.local_symbol]["price"]) * \
+                                           self.size_map[data.local_symbol] + (
+                                                   data.volume - self.long_open_position_record[data.local_symbol][
+                                               "volume"]) * self.size_map[
+                                               data.local_symbol] * (
+                                                   data.price - self.interface.pre_close_price[data.local_symbol])
+                            self.long_open_position_record[data.local_symbol] = None
+                        elif data.volume == self.long_open_position_record[data.local_symbol]['volume']:
+                            close_profit = self.long_open_position_record["volume"] * (
+                                    data.price - self.long_open_position_record["price"]) * \
+                                           self.size_map[data.local_symbol]
+                            self.long_open_position_record[data.local_symbol] = None
+                        else:
+                            close_profit = data.volume * (
+                                    data.price - self.long_open_position_record["price"]) * \
+                                           self.size_map[data.local_symbol]
+                            self.long_open_position_record[data.local_symbol]['volume'] -= data.volume
+
+                if self.pnl_of_every_symbol.get(data.local_symbol) is None:
+                    self.pnl_of_every_symbol[data.local_symbol] = close_profit
+                else:
+                    self.pnl_of_every_symbol[data.local_symbol] += close_profit
 
         else:
             raise TypeError("错误的数据类型，期望成交单数据 TradeData 而不是 {}".format(type(data)))
@@ -196,18 +354,35 @@ class Account:
         self.long_margin = 0
         self.short_margin = 0
         self.frozen_premium = 0
+        self.count = 0
+        self.pnl_of_every_symbol.clear()
         self.interface.today_volume = 0
         for x in self.fee.keys():
             self.fee[x] = 0
 
     @property
     def position_amount(self):
-        return sum([self.interface.price_mapping.get(x['local_symbol']) * x["volume"] for x in self.position_manager.get_all_positions()])
+        return sum([self.interface.price_mapping.get(x['local_symbol']) * x["volume"] * self.size_map.get(
+            x["local_symbol"]) * self.margin_ratio.get(x["local_symbol"]) for x in
+                    self.position_manager.get_all_positions()])
 
     def is_traded(self, order: OrderData) -> bool:
         """ 当前账户是否足以支撑成交 """
         # 根据传入的单子判断当前的账户可用资金是否足以成交此单
-        order_amount = order.price * order.volume * self.size_map.get(order.local_symbol) * self.margin_ratio.get(
+
+        if order.offset != Offset.OPEN:
+            """ 交易是否可平不足？ """
+            if order.direction == Direction.LONG:
+                pos = self.position_manager.get_position_by_ld(order.local_symbol, Direction.SHORT)
+                if not pos or order.volume > pos.volume:
+                    """ 仓位不足 """
+                    return False
+            else:
+                pos = self.position_manager.get_position_by_ld(order.local_symbol, Direction.LONG)
+                if not pos or order.volume > pos.volume:
+                    return False
+        order_amount = order.price * order.volume * self.size_map.get(
+            order.local_symbol) * self.margin_ratio.get(
             order.local_symbol) + order.price * order.volume
         if self.available < order_amount or self.available < 0:
             """ 可用不足"""
@@ -221,8 +396,10 @@ class Account:
         :param trade:交易单子/trade
         :return:
         """
-        self.position_manager.update_trade(trade=trade)
+        # print("处理前仓位: \n", self.position_manager.get_position(trade.local_symbol))
         self.update_account_from_trade(trade)
+        self.position_manager.update_trade(trade=trade)
+        # print("处理后仓位: \n", self.position_manager.get_position(trade.local_symbol))
 
     def settle(self, interface_date=None):
         """ 生成今天的交易数据， 同时更新前日数据 ，然后进行持仓结算 """
@@ -232,18 +409,71 @@ class Account:
             date = self.date
         """ 结算撤掉所有单 归还冻结 """
         self.clear_frozen()
+        # 此处的仓位和昨仓有重合， 今仓要单独分出来
+        for pos in self.position_manager.get_all_positions():
+            if pos["direction"] == Direction.LONG.value:
+                """ 如果是多头持仓 """
+                if self.long_open_position_record.get(pos["local_symbol"]) is None:
+                    """ 如果没有今仓 """
+                    profit = pos['volume'] * self.size_map.get(
+                        pos["local_symbol"]) * (self.interface.price_mapping[pos["local_symbol"]]
+                                                - self.interface.pre_close_price.get(pos["local_symbol"]))
+                else:
+                    """ 存在今仓 """
+                    pp = pos["volume"] - self.long_open_position_record[pos["local_symbol"]]["volume"]
+                    assert pp >= 0
+                    pnl1 = pp * (self.interface.price_mapping[pos["local_symbol"]] - self.interface.pre_close_price[
+                        pos["local_symbol"]]) * self.size_map[pos["local_symbol"]]
+                    pnl2 = (self.interface.price_mapping[pos['local_symbol']] -
+                            self.long_open_position_record[pos["local_symbol"]]["price"]) * \
+                           self.long_open_position_record[pos["local_symbol"]]["volume"] * self.size_map.get(
+                        pos['local_symbol'])
+
+                    profit = (pnl1 + pnl2)
+            else:
+                """ 空头持仓 """
+                if self.short_open_position_record.get(pos["local_symbol"]) is None:
+                    """ 如果没有今仓"""
+                    profit = pos['volume'] * self.size_map.get(
+                        pos["local_symbol"]) * (self.interface.pre_close_price.get(
+                        pos["local_symbol"]) - self.interface.price_mapping[pos["local_symbol"]])
+                else:
+                    """ 存在今仓 """
+                    pp = pos["volume"] - self.short_open_position_record[pos["local_symbol"]]["volume"]
+                    assert pp >= 0
+                    pnl1 = pp * (self.interface.pre_close_price[
+                                     pos["local_symbol"]] - self.interface.price_mapping[
+                                     pos["local_symbol"]]) * self.size_map[pos["local_symbol"]]
+                    pnl2 = (self.short_open_position_record[pos["local_symbol"]]["price"] -
+                            self.interface.price_mapping[
+                                pos['local_symbol']]) * \
+                           self.short_open_position_record[pos["local_symbol"]]["volume"] * self.size_map.get(
+                        pos['local_symbol'])
+                    profit = (pnl1 + pnl2)
+                    print("\n\n\n\n{} 收盘价格: {}, 前日收盘价: {}".format(self.date,
+                                                                  self.interface.price_mapping[pos["local_symbol"]],
+                                                                  self.interface.pre_close_price[pos["local_symbol"]]))
+            if self.pnl_of_every_symbol.get(pos["local_symbol"]) is None:
+                self.pnl_of_every_symbol[pos["local_symbol"]] = profit
+            else:
+                self.pnl_of_every_symbol[pos["local_symbol"]] += profit
+
         p = AliasDayResult(
             **{"balance": self.balance + self.position_amount,
-               "frozen": self.margin,
+               "margin": self.margin,
                "available": self.available,
                "short_balance": self.short_balance,
+               "ery": self.pnl_of_every_symbol,
                "long_balance": self.long_balance,
                "date": date,
                "commission": sum([x for x in self.fee.values()]),
                "net_pnl": self.balance + self.position_amount - self.pre_balance,
-               "count": 0,
+               "count": self.count,
                })
         print(p)
+        print(self.margin)
+        print(self.balance)
+        print(self.position_amount)
         self.daily_life[date] = deepcopy(p._to_dict())
         self.pre_balance = self.balance + self.position_amount
         self.long_balance = self.balance
@@ -265,8 +495,9 @@ class Account:
         """ 更新本地账户回测参数 """
         for i, v in params.items():
             if i == "initial_capital" and not self.init:
-                self.balance = v
+                # self.balance = v
                 self.pre_balance = v
+                self.available = v
                 self.initial_capital = v
                 self.long_balance = v
                 self.short_balance = v
