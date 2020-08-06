@@ -34,33 +34,33 @@ class DoubleMa(LooperApi):
 
     def on_bar(self, bar):
         """ """
-        self.manager.update_bar(bar)
-        if not self.manager.inited:
-            return
-        ex = self.manager.macd_scta()
-        # print(ex)
-        if -1 < ex < 1:
-            if ex > 0:
-                self.action.sell(bar.close_price, self.sell, bar)
-                volume = int(ex * 10)
-                if volume > self.buy:
-                    self.action.buy(bar.close_price, volume - self.buy, bar)
-                elif volume == self.buy:
-                    pass
-                else:
-                    self.action.cover(bar.close_price, self.buy - volume, bar)
-            elif ex == 0:
-                self.action.sell(bar.close_price, self.sell, bar)
-                self.action.cover(bar.close_price, self.buy, bar)
-            else:
-                volume = abs(int(ex * 10))
-                self.action.cover(bar.close_price, self.buy, bar)
-                if volume > self.sell:
-                    self.action.short(bar.close_price, volume - self.sell, bar)
-                elif volume == self.sell:
-                    pass
-                else:
-                    self.action.sell(bar.close_price, abs(volume - self.sell), bar)
+        # self.manager.update_bar(bar)
+        # if not self.manager.inited:
+        #     return
+        # ex = self.manager.macd_scta()
+        # # print(ex)
+        # if -1 < ex < 1:
+        #     if ex > 0:
+        #         self.action.sell(bar.close_price, self.sell, bar)
+        #         volume = int(ex * 10)
+        #         if volume > self.buy:
+        #             self.action.buy(bar.close_price, volume - self.buy, bar)
+        #         elif volume == self.buy:
+        #             pass
+        #         else:
+        #             self.action.cover(bar.close_price, self.buy - volume, bar)
+        #     elif ex == 0:
+        #         self.action.sell(bar.close_price, self.sell, bar)
+        #         self.action.cover(bar.close_price, self.buy, bar)
+        #     else:
+        #         volume = abs(int(ex * 10))
+        #         self.action.cover(bar.close_price, self.buy, bar)
+        #         if volume > self.sell:
+        #             self.action.short(bar.close_price, volume - self.sell, bar)
+        #         elif volume == self.sell:
+        #             pass
+        #         else:
+        #             self.action.sell(bar.close_price, abs(volume - self.sell), bar)
 
     def on_tick(self, tick):
         pass
