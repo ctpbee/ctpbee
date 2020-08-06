@@ -1,8 +1,6 @@
 """
 Vnpy里面提高的指标系统
 需要你自行安装TA-LIB
-
-I
 """
 
 import numpy as np
@@ -18,7 +16,6 @@ def round_to(value: float, target: float) -> float:
     """
     Round price to price tick value.
     """
-
     return int(round(value / target)) * target
 
 
