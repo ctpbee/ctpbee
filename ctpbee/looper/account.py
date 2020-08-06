@@ -66,7 +66,6 @@ class Account:
         # 初始资金
         self.initial_capital = 0
         # 账户权益
-        self.balance = 100000
         # 保证金占用
         self.long_margin = 0
         self.short_margin = 0
@@ -80,6 +79,7 @@ class Account:
         # 空头净值
         self.short_balance = 0
         self.frozen_premium = 0
+        self.count = 0
         """ 
         fee应该是一个 {
             ag2012.SHFE: 200.1
@@ -92,12 +92,14 @@ class Account:
         self.margin_ratio = {}
         # commission_ratio 应该为{"ag2012.SHFE": {"close_today": 0.005, "close":0.005 }
         self.commission_ratio = defaultdict(dict)
+        self.close_profit = {}
 
     @property
     def margin(self):
         result = 0
         for x in self.position_manager.get_all_positions():
-            result += x["price"] * x["volume"] * self.size_map.get(x["local_symbol"]) * self.margin_ratio.get(
+            result += x["price"] * x["volume"] * self.size_map.get(
+                x["local_symbol"]) * self.margin_ratio.get(
                 x["local_symbol"])
         return result
 
@@ -109,13 +111,66 @@ class Account:
     def to_object(self) -> AccountData:
         return AccountData._create_class(dict(accountid=self.account_id,
                                               local_account_id=f"{self.account_id}.SIM",
-                                              frozen=self.margin,
+                                              frozen=self.frozen,
                                               balance=self.balance,
                                               ))
 
     @property
-    def available(self) -> float:
-        return self.balance - self.margin - self.frozen_margin - sum(self.frozen_fee.values()) - self.frozen_premium
+    def pnl_of_every_symbol(self):
+        result = {}
+        for key, value in self.fee.items():
+            result[key] = -value
+        for key, value in self.close_profit.items():
+            if key in result.keys():
+                result[key] += value
+            else:
+                result[key] = value
+        for pos in self.position_manager.get_all_positions():
+            if pos['direction'] == "long":
+                pnl = (self.interface.price_mapping[pos["local_symbol"]] - pos["price"]) * pos[
+                    "volume"] * self.size_map.get(
+                    pos["local_symbol"])
+            else:
+                pnl = (pos["price"] - self.interface.price_mapping[pos["local_symbol"]]) * pos[
+                    "volume"] * self.size_map.get(
+                    pos["local_symbol"])
+            if pos["local_symbol"] in result.keys():
+                result[pos["local_symbol"]] += pnl
+            else:
+                result[pos["local_symbol"]] = pnl
+        return result
+
+    @property
+    def frozen(self):
+        return sum(self.frozen_fee.values())
+
+    @property
+    def float_pnl(self):
+        result = 0
+        for pos in self.position_manager.get_all_positions():
+            if pos['direction'] == "long":
+                result += (self.interface.price_mapping[pos["local_symbol"]] - pos["price"]) * pos[
+                    "volume"] * self.size_map.get(
+                    pos["local_symbol"])
+            else:
+                result += (pos["price"] - self.interface.price_mapping[pos["local_symbol"]]) * pos[
+                    "volume"] * self.size_map.get(
+                    pos["local_symbol"])
+        return result
+
+    @property
+    def balance(self) -> float:
+        return self.available + self.margin
+
+    @property
+    def available(self):
+        """ 可用资金 = 前日权益 + 平仓盈亏 + 浮动盈亏  - 手续费  - 冻结手续费 - 保证金 """
+        return self.pre_balance + sum(self.close_profit.values()) + self.float_pnl - sum(
+            self.fee.values()) - self.frozen - self.margin - self.frozen_margin
+
+    @property
+    def logger(self):
+        return self.interface.logger
 
     def update_account_from_trade(self, data: TradeData or OrderData):
         """ 更新基础属性方法
@@ -139,20 +194,52 @@ class Account:
             else:
                 self.fee[data.local_symbol] += data.price * data.volume * ratio * self.size_map.get(data.local_symbol)
             """ 余额减去实际发生手续费用 """
-            self.balance -= data.price * data.volume * ratio * self.size_map.get(data.local_symbol)
+            if self.pnl_of_every_symbol.get(data.local_symbol) is None:
+                self.pnl_of_every_symbol[data.local_symbol] = data.price * data.volume * ratio * self.size_map.get(
+                    data.local_symbol)
+            else:
+                self.pnl_of_every_symbol[data.local_symbol] += data.price * data.volume * ratio * self.size_map.get(
+                    data.local_symbol)
 
             if data.offset == Offset.OPEN:
                 """  开仓增加保证金 """
+                self.count += data.volume
                 if data.direction == Direction.LONG:
                     if data.order_id in self.long_frozen_margin.keys():  # 如果成交, 那么清除多头的保证金冻结
                         self.long_frozen_margin.pop(data.order_id)
                 else:
                     if data.order_id in self.short_frozen_margin.keys():  # 如果成交, 那么清除空头的保证金冻结
                         self.short_frozen_margin.pop(data.order_id)
-                self.balance -= data.price * data.volume
 
             else:
-                self.balance += data.price * data.volume
+
+                """ 计算平仓产生的盈亏"""
+
+                """ 注意此处需要判断是否是当天持仓当天平还是当天持仓隔日平
+                1. 因为每天都进行了自动结算机制,账户都用了收盘价成为仓位的一个成本，所以账户在平仓的时候计算盈亏需要计算他是否是当天平仓，
+                那这个时候需要判断这个仓位是否已经过了多少天
+                2. 因此当日某个品种开仓的一个成本还有手数需要被记录下来
+                如果一个场景下存在螺纹钢昨日开仓3手,收盘价p1.今日开仓3手开仓价 p2, 平3手平仓价p3,再开3手开仓价p4 ,今日收盘价p5
+                那么今日单个品种的盈亏按照优先平今或者优先平昨天规则分别进行计算
+                优先平今
+                pnl = (p3 - p2) * 3 + (p5 - p4) * 3 + (p5 - p1) * 3 +  ]       3p3  + 6p5 - 3p4 - 3p1 -3p2
+                优先平昨
+                pnl = (p3 - p1) * 3 + (p5 - p2) * 3 + (p5 - p4) * 3 + 手续费    6p5 + 3p3 -3p1 - 3p2 + 3p4
+                """
+                if data.direction == Direction.LONG:
+                    print("结束空头持仓")
+                    pos = self.position_manager.get_position_by_ld(data.local_symbol, Direction.SHORT)
+                    assert pos.volume >= data.volume
+                    close_profit = (pos.price - data.price) * data.volume * self.size_map.get(data.local_symbol)
+
+                else:
+                    pos = self.position_manager.get_position_by_ld(data.local_symbol, Direction.LONG)
+                    assert pos.volume >= data.volume
+                    close_profit = (data.price - pos.price) * data.volume * self.size_map.get(data.local_symbol)
+                if self.close_profit.get(data.local_symbol) is None:
+                    self.close_profit[data.local_symbol] = close_profit
+                else:
+                    self.close_profit[data.local_symbol] += close_profit
 
         else:
             raise TypeError("错误的数据类型，期望成交单数据 TradeData 而不是 {}".format(type(data)))
@@ -193,21 +280,37 @@ class Account:
         self.short_frozen_margin.clear()
 
     def reset_attr(self):
-        self.long_margin = 0
-        self.short_margin = 0
         self.frozen_premium = 0
+        self.count = 0
+        self.pnl_of_every_symbol.clear()
+        self.close_profit.clear()
         self.interface.today_volume = 0
         for x in self.fee.keys():
             self.fee[x] = 0
 
     @property
     def position_amount(self):
-        return sum([self.interface.price_mapping.get(x['local_symbol']) * x["volume"] for x in self.position_manager.get_all_positions()])
+        return sum([self.interface.price_mapping.get(x['local_symbol']) * x["volume"] * self.size_map.get(
+            x["local_symbol"]) * self.margin_ratio.get(x["local_symbol"]) for x in
+                    self.position_manager.get_all_positions()])
 
     def is_traded(self, order: OrderData) -> bool:
         """ 当前账户是否足以支撑成交 """
         # 根据传入的单子判断当前的账户可用资金是否足以成交此单
-        order_amount = order.price * order.volume * self.size_map.get(order.local_symbol) * self.margin_ratio.get(
+
+        if order.offset != Offset.OPEN:
+            """ 交易是否可平不足？ """
+            if order.direction == Direction.LONG:
+                pos = self.position_manager.get_position_by_ld(order.local_symbol, Direction.SHORT)
+                if not pos or order.volume > pos.volume:
+                    """ 仓位不足 """
+                    return False
+            else:
+                pos = self.position_manager.get_position_by_ld(order.local_symbol, Direction.LONG)
+                if not pos or order.volume > pos.volume:
+                    return False
+        order_amount = order.price * order.volume * self.size_map.get(
+            order.local_symbol) * self.margin_ratio.get(
             order.local_symbol) + order.price * order.volume
         if self.available < order_amount or self.available < 0:
             """ 可用不足"""
@@ -221,8 +324,10 @@ class Account:
         :param trade:交易单子/trade
         :return:
         """
-        self.position_manager.update_trade(trade=trade)
+        # print("处理前仓位: \n", self.position_manager.get_position(trade.local_symbol))
         self.update_account_from_trade(trade)
+        self.position_manager.update_trade(trade=trade)
+        # print("处理后仓位: \n", self.position_manager.get_position(trade.local_symbol))
 
     def settle(self, interface_date=None):
         """ 生成今天的交易数据， 同时更新前日数据 ，然后进行持仓结算 """
@@ -232,20 +337,23 @@ class Account:
             date = self.date
         """ 结算撤掉所有单 归还冻结 """
         self.clear_frozen()
+        print(
+            f"前日权益: {self.pre_balance}\n close_profit: {sum(self.close_profit.values())}\n 浮动盈亏: {self.float_pnl}\n 手续费: {sum(self.fee.values())}\n冻结: {self.frozen}")
         p = AliasDayResult(
-            **{"balance": self.balance + self.position_amount,
-               "frozen": self.margin,
+            **{"balance": self.balance,
+               "margin": self.margin,
                "available": self.available,
                "short_balance": self.short_balance,
+               "ery": self.pnl_of_every_symbol,
                "long_balance": self.long_balance,
                "date": date,
                "commission": sum([x for x in self.fee.values()]),
-               "net_pnl": self.balance + self.position_amount - self.pre_balance,
-               "count": 0,
+               "net_pnl": self.balance - self.pre_balance,
+               "count": self.count,
                })
         print(p)
         self.daily_life[date] = deepcopy(p._to_dict())
-        self.pre_balance = self.balance + self.position_amount
+        self.pre_balance = self.balance
         self.long_balance = self.balance
         self.short_balance = self.balance
         self.reset_attr()
@@ -265,7 +373,7 @@ class Account:
         """ 更新本地账户回测参数 """
         for i, v in params.items():
             if i == "initial_capital" and not self.init:
-                self.balance = v
+                # self.balance = v
                 self.pre_balance = v
                 self.initial_capital = v
                 self.long_balance = v

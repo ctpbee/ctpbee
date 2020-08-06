@@ -46,6 +46,7 @@ class M(CtpbeeApi):
         print(self.center.positions)
         print(self.center.active_orders)
 
+
 def create_app():
     app = CtpBee("last", __name__, refresh=True)
 
