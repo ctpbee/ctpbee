@@ -195,3 +195,48 @@ class ArrayManager(object):
         if array:
             return up, down
         return up[-1], down[-1]
+
+    def macd_scta(self, params=[5, 10, 22, 63, 252], array=False):
+        try:
+            import pandas as pd
+        except ImportError:
+            raise ValueError("请安装pandas以继续使用此指标")
+        S_days = params[0]
+        I_days = params[1]
+        L_days = params[2]
+        PW = params[3]
+        SW = params[4]
+
+        S_hl = np.log(0.5) / np.log(1 - 1 / S_days)
+        I_hl = np.log(0.5) / np.log(1 - 1 / I_days)
+        L_hl = np.log(0.5) / np.log(1 - 1 / L_days)
+
+        price_df = pd.DataFrame(self.close)
+
+        S_Macd = price_df.ewm(halflife=S_hl, min_periods=S_days).mean() - price_df.ewm(halflife=3 * S_hl,
+                                                                                       min_periods=3 * S_days).mean()
+        I_Macd = price_df.ewm(halflife=I_hl, min_periods=I_days).mean() - price_df.ewm(halflife=3 * I_hl,
+                                                                                       min_periods=3 * I_days).mean()
+        L_Macd = price_df.ewm(halflife=L_hl, min_periods=L_days).mean() - price_df.ewm(halflife=3 * L_hl,
+                                                                                       min_periods=3 * L_days).mean()
+
+        PW_std = price_df.rolling(window=PW).std()
+
+        S_y = S_Macd / PW_std
+        I_y = I_Macd / PW_std
+        L_y = L_Macd / PW_std
+
+        S_z = S_y / S_y.rolling(window=SW).std()
+        I_z = I_y / I_y.rolling(window=SW).std()
+        L_z = L_y / L_y.rolling(window=SW).std()
+        S_u = S_z * np.exp(-(S_z ** 2) / 4) / 0.89
+        I_u = I_z * np.exp(-(I_z ** 2) / 4) / 0.89
+        L_u = L_z * np.exp(-(L_z ** 2) / 4) / 0.89
+
+        scta = (S_u + I_u + L_u) / 3
+
+        scta = scta.to_numpy().T[0]
+
+        if array:
+            return scta
+        return scta[-1]
