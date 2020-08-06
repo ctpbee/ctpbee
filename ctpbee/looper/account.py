@@ -434,7 +434,7 @@ class Account:
         # result['total_turnover'] = df["turnover"].sum()
         # result['daily_turnover'] = result['total_turnover'] / result['total_days']
         result['total_count'] = df["count"].sum()
-        result['daily_count'] = result['total_count'] / result['total_days']
+        result['daily_count'] = round(result['total_count'] / result['total_days'], 2)
         result['total_return'] = round((result['end_balance'] / self.initial_capital - 1) * 100, 1)
         result['annual_return'] = round(result['total_return'] / result['total_days'] * 240, 2)
         result['daily_return'] = round(df["return"].mean() * 100, 2)

@@ -1,7 +1,6 @@
 from ctpbee.constant import Offset, TradeData, Direction
 from ctpbee.looper import LooperApi, Vessel
 from ctpbee.qa_support import QADataSupport
-
 from ctpbee.indicator.ta_lib import ArrayManager
 
 
@@ -19,9 +18,8 @@ class DoubleMaStrategy(LooperApi):
         self.open_price = None
         self.buy = 0
         self.sell = 0
-
-        self.slow = 30
-        self.fast = 15
+        self.slow = 60
+        self.fast = 30
 
     def on_trade(self, trade: TradeData):
         if trade.offset == Offset.OPEN:
@@ -93,7 +91,6 @@ if __name__ == '__main__':
             },
         "strategy":
             {
-
             }
     }
     runnning.add_strategy(strategy)
