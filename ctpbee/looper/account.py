@@ -8,6 +8,13 @@
 
 from collections import defaultdict
 from copy import deepcopy
+import math
+
+try:
+    from statistics import geometric_mean
+except ImportError:
+    def geometric_mean(xs):
+        return math.exp(math.fsum(math.log(x) for x in xs) / len(xs))
 
 import numpy as np
 from pandas import DataFrame
@@ -93,6 +100,7 @@ class Account:
         # commission_ratio 应该为{"ag2012.SHFE": {"close_today": 0.005, "close":0.005 }
         self.commission_ratio = defaultdict(dict)
         self.close_profit = {}
+        self.turnover = 0
 
     @property
     def margin(self):
@@ -210,7 +218,7 @@ class Account:
                 else:
                     if data.order_id in self.short_frozen_margin.keys():  # 如果成交, 那么清除空头的保证金冻结
                         self.short_frozen_margin.pop(data.order_id)
-
+                self.turnover += data.volume * data.price
             else:
 
                 """ 计算平仓产生的盈亏"""
@@ -281,6 +289,7 @@ class Account:
     def reset_attr(self):
         self.frozen_premium = 0
         self.count = 0
+        self.turnover = 0
         self.pnl_of_every_symbol.clear()
         self.close_profit.clear()
         self.interface.today_volume = 0
@@ -345,6 +354,7 @@ class Account:
                "commission": sum([x for x in self.fee.values()]),
                "net_pnl": self.balance - self.pre_balance,
                "count": self.count,
+               "turnover": self.turnover
                })
         self.daily_life[date] = deepcopy(p._to_dict())
         self.pre_balance = self.balance
@@ -390,7 +400,13 @@ class Account:
         for daily in self.daily_life.values():
             for key, value in daily.items():
                 result[key].append(value)
-        df = DataFrame.from_dict(result).set_index("date")
+        try:
+            df = DataFrame.from_dict(result).set_index("date")
+        except KeyError:
+            print("-------------------------------------------------")
+            print("|          好像没有结算数据哦!                    |")
+            print("-------------------------------------------------")
+            return {}
         try:
             import matplotlib.pyplot as plt
             df['balance'].plot()
@@ -416,23 +432,35 @@ class Account:
         )
         df["draw_down"] = df["balance"] - df["high_level"]
         df["dd_percent"] = df["draw_down"] / df["high_level"] * 100
-        result['initial_capital'] = self.initial_capital
-        result['start_date'] = df.index[0]
-        result['end_date'] = df.index[-1]
-        result['total_days'] = len(df)
-        result['profit_days'] = len(df[df["net_pnl"] > 0])
-        result['loss_days'] = len(df[df["net_pnl"] < 0])
-        result['end_balance'] = round(df["balance"].iloc[-1], 2)
-        result['max_draw_down'] = round(df["draw_down"].min(), 2)
-        result['max_dd_percent'] = str(round(df["dd_percent"].min(), 2)) + "%"
-        result['total_pnl'] = round(df["net_pnl"].sum(), 2)
-        result['daily_pnl'] = round(result['total_pnl'] / result['total_days'], 2)
-        result['total_commission'] = round(df["commission"].sum(), 2)
-        result['daily_commission'] = round(result['total_commission'] / result['total_days'], 2)
-        result['total_count'] = df["count"].sum()
-        result['daily_count'] = round(result['total_count'] / result['total_days'], 2)
-        result['total_return'] = round((result['end_balance'] / self.initial_capital - 1) * 100, 1)
-        result['annual_return'] = round(result['total_return'] / result['total_days'] * 240, 2)
-        result['daily_return'] = round(df["return"].mean() * 100, 2)
-        result['return_std'] = round(df["return"].std() * 100, 2)
+        result['initial_capital / 初始资金'] = self.initial_capital
+        result['start_date / 起始日期'] = df.index[0]
+        result['end_date / 结束日期'] = df.index[-1]
+        result['total_days / 交易天数'] = len(df)
+        result['profit_days / 盈利天数'] = len(df[df["net_pnl"] > 0])
+        result['loss_days / 亏损天数'] = len(df[df["net_pnl"] < 0])
+        result['end_balance / 结束资金'] = round(df["balance"].iloc[-1], 2)
+        result['max_draw_down / 最大回撤'] = round(df["draw_down"].min(), 2)
+        result['max_dd_percent / 最大回撤百分比'] = str(round(df["dd_percent"].min(), 2)) + "%"
+        result['total_pnl / 总盈亏'] = round(df["net_pnl"].sum(), 2)
+        result['daily_pnl / 平均日盈亏'] = round(result['total_pnl / 总盈亏'] / result['total_days / 交易天数'], 2)
+        result['total_commission / 总手续费'] = round(df["commission"].sum(), 2)
+        result['daily_commission / 日均手续费'] = round(result['total_commission / 总手续费'] / result['total_days / 交易天数'], 2)
+        # result['total_slippage'] = df["slippage"].sum()
+        # result['daily_slippage'] = result['total_slippage'] / result['total_days']
+        result['total_turnover / 开仓总资金'] = round(df["turnover"].sum(), 2)
+        result['daily_turnover / 每日平均开仓资金'] = round(result['total_turnover / 开仓总资金'] / result['total_days / 交易天数'], 2)
+        result['total_count / 总成交次数'] = df["count"].sum()
+        result['daily_count / 日均成交次数'] = round(result['total_count / 总成交次数'] / result['total_days / 交易天数'], 2)
+        result['total_return / 总收益率'] = str(
+            round((result['end_balance / 结束资金'] / self.initial_capital - 1) * 100, 2)) + "%"
+        by_year_return_std = df["return"].std() * np.sqrt(245)
+        df["return_x"] = df["return"] + 1
+        profit_ratio = geometric_mean(df["return_x"].to_numpy()) ** 245 - 1
+        result['annual_return / 年化收益率'] = str(round(profit_ratio * 100, 2)) + "%"
+        result['return_std / 年化标准差'] = str(round(by_year_return_std * 100, 2)) + "%"
+        result['volatility / 波动率'] = str(round(df["return"].std() * 100, 2)) + "%"
+        if by_year_return_std != 0:
+            result['sharpe / 年化夏普率'] = (profit_ratio - 2.5 / 100) / by_year_return_std
+        else:
+            result['sharpe / 年化夏普率'] = "计算出错"
         return result

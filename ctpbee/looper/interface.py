@@ -188,6 +188,7 @@ class LocalLooper():
         # 行情
         self.data_entity = None
         self.if_next_day = False
+        self.data_type = "bar"
 
         self.price_mapping = dict()
 
@@ -297,12 +298,13 @@ class LocalLooper():
                     """ 超出涨跌价格 """
                     continue
                 # 进行成交判断
-                long_c = self.data_entity.low_price if self.data_entity.low_price is not None else self.data_entity.ask_price_1
-                short_c = self.data_entity.high_price if self.data_entity.low_price is not None else self.data_entity.bid_price_1
-                long_b = self.data_entity.open_price if self.data_entity.low_price is not None else long_c
-                short_b = self.data_entity.open_price if self.data_entity.low_price is not None else short_c
+                long_c = self.data_entity.low_price if self.data_type == "bar" else self.data_entity.ask_price_1
+                short_c = self.data_entity.high_price if self.data_type == "bar" is not None else self.data_entity.bid_price_1
+                long_b = self.data_entity.open_price if self.data_type == "bar" is not None else long_c
+                short_b = self.data_entity.open_price if self.data_type == "bar" is not None else short_c
                 long_cross = data.direction == Direction.LONG and data.price >= long_c > 0
                 short_cross = data.direction == Direction.SHORT and data.price <= short_c and short_c > 0
+                print(long_c, long_b, long_cross)
                 if long_cross:
                     data.price = min(data.price, long_b)
                 else:
@@ -352,6 +354,7 @@ class LocalLooper():
         """ 回测周期 """
         entity, params = args
         # 日期不相等时,　更新前日结算价格
+        self.data_type = entity.type
         self.__init_params(params)
         if self.account.date is None:
             self.account.date = self.date
@@ -381,6 +384,7 @@ class LocalLooper():
                 self.data_entity.local_symbol] = self.data_entity.last_price if entity.type == "tick" else self.data_entity.close_price
         self.datetime = entity.datetime
         self.match_deal()
+
         if entity.type == "tick":
             [api(entity) for api in self.strategy_mapping.values()]
             self.account.position_manager.update_tick(self.data_entity,

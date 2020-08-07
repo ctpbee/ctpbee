@@ -361,7 +361,10 @@ class TickData(BaseData):
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        try:
+            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        except AttributeError:
+            self.local_symbol = f"{self.symbol}.{self.exchange}"
 
 
 class BarData(BaseData):

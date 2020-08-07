@@ -51,6 +51,9 @@ class LooperApi:
         """ 用户需要继承此方法"""
         # print("我在设置策略参数")
 
+    def get_strategy(self, strategy_name):
+        return self.app.strategy_mapping.get(strategy_name)
+
     def __call__(self, data):
         """
         你必须实现此方法以支持在此层进行中转
