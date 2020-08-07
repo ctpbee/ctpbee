@@ -400,7 +400,13 @@ class Account:
         for daily in self.daily_life.values():
             for key, value in daily.items():
                 result[key].append(value)
-        df = DataFrame.from_dict(result).set_index("date")
+        try:
+            df = DataFrame.from_dict(result).set_index("date")
+        except KeyError:
+            print("-------------------------------------------------")
+            print("|          好像没有结算数据哦!                    |")
+            print("-------------------------------------------------")
+            return {}
         try:
             import matplotlib.pyplot as plt
             df['balance'].plot()

@@ -38,7 +38,7 @@ class ArrayManager(object):
         self.close_array = np.zeros(size)
         self.volume_array = np.zeros(size)
 
-    def update_bar(self, bar):
+    def add_data(self, data, type="bar"):
         """
         Update new bar data into array manager.
         """
@@ -52,11 +52,14 @@ class ArrayManager(object):
         self.close_array[:-1] = self.close_array[1:]
         self.volume_array[:-1] = self.volume_array[1:]
 
-        self.open_array[-1] = bar.open_price
-        self.high_array[-1] = bar.high_price
-        self.low_array[-1] = bar.low_price
-        self.close_array[-1] = bar.close_price
-        self.volume_array[-1] = bar.volume
+        self.open_array[-1] = data.open_price
+        self.high_array[-1] = data.high_price
+        self.low_array[-1] = data.low_price
+        if type == "bar":
+            self.close_array[-1] = data.close_price
+        else:
+            self.close_array[-1] = data.last_price
+        self.volume_array[-1] = data.volume
 
     @property
     def open(self):
