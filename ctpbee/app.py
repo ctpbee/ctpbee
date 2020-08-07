@@ -290,6 +290,12 @@ class CtpBee(object):
         extension.frozen = True
         return True
 
+    def get_extension(self, extension_name):
+        if extension_name in self._extensions:
+            return self._extensions.get(extension_name)
+        else:
+            return None
+
     def enable_extension(self, extension_name):
         extension = self._extensions.get(extension_name, None)
         if not extension:

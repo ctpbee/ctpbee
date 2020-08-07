@@ -227,7 +227,6 @@ class Account:
                 pnl = (p3 - p1) * 3 + (p5 - p2) * 3 + (p5 - p4) * 3 + 手续费    6p5 + 3p3 -3p1 - 3p2 + 3p4
                 """
                 if data.direction == Direction.LONG:
-                    print("结束空头持仓")
                     pos = self.position_manager.get_position_by_ld(data.local_symbol, Direction.SHORT)
                     assert pos.volume >= data.volume
                     close_profit = (pos.price - data.price) * data.volume * self.size_map.get(data.local_symbol)
@@ -324,10 +323,8 @@ class Account:
         :param trade:交易单子/trade
         :return:
         """
-        # print("处理前仓位: \n", self.position_manager.get_position(trade.local_symbol))
         self.update_account_from_trade(trade)
         self.position_manager.update_trade(trade=trade)
-        # print("处理后仓位: \n", self.position_manager.get_position(trade.local_symbol))
 
     def settle(self, interface_date=None):
         """ 生成今天的交易数据， 同时更新前日数据 ，然后进行持仓结算 """
@@ -337,8 +334,6 @@ class Account:
             date = self.date
         """ 结算撤掉所有单 归还冻结 """
         self.clear_frozen()
-        print(
-            f"前日权益: {self.pre_balance}\n close_profit: {sum(self.close_profit.values())}\n 浮动盈亏: {self.float_pnl}\n 手续费: {sum(self.fee.values())}\n冻结: {self.frozen}")
         p = AliasDayResult(
             **{"balance": self.balance,
                "margin": self.margin,
@@ -351,7 +346,6 @@ class Account:
                "net_pnl": self.balance - self.pre_balance,
                "count": self.count,
                })
-        print(p)
         self.daily_life[date] = deepcopy(p._to_dict())
         self.pre_balance = self.balance
         self.long_balance = self.balance
@@ -428,21 +422,21 @@ class Account:
         result['total_days'] = len(df)
         result['profit_days'] = len(df[df["net_pnl"] > 0])
         result['loss_days'] = len(df[df["net_pnl"] < 0])
-        result['end_balance'] = df["balance"].iloc[-1]
-        result['max_draw_down'] = df["draw_down"].min()
-        result['max_dd_percent'] = df["dd_percent"].min()
-        result['total_pnl'] = df["net_pnl"].sum()
-        result['daily_pnl'] = result['total_pnl'] / result['total_days']
-        result['total_commission'] = df["commission"].sum()
-        result['daily_commission'] = result['total_commission'] / result['total_days']
+        result['end_balance'] = round(df["balance"].iloc[-1], 2)
+        result['max_draw_down'] = round(df["draw_down"].min(), 2)
+        result['max_dd_percent'] = str(round(df["dd_percent"].min(), 2)) + "%"
+        result['total_pnl'] = round(df["net_pnl"].sum(), 2)
+        result['daily_pnl'] = round(result['total_pnl'] / result['total_days'], 2)
+        result['total_commission'] = round(df["commission"].sum(), 2)
+        result['daily_commission'] = round(result['total_commission'] / result['total_days'], 2)
         # result['total_slippage'] = df["slippage"].sum()
         # result['daily_slippage'] = result['total_slippage'] / result['total_days']
         # result['total_turnover'] = df["turnover"].sum()
         # result['daily_turnover'] = result['total_turnover'] / result['total_days']
         result['total_count'] = df["count"].sum()
-        result['daily_count'] = result['total_count'] / result['total_days']
-        result['total_return'] = (result['end_balance'] / self.initial_capital - 1) * 100
-        result['annual_return'] = result['total_return'] / result['total_days'] * 240
-        result['daily_return'] = df["return"].mean() * 100
-        result['return_std'] = df["return"].std() * 100
+        result['daily_count'] = round(result['total_count'] / result['total_days'], 2)
+        result['total_return'] = round((result['end_balance'] / self.initial_capital - 1) * 100, 1)
+        result['annual_return'] = round(result['total_return'] / result['total_days'] * 240, 2)
+        result['daily_return'] = round(df["return"].mean() * 100, 2)
+        result['return_std'] = round(df["return"].std() * 100, 2)
         return result
