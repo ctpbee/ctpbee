@@ -472,6 +472,9 @@ class CtpbeeApi(BeeApi):
             raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
         return self.app.recorder
 
+    def get_strategy(self, strategy_name):
+        return self.app.get_extension(strategy_name)
+
     def on_order(self, order: OrderData) -> None:
         pass
 
