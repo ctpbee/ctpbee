@@ -35,7 +35,7 @@ class DoubleMaStrategy(LooperApi):
 
     def on_bar(self, bar):
         """ """
-        self.manager.update_bar(bar)
+        self.manager.add_data(bar)
         if not self.manager.inited:
             return
         fast_avg = self.manager.sma(self.fast, array=True)
