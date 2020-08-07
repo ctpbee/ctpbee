@@ -429,10 +429,6 @@ class Account:
         result['daily_pnl'] = round(result['total_pnl'] / result['total_days'], 2)
         result['total_commission'] = round(df["commission"].sum(), 2)
         result['daily_commission'] = round(result['total_commission'] / result['total_days'], 2)
-        # result['total_slippage'] = df["slippage"].sum()
-        # result['daily_slippage'] = result['total_slippage'] / result['total_days']
-        # result['total_turnover'] = df["turnover"].sum()
-        # result['daily_turnover'] = result['total_turnover'] / result['total_days']
         result['total_count'] = df["count"].sum()
         result['daily_count'] = round(result['total_count'] / result['total_days'], 2)
         result['total_return'] = round((result['end_balance'] / self.initial_capital - 1) * 100, 1)
