@@ -304,7 +304,6 @@ class LocalLooper():
                 short_b = self.data_entity.open_price if self.data_type == "bar" is not None else short_c
                 long_cross = data.direction == Direction.LONG and data.price >= long_c > 0
                 short_cross = data.direction == Direction.SHORT and data.price <= short_c and short_c > 0
-                print(long_c, long_b, long_cross)
                 if long_cross:
                     data.price = min(data.price, long_b)
                 else:

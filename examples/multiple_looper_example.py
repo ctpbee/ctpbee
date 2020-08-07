@@ -88,7 +88,6 @@ class OIDoubleMaStrategy(LooperApi):
     def on_bar(self, bar):
         """ """
         self.manager.update_bar(bar)
-
         if not self.manager.inited:
             return
         fast_avg = self.manager.sma(self.fast, array=True)
@@ -108,7 +107,8 @@ class OIDoubleMaStrategy(LooperApi):
 
 if __name__ == '__main__':
     from ctpbee import QADataSupport
-    data_support = QADataSupport(host="quantaxis.tech", port=27027)
+
+    data_support = QADataSupport()
     runnning = Vessel()
     strategy = DoubleMaStrategy("rb")
     strategy_2 = OIDoubleMaStrategy("oi")
