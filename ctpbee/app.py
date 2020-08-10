@@ -70,7 +70,7 @@ class CtpBee(object):
              SHARED_FUNC=False,  # 分时图数据 --> 等待优化
              REFRESH_INTERVAL=1.5,  # 定时刷新秒数， 需要在CtpBee实例化的时候将refresh设置为True才会生效
              INSTRUMENT_INDEPEND=False,  # 是否开启独立行情，策略对应相应的行情
-             CLOSE_PATTERN="today",  # 面对支持平今的交易所，优先平今或者平昨 ---> today: 平今, yesterday: 平昨， 其他:处罚异常
+             CLOSE_PATTERN="today",  # 面对支持平今的交易所，优先平今或者平昨 ---> today: 平今, yesterday: 平昨， 其他:d
              TODAY_EXCHANGE=[Exchange.SHFE.value, Exchange.INE.value],  # 需要支持平今的交易所代码列表
              AFTER_TIMEOUT=3,  # 设置after线程执行超时,
              TIMER_INTERVAL=1,
