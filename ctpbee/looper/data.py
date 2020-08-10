@@ -58,28 +58,43 @@ class VessData:
         self.inner_data = {}
         self.init_flag = False
         self.data: Tuple[Iterable, Sized] = data
-        # 数据供应商默认设置为ctpbee
-        self.data_provider = "ctpbee"
-        # 数据类型默认设置为tick
-        # 默认的产品类型
+        self.the_buffer = {}
         self.product_type = "future"
         if not isinstance(data, Iterable):
             raise ValueError("数据应为可迭代的数据")
-        # 应该是个生成器
-        """ 根据每个data """
-        self.data_type = Bumblebee(**data[0][0]).type
-
+        # 数据供应商默认设置为ctpbee
         try:
-            for i in data:
-                self.inner_data[i[0]["local_symbol"]] = chain(map(lambda x: Bumblebee(**x), i))
-            self.init_flag = True
-        except Exception:
-            raise ValueError("数据格式不合法")
-        self.slice = 0
-        self.the_buffer = {}
-        for x in self.inner_data:
-            origin = next(self.inner_data[x])
-            self.the_buffer[origin.local_symbol] = origin
+            from data_api import Tick, Kline
+            self.data_provider = "ctpbee"
+            try:
+                for i in data:
+                    temp = next(chain(i))
+                    self.data_type = temp.to_bumblebee().type
+                    print(temp.local_symbol)
+                    self.the_buffer[temp.local_symbol] = temp
+                    self.inner_data[temp.local_symbol] = chain(i)
+                self.init_flag = True
+            except Exception:
+                raise ValueError("数据格式不合法")
+        except ImportError:
+            self.data_provider = "ctpbee"
+            # 数据类型默认设置为tick
+            # 默认的产品类型
+
+            # 应该是个生成器
+            """ 根据每个data """
+            self.data_type = Bumblebee(**data[0][0]).type
+            try:
+                for i in data:
+                    self.inner_data[i[0]["local_symbol"]] = chain(map(lambda x: Bumblebee(**x), i))
+                self.init_flag = True
+            except Exception:
+                raise ValueError("数据格式不合法")
+            self.slice = 0
+            self.the_buffer = {}
+            for x in self.inner_data:
+                origin = next(self.inner_data[x])
+                self.the_buffer[origin.local_symbol] = origin
 
     @property
     def last_bar(self):
@@ -94,7 +109,14 @@ class VessData:
                 """ 如果找到了值相等  那么更新里面的值 """
                 nx = value
                 self.the_buffer[key] = next(self.inner_data[key])
-                return nx
+                try:
+                    from data_api import Tick, Kline
+                    if isinstance(nx, Tick) or isinstance(nx, Kline):
+                        return nx.to_bumblebee()
+                    else:
+                        return nx
+                except ImportError:
+                    return nx
 
     def __next__(self):
         """
@@ -111,7 +133,10 @@ class VessData:
 
     @property
     def length(self):
-        return max([len(x) for x in self.data])
+        try:
+            return max([len(x) for x in self.data])
+        except TypeError:
+            return max([x.count() for x in self.data])
 
     @property
     def type(self):
