@@ -21,10 +21,18 @@ class LooperApi:
         self.name = name
         self.active = True
         self.app = None
+        self.date = None
 
     @property
     def position_manager(self):
         return self.app.account.position_manager
+
+    def get_main_contract(self, alpha):
+        try:
+            return self.data_api.get_main_contract_by_date(alpha, self.date)
+        except AttributeError:
+            print("请添加self.date属性和self.data_api")
+            return None
 
     def on_bar(self, bar):
         raise NotImplemented
@@ -53,6 +61,9 @@ class LooperApi:
 
     def get_strategy(self, strategy_name):
         return self.app.strategy_mapping.get(strategy_name)
+
+    def get_last_entity(self, alpha):
+        return self.app.get_entity_from_alpha(alpha)
 
     def __call__(self, data):
         """

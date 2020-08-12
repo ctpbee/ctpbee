@@ -2,6 +2,7 @@ import collections
 import random
 import uuid
 from copy import deepcopy
+from datetime import timedelta
 from typing import Text, List
 from warnings import warn
 
@@ -147,6 +148,7 @@ class LocalLooper():
         """ 需要构建完整的成交回报以及发单报告,在account里面需要存储大量的存储 """
 
         # 活跃报单数量
+        self.change_month_record = {}
         self.pending = []
 
         self.sessionid = random.randint(1000, 10000)
@@ -302,7 +304,9 @@ class LocalLooper():
             todo: 处理冻结 ??
         """
         for data in self.pending:
-            if data.local_symbol != self.data_entity.local_symbol:  # 针对多品种，实现拆分。 更新当前的价格，确保多个
+            px = "".join(filter(str.isalpha, data.local_symbol))
+            nx = "".join(filter(str.isalpha, self.data_entity.local_symbol))
+            if nx != px:  # 针对多品种，实现拆分。 更新当前的价格，确保多个
                 continue
             if self.params.get("deal_pattern") == "match":
                 """ 撮合成交 """
@@ -312,7 +316,7 @@ class LocalLooper():
                     # 同时这里需要处理是否要进行
                     trade = self._generate_trade_data_from_order(data)
                     self.logger.info(
-                        f"成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
+                        f"--> {trade.local_symbol} 成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
                         f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
                     self.account.update_trade(trade)
                     """ 调用strategy的on_trade """
@@ -412,6 +416,12 @@ class LocalLooper():
         if not self.auth_time(entity.datetime):
             return
         self.data_type = entity.type
+        # 回测的时候自动更新策略的日期
+        if entity.datetime.hour > 21:
+            dt = entity.datetime + timedelta(days=1)
+        else:
+            dt = entity.datetime
+        [setattr(x, "date", str(dt.date())) for x in self.strategy_mapping.values()]
         self.__init_params(params)
         try:
             seconds = (entity.datetime - self.datetime).seconds
@@ -427,11 +437,15 @@ class LocalLooper():
                     self.pre_close_price[
                         self.data_entity.local_symbol] = self.data_entity.close_price if entity.type == "bar" \
                         else self.data_entity.last_price
+                #  结算完触发初始化函数
+                [x.on_init(entity) for x in self.strategy_mapping.values()]
         except KeyError:
             pass
         except AttributeError:
             pass
         self.data_entity = entity
+
+        self.change_month_record["".join(filter(str.isalpha, entity.local_symbol.split(".")[0]))] = entity
         # 维护一个最新的价格
         self.price_mapping[self.data_entity.local_symbol] = self.data_entity.close_price if entity.type == "bar" \
             else self.data_entity.last_price
@@ -453,3 +467,6 @@ class LocalLooper():
         self.date = entity.datetime.date()
         # 穿过接口日期检查
         self.account.via_aisle()
+
+    def get_entity_from_alpha(self, alpha):
+        return self.change_month_record.get(alpha)

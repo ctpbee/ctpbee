@@ -336,10 +336,12 @@ class Account:
                 pos = self.position_manager.get_position_by_ld(order.local_symbol, Direction.SHORT)
                 if not pos or order.volume > pos.volume:
                     """ 仓位不足 """
+                    print(f"平多头仓位不足 {order.local_symbol} volume: {order.volume}")
                     return False
             else:
                 pos = self.position_manager.get_position_by_ld(order.local_symbol, Direction.LONG)
                 if not pos or order.volume > pos.volume:
+                    print(f"平空头仓位不足 {order.local_symbol} volume: {order.volume}")
                     return False
         order_amount = order.price * order.volume * self.size_map.get(
             order.local_symbol) * self.margin_ratio.get(

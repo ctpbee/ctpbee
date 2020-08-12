@@ -489,14 +489,14 @@ class LocalPositionManager(dict):
         """ 返回所有的持仓信息 """
         position_list = []
         for x in self.values():
-            if x.symbol == "":
+            if x.local_symbol == "":
                 continue
             if x.long_pos != 0:
                 temp = {}
                 temp['exchange'] = x.exchange
                 temp['direction'] = "long"
                 temp['position_profit'] = x.long_pnl
-                temp['symbol'] = x.symbol
+                temp['symbol'] = x.local_symbol
                 temp['local_symbol'] = x.local_symbol
                 temp['price'] = x.long_price
                 temp['volume'] = x.long_pos
@@ -514,7 +514,7 @@ class LocalPositionManager(dict):
                 temp['exchange'] = x.exchange
                 temp['direction'] = "short"
                 temp['position_profit'] = x.short_pnl
-                temp['symbol'] = x.symbol
+                temp['symbol'] = x.local_symbol
                 temp['local_symbol'] = x.local_symbol
                 temp['price'] = x.short_price
                 temp['volume'] = x.short_pos
