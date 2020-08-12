@@ -9,6 +9,7 @@
 from collections import defaultdict
 from copy import deepcopy
 import math
+from datetime import datetime
 
 try:
     from statistics import geometric_mean
@@ -101,6 +102,7 @@ class Account:
         self.commission_ratio = defaultdict(dict)
         self.close_profit = {}
         self.turnover = 0
+        self.pre_float = 0
 
     @property
     def margin(self):
@@ -134,13 +136,23 @@ class Account:
             else:
                 result[key] = value
         for pos in self.position_manager.get_all_positions():
+            today = pos["volume"] - pos["yd_volume"]
+            price = self.interface.pre_close_price[pos["local_symbol"]]
+
             if pos['direction'] == "long":
-                pnl = (self.interface.price_mapping[pos["local_symbol"]] - pos["price"]) * pos[
-                    "volume"] * self.size_map.get(
+                """ 判断昨仓还是今仓 """
+                pnl = (self.interface.price_mapping[pos["local_symbol"]] - price) * pos[
+                    "yd_volume"] * self.size_map.get(
+                    pos["local_symbol"]) + (self.interface.price_mapping[pos["local_symbol"]] - pos[
+                    "price"]) * today * self.size_map.get(
                     pos["local_symbol"])
             else:
-                pnl = (pos["price"] - self.interface.price_mapping[pos["local_symbol"]]) * pos[
-                    "volume"] * self.size_map.get(
+                pnl = (self.interface.pre_close_price[
+                           pos["local_symbol"]] - self.interface.price_mapping[pos["local_symbol"]]) * pos[
+                          "yd_volume"] * self.size_map.get(
+                    pos["local_symbol"]) + (self.interface.pre_close_price[
+                                                pos["local_symbol"]] - self.interface.price_mapping[
+                                                pos["local_symbol"]]) * today * self.size_map.get(
                     pos["local_symbol"])
             if pos["local_symbol"] in result.keys():
                 result[pos["local_symbol"]] += pnl
@@ -156,14 +168,26 @@ class Account:
     def float_pnl(self):
         result = 0
         for pos in self.position_manager.get_all_positions():
+            today = pos["volume"] - pos["yd_volume"]
+            price = self.interface.pre_close_price[pos["local_symbol"]]
+
             if pos['direction'] == "long":
-                result += (self.interface.price_mapping[pos["local_symbol"]] - pos["price"]) * pos[
-                    "volume"] * self.size_map.get(
+                """ 判断昨仓还是今仓 """
+                pnl = (self.interface.price_mapping[pos["local_symbol"]] - price) * pos[
+                    "yd_volume"] * self.size_map.get(
+                    pos["local_symbol"]) + (self.interface.price_mapping[pos["local_symbol"]] - pos[
+                    "price"]) * today * self.size_map.get(
                     pos["local_symbol"])
+                result += pnl
             else:
-                result += (pos["price"] - self.interface.price_mapping[pos["local_symbol"]]) * pos[
-                    "volume"] * self.size_map.get(
+                pnl = (self.interface.pre_close_price[
+                           pos["local_symbol"]] - self.interface.price_mapping[pos["local_symbol"]]) * pos[
+                          "yd_volume"] * self.size_map.get(
+                    pos["local_symbol"]) + (self.interface.pre_close_price[
+                                                pos["local_symbol"]] - self.interface.price_mapping[
+                                                pos["local_symbol"]]) * today * self.size_map.get(
                     pos["local_symbol"])
+                result += pnl
         return result
 
     @property
@@ -319,7 +343,7 @@ class Account:
                     return False
         order_amount = order.price * order.volume * self.size_map.get(
             order.local_symbol) * self.margin_ratio.get(
-            order.local_symbol) + order.price * order.volume
+            order.local_symbol)
         if self.available < order_amount or self.available < 0:
             """ 可用不足"""
             return False
@@ -334,6 +358,16 @@ class Account:
         """
         self.update_account_from_trade(trade)
         self.position_manager.update_trade(trade=trade)
+        tr = ""
+        for pos in self.position_manager.get_all_positions():
+            if pos["direction"] == "long":
+                tr += f"{pos['local_symbol']}  long :{pos['volume']} \n"
+            else:
+                tr += f"{pos['local_symbol']}  short :{pos['volume']} \n"
+        if isinstance(trade.time, datetime):
+            self.interface.position_detail[trade.time.strftime("%Y-%m-%d %H:%M:%S")] = tr
+        elif isinstance(trade.time, str):
+            self.interface.position_detail[trade.time] = tr
 
     def settle(self, interface_date=None):
         """ 生成今天的交易数据， 同时更新前日数据 ，然后进行持仓结算 """
@@ -356,6 +390,8 @@ class Account:
                "count": self.count,
                "turnover": self.turnover
                })
+        print(p)
+        self.pre_float = self.float_pnl
         self.daily_life[date] = deepcopy(p._to_dict())
         self.pre_balance = self.balance
         self.long_balance = self.balance
@@ -455,7 +491,11 @@ class Account:
             round((result['end_balance / 结束资金'] / self.initial_capital - 1) * 100, 2)) + "%"
         by_year_return_std = df["return"].std() * np.sqrt(245)
         df["return_x"] = df["return"] + 1
-        profit_ratio = geometric_mean(df["return_x"].to_numpy()) ** 245 - 1
+        try:
+            profit_ratio = geometric_mean(df["return_x"].to_numpy()) ** 245 - 1
+        except ValueError:
+            self.logger.error("计算存在负数, 本次回测作废")
+            return {}
         result['annual_return / 年化收益率'] = str(round(profit_ratio * 100, 2)) + "%"
         result['return_std / 年化标准差'] = str(round(by_year_return_std * 100, 2)) + "%"
         result['volatility / 波动率'] = str(round(df["return"].std() * 100, 2)) + "%"

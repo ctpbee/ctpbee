@@ -62,7 +62,6 @@ class LooperApi:
             return
         if not self.active:
             return
-
         if isinstance(data, ContractData):
             self.on_contract(data)
         elif isinstance(data, OrderData):
@@ -237,10 +236,11 @@ class Vessel:
         成交单数据
         """
         trade_data = list(map(dumps, self.interface.traded_order_mapping.values()))
+        position_data = self.interface.position_detail
         if report:
             path = render_result(self.interface.account.result, trade_data=trade_data, strategy=strategys,
                                  net_pnl=net_pnl,
-                                 account_data=account_data, datetimed=end_time,
+                                 account_data=account_data, datetimed=end_time, position_data=position_data,
                                  cost_time=cost_time, **kwargs)
             print(f"请复制下面的路径到浏览器打开----> \n {path}")
             return path
@@ -257,7 +257,7 @@ class Vessel:
         if False not in [x.init_flag for x in self.looper_data]:
             # self.logger.info(f"产品: {self.looper_data.product}")
             self.logger.info(f"回测模式: {self.looper_pattern}")
-        for x in range(self.looper_data[0].length):
+        while True:
             if ready:
                 """ 如果处于就绪状态 那么直接开始继续回测 """
                 try:
@@ -265,12 +265,13 @@ class Vessel:
                     for _origin_data in self.looper_data:
                         p = next(_origin_data)
                         self.interface(p, parmas)
-
                 except StopIteration:
                     self._looper_status = "finished"
+                    self.logger.info("回测结束了, 正在终止")
                     break
             else:
                 """ 如果处于未就绪状态 那么暂停回测 """
+                print("数据未就绪")
                 sleep(1)
         self.logger.info("回测结束,正在生成回测报告")
 

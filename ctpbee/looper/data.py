@@ -9,7 +9,7 @@ todo: 优化数据访问速度
 """
 from datetime import datetime
 from itertools import chain
-from typing import List, Iterable, Tuple, Sized
+from typing import List, Iterable, Tuple, Sized, Generator
 
 
 class Bumblebee(dict):
@@ -68,11 +68,16 @@ class VessData:
             self.data_provider = "ctpbee"
             try:
                 for i in data:
-                    temp = next(chain(i))
-                    self.data_type = temp.to_bumblebee().type
-                    print(temp.local_symbol)
-                    self.the_buffer[temp.local_symbol] = temp
-                    self.inner_data[temp.local_symbol] = chain(i)
+                    if isinstance(i, Generator):
+                        temp = next(i)
+                        self.data_type = temp.type
+                        self.the_buffer[temp.local_symbol] = temp
+                        self.inner_data[temp.local_symbol] = i
+                    else:
+                        temp = next(chain(i))
+                        self.data_type = temp.type
+                        self.the_buffer[temp.local_symbol] = temp
+                        self.inner_data[temp.local_symbol] = chain(i)
                 self.init_flag = True
             except Exception:
                 raise ValueError("数据格式不合法")
@@ -130,13 +135,6 @@ class VessData:
 
     def __iter__(self):
         return iter(self.inner_data)
-
-    @property
-    def length(self):
-        try:
-            return max([len(x) for x in self.data])
-        except TypeError:
-            return max([x.count() for x in self.data])
 
     @property
     def type(self):

@@ -94,7 +94,7 @@ class Exchange(Enum):
     SSE = "SSE"
     SZSE = "SZSE"
     SGE = "SGE"
-
+    CTP = "ctp"
     # Global
     SMART = "SMART"
     NYMEX = "NYMEX"
@@ -133,7 +133,8 @@ EXCHANGE_MAPPING = {
     "BITMEX": Exchange.BITMEX,
     "OKEX": Exchange.OKEX,
     "HUOBI": Exchange.HUOBI,
-    "BITFINEX": Exchange.BITFINEX
+    "BITFINEX": Exchange.BITFINEX,
+    "CTP": Exchange.CTP
 }
 
 
@@ -457,6 +458,7 @@ class TradeData(BaseData):
     price: float = 0
     volume: float = 0
     time: str = ""
+    order_time: str = ""
 
     def __post_init__(self):
         """"""

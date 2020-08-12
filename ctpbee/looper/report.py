@@ -18,7 +18,7 @@ main_template = env.get_template("looper.html")
 trade_template = env.get_template("trade_record.html")
 
 
-def render_result(result, kline=None, trades=None, datetimed=None, trade_data=None, strategy=[],
+def render_result(result, kline=None, trades=None, datetimed=None, trade_data=None, strategy=[], position_data=None,
                   account_data=None, net_pnl=None, cost_time=None, **kwargs):
     """
     渲染结果并写入到本地html文件， 并返回htmk文件地址
@@ -29,7 +29,7 @@ def render_result(result, kline=None, trades=None, datetimed=None, trade_data=No
                                        account_data=account_data,
                                        net_pnl=net_pnl, cost_time=cost_time,
                                        datetime=datetimed)
-    trade_code_string = trade_template.render(trade_data=trade_data)
+    trade_code_string = trade_template.render(trade_data=trade_data, position_data=position_data)
 
     """ 回测主文件存放地址"""
     file_path = kwargs.get("file_path", None)
