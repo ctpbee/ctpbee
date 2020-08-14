@@ -382,12 +382,21 @@ class PositionHolding:
         return None
 
 
+class Dict(dict):
+    __getattr__ = dict.__getitem__
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+    __getattribute__ = dict.get
+
+
+# __get_item__
+
 class LocalPositionManager(dict):
     """ 用于管理持仓信息 只提供向外的接口 """
 
-    def __init__(self, params: dict):
+    def __init__(self, account):
         """ 传入参数进行参数设置 """
-        self.size_map: dict = params.get("size_map")
+        self.account = account
 
     @property
     def position_profit(self):
@@ -420,7 +429,7 @@ class LocalPositionManager(dict):
 
         holding = self.get(req.local_symbol, None)
         if not holding:
-            self[req.local_symbol] = PositionHolding(req.local_symbol, self.size_map.get(req.local_symbol))
+            self[req.local_symbol] = PositionHolding(req.local_symbol, self.account.get_size_from_map(req.local_symbol))
         self[req.local_symbol].update_order_request(req, local_orderid)
 
     def convert_order_request(self, req: OrderRequest, lock: bool):
@@ -430,7 +439,7 @@ class LocalPositionManager(dict):
 
         holding = self.get(req.local_symbol, None)
         if not holding:
-            self[req.local_symbol] = PositionHolding(req.local_symbol, self.size_map.get(req.local_symbol))
+            self[req.local_symbol] = PositionHolding(req.local_symbol, self.account.get_size_from_map(req.local_symbol))
         if lock:
             return self[req.local_symbol].convert_order_request_lock(req)
         elif req.exchange == Exchange.SHFE:
@@ -441,14 +450,16 @@ class LocalPositionManager(dict):
     def update_order(self, order):
         """ 更新order """
         if order.local_symbol not in self:
-            self[order.local_symbol] = PositionHolding(order.local_symbol, self.size_map.get(order.local_symbol))
+            self[order.local_symbol] = PositionHolding(order.local_symbol,
+                                                       self.account.get_size_from_map(order.local_symbol))
         else:
             self.get(order.local_symbol).update_order(order)
 
     def update_trade(self, trade, **kwargs):
         """ 更新成交  """
         if trade.local_symbol not in self:
-            self[trade.local_symbol] = PositionHolding(trade.local_symbol, self.size_map.get(trade.local_symbol))
+            self[trade.local_symbol] = PositionHolding(trade.local_symbol,
+                                                       self.account.get_size_from_map(trade.local_symbol))
             self[trade.local_symbol].update_trade(trade)
         else:
             self.get(trade.local_symbol).update_trade(trade)
@@ -456,7 +467,8 @@ class LocalPositionManager(dict):
     def update_position(self, position):
         """ 更新持仓 """
         if position.local_symbol not in self.keys():
-            self[position.local_symbol] = PositionHolding(position.local_symbol)
+            self[position.local_symbol] = PositionHolding(position.local_symbol,
+                                                          self.account.get_size_from_map(position.local_symbol))
             self[position.local_symbol].update_position(position)
         else:
             self.get(position.local_symbol).update_position(position)
@@ -492,7 +504,7 @@ class LocalPositionManager(dict):
             if x.local_symbol == "":
                 continue
             if x.long_pos != 0:
-                temp = {}
+                temp = Dict()
                 temp['exchange'] = x.exchange
                 temp['direction'] = "long"
                 temp['position_profit'] = x.long_pnl
@@ -510,7 +522,7 @@ class LocalPositionManager(dict):
                     temp['position_date'] = 1
                 position_list.append(temp)
             if x.short_pos != 0:
-                temp = {}
+                temp = Dict()
                 temp['exchange'] = x.exchange
                 temp['direction'] = "short"
                 temp['position_profit'] = x.short_pnl

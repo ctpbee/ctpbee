@@ -99,6 +99,7 @@ class Account:
         self.position_manager = None
         self.margin_ratio = {}
         # commission_ratio 应该为{"ag2012.SHFE": {"close_today": 0.005, "close":0.005 }
+        self.basic_info = None
         self.commission_ratio = defaultdict(dict)
         self.close_profit = {}
         self.turnover = 0
@@ -108,9 +109,12 @@ class Account:
     def margin(self):
         result = 0
         for x in self.position_manager.get_all_positions():
-            result += x["price"] * x["volume"] * self.size_map.get(
-                x["local_symbol"]) * self.margin_ratio.get(
+            result += x["price"] * x["volume"] * self.get_size_from_map(
+                x["local_symbol"]) * self.get_margin_ration(
                 x["local_symbol"])
+            print(x["price"], x["volume"], self.get_margin_ration(x["local_symbol"]),
+                  self.get_size_from_map(x["local_symbol"]))
+
         return result
 
     @property
@@ -142,17 +146,17 @@ class Account:
             if pos['direction'] == "long":
                 """ 判断昨仓还是今仓 """
                 pnl = (self.interface.price_mapping[pos["local_symbol"]] - price) * pos[
-                    "yd_volume"] * self.size_map.get(
+                    "yd_volume"] * self.get_size_from_map(
                     pos["local_symbol"]) + (self.interface.price_mapping[pos["local_symbol"]] - pos[
-                    "price"]) * today * self.size_map.get(
+                    "price"]) * today * self.get_size_from_map(
                     pos["local_symbol"])
             else:
                 pnl = (self.interface.pre_close_price[
                            pos["local_symbol"]] - self.interface.price_mapping[pos["local_symbol"]]) * pos[
-                          "yd_volume"] * self.size_map.get(
+                          "yd_volume"] * self.get_size_from_map(
                     pos["local_symbol"]) + (self.interface.pre_close_price[
                                                 pos["local_symbol"]] - self.interface.price_mapping[
-                                                pos["local_symbol"]]) * today * self.size_map.get(
+                                                pos["local_symbol"]]) * today * self.get_size_from_map(
                     pos["local_symbol"])
             if pos["local_symbol"] in result.keys():
                 result[pos["local_symbol"]] += pnl
@@ -174,18 +178,18 @@ class Account:
             if pos['direction'] == "long":
                 """ 判断昨仓还是今仓 """
                 pnl = (self.interface.price_mapping[pos["local_symbol"]] - price) * pos[
-                    "yd_volume"] * self.size_map.get(
+                    "yd_volume"] * self.get_size_from_map(
                     pos["local_symbol"]) + (self.interface.price_mapping[pos["local_symbol"]] - pos[
-                    "price"]) * today * self.size_map.get(
+                    "price"]) * today * self.get_size_from_map(
                     pos["local_symbol"])
                 result += pnl
             else:
                 pnl = (self.interface.pre_close_price[
                            pos["local_symbol"]] - self.interface.price_mapping[pos["local_symbol"]]) * pos[
-                          "yd_volume"] * self.size_map.get(
+                          "yd_volume"] * self.get_size_from_map(
                     pos["local_symbol"]) + (self.interface.pre_close_price[
                                                 pos["local_symbol"]] - self.interface.price_mapping[
-                                                pos["local_symbol"]]) * today * self.size_map.get(
+                                                pos["local_symbol"]]) * today * self.get_size_from_map(
                     pos["local_symbol"])
                 result += pnl
         return result
@@ -204,6 +208,54 @@ class Account:
     def logger(self):
         return self.interface.logger
 
+    def get_margin_ration(self, local_symbol):
+        """ 获取保证金比率"""
+        if self.basic_info is not None:
+            if "." in local_symbol:
+                local_symbol = local_symbol.split(".")[0]
+            lc = "".join(filter(str.isalpha, local_symbol))
+            return self.basic_info[lc][self.interface.date].margin
+        else:
+            return self.margin_ratio.get(local_symbol)
+
+    def get_commission(self, order: OrderData or TradeData, close_today=False):
+        """ 获取手续费比率 """
+        if self.basic_info is not None:
+            if "." in order.local_symbol:
+                local_symbol = order.local_symbol.split(".")[0]
+            else:
+                local_symbol = order.local_symbol
+            lc = "".join(filter(str.isalpha, local_symbol))
+            n = self.basic_info[lc][self.interface.date]
+            if n.commission_type == 2:
+                if close_today:
+                    """ 平今 """
+                    return n.close_today_ratio * order.price * order.volume * self.get_size_from_map(order.local_symbol)
+                else:
+                    return n.close_ratio * order.price * order.volume * self.get_size_from_map(order.local_symbol)
+            else:
+                if close_today:
+                    return n.close_today_ratio * order.volume * self.get_size_from_map(order.local_symbol)
+                else:
+                    return n.close_ratio * order.volume * self.get_size_from_map(order.local_symbol)
+        else:
+            if close_today:
+                return self.commission_ratio.get(order.local_symbol)[
+                           "close_today"] * order.volume * order.price * self.get_size_from_map(order.local_symbol)
+            else:
+                return self.commission_ratio.get(order.local_symbol)[
+                           "close"] * order.volume * order.price * self.get_size_from_map(order.local_symbol)
+
+    def get_size_from_map(self, local_symbol):
+        """ 获取合约乘数 """
+        if self.basic_info is not None:
+            if "." in local_symbol:
+                local_symbol = local_symbol.split(".")[0]
+            lc = "".join(filter(str.isalpha, local_symbol))
+            return self.basic_info[lc][self.interface.date].size
+        else:
+            return self.size_map.get(local_symbol)
+
     def update_account_from_trade(self, data: TradeData or OrderData):
         """ 更新基础属性方法
         # 下单更新冻结的保证金
@@ -216,22 +268,22 @@ class Account:
                 self.frozen_fee.pop(data.order_id)
             try:
                 if data.offset == Offset.CLOSETODAY:
-                    ratio = self.commission_ratio.get(data.local_symbol)["close_today"]
+                    fee = self.get_commission(data, close_today=True)
                 else:
-                    ratio = self.commission_ratio.get(data.local_symbol)["close"]
+                    fee = self.get_commission(data)
             except KeyError:
                 raise ValueError("请在对应品种设置合理的手续费")
+
             if self.fee.get(data.local_symbol) is None:
-                self.fee[data.local_symbol] = data.price * data.volume * ratio * self.size_map.get(data.local_symbol)
+                self.fee[data.local_symbol] = fee
             else:
-                self.fee[data.local_symbol] += data.price * data.volume * ratio * self.size_map.get(data.local_symbol)
+                self.fee[data.local_symbol] += fee
             """ 余额减去实际发生手续费用 """
             if self.pnl_of_every_symbol.get(data.local_symbol) is None:
-                self.pnl_of_every_symbol[data.local_symbol] = data.price * data.volume * ratio * self.size_map.get(
-                    data.local_symbol)
+                self.pnl_of_every_symbol[data.local_symbol] = fee
             else:
-                self.pnl_of_every_symbol[data.local_symbol] += data.price * data.volume * ratio * self.size_map.get(
-                    data.local_symbol)
+                self.pnl_of_every_symbol[
+                    data.local_symbol] += fee
 
             if data.offset == Offset.OPEN:
                 """  开仓增加保证金 """
@@ -261,12 +313,12 @@ class Account:
                 if data.direction == Direction.LONG:
                     pos = self.position_manager.get_position_by_ld(data.local_symbol, Direction.SHORT)
                     assert pos.volume >= data.volume
-                    close_profit = (pos.price - data.price) * data.volume * self.size_map.get(data.local_symbol)
+                    close_profit = (pos.price - data.price) * data.volume * self.get_size_from_map(data.local_symbol)
 
                 else:
                     pos = self.position_manager.get_position_by_ld(data.local_symbol, Direction.LONG)
                     assert pos.volume >= data.volume
-                    close_profit = (data.price - pos.price) * data.volume * self.size_map.get(data.local_symbol)
+                    close_profit = (data.price - pos.price) * data.volume * self.get_size_from_map(data.local_symbol)
                 if self.close_profit.get(data.local_symbol) is None:
                     self.close_profit[data.local_symbol] = close_profit
                 else:
@@ -280,19 +332,17 @@ class Account:
         从order里面更新订单信息
         """
         if order.offset == Offset.CLOSETODAY:
-            self.frozen_fee[order.order_id] = self.commission_ratio.get(
-                order.local_symbol)["close_today"] * order.price * order.volume * self.size_map.get(order.local_symbol)
+            self.frozen_fee[order.order_id] = self.get_commission(order, close_today=True)
         else:
-            self.frozen_fee[order.order_id] = self.commission_ratio.get(
-                order.local_symbol)["close"] * order.price * order.volume * self.size_map.get(order.local_symbol)
+            self.frozen_fee[order.order_id] = self.get_commission(order)
         if order.offset == Offset.OPEN:
             """ 开仓增加保证金占用 """
             if order.direction == Direction.LONG:
-                self.long_frozen_margin[order.order_id] = self.margin_ratio.get(
-                    order.local_symbol) * order.price * order.volume * self.size_map.get(order.local_symbol)
+                self.long_frozen_margin[order.order_id] = self.get_margin_ration(
+                    order.local_symbol) * order.price * order.volume * self.get_size_from_map(order.local_symbol)
             else:
-                self.short_frozen_margin[order.order_id] = self.margin_ratio.get(
-                    order.local_symbol) * order.price * order.volume * self.size_map.get(order.local_symbol)
+                self.short_frozen_margin[order.order_id] = self.get_margin_ration(
+                    order.local_symbol) * order.price * order.volume * self.get_size_from_map(order.local_symbol)
 
         self.position_manager.update_order(order)
 
@@ -320,10 +370,38 @@ class Account:
         for x in self.fee.keys():
             self.fee[x] = 0
 
+    def close_position_by_amount(self, amount, price_mapping):
+        """ 通过指定金额来金额来平仓直到available为正 """
+        self.logger.info(f"{self.date} 正在按照指定金额进行平仓: {amount}")
+        for position in self.position_manager.get_all_positions():
+            margin = position["price"] * position["volume"] * self.get_size_from_map(
+                position["local_symbol"]) * self.get_margin_ration(position["local_symbol"])
+            if margin > amount:
+                volume = amount / (position["price"] * self.get_size_from_map(
+                    position["local_symbol"]) * self.get_margin_ration(position["local_symbol"]))
+                if volume % 1 != 0:
+                    volume = int(volume) + 1
+                else:
+                    volume = int(volume)
+                amount = 0
+            else:
+                volume = position["volume"]
+                amount -= margin
+
+            if position["direction"] == "long":
+                self.interface.action.cover(price_mapping[position["local_symbol"]], volume, position)
+            else:
+                self.interface.action.sell(price_mapping[position["local_symbol"]], volume, position)
+            if amount <= 0:
+                self.logger.info("已经发完足够包含指定保证金的平仓单")
+                break
+        if amount > 0:
+            raise ValueError(f"你爆仓了!!!!, 什么策略????? 你的保证金: {self.margin} 可用:{self.available}")
+
     @property
     def position_amount(self):
-        return sum([self.interface.price_mapping.get(x['local_symbol']) * x["volume"] * self.size_map.get(
-            x["local_symbol"]) * self.margin_ratio.get(x["local_symbol"]) for x in
+        return sum([self.interface.price_mapping.get(x['local_symbol']) * x["volume"] * self.get_size_from_map(
+            x["local_symbol"]) * self.get_margin_ration(x["local_symbol"]) for x in
                     self.position_manager.get_all_positions()])
 
     def is_traded(self, order: OrderData) -> bool:
@@ -338,13 +416,17 @@ class Account:
                     """ 仓位不足 """
                     print(f"平多头仓位不足 {order.local_symbol} volume: {order.volume}")
                     return False
+                else:
+                    return True
             else:
                 pos = self.position_manager.get_position_by_ld(order.local_symbol, Direction.LONG)
                 if not pos or order.volume > pos.volume:
                     print(f"平空头仓位不足 {order.local_symbol} volume: {order.volume}")
                     return False
-        order_amount = order.price * order.volume * self.size_map.get(
-            order.local_symbol) * self.margin_ratio.get(
+                else:
+                    return True
+        order_amount = order.price * order.volume * self.get_size_from_map(
+            order.local_symbol) * self.get_margin_ration(
             order.local_symbol)
         if self.available < order_amount or self.available < 0:
             """ 可用不足"""
@@ -379,6 +461,11 @@ class Account:
             date = self.date
         """ 结算撤掉所有单 归还冻结 """
         self.clear_frozen()
+
+        if self.available < 0:
+            self.logger.info("你的可用不足, 进行减仓")
+            self.close_position_by_amount(abs(self.available), self.interface.price_mapping)
+
         p = AliasDayResult(
             **{"balance": self.balance,
                "margin": self.margin,
@@ -426,7 +513,7 @@ class Account:
                 pass
             setattr(self, i, v)
         if not self.init_position_manager_flag:
-            self.position_manager = LocalPositionManager(params)
+            self.position_manager = LocalPositionManager(self)
             self.init_position_manager_flag = True
         else:
             pass
@@ -449,7 +536,6 @@ class Account:
             import matplotlib.pyplot as plt
             df['balance'].plot()
             plt.show()
-
         except ImportError as e:
             pass
         finally:

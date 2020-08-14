@@ -34,6 +34,9 @@ class LooperApi:
             print("请添加self.date属性和self.data_api")
             return None
 
+    def on_init(self, init):
+        pass
+
     def on_bar(self, bar):
         raise NotImplemented
 
@@ -208,6 +211,10 @@ class Vessel:
         self._risk_status = True
         self.interface.update_risk(risk)
         self.check_if_ready()
+
+    def add_basic_info(self, info):
+        """ 添加基础手续费以及size_map等信息 """
+        self.interface.account.basic_info = info
 
     def set_params(self, params):
         """

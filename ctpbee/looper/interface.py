@@ -198,12 +198,13 @@ class LocalLooper():
         self.price_mapping = dict()
         # 仓位详细
         self.position_detail = dict()
+        self.action = Action(self)
 
     def get_trades(self):
         return list(self.traded_order_mapping.values())
 
     def update_strategy(self, strategy):
-        setattr(strategy, "action", Action(self))
+        setattr(strategy, "action", self.action)
         setattr(strategy, "logger", self.logger)
         setattr(strategy, "info", self.logger.info)
         setattr(strategy, "debug", self.logger.debug)
@@ -274,12 +275,12 @@ class LocalLooper():
                 return 1
             else:
                 self.logger.info("报单可用不足")
-                self.logger.debug(f"{self.account.close_profit}")
-                self.logger.debug(f"{self.account.margin}")
-                self.logger.debug(f"{self.account.pre_balance}")
-                self.logger.debug(f"{self.account.float_pnl}")
-                self.logger.debug(f"{self.account.frozen_margin}")
-                self.logger.debug(f"{self.account.available}")
+                self.logger.debug(f"close_profit: {self.account.close_profit}")
+                self.logger.debug(f"margin: {self.account.margin}")
+                self.logger.debug(f"pre_balance: {self.account.pre_balance}")
+                self.logger.debug(f"float_pnl: {self.account.float_pnl}")
+                self.logger.debug(f"frozen_margin: {self.account.frozen_margin}")
+                self.logger.debug(f"available: {self.account.available}")
                 return 0
         if isinstance(data, CancelRequest):
             """ 撤单请求处理 
@@ -317,7 +318,8 @@ class LocalLooper():
                     trade = self._generate_trade_data_from_order(data)
                     self.logger.info(
                         f"--> {trade.local_symbol} 成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
-                        f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
+                        f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}, "
+                        f"账户净值: {self.account.balance} 保证金: {self.account.margin} 账户剩余可用: {self.account.available}  此时队列中的单子: {len(self.pending)}")
                     self.account.update_trade(trade)
                     """ 调用strategy的on_trade """
                     self.pending.remove(data)
@@ -413,6 +415,8 @@ class LocalLooper():
         # 日期不相等时,　更新前日结算价格
         if self.account.date is None:
             self.account.date = self.date
+        if self.date is None:
+            self.date = entity.datetime.date()
         if not self.auth_time(entity.datetime):
             return
         self.data_type = entity.type
@@ -444,7 +448,6 @@ class LocalLooper():
         except AttributeError:
             pass
         self.data_entity = entity
-
         self.change_month_record["".join(filter(str.isalpha, entity.local_symbol.split(".")[0]))] = entity
         # 维护一个最新的价格
         self.price_mapping[self.data_entity.local_symbol] = self.data_entity.close_price if entity.type == "bar" \
