@@ -112,9 +112,6 @@ class Account:
             result += x["price"] * x["volume"] * self.get_size_from_map(
                 x["local_symbol"]) * self.get_margin_ration(
                 x["local_symbol"])
-            print(x["price"], x["volume"], self.get_margin_ration(x["local_symbol"]),
-                  self.get_size_from_map(x["local_symbol"]))
-
         return result
 
     @property
@@ -479,7 +476,6 @@ class Account:
                "count": self.count,
                "turnover": self.turnover
                })
-        print(p)
         self.pre_float = self.float_pnl
         self.daily_life[date] = deepcopy(p._to_dict())
         self.pre_balance = self.balance
