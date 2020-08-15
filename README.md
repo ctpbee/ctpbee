@@ -72,10 +72,8 @@ ctpbee作为开发框架并不具有历史数据的功能，我们也因为条�
 
 关于此个版本的支持，请参见[文档](https://docs.ctpbee.com/)中的[安装](https://docs.ctpbee.com/install)
 
-## 模拟/SIM
-ctpbee基于回测的机制添加了`sim`接口， 通过配置的接口`INTERFACE`填入`sim`即可进行载入,
-此处描述为通过[fast-pub](https://github.com/ctpbee/fast-pub)拉起一个模拟服务器，通过`HTTP API`来获取策略机制. 此项功能正在研发中~~ 欢迎通过`issue`来进行反馈!
-
+## 回测 
+小有可能是最完善的回测了， 可惜这个时候还没有文档 -_-
 
 ## 一些可能会减少你工作量的工作
 - [x] 7×24小时无人值守 (可选)
