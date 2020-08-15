@@ -78,7 +78,7 @@ class Recorder(object):
         data = event.data
         self.local_contract_price_mapping[data.local_symbol] = data.last_price
         # 过滤掉数字 取中文做key
-        key = "".join([x for x in data.symbol if not x.isdigit()])
+        key = "".join([x for x in data.local_symbol if not x.isdigit()])
         self.main_contract_mapping[key.upper()].append(data)
 
     def process_error_event(self, event: Event):

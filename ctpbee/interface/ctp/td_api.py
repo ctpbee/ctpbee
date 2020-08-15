@@ -216,7 +216,7 @@ class BeeTdApi(TdApi):
         if last:
             for position in self.positions.values():
                 self.on_event(type=EVENT_POSITION, data=position)
-                self.position_instrument_mapping[position.symbol] = False
+                self.position_instrument_mapping[position.local_symbol] = False
             self.positions.clear()
             self.position_init_flag = True
             if self.instrunment_init_flag and self.position_init_flag and not self.init_status:

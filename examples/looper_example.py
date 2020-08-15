@@ -56,7 +56,7 @@ class DoubleMaStrategy(LooperApi):
 if __name__ == '__main__':
     from ctpbee import QADataSupport
 
-    data_support = QADataSupport()
+    data_support = QADataSupport(host="quantaxis.tech", port=27027)
     runnning = Vessel()
     strategy = DoubleMaStrategy("ma")
     data = data_support.get_future_min("rb2010.SHFE", frq="1min", start="2019-10-01", end="2020-07-15")

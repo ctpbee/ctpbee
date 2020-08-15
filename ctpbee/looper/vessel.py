@@ -21,10 +21,21 @@ class LooperApi:
         self.name = name
         self.active = True
         self.app = None
+        self.date = None
 
     @property
     def position_manager(self):
         return self.app.account.position_manager
+
+    def get_main_contract(self, alpha):
+        try:
+            return self.data_api.get_main_contract_by_date(alpha, self.date)
+        except AttributeError:
+            print("请添加self.date属性和self.data_api")
+            return None
+
+    def on_init(self, init):
+        pass
 
     def on_bar(self, bar):
         raise NotImplemented
@@ -54,6 +65,9 @@ class LooperApi:
     def get_strategy(self, strategy_name):
         return self.app.strategy_mapping.get(strategy_name)
 
+    def get_last_entity(self, alpha):
+        return self.app.get_entity_from_alpha(alpha)
+
     def __call__(self, data):
         """
         你必须实现此方法以支持在此层进行中转
@@ -62,7 +76,6 @@ class LooperApi:
             return
         if not self.active:
             return
-
         if isinstance(data, ContractData):
             self.on_contract(data)
         elif isinstance(data, OrderData):
@@ -199,6 +212,10 @@ class Vessel:
         self.interface.update_risk(risk)
         self.check_if_ready()
 
+    def add_basic_info(self, info):
+        """ 添加基础手续费以及size_map等信息 """
+        self.interface.account.basic_info = info
+
     def set_params(self, params):
         """
         设置参数
@@ -237,10 +254,11 @@ class Vessel:
         成交单数据
         """
         trade_data = list(map(dumps, self.interface.traded_order_mapping.values()))
+        position_data = self.interface.position_detail
         if report:
             path = render_result(self.interface.account.result, trade_data=trade_data, strategy=strategys,
                                  net_pnl=net_pnl,
-                                 account_data=account_data, datetimed=end_time,
+                                 account_data=account_data, datetimed=end_time, position_data=position_data,
                                  cost_time=cost_time, **kwargs)
             print(f"请复制下面的路径到浏览器打开----> \n {path}")
             return path
@@ -257,7 +275,7 @@ class Vessel:
         if False not in [x.init_flag for x in self.looper_data]:
             # self.logger.info(f"产品: {self.looper_data.product}")
             self.logger.info(f"回测模式: {self.looper_pattern}")
-        for x in range(self.looper_data[0].length):
+        while True:
             if ready:
                 """ 如果处于就绪状态 那么直接开始继续回测 """
                 try:
@@ -265,12 +283,13 @@ class Vessel:
                     for _origin_data in self.looper_data:
                         p = next(_origin_data)
                         self.interface(p, parmas)
-
                 except StopIteration:
                     self._looper_status = "finished"
+                    self.logger.info("回测结束了, 正在终止")
                     break
             else:
                 """ 如果处于未就绪状态 那么暂停回测 """
+                print("数据未就绪")
                 sleep(1)
         self.logger.info("回测结束,正在生成回测报告")
 
