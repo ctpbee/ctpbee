@@ -8,7 +8,7 @@ from time import sleep
 from ctpbee.constant import ContractData, OrderData, TradeData, AccountData, PositionData, BarData, TickData
 from ctpbee.log import VLogger
 from ctpbee.looper.data import VessData
-from ctpbee.looper.interface import LocalLooper
+from ctpbee.looper.interface import LocalLooper, Action
 from ctpbee.cprint_config import CP
 from ctpbee.looper.report import render_result
 from ctpbee.jsond import dumps
@@ -22,6 +22,8 @@ class LooperApi:
         self.active = True
         self.app = None
         self.date = None
+        self.action: Action or None = None
+        self.logger: VLogger or None = None
 
     @property
     def position_manager(self):
