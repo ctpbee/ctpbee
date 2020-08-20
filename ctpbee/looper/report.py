@@ -24,11 +24,13 @@ def render_result(result, kline=None, trades=None, datetimed=None, trade_data=No
     渲染结果并写入到本地html文件， 并返回htmk文件地址
     """
 
+    time = str(datetimed).replace(" ", "_").replace(".", "_").replace(":", "_")
+    filename = "{}_{}".format("_".join(strategy), time)
     datetimed = str(datetimed.strftime("%Y-%m-%d_%H_%M_%S"))
     code_string = main_template.render(result=result, strategy=strategy,
                                        account_data=account_data,
                                        net_pnl=net_pnl, cost_time=cost_time,
-                                       datetime=datetimed)
+                                       datetime=datetimed, file_name=filename)
     trade_code_string = trade_template.render(trade_data=trade_data, position_data=position_data)
 
     """ 回测主文件存放地址"""
@@ -39,7 +41,7 @@ def render_result(result, kline=None, trades=None, datetimed=None, trade_data=No
 
     """默认回测文件存放文件夹地址"""
     path = join_path(get_ctpbee_path(), "looper")
-    filename = "{}_{}".format("_".join(strategy), datetimed)
+
     if not file_path:
         if not os.path.isdir(path):
             os.mkdir(path)
