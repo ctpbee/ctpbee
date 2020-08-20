@@ -304,6 +304,7 @@ class LocalLooper():
             p : 成交回报
             todo: 处理冻结 ??
         """
+        rc = []
         for data in self.pending:
             px = "".join(filter(str.isalpha, data.local_symbol))
             nx = "".join(filter(str.isalpha, self.data_entity.local_symbol))
@@ -322,7 +323,7 @@ class LocalLooper():
                         f"账户净值: {self.account.balance} 保证金: {self.account.margin} 账户剩余可用: {self.account.available}  此时队列中的单子: {len(self.pending)}")
                     self.account.update_trade(trade)
                     """ 调用strategy的on_trade """
-                    self.pending.remove(data)
+                    rc.append(data)
                     data.status = Status.ALLTRADED
                     [api(deepcopy(data)) for api in self.strategy_mapping.values()]
                     [api(trade) for api in self.strategy_mapping.values()]
@@ -384,6 +385,8 @@ class LocalLooper():
                     continue
             else:
                 raise TypeError("未支持的成交机制")
+        for data in rc:
+            self.pending.remove(data)
 
     def init_params(self, params):
         """ 回测参数设置 """
@@ -457,15 +460,16 @@ class LocalLooper():
                 self.data_entity.local_symbol] = self.data_entity.last_price if entity.type == "tick" else self.data_entity.close_price
         self.datetime = entity.datetime
         self.match_deal()
-
         if entity.type == "tick":
-            [api(entity) for api in self.strategy_mapping.values()]
             self.account.position_manager.update_tick(self.data_entity,
                                                       self.pre_close_price[self.data_entity.local_symbol])
-        if entity.type == "bar":
             [api(entity) for api in self.strategy_mapping.values()]
+
+        if entity.type == "bar":
             self.account.position_manager.update_bar(self.data_entity,
                                                      self.pre_close_price[self.data_entity.local_symbol])
+            [api(entity) for api in self.strategy_mapping.values()]
+
         # 更新接口的日期
         self.date = entity.datetime.date()
         # 穿过接口日期检查
