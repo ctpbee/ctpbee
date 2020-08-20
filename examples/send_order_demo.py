@@ -10,7 +10,7 @@ from ctpbee.constant import ContractData, LogData, TickData, BarData, OrderType,
 class Demo(CtpbeeApi):
     def __init__(self, name):
         super().__init__(name)
-        self.instrument_set = ["C2101.DCE"]
+        self.instrument_set = ["rb2010.SHFE"]
         self.isok = False
 
     def on_contract(self, contract: ContractData):
