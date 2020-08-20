@@ -63,8 +63,8 @@ if __name__ == '__main__':
     market_app = CtpBee("market", __name__)
     market_app.config.from_mapping({
         "CONNECT_INFO": {
-            "userid": "089131",
-            "password": "350888",
+            "userid": "170874",
+            "password": "he071201",
             "brokerid": "9999",
             "md_address": "tcp://218.202.237.33:10112",
             "td_address": "tcp://218.202.237.33:10102",

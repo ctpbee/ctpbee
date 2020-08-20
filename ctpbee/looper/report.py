@@ -39,14 +39,15 @@ def render_result(result, kline=None, trades=None, datetimed=None, trade_data=No
 
     """默认回测文件存放文件夹地址"""
     path = join_path(get_ctpbee_path(), "looper")
+    filename = "{}_{}".format("_".join(strategy), datetimed)
     if not file_path:
         if not os.path.isdir(path):
             os.mkdir(path)
 
-        file_path = join_path(path, datetimed + ".html")
+        file_path = join_path(path, filename + ".html")
 
     if not trade_path:
-        trade_path = join_path(path, datetimed + "-trade.html")
+        trade_path = join_path(path, filename + "-trade.html")
     with open(file_path, "w", encoding="utf8") as f:
         f.write(code_string)
     with open(trade_path, "w", encoding="utf8") as f:

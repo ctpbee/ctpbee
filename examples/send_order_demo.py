@@ -4,13 +4,13 @@
 
 from ctpbee import CtpbeeApi, helper, CtpBee
 from ctpbee.constant import ContractData, LogData, TickData, BarData, OrderType, Offset, OrderData, \
-    TradeData, PositionData, Direction, AccountData
+    TradeData, PositionData, Direction, AccountData, Exchange
 
 
 class Demo(CtpbeeApi):
     def __init__(self, name):
         super().__init__(name)
-        self.instrument_set = ["ag2009.SHFE"]
+        self.instrument_set = ["C2101.DCE"]
         self.isok = False
 
     def on_contract(self, contract: ContractData):
@@ -26,12 +26,10 @@ class Demo(CtpbeeApi):
         # print(self.center.positions)
         # if not self.isok:
         #     return
-        print(tick)
-        d = self.action.buy(tick.last_price, 1, tick)
-        print(self.center.active_orders)
 
     def on_bar(self, bar: BarData) -> None:
         """ 处理ctpbee生成的bar """
+        self.action.buy(bar.close_price, 1, bar, price_type=OrderType.MARKET)
 
     def on_init(self, init):
         if init:
