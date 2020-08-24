@@ -29,6 +29,7 @@ class Demo(CtpbeeApi):
 
     def on_bar(self, bar: BarData) -> None:
         """ 处理ctpbee生成的bar """
+        print(bar.interval, type(bar.interval))
         self.action.buy(bar.close_price, 1, bar, price_type=OrderType.MARKET)
 
     def on_init(self, init):

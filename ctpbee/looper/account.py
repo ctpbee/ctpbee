@@ -171,7 +171,6 @@ class Account:
         for pos in self.position_manager.get_all_positions():
             today = pos["volume"] - pos["yd_volume"]
             price = self.interface.pre_close_price[pos["local_symbol"]]
-
             if pos['direction'] == "long":
                 """ 判断昨仓还是今仓 """
                 pnl = (self.interface.price_mapping[pos["local_symbol"]] - price) * pos[
@@ -189,6 +188,7 @@ class Account:
                                                 pos["local_symbol"]]) * today * self.get_size_from_map(
                     pos["local_symbol"])
                 result += pnl
+
         return result
 
     @property
@@ -232,9 +232,9 @@ class Account:
                     return n.close_ratio * order.price * order.volume * self.get_size_from_map(order.local_symbol)
             else:
                 if close_today:
-                    return n.close_today_ratio * order.volume * self.get_size_from_map(order.local_symbol)
+                    return n.close_today_ratio * order.volume
                 else:
-                    return n.close_ratio * order.volume * self.get_size_from_map(order.local_symbol)
+                    return n.close_ratio * order.volume
         else:
             if close_today:
                 return self.commission_ratio.get(order.local_symbol)[
@@ -270,7 +270,6 @@ class Account:
                     fee = self.get_commission(data)
             except KeyError:
                 raise ValueError("请在对应品种设置合理的手续费")
-
             if self.fee.get(data.local_symbol) is None:
                 self.fee[data.local_symbol] = fee
             else:
@@ -293,25 +292,10 @@ class Account:
                         self.short_frozen_margin.pop(data.order_id)
                 self.turnover += data.volume * data.price
             else:
-
-                """ 计算平仓产生的盈亏"""
-
-                """ 注意此处需要判断是否是当天持仓当天平还是当天持仓隔日平
-                1. 因为每天都进行了自动结算机制,账户都用了收盘价成为仓位的一个成本，所以账户在平仓的时候计算盈亏需要计算他是否是当天平仓，
-                那这个时候需要判断这个仓位是否已经过了多少天
-                2. 因此当日某个品种开仓的一个成本还有手数需要被记录下来
-                如果一个场景下存在螺纹钢昨日开仓3手,收盘价p1.今日开仓3手开仓价 p2, 平3手平仓价p3,再开3手开仓价p4 ,今日收盘价p5
-                那么今日单个品种的盈亏按照优先平今或者优先平昨天规则分别进行计算
-                优先平今
-                pnl = (p3 - p2) * 3 + (p5 - p4) * 3 + (p5 - p1) * 3 +  ]       3p3  + 6p5 - 3p4 - 3p1 -3p2
-                优先平昨
-                pnl = (p3 - p1) * 3 + (p5 - p2) * 3 + (p5 - p4) * 3 + 手续费    6p5 + 3p3 -3p1 - 3p2 + 3p4
-                """
                 if data.direction == Direction.LONG:
                     pos = self.position_manager.get_position_by_ld(data.local_symbol, Direction.SHORT)
                     assert pos.volume >= data.volume
                     close_profit = (pos.price - data.price) * data.volume * self.get_size_from_map(data.local_symbol)
-
                 else:
                     pos = self.position_manager.get_position_by_ld(data.local_symbol, Direction.LONG)
                     assert pos.volume >= data.volume

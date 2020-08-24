@@ -319,8 +319,7 @@ class LocalLooper():
                     trade = self._generate_trade_data_from_order(data)
                     self.logger.info(
                         f"--> {trade.local_symbol} 成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
-                        f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}, "
-                        f"账户净值: {self.account.balance} 保证金: {self.account.margin} 账户剩余可用: {self.account.available}  此时队列中的单子: {len(self.pending)}")
+                        f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
                     self.account.update_trade(trade)
                     """ 调用strategy的on_trade """
                     rc.append(data)
@@ -330,7 +329,7 @@ class LocalLooper():
                     self.traded_order_mapping[trade.order_id] = trade
                     self.today_volume += data.volume
                 else:
-                    print("单子没成交哦")
+                    self.logger.error(">>> 单子没成交哦")
                 continue
 
             elif self.params.get("deal_pattern") == "price":
@@ -434,7 +433,9 @@ class LocalLooper():
             seconds = (entity.datetime - self.datetime).seconds
             if seconds >= 60 * 60 * 4 and (entity.datetime.hour >= 21 or (
                     (14 <= self.datetime.hour <= 15) and entity.datetime.date() != self.datetime.date())):
-                self.logger.warning("结算数据:  " + str(self.account.date))
+                self.logger.warning(
+                    "结算数据:  " + str(
+                        self.account.date) + f"账户净值: {self.account.balance}" + f"保证金占用: {self.account.margin} For: {self.account.pnl_of_every_symbol}")
                 self.account.settle(entity.datetime.date())
 
                 if self.data_entity is None:
