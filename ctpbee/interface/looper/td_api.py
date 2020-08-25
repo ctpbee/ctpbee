@@ -5,17 +5,15 @@ from ctpbee.constant import Event, EVENT_POSITION, AccountData, EVENT_ACCOUNT
 from ctpbee.looper.interface import LocalLooper
 
 
-class SimInterface(LocalLooper):
+class LooperYou(LocalLooper):
     """
     模拟成交接口网关， 负责向上提供API
     三点之后发起结算
     """
 
     def __init__(self, app_signal):
-        self.app_signal = app_signal
+        super().__init__(app_signal)
         self.gateway_name = "ctp"
-        # 此处的logger需要设置为空，在外部必须被强写掉
-        super().__init__(logger=None, risk=None)
 
     def query_account(self):
         """ 查询账户信息API"""
@@ -25,11 +23,6 @@ class SimInterface(LocalLooper):
     @property
     def td_status(self):
         return True
-
-    def on_event(self, type, data):
-        event = Event(type=type, data=data)
-        signal = getattr(self.app_signal, f"{type}_signal")
-        signal.send(event)
 
     def query_positions(self):
         """

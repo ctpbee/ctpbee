@@ -55,7 +55,6 @@ class Account:
     支持成交之后修改资金 ， 对外提供API
 
     """
-
     def __init__(self, interface, name=None):
         self.account_id = name if name is not None else uuid.uuid4()
         # 成交接口
@@ -388,21 +387,22 @@ class Account:
     def is_traded(self, order: OrderData) -> bool:
         """ 当前账户是否足以支撑成交 """
         # 根据传入的单子判断当前的账户可用资金是否足以成交此单
-
         if order.offset != Offset.OPEN:
             """ 交易是否可平不足？ """
+            poss = self.position_manager.get_position(order.local_symbol)
+            if not poss:
+                return False
+
             if order.direction == Direction.LONG:
-                pos = self.position_manager.get_position_by_ld(order.local_symbol, Direction.SHORT)
-                if not pos or order.volume > pos.volume:
+                if  order.volume > poss.short_available:
                     """ 仓位不足 """
-                    print(f"平多头仓位不足 {order.local_symbol} volume: {order.volume}")
+                    self.logger.error(f"平空头仓位不足 {order.local_symbol} volume: {order.volume}  持仓量: {poss.short_available}")
                     return False
                 else:
                     return True
             else:
-                pos = self.position_manager.get_position_by_ld(order.local_symbol, Direction.LONG)
-                if not pos or order.volume > pos.volume:
-                    print(f"平空头仓位不足 {order.local_symbol} volume: {order.volume}")
+                if order.volume > poss.long_available:
+                    self.logger.error(f"平多头仓位不足 {order.local_symbol} volume: {order.volume}  持仓量: {poss.long_available}")
                     return False
                 else:
                     return True

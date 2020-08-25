@@ -82,7 +82,17 @@ class PositionHolding:
         self.last_price = 0
 
     def __str__(self):
-        return f"PositionHold local_symbol At: \n     <long_volume: {self.long_pos}\n      long_price: {self.long_price}\n      short_volume: {self.short_pos}\n      short_price: {self.short_price}>"
+        return f"PositionHold local_symbol {self.local_symbol} At: \n     <long_pos: {self.long_pos}\n   long_available:{self.long_pos - self.long_pos_frozen}\n " \
+               f"  long_price: {self.long_price}\n      short_pos: {self.short_pos}\n   " \
+               f" short_available:{self.short_pos - self.short_pos_frozen}\n     short_price: {self.short_price}>"
+
+    @property
+    def long_available(self):
+        return self.long_pos - self.long_pos_frozen
+
+    @property
+    def short_available(self):
+        return self.short_pos - self.short_pos_frozen
 
     def update_trade(self, trade):
         """ 成交更新 """

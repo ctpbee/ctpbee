@@ -2,10 +2,11 @@ from ctpbee import common_signals
 from ctpbee.constant import EVENT_TICK, Event
 
 
-class SimMarket:
+class LooperMe:
     def __init__(self, app_signal):
         self.app_signal = app_signal
         self.gateway_name = "SIM"
+        self.login_status = True
 
     @property
     def md_status(self):

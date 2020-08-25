@@ -1,10 +1,10 @@
 from ctpbee.constant import Offset, TradeData, Direction
-from ctpbee.looper import LooperApi, Vessel
+from ctpbee import CtpbeeApi, CtpBee
 from ctpbee.qa_support import QADataSupport
 from ctpbee.indicator.ta_lib import ArrayManager
 
 
-class DoubleMaStrategy(LooperApi):
+class DoubleMaStrategy(CtpbeeApi):
     def __init__(self, name):
         super().__init__(name)
         self.manager = ArrayManager(500)
@@ -54,46 +54,18 @@ class DoubleMaStrategy(LooperApi):
 
 
 if __name__ == '__main__':
-    from ctpbee import QADataSupport
+    from ctpbee import QADataSupport, CtpbeeApi
 
     data_support = QADataSupport()
-    runnning = Vessel()
+    app = CtpBee("looper", __name__)
     strategy = DoubleMaStrategy("ma")
-    data = data_support.get_future_min("rb2010.SHFE", frq="1min", start="2019-10-01", end="2020-07-15")
-    runnning.add_data(data)
-    params = {
-        "looper":
-            {
-                "initial_capital": 100000,
-                "deal_pattern": "price",
-                # 合约乘数
-                "size_map": {"rb2010.SHFE": 10,
-                             "OI2009.CZCE": 10,
-                             "FG2009.CZCE": 20,
-                             },
-                # 手续费收费
-                "commission_ratio": {
-                    "OI2009.CZCE": {"close": 0.00003, "close_today": 0},
-                    "rb2010.SHFE": {"close": 0.0001, "close_today": 0.0001},
-                    "FG2009.CZCE": {"close": 0.00001, "close_today": 0.00001},
-                },
-                # 保证金占用
-                "margin_ratio": {
-                    "rb2010.SHFE": 0.1,
-                    "OI2009.CZCE": 0.06,
-                    "FG2009.CZCE": 0.05
-                },
-                "slippage_sell": 0,
-                "slippage_cover": 0,
-                "slippage_buy": 0,
-                "slippage_short": 0,
-                "close_pattern": "yesterday",
-            },
-        "strategy":
-            {
-            }
+    # data = data_support.get_future_min("rb2010.SHFE", frq="1min", start="2019-10-01", end="2020-07-15")
+    # app.add_data(data)
+    info = {
+        "PATTERN": "looper",
     }
-    runnning.add_strategy(strategy)
-    runnning.params = params
-    runnning.run()
-    result = runnning.get_result(report=True, auto_open=True)
+    app.config.from_mapping(info)
+    app.add_extension(strategy)
+    app.start()
+    # runnning.run()
+    # result = runnning.get_result(report=True, auto_open=True)

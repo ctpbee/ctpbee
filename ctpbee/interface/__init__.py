@@ -32,12 +32,9 @@ class Interface:
         if interface == "ctp_se":
             from ctpbee.interface.ctp import BeeTdApiApp, BeeMdApiApp
             return BeeMdApiApp, BeeTdApiApp
-        if interface == "xin":
-            from ctpbee.interface.xin import XinTdApi, XinMdApi
-            return XinMdApi, XinTdApi
-        if interface == "sim":
-            from ctpbee.interface.sim import SimInterface, SimMarket
-            return SimMarket, SimInterface
+        if interface == "looper":
+            from ctpbee.interface.looper import LooperMe, LooperYou
+            return LooperYou, LooperMe
         else:
             raise ValueError("错误参数")
 

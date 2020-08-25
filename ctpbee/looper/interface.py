@@ -7,7 +7,7 @@ from typing import Text, List
 from warnings import warn
 
 from ctpbee.constant import OrderRequest, Offset, Direction, OrderType, OrderData, CancelRequest, TradeData, BarData, \
-    TickData, PositionData, Status, Exchange
+    TickData, PositionData, Status, Exchange, Event, EVENT_ORDER, EVENT_TRADE, EVENT_LOG, EVENT_ERROR
 from ctpbee.exceptions import ConfigError
 from ctpbee.func import helper
 from ctpbee.looper.account import Account
@@ -144,9 +144,11 @@ class LocalLooper():
         -4: "资金不足"
     }
 
-    def __init__(self, logger, risk=None):
-        """ 需要构建完整的成交回报以及发单报告,在account里面需要存储大量的存储 """
-
+    def __init__(self, app_signal):
+        """ 需要构建完整的成交回报以及发单报告,
+        在account里面需要存储大量的存储
+         在我们此处实现过程也通过调用事件引擎来进行调用
+         """
         # 活跃报单数量
         self.change_month_record = {}
         self.pending = []
@@ -155,7 +157,7 @@ class LocalLooper():
         self.frontid = random.randint(10001, 500000)
 
         # 日志输出器
-        self.logger = logger
+        self.app_signal = app_signal
         # 策略池子
         self.strategy_mapping = dict()
         # 覆盖里面的action和logger属性
@@ -164,7 +166,6 @@ class LocalLooper():
         self.drop_price = 0
 
         # 风控/risk control todo:完善
-        self.risk = risk
         self.params = dict(
             deal_pattern="match",
             single_order_limit=10,
@@ -198,20 +199,14 @@ class LocalLooper():
         self.price_mapping = dict()
         # 仓位详细
         self.position_detail = dict()
-        self.action = Action(self)
 
     def get_trades(self):
         return list(self.traded_order_mapping.values())
 
-    def update_strategy(self, strategy):
-        setattr(strategy, "action", self.action)
-        setattr(strategy, "logger", self.logger)
-        setattr(strategy, "info", self.logger.info)
-        setattr(strategy, "debug", self.logger.debug)
-        setattr(strategy, "error", self.logger.error)
-        setattr(strategy, "warning", self.logger.warning)
-        setattr(strategy, "app", self)
-        self.strategy_mapping[strategy.name] = strategy
+    def on_event(self, type, data):
+        event = Event(type=type, data=data)
+        signal = getattr(self.app_signal, f"{type}_signal")
+        signal.send(event)
 
     def enable_extension(self, name):
         if name in self.strategy_mapping.keys():
@@ -274,13 +269,7 @@ class LocalLooper():
                 self.account.update_account_from_order(order_data)
                 return 1
             else:
-                self.logger.info("报单可用不足")
-                self.logger.debug(f"close_profit: {self.account.close_profit}")
-                self.logger.debug(f"margin: {self.account.margin}")
-                self.logger.debug(f"pre_balance: {self.account.pre_balance}")
-                self.logger.debug(f"float_pnl: {self.account.float_pnl}")
-                self.logger.debug(f"frozen_margin: {self.account.frozen_margin}")
-                self.logger.debug(f"available: {self.account.available}")
+                self.on_event(EVENT_ERROR, "报单可用不足")
                 return 0
         if isinstance(data, CancelRequest):
             """ 撤单请求处理 
@@ -317,9 +306,9 @@ class LocalLooper():
                     """ 调用API生成成交单 """
                     # 同时这里需要处理是否要进行
                     trade = self._generate_trade_data_from_order(data)
-                    self.logger.info(
-                        f"--> {trade.local_symbol} 成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
-                        f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
+                    self.on_event(EVENT_LOG,
+                                  f"--> {trade.local_symbol} 成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
+                                  f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
                     self.account.update_trade(trade)
                     """ 调用strategy的on_trade """
                     rc.append(data)
@@ -329,7 +318,7 @@ class LocalLooper():
                     self.traded_order_mapping[trade.order_id] = trade
                     self.today_volume += data.volume
                 else:
-                    self.logger.error(">>> 单子没成交哦")
+                    self.on_event(EVENT_ERROR, ">>> 单子没成交哦")
                 continue
 
             elif self.params.get("deal_pattern") == "price":
@@ -351,33 +340,35 @@ class LocalLooper():
                         """ 调用API生成成交单 """
                         # 同时这里需要处理是否要进行
                         trade = self._generate_trade_data_from_order(data)
-                        self.logger.info(
-                            f"成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
-                            f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
+                        self.on_event(EVENT_LOG, data=
+                        f"成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
+                        f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
                         self.account.update_trade(trade)
                         """ 调用strategy的on_trade """
                         self.pending.remove(data)
                         data.status = Status.ALLTRADED
-                        [api(deepcopy(data)) for api in self.strategy_mapping.values()]
-                        [api(trade) for api in self.strategy_mapping.values()]
+                        self.on_event(EVENT_ORDER, data=data)
+                        self.on_event(EVENT_TRADE, data=trade)
                         self.traded_order_mapping[trade.order_id] = trade
                         self.today_volume += data.volume
+                        continue
                 if short_cross:
                     if self.account.is_traded(data):
                         """ 调用API生成成交单 """
                         # 同时这里需要处理是否要进行
                         trade = self._generate_trade_data_from_order(data)
-                        self.logger.info(
-                            f"成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
-                            f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
+                        self.on_event(EVENT_LOG, data=
+                        f"成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
+                        f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
                         self.account.update_trade(trade)
                         """ 调用strategy的on_trade """
                         self.pending.remove(data)
                         data.status = Status.ALLTRADED
-                        [api(deepcopy(data)) for api in self.strategy_mapping.values()]
-                        [api(trade) for api in self.strategy_mapping.values()]
+                        self.on_event(EVENT_ORDER, data=data)
+                        self.on_event(EVENT_TRADE, data=trade)
                         self.traded_order_mapping[trade.order_id] = trade
                         self.today_volume += data.volume
+                        continue
                     continue
                 else:
                     """ 当前账户不足以支撑成交 """
@@ -400,8 +391,6 @@ class LocalLooper():
         """ 初始化参数设置  """
         if not isinstance(params, dict):
             raise AttributeError("回测参数类型错误，请检查是否为字典")
-
-        [strategy.init_params(params.get("strategy")) for strategy in self.strategy_mapping.values()]
         self.init_params(params.get("looper"))
 
     @staticmethod
