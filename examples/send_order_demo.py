@@ -26,11 +26,12 @@ class Demo(CtpbeeApi):
         # print(self.center.positions)
         # if not self.isok:
         #     return
+        print(self.center.get_position("rb2010.SHFE"))
 
     def on_bar(self, bar: BarData) -> None:
         """ 处理ctpbee生成的bar """
         print(bar.interval, type(bar.interval))
-        self.action.buy(bar.close_price, 1, bar, price_type=OrderType.MARKET)
+        self.action.cover(bar.close_price, 1, bar, price_type=OrderType.MARKET)
 
     def on_init(self, init):
         if init:
