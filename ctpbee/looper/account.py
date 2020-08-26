@@ -22,7 +22,7 @@ from pandas import DataFrame
 
 from ctpbee.constant import TradeData, OrderData, Offset, PositionData, Direction, AccountData
 from ctpbee.exceptions import ConfigError
-from ctpbee.looper.local_position import LocalPositionManager
+from ctpbee.data_handle.local_position import LocalPositionManager
 import uuid
 
 
@@ -482,7 +482,6 @@ class Account:
         """ 更新本地账户回测参数 """
         for i, v in params.items():
             if i == "initial_capital" and not self.init:
-                # self.balance = v
                 self.pre_balance = v
                 self.initial_capital = v
                 self.long_balance = v

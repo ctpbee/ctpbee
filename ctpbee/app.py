@@ -3,7 +3,7 @@ import os
 import sys
 from datetime import datetime
 from inspect import ismethod
-from json import dumps
+
 from threading import Thread
 from time import sleep
 from typing import Text
@@ -21,14 +21,13 @@ from ctpbee.context import _app_context_ctx
 from ctpbee.constant import Event, EVENT_TIMER
 from ctpbee.exceptions import ConfigError
 from ctpbee.helpers import end_thread
-from ctpbee.context import current_app
-from ctpbee.helpers import locked_cached_property, find_package, refresh_query, graphic_pattern
+from ctpbee.helpers import find_package, refresh_query, graphic_pattern
 from ctpbee.interface import Interface
 from ctpbee.level import CtpbeeApi, Action
 from ctpbee.log import VLogger
 from ctpbee.record import Recorder
 from ctpbee.cprint_config import CP
-
+from ctpbee.jsond import dumps
 from ctpbee.signals import AppSignal, common_signals
 
 
@@ -109,6 +108,8 @@ class CtpBee(object):
         risk: 风险管理类, 可以自己继承RiskLevel进行定制
         sim: 是否进行模拟
         """
+        self.start_datetime = datetime.now()
+        self.basic_info = None
         self._extensions = {}
         self.name = name if name else 'ctpbee'
         self.import_name = import_name
@@ -205,7 +206,7 @@ class CtpBee(object):
     def update_action_class(self, action_class):
         if isinstance(action_class, Action):
             raise TypeError(f"更新action_class出现错误, 你传入的action_class类型为{type(action_class)}")
-        self.action = action_class()
+        self.action = action_class(self)
 
     def update_risk_gateway(self, gateway_class):
         self.risk_decorator = gateway_class
@@ -288,8 +289,9 @@ class CtpBee(object):
             show_me = graphic_pattern(__version__, self.engine_method)
             if log_output:
                 print(show_me)
-            self.trader, self.market = Interface.get_interface(app=self)
-            self.start_datetime = datetime.now()
+            Trader, Market = Interface.get_interface(app=self)
+            self.trader = Trader(self.app_signal, self)
+            self.market = Market(self.app_signal)
             print(">>>> 回测接口载入成功")
             self._start_looper()
         else:
@@ -333,15 +335,28 @@ class CtpBee(object):
             return path
         return self.trader.account.result
 
+    def add_basic_info(self, info):
+        """ 添加基础手续费以及size_map等信息 """
+        if self.config.get("PATTERN") != "looper":
+            raise TypeError("此API仅在回测模式下进行调用")
+        self.basic_info = info
+
     def _start_looper(self):
         """ 基于现有的数据进行回测数据 """
         d = VessData(*self.data)
+        if self.basic_info is not None:
+            self.trader.account.basic_info = self.basic_info
+        """ trader初始化参数"""
+        self.trader.init_params(params=self.config)
         while True:
             try:
                 p = next(d)
-                self.market(p)
+                self.trader(p)
             except StopIteration:
                 self.logger.info("回测结束,正在生成结果")
+                break
+            except  ValueError:
+                raise ValueError("数据存在问题, 请检查")
 
     def remove_extension(self, extension_name: Text) -> None:
         """移除插件"""
@@ -352,7 +367,6 @@ class CtpBee(object):
         """添加插件"""
         self._extensions.pop(extension.extension_name, None)
         extension.init_app(self)
-        # self._extensions[extension.extension_name] = extension
 
     def suspend_extension(self, extension_name):
         extension = self._extensions.get(extension_name, None)

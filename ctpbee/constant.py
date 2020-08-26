@@ -173,6 +173,7 @@ EVENT_ACCOUNT = "account"
 EVENT_SHARED = "shared"
 EVENT_LAST = "last"
 EVENT_INIT_FINISHED = "init"
+EVENT_WARNING = "warning"
 
 
 @dataclass(init=False, repr=False)
@@ -394,8 +395,10 @@ class BarData(BaseData):
             setattr(self, "symbol", l.split(".")[0])
             setattr(self, "exchange", l.split(".")[1])
         else:
-            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
-
+            try:
+                self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+            except AttributeError:
+                self.local_symbol = f"{self.symbol}.{self.exchange}"
 
 class OrderData(BaseData):
     """

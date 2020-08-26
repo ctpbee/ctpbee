@@ -5,7 +5,7 @@ from datetime import datetime
 
 from ctpbee.data_handle import generator
 from ctpbee.data_handle.local_position import LocalPositionManager
-from ctpbee.constant import Event
+from ctpbee.constant import Event, TickData
 from ctpbee.helpers import helper_call
 
 import ctpbee.signals as signal
@@ -73,6 +73,9 @@ class Recorder(object):
         for x in self.app._extensions.values():
             x(deepcopy(event))
 
+    def process_warning_event(self, event):
+        self.app.logger.warning(event.data)
+
     def process_last_event(self, event):
         """ 处理合约的最新行情数据 """
         data = event.data
@@ -103,9 +106,9 @@ class Recorder(object):
 
     @helper_call
     def process_tick_event(self, event: Event):
-        tick = event.data
+        tick:TickData = event.data
         self.ticks[tick.local_symbol] = tick
-        self.position_manager.update_tick(tick)
+        self.position_manager.update_tick(tick, tick.pre_settlement_price)
         # 生成datetime对象
         if not tick.datetime:
             if '.' in tick.time:

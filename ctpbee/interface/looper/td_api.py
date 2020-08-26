@@ -11,8 +11,8 @@ class LooperYou(LocalLooper):
     三点之后发起结算
     """
 
-    def __init__(self, app_signal):
-        super().__init__(app_signal)
+    def __init__(self, app_signal, app):
+        super().__init__(app_signal, app)
         self.gateway_name = "ctp"
 
     def query_account(self):

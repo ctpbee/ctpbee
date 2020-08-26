@@ -42,7 +42,7 @@ class AppSignal:
         """ 账户级别的相关信号 """
         self.app_name = app_name
         self.id = ids
-        self.event = ['order', "trade", "contract", "position", "init", "account", "last", "log", "error"]
+        self.event = ['order', "trade", "contract", "warning", "position", "init", "account", "last", "log", "error"]
         self.order_signal = NamedSignal(f"{ids}+order")
         self.trade_signal = NamedSignal(f"{ids}+trade")
         self.position_signal = NamedSignal(f"{ids}+position")
@@ -52,6 +52,7 @@ class AppSignal:
         self.log_signal = NamedSignal(f"{ids}+log")
         self.contract_signal = NamedSignal(f"{ids}+contract")
         self.error_signal = NamedSignal(f"{ids}+error")
+        self.warning_signal = NamedSignal(f"{ids}+warning")
 
 
 # 发单监视器

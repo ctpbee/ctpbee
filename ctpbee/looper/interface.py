@@ -7,136 +7,14 @@ from typing import Text, List
 from warnings import warn
 
 from ctpbee.constant import OrderRequest, Offset, Direction, OrderType, OrderData, CancelRequest, TradeData, BarData, \
-    TickData, PositionData, Status, Exchange, Event, EVENT_ORDER, EVENT_TRADE, EVENT_LOG, EVENT_ERROR
+    TickData, PositionData, Status, Exchange, Event, EVENT_ORDER, EVENT_TRADE, EVENT_LOG, EVENT_ERROR, \
+    EVENT_INIT_FINISHED, EVENT_BAR, EVENT_TICK, EVENT_WARNING
 from ctpbee.exceptions import ConfigError
 from ctpbee.func import helper
 from ctpbee.looper.account import Account
 
 
-class Action:
-    def __init__(self, looper):
-        """ 将action这边报单 """
-        self.looper = looper
-
-    def buy(self, price, volume, origin, price_type: OrderType = OrderType.LIMIT, **kwargs):
-        if not isinstance(self.looper.params['slippage_buy'], float) and not isinstance(
-                self.looper.params['slippage_buy'], int):
-            raise ConfigError(message="滑点配置应为浮点小数")
-        req = OrderRequest(price=price, volume=volume, exchange=origin.exchange, offset=Offset.OPEN,
-                           direction=Direction.LONG, type=price_type, symbol=origin.symbol)
-        return self.looper.send_order(req)
-
-    def short(self, price, volume, origin, price_type: OrderType = OrderType.LIMIT, **kwargs):
-        if not isinstance(self.looper.params['slippage_short'], float) and not isinstance(
-                self.looper.params['slippage_short'], int):
-            raise ConfigError(message="滑点配置应为浮点小数")
-        req = OrderRequest(price=price, volume=volume, exchange=origin.exchange, offset=Offset.OPEN,
-                           direction=Direction.SHORT, type=price_type, symbol=origin.symbol)
-        return self.looper.send_order(req)
-
-    @property
-    def position_manager(self):
-        return self.looper.account.position_manager
-
-    def sell(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData] = None,
-             price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
-
-        if not isinstance(self.looper.params['slippage_sell'], float) and not isinstance(
-                self.looper.params['slippage_sell'], int):
-            raise ConfigError(message="滑点配置应为浮点小数")
-        price = price + self.looper.params['slippage_sell']
-        req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.LONG,
-                                                     type=price_type, exchange=origin.exchange,
-                                                     symbol=origin.symbol) for x in
-                    self.get_req(origin.local_symbol, Direction.SHORT, volume, self.looper)]
-        return [self.looper.send_order(req) for req in req_list if req.volume != 0]
-
-    def cover(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
-              price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
-        if not isinstance(self.looper.params['slippage_cover'], float) and not isinstance(
-                self.looper.params['slippage_cover'], int):
-            raise ConfigError(message="滑点配置应为浮点小数")
-        price = price + self.looper.params['slippage_cover']
-        req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.SHORT,
-                                                     type=price_type, exchange=origin.exchange,
-                                                     symbol=origin.symbol) for x in
-                    self.get_req(origin.local_symbol, Direction.LONG, volume, self.looper)]
-        return [self.looper.send_order(req) for req in req_list if req.volume != 0]
-
-    def cancel(self, id: Text, origin: [BarData, TickData, TradeData, OrderData, PositionData] = None, **kwargs):
-        if "." in id:
-            orderid = id.split(".")[1]
-        if origin is None:
-            exchange = kwargs.get("exchange")
-            if isinstance(exchange, Exchange):
-                exchange = exchange.value
-            local_symbol = kwargs.get("local_symbol")
-        elif origin:
-            exchange = origin.exchange.value
-            local_symbol = origin.local_symbol
-
-        if origin is None and len(kwargs) == 0:
-            """ 如果两个都不传"""
-            order = self.looper.get_order(id)
-            if not order:
-                print("找不到订单啦... 撤不了哦")
-                return None
-            exchange = order.exchange.value
-            local_symbol = order.local_symbol
-        req = helper.generate_cancel_req_by_str(order_id=orderid, exchange=exchange, symbol=local_symbol)
-        return self.looper.cancel_order(req)
-
-    def cancel_all(self):
-        return self.looper.cancel_all()
-
-    @staticmethod
-    def get_req(local_symbol, direction, volume: int, looper) -> List:
-        """
-        generate the offset and volume
-        生成平仓所需要的offset和volume
-         """
-
-        def cal_req(position, volume, looper) -> List:
-            # 判断是否为上期所或者能源交易所 / whether the exchange is SHFE or INE
-            if position.exchange.value not in looper.params["today_exchange"]:
-                return [[Offset.CLOSE, volume]]
-
-            if looper.params["close_pattern"] == "today":
-                # 那么先判断今仓数量是否满足volume /
-                td_volume = position.volume - position.yd_volume
-                if td_volume >= volume:
-                    return [[Offset.CLOSETODAY, volume]]
-                else:
-                    return [[Offset.CLOSETODAY, td_volume],
-                            [Offset.CLOSEYESTERDAY, volume - td_volume]] if td_volume != 0 else [
-                        [Offset.CLOSEYESTERDAY, volume]]
-
-            elif looper.params["close_pattern"] == "yesterday":
-                if position.yd_volume >= volume:
-                    """如果昨仓数量要大于或者等于需要平仓数目 那么直接平昨"""
-                    return [[Offset.CLOSEYESTERDAY, volume]]
-                else:
-                    """如果昨仓数量要小于需要平仓数目 那么优先平昨再平今"""
-                    return [[Offset.CLOSEYESTERDAY, position.yd_volume],
-                            [Offset.CLOSETODAY, volume - position.yd_volume]] if position.yd_volume != 0 else [
-                        [Offset.CLOSETODAY, volume]]
-            else:
-                raise ValueError("异常配置, ctpbee只支持today和yesterday两种优先模式")
-
-        position: PositionData = looper.account.position_manager.get_position_by_ld(local_symbol, direction)
-        if not position:
-            msg = f"{local_symbol}在{direction.value}上无仓位"
-            warn(msg)
-            return []
-        if position.volume < volume:
-            msg = f"{local_symbol}在{direction.value}上仓位不足, 平掉当前 {direction.value} 的所有持仓, 平仓数量: {position.volume}"
-            warn(msg)
-            return cal_req(position, position.volume, looper)
-        else:
-            return cal_req(position, volume, looper)
-
-
-class LocalLooper():
+class LocalLooper:
     message_box = {
         -1: "超出下单限制",
         -2: "超出涨跌价格",
@@ -144,11 +22,12 @@ class LocalLooper():
         -4: "资金不足"
     }
 
-    def __init__(self, app_signal):
+    def __init__(self, app_signal, app):
         """ 需要构建完整的成交回报以及发单报告,
         在account里面需要存储大量的存储
          在我们此处实现过程也通过调用事件引擎来进行调用
          """
+        self.app = app
         # 活跃报单数量
         self.change_month_record = {}
         self.pending = []
@@ -205,7 +84,11 @@ class LocalLooper():
 
     def on_event(self, type, data):
         event = Event(type=type, data=data)
-        signal = getattr(self.app_signal, f"{type}_signal")
+        if type == EVENT_BAR or type == EVENT_TICK:
+            import ctpbee.signals as signals
+            signal = getattr(signals.common_signals, f"{type}_signal")
+        else:
+            signal = getattr(self.app_signal, f"{type}_signal")
         signal.send(event)
 
     def enable_extension(self, name):
@@ -313,8 +196,8 @@ class LocalLooper():
                     """ 调用strategy的on_trade """
                     rc.append(data)
                     data.status = Status.ALLTRADED
-                    [api(deepcopy(data)) for api in self.strategy_mapping.values()]
-                    [api(trade) for api in self.strategy_mapping.values()]
+                    self.on_event(EVENT_ORDER, data=data)
+                    self.on_event(EVENT_TRADE, data=trade)
                     self.traded_order_mapping[trade.order_id] = trade
                     self.today_volume += data.volume
                 else:
@@ -330,8 +213,6 @@ class LocalLooper():
                 # 进行成交判断
                 long_c = self.data_entity.low_price if self.data_type == "bar" else self.data_entity.ask_price_1
                 short_c = self.data_entity.high_price if self.data_type == "bar" is not None else self.data_entity.bid_price_1
-                # long_b = self.data_entity.open_price if self.data_type == "bar" is not None else long_c
-                # short_b = self.data_entity.open_price if self.data_type == "bar" is not None else short_c
                 long_cross = data.direction == Direction.LONG and 0 < long_c <= data.price
                 short_cross = data.direction == Direction.SHORT and data.price <= short_c and short_c > 0
                 if long_cross:
@@ -378,7 +259,7 @@ class LocalLooper():
         for data in rc:
             self.pending.remove(data)
 
-    def init_params(self, params):
+    def _init_params(self, params):
         """ 回测参数设置 """
         self.params.update(params)
         """ 更新接口参数设置 """
@@ -387,11 +268,11 @@ class LocalLooper():
 
         self.account.update_params(params)
 
-    def __init_params(self, params):
+    def init_params(self, params):
         """ 初始化参数设置  """
         if not isinstance(params, dict):
             raise AttributeError("回测参数类型错误，请检查是否为字典")
-        self.init_params(params.get("looper"))
+        self._init_params(params.get("LOOPER"))
 
     @staticmethod
     def auth_time(time):
@@ -402,7 +283,7 @@ class LocalLooper():
 
     def __call__(self, *args, **kwargs):
         """ 回测周期 """
-        entity, params = args
+        entity = args[0]
         # 日期不相等时,　更新前日结算价格
         if self.account.date is None:
             self.account.date = self.date
@@ -416,17 +297,16 @@ class LocalLooper():
             dt = entity.datetime + timedelta(days=1)
         else:
             dt = entity.datetime
-        [setattr(x, "date", str(dt.date())) for x in self.strategy_mapping.values()]
-        self.__init_params(params)
         try:
             seconds = (entity.datetime - self.datetime).seconds
             if seconds >= 60 * 60 * 4 and (entity.datetime.hour >= 21 or (
                     (14 <= self.datetime.hour <= 15) and entity.datetime.date() != self.datetime.date())):
-                self.logger.warning(
-                    "结算数据:  " + str(
-                        self.account.date) + f"账户净值: {self.account.balance}" + f"保证金占用: {self.account.margin} For: {self.account.pnl_of_every_symbol}")
+                self.on_event(EVENT_WARNING,
+                              "结算数据:  " + str(
+                                  self.account.date) + f"账户净值: {self.account.balance}" + f"保证金占用: {self.account.margin} For: {self.account.pnl_of_every_symbol}")
                 self.account.settle(entity.datetime.date())
-
+                # 针对于账户的实现 我们需要将昨仓转换为今仓
+                self.app.recorder.position_manager.covert_to_yesterday_holding()
                 if self.data_entity is None:
                     self.pre_close_price[
                         self.data_entity.local_symbol] = entity.close_price if entity.type == "bar" else entity.last_price
@@ -435,7 +315,7 @@ class LocalLooper():
                         self.data_entity.local_symbol] = self.data_entity.close_price if entity.type == "bar" \
                         else self.data_entity.last_price
                 #  结算完触发初始化函数
-                [x.on_init(entity) for x in self.strategy_mapping.values()]
+                self.on_event(EVENT_INIT_FINISHED, True)
         except KeyError:
             pass
         except AttributeError:
@@ -450,15 +330,20 @@ class LocalLooper():
                 self.data_entity.local_symbol] = self.data_entity.last_price if entity.type == "tick" else self.data_entity.close_price
         self.datetime = entity.datetime
         self.match_deal()
+
         if entity.type == "tick":
             self.account.position_manager.update_tick(self.data_entity,
                                                       self.pre_close_price[self.data_entity.local_symbol])
-            [api(entity) for api in self.strategy_mapping.values()]
+            self.app.recorder.position_manager.update_tick(self.data_entity,
+                                                           self.pre_close_price[self.data_entity.local_symbol])
+            self.on_event(EVENT_TICK, TickData(**entity))
 
         if entity.type == "bar":
             self.account.position_manager.update_bar(self.data_entity,
                                                      self.pre_close_price[self.data_entity.local_symbol])
-            [api(entity) for api in self.strategy_mapping.values()]
+            self.app.recorder.position_manager.update_bar(self.data_entity,
+                                                          self.pre_close_price[self.data_entity.local_symbol])
+            self.on_event(EVENT_BAR, BarData(**entity))
 
         # 更新接口的日期
         self.date = entity.datetime.date()

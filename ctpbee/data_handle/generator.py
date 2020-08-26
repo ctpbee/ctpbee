@@ -70,11 +70,12 @@ class DataGenerator:
             new_minute = True
         if new_minute:
             self.last_volume = tick.volume
+            gateway_name = tick.gateway_name if getattr(tick, "gateway_name", None) else "looper"
             self.bar = BarData(
                 symbol=tick.symbol,
                 exchange=tick.exchange,
                 datetime=tick.datetime,
-                gateway_name=tick.gateway_name,
+                gateway_name=gateway_name,
                 open_price=tick.last_price,
                 high_price=tick.last_price,
                 low_price=tick.last_price,
