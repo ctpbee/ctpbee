@@ -96,10 +96,12 @@ class PositionHolding:
 
     @property
     def long_available(self):
+        print(self.long_pos, self.long_pos_frozen)
         return self.long_pos - self.long_pos_frozen
 
     @property
     def short_available(self):
+        print(self.short_pos, self.short_pos_frozen)
         return self.short_pos - self.short_pos_frozen
 
     def update_trade(self, trade):
@@ -126,6 +128,7 @@ class PositionHolding:
                     if self.short_td < 0:
                         self.short_yd += self.short_td
                         self.short_td = 0
+
         # 空头 {'OI001.CZCE': 1590.0},
 
         elif trade.direction == Direction.SHORT:
@@ -151,7 +154,8 @@ class PositionHolding:
                     if self.long_td < 0:
                         self.long_yd += self.long_td
                         self.long_td = 0
-
+        # self.long_pos = self.long_td + self.long_yd
+        # self.short_pos = self.short_yd + self.short_td
         # 汇总
         self.calculate_price(trade)
         self.calculate_position()

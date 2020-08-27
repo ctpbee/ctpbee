@@ -85,7 +85,8 @@ class Helper():
         "DCE": Exchange.DCE,
         "SSE": Exchange.SSE,
         "SZSE": Exchange.SZSE,
-        "SGE": Exchange.SGE
+        "SGE": Exchange.SGE,
+        "CTP": Exchange.CTP
     }
 
     offset_map = {

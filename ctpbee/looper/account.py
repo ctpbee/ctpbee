@@ -20,8 +20,8 @@ except ImportError:
 import numpy as np
 from pandas import DataFrame
 
-from ctpbee.constant import TradeData, OrderData, Offset, PositionData, Direction, AccountData
-from ctpbee.exceptions import ConfigError
+from ctpbee.constant import TradeData, OrderData, Offset, Direction, AccountData, \
+    EVENT_WARNING
 from ctpbee.data_handle.local_position import LocalPositionManager
 import uuid
 
@@ -55,6 +55,7 @@ class Account:
     支持成交之后修改资金 ， 对外提供API
 
     """
+
     def __init__(self, interface, name=None):
         self.account_id = name if name is not None else uuid.uuid4()
         # 成交接口
@@ -328,10 +329,13 @@ class Account:
 
     def pop_order(self, order: OrderData):
         if order.direction == Direction.LONG:
-            self.long_frozen_margin.pop(order.order_id)
+            if order.order_id in self.long_frozen_margin:
+                self.long_frozen_margin.pop(order.order_id)
         if order.direction == Direction.SHORT:
-            self.short_frozen_margin.pop(order.order_id)
-        self.frozen_fee.pop(order.order_id)
+            if order.order_id in self.short_frozen_margin:
+                self.short_frozen_margin.pop(order.order_id)
+        if order.order_id in self.frozen_fee:
+            self.frozen_fee.pop(order.order_id)
 
     def clear_frozen(self):
         """ 撤单的时候应该要清除所有的单子 并同时清除保证金占用和手续费冻结 """
@@ -391,28 +395,26 @@ class Account:
             """ 交易是否可平不足？ """
             poss = self.position_manager.get_position(order.local_symbol)
             if not poss:
-                return False
+                return False, "此合约上无仓位"
 
             if order.direction == Direction.LONG:
-                if  order.volume > poss.short_available:
+                if order.volume > poss.short_pos:
                     """ 仓位不足 """
-                    self.logger.error(f"平空头仓位不足 {order.local_symbol} volume: {order.volume}  持仓量: {poss.short_available}")
-                    return False
+                    return False, f"平空头仓位不足 {order.local_symbol} volume: {order.volume}  持仓量: {poss.short_pos}"
                 else:
-                    return True
+                    return True, None
             else:
-                if order.volume > poss.long_available:
-                    self.logger.error(f"平多头仓位不足 {order.local_symbol} volume: {order.volume}  持仓量: {poss.long_available}")
-                    return False
+                if order.volume > poss.long_pos:
+                    return False, f"平多头仓位不足 {order.local_symbol} volume: {order.volume}  持仓量: {poss.long_pos}"
                 else:
-                    return True
+                    return True, None
         order_amount = order.price * order.volume * self.get_size_from_map(
             order.local_symbol) * self.get_margin_ration(
             order.local_symbol)
         if self.available < order_amount or self.available < 0:
             """ 可用不足"""
-            return False
-        return True
+            return False, f"资金可用不足, {self.available}"
+        return True, None
 
     def update_trade(self, trade: TradeData) -> None:
         """
@@ -442,7 +444,6 @@ class Account:
             date = self.date
         """ 结算撤掉所有单 归还冻结 """
         self.clear_frozen()
-
         if self.available < 0:
             self.logger.info("你的可用不足, 进行减仓")
             self.close_position_by_amount(abs(self.available), self.interface.price_mapping)
@@ -460,6 +461,9 @@ class Account:
                "count": self.count,
                "turnover": self.turnover
                })
+        self.interface.on_event(EVENT_WARNING,
+                                "结算数据:  " + str(
+                                    date) + f"账户净值: {self.balance}" + f"保证金占用: {self.margin} For: {self.pnl_of_every_symbol}")
         self.pre_float = self.float_pnl
         self.daily_life[date] = deepcopy(p._to_dict())
         self.pre_balance = self.balance
