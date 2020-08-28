@@ -323,13 +323,8 @@ class LocalLooper:
                 self.account.settle(entity.datetime.date())
                 # 针对于账户的实现 我们需要将昨仓转换为今仓
                 self.app.recorder.position_manager.covert_to_yesterday_holding()
-                if self.data_entity is None:
-                    self.pre_close_price[
-                        self.data_entity.local_symbol] = entity.close_price if entity.type == "bar" else entity.last_price
-                else:
-                    self.pre_close_price[
-                        self.data_entity.local_symbol] = self.data_entity.close_price if entity.type == "bar" \
-                        else self.data_entity.last_price
+                for local_symbol, price in self.price_mapping.items():
+                    self.pre_close_price[local_symbol] = price
                 #  结算完触发初始化函数
                 self.on_event(EVENT_INIT_FINISHED, True)
         except KeyError:
