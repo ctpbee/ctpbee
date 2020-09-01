@@ -5,7 +5,7 @@
 import os
 import webbrowser
 from jinja2 import Environment, PackageLoader, select_autoescape
-from ctpbee import get_ctpbee_path
+from ctpbee.func import get_ctpbee_path
 
 from ctpbee.func import join_path
 
@@ -21,7 +21,7 @@ trade_template = env.get_template("trade_record.html")
 def render_result(result, kline=None, trades=None, datetimed=None, trade_data=None, strategy=[], position_data=None,
                   account_data=None, net_pnl=None, cost_time=None, **kwargs):
     """
-    渲染结果并写入到本地html文件， 并返回htmk文件地址
+    渲染结果并写入到本地html文件， 并返回html文件地址
     """
 
     time = str(datetimed).replace(" ", "_").replace(".", "_").replace(":", "_")

@@ -26,7 +26,7 @@ import warnings
 from copy import copy
 
 from ctpbee.constant import PositionData, Offset, Direction, OrderRequest, OrderData, \
-    Exchange, TickData, EXCHANGE_MAPPING
+    Exchange, TickData, EXCHANGE_MAPPING, BarData
 
 
 class LocalVariable:
@@ -58,12 +58,17 @@ class PositionHolding:
             raise ValueError("invalid local_symbol")
         self.active_orders = {}
         self.size = 1
-        if app.recorder.get_contract(self.local_symbol) is not None:
-
-            self.size = app.recorder.get_contract(self.local_symbol).size
+        from ctpbee.looper.account import Account
+        if isinstance(app, Account):
+            # if app.balance
+            pass
         else:
-            raise ValueError("获取合约信息失败, 持仓盈亏计算失败")
-        self.app = app
+            if app.recorder.get_contract(self.local_symbol) is not None:
+                self.size = app.recorder.get_contract(self.local_symbol).size
+            elif getattr(app.trader, "account", None) is not None:
+                self.size = app.trader.account.get_size_from_map(local_symbol=local_symbol)
+            else:
+                raise ValueError("获取合约信息失败, 持仓盈亏计算失败")
         self.long_pos = 0
         self.long_yd = 0
         self.long_td = 0
@@ -89,6 +94,16 @@ class PositionHolding:
         self.pre_settlement_price = 0
         self.last_price = 0
 
+    @property
+    def long_available(self):
+        print(self.long_pos, self.long_pos_frozen)
+        return self.long_pos - self.long_pos_frozen
+
+    @property
+    def short_available(self):
+        print(self.short_pos, self.short_pos_frozen)
+        return self.short_pos - self.short_pos_frozen
+
     def update_trade(self, trade):
         """成交更新"""
         # 多头
@@ -113,6 +128,7 @@ class PositionHolding:
                     if self.short_td < 0:
                         self.short_yd += self.short_td
                         self.short_td = 0
+
         # 空头 {'OI001.CZCE': 1590.0},
 
         elif trade.direction == Direction.SHORT:
@@ -138,7 +154,8 @@ class PositionHolding:
                     if self.long_td < 0:
                         self.long_yd += self.long_td
                         self.long_td = 0
-
+        # self.long_pos = self.long_td + self.long_yd
+        # self.short_pos = self.short_yd + self.short_td
         # 汇总
         self.calculate_price(trade)
         self.calculate_position()
@@ -183,10 +200,16 @@ class PositionHolding:
         order = req._create_order_data(orderid, gateway_name)
         self.update_order(order)
 
-    def update_tick(self, tick):
+    def update_tick(self, tick, pre_settlement_price):
         """行情更新"""
-        self.pre_settlement_price = tick.pre_settlement_price
+        self.pre_settlement_price = pre_settlement_price
         self.last_price = tick.last_price
+        self.calculate_pnl()
+        self.calculate_stare_pnl()
+
+    def update_bar(self, bar, pre_close):
+        self.pre_settlement_price = pre_close
+        self.last_price = bar.close_price
         self.calculate_pnl()
         self.calculate_stare_pnl()
 
@@ -387,12 +410,18 @@ class LocalPositionManager(dict):
     def __init__(self, app):
         super().__init__({})
         self.app = app
+        self.size_map = {}
 
-    def update_tick(self, tick: TickData):
+    def update_tick(self, tick: TickData, pre_close):
         """ 更新tick  """
         if tick.local_symbol not in self:
             return
-        self.get(tick.local_symbol).update_tick(tick)
+        self.get(tick.local_symbol).update_tick(tick, pre_close)
+
+    def update_bar(self, bar: BarData, pre_close):
+        if bar.local_symbol not in self:
+            return
+        self.get(bar.local_symbol).update_bar(bar, pre_close)
 
     def is_convert_required(self, local_symbol: str):
         """
@@ -460,6 +489,9 @@ class LocalPositionManager(dict):
         """ 根据local_symbol 获取持仓信息 """
         return self.get(local_symbol, None)
 
+    def update_size_map(self, params):
+        self.size_map = params.get("size_map")
+
     def get_position_by_ld(self, local_symbol: Text, direction: Direction) -> PositionData:
         """
         ld means local_symbol and direction
@@ -468,6 +500,17 @@ class LocalPositionManager(dict):
         if local_symbol not in self:
             return None
         return self[local_symbol].get_position_by_direction(direction)
+
+    def covert_to_yesterday_holding(self):
+        """ 将今日持仓转换为昨日持仓 """
+        for holding in self.values():
+            if holding.long_td != 0:
+                holding.long_yd += holding.long_td
+                holding.long_td = 0
+
+            if holding.short_td != 0:
+                holding.short_yd += holding.short_td
+                holding.short_td = 0
 
     def get_all_positions(self):
         """ 返回所有的持仓信息 """

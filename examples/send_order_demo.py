@@ -10,7 +10,7 @@ from ctpbee.constant import ContractData, LogData, TickData, BarData, OrderType,
 class Demo(CtpbeeApi):
     def __init__(self, name):
         super().__init__(name)
-        self.instrument_set = ["rb2010.SHFE"]
+        self.instrument_set = ["rb2010.SHFE", "ag2012.SHFE", "AP010.CZCE"]
         self.isok = False
 
     def on_contract(self, contract: ContractData):
@@ -25,11 +25,14 @@ class Demo(CtpbeeApi):
         """ 处理推送的tick """
         # print(self.center.positions)
         # if not self.isok:
+        print(tick.datetime, tick.symbol)
         #     return
+        # print(self.center.get_position("rb2010.SHFE"))
 
     def on_bar(self, bar: BarData) -> None:
         """ 处理ctpbee生成的bar """
-        self.action.buy(bar.close_price, 1, bar, price_type=OrderType.MARKET)
+        print(bar.interval, type(bar.interval))
+        self.action.cover(bar.close_price, 1, bar, price_type=OrderType.MARKET)
 
     def on_init(self, init):
         if init:

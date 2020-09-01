@@ -219,11 +219,7 @@ class BeeTdApi(TdApi):
                 self.position_instrument_mapping[position.local_symbol] = False
             self.positions.clear()
             self.position_init_flag = True
-            if self.instrunment_init_flag and self.position_init_flag and not self.init_status:
-                self.reqid += 1
-                self.init_status = True
-                self.reqQryDepthMarketData({}, self.reqid)
-                self.on_event(type=EVENT_INIT_FINISHED, data=True)
+
 
     def onRspQryTradingAccount(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
@@ -234,7 +230,11 @@ class BeeTdApi(TdApi):
             gateway_name=self.gateway_name
         )
         account.available = data["Available"]
-
+        if self.instrunment_init_flag and not self.init_status:
+            self.reqid += 1
+            self.init_status = True
+            self.reqQryDepthMarketData({}, self.reqid)
+            self.on_event(type=EVENT_INIT_FINISHED, data=True)
         self.on_event(type=EVENT_ACCOUNT, data=account)
 
     def onRspQryInstrument(self, data: dict, error: dict, reqid: int, last: bool):

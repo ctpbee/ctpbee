@@ -1,7 +1,9 @@
 # coding:utf-8
 import os
 import sys
+from datetime import datetime
 from inspect import ismethod
+
 from threading import Thread
 from time import sleep
 from typing import Text
@@ -9,6 +11,8 @@ from typing import Text
 from werkzeug.datastructures import ImmutableDict
 
 from ctpbee import __version__
+from ctpbee.looper.data import VessData
+from ctpbee.looper.report import render_result
 from ctpbee.util import RiskLevel
 from ctpbee.center import Center
 from ctpbee.config import Config
@@ -17,14 +21,13 @@ from ctpbee.context import _app_context_ctx
 from ctpbee.constant import Event, EVENT_TIMER
 from ctpbee.exceptions import ConfigError
 from ctpbee.helpers import end_thread
-from ctpbee.context import current_app
-from ctpbee.helpers import locked_cached_property, find_package, refresh_query, graphic_pattern
+from ctpbee.helpers import find_package, refresh_query, graphic_pattern
 from ctpbee.interface import Interface
 from ctpbee.level import CtpbeeApi, Action
 from ctpbee.log import VLogger
 from ctpbee.record import Recorder
 from ctpbee.cprint_config import CP
-
+from ctpbee.jsond import dumps
 from ctpbee.signals import AppSignal, common_signals
 
 
@@ -74,7 +77,8 @@ class CtpBee(object):
              TODAY_EXCHANGE=[Exchange.SHFE.value, Exchange.INE.value],  # 需要支持平今的交易所代码列表
              AFTER_TIMEOUT=3,  # 设置after线程执行超时,
              TIMER_INTERVAL=1,
-             SIM=False
+
+             PATTERN="real"
              ))
 
     config_class = Config
@@ -88,12 +92,11 @@ class CtpBee(object):
     def __init__(self,
                  name: Text,
                  import_name,
-                 action_class: Action = None,
+                 action_class: Action or None = None,
                  engine_method: str = "thread",
                  logger_class=None, logger_config=None,
                  refresh: bool = False,
                  risk: RiskLevel = None,
-                 sim: bool = False,
                  instance_path=None):
         """
         name: 创建运行核心的名字
@@ -105,6 +108,8 @@ class CtpBee(object):
         risk: 风险管理类, 可以自己继承RiskLevel进行定制
         sim: 是否进行模拟
         """
+        self.start_datetime = datetime.now()
+        self.basic_info = None
         self._extensions = {}
         self.name = name if name else 'ctpbee'
         self.import_name = import_name
@@ -187,10 +192,21 @@ class CtpBee(object):
                 setattr(self, func.__name__, func)
         _app_context_ctx.push(self.name, self)
 
+        self.data = []
+
+    def add_data(self, *data):
+        """
+        载入历史回测数据
+        """
+        if self.config.get("PATTERN") == "looper":
+            self.data = data
+        else:
+            raise TypeError("此API仅仅接受回测模式, 请通过配置文件 PATTERN 修改运行模式")
+
     def update_action_class(self, action_class):
         if isinstance(action_class, Action):
             raise TypeError(f"更新action_class出现错误, 你传入的action_class类型为{type(action_class)}")
-        self.action = action_class()
+        self.action = action_class(self)
 
     def update_risk_gateway(self, gateway_class):
         self.risk_decorator = gateway_class
@@ -235,10 +251,7 @@ class CtpBee(object):
             self.market.connect(info)
 
         if self.config.get("TD_FUNC"):
-            if self.config['INTERFACE'] == "looper":
-                self.trader = TdApi(self.app_signal, self)
-            else:
-                self.trader = TdApi(self.app_signal)
+            self.trader = TdApi(self.app_signal)
             self.trader.connect(info)
 
         if self.refresh:
@@ -259,18 +272,91 @@ class CtpBee(object):
         :param debug: 是否开启调试模式 ----> 等待完成
         :return:
         """
+        if self.config.get("PATTERN") == "real":
+            def running_timer(common_signal):
+                while True:
+                    event = Event(type=EVENT_TIMER)
+                    common_signal.timer_signal.send(event)
+                    sleep(self.config['TIMER_INTERVAL'])
 
-        def running_timer(common_signal):
-            while True:
-                event = Event(type=EVENT_TIMER)
-                common_signal.timer_signal.send(event)
-                sleep(self.config['TIMER_INTERVAL'])
+            self.timer = Thread(target=running_timer, args=(common_signals,))
+            self.timer.start()
 
-        self.timer = Thread(target=running_timer, args=(common_signals,))
-        self.timer.start()
+            self.config["LOG_OUTPUT"] = log_output
+            self._running(logout=log_output)
+        elif self.config.get("PATTERN") == "looper":
+            self.config["INTERFACE"] = "looper"
+            show_me = graphic_pattern(__version__, self.engine_method)
+            if log_output:
+                print(show_me)
+            Trader, Market = Interface.get_interface(app=self)
+            self.trader = Trader(self.app_signal, self)
+            self.market = Market(self.app_signal)
+            print(">>>> 回测接口载入成功")
+            self._start_looper()
+        else:
+            raise ValueError("错误的参数, 仅仅支持")
 
-        self.config["LOG_OUTPUT"] = log_output
-        self._running(logout=log_output)
+    def get_result(self, report: bool = False, **kwargs):
+        """
+        计算回测结果，生成回测报告
+        :param report: bool ,指定是否输出策略报告
+        :param auto_open: bool, 是否让浏览器自动打开回测报告
+        :param zh:bpol, 是否输出成中文报告
+        """
+        strategys = list(self._extensions.keys())
+        end_time = datetime.now()
+        """
+        账户数据
+        """
+        account_data = self.trader.account.get_mapping("balance")
+        """
+        耗费时间
+        """
+        cost_time = f"{str(end_time.hour - self.start_datetime.hour)}" \
+                    f"h {str(end_time.minute - self.start_datetime.minute)}m " \
+                    f"{str(end_time.second - self.start_datetime.second)}s"
+        """
+        每日盈利
+        """
+        net_pnl = self.trader.account.get_mapping("net_pnl")
+
+        """
+        成交单数据
+        """
+        trade_data = list(map(dumps, self.trader.traded_order_mapping.values()))
+        position_data = self.trader.position_detail
+        if report:
+            path = render_result(self.trader.account.result, trade_data=trade_data, strategy=strategys,
+                                 net_pnl=net_pnl,
+                                 account_data=account_data, datetimed=end_time, position_data=position_data,
+                                 cost_time=cost_time, **kwargs)
+            print(f"请复制下面的路径到浏览器打开----> \n {path}")
+            return path
+        return self.trader.account.result
+
+    def add_basic_info(self, info):
+        """ 添加基础手续费以及size_map等信息 """
+        if self.config.get("PATTERN") != "looper":
+            raise TypeError("此API仅在回测模式下进行调用")
+        self.basic_info = info
+
+    def _start_looper(self):
+        """ 基于现有的数据进行回测数据 """
+        d = VessData(*self.data)
+        if self.basic_info is not None:
+            self.trader.account.basic_info = self.basic_info
+        """ trader初始化参数"""
+        self.trader.init_params(params=self.config)
+        while True:
+            try:
+                p = next(d)
+                self.trader(p)
+            except StopIteration:
+                self.logger.info("回测结束,正在生成结果")
+                break
+            except  ValueError:
+                raise ValueError("数据存在问题, 请检查")
 
     def remove_extension(self, extension_name: Text) -> None:
         """移除插件"""
@@ -281,7 +367,6 @@ class CtpBee(object):
         """添加插件"""
         self._extensions.pop(extension.extension_name, None)
         extension.init_app(self)
-        # self._extensions[extension.extension_name] = extension
 
     def suspend_extension(self, extension_name):
         extension = self._extensions.get(extension_name, None)

@@ -20,9 +20,9 @@ except ImportError:
 import numpy as np
 from pandas import DataFrame
 
-from ctpbee.constant import TradeData, OrderData, Offset, PositionData, Direction, AccountData
-from ctpbee.exceptions import ConfigError
-from ctpbee.looper.local_position import LocalPositionManager
+from ctpbee.constant import TradeData, OrderData, Offset, Direction, AccountData, \
+    EVENT_WARNING
+from ctpbee.data_handle.local_position import LocalPositionManager
 import uuid
 
 
@@ -171,7 +171,6 @@ class Account:
         for pos in self.position_manager.get_all_positions():
             today = pos["volume"] - pos["yd_volume"]
             price = self.interface.pre_close_price[pos["local_symbol"]]
-
             if pos['direction'] == "long":
                 """ 判断昨仓还是今仓 """
                 pnl = (self.interface.price_mapping[pos["local_symbol"]] - price) * pos[
@@ -189,6 +188,7 @@ class Account:
                                                 pos["local_symbol"]]) * today * self.get_size_from_map(
                     pos["local_symbol"])
                 result += pnl
+
         return result
 
     @property
@@ -232,9 +232,9 @@ class Account:
                     return n.close_ratio * order.price * order.volume * self.get_size_from_map(order.local_symbol)
             else:
                 if close_today:
-                    return n.close_today_ratio * order.volume * self.get_size_from_map(order.local_symbol)
+                    return n.close_today_ratio * order.volume
                 else:
-                    return n.close_ratio * order.volume * self.get_size_from_map(order.local_symbol)
+                    return n.close_ratio * order.volume
         else:
             if close_today:
                 return self.commission_ratio.get(order.local_symbol)[
@@ -270,7 +270,6 @@ class Account:
                     fee = self.get_commission(data)
             except KeyError:
                 raise ValueError("请在对应品种设置合理的手续费")
-
             if self.fee.get(data.local_symbol) is None:
                 self.fee[data.local_symbol] = fee
             else:
@@ -293,25 +292,10 @@ class Account:
                         self.short_frozen_margin.pop(data.order_id)
                 self.turnover += data.volume * data.price
             else:
-
-                """ 计算平仓产生的盈亏"""
-
-                """ 注意此处需要判断是否是当天持仓当天平还是当天持仓隔日平
-                1. 因为每天都进行了自动结算机制,账户都用了收盘价成为仓位的一个成本，所以账户在平仓的时候计算盈亏需要计算他是否是当天平仓，
-                那这个时候需要判断这个仓位是否已经过了多少天
-                2. 因此当日某个品种开仓的一个成本还有手数需要被记录下来
-                如果一个场景下存在螺纹钢昨日开仓3手,收盘价p1.今日开仓3手开仓价 p2, 平3手平仓价p3,再开3手开仓价p4 ,今日收盘价p5
-                那么今日单个品种的盈亏按照优先平今或者优先平昨天规则分别进行计算
-                优先平今
-                pnl = (p3 - p2) * 3 + (p5 - p4) * 3 + (p5 - p1) * 3 +  ]       3p3  + 6p5 - 3p4 - 3p1 -3p2
-                优先平昨
-                pnl = (p3 - p1) * 3 + (p5 - p2) * 3 + (p5 - p4) * 3 + 手续费    6p5 + 3p3 -3p1 - 3p2 + 3p4
-                """
                 if data.direction == Direction.LONG:
                     pos = self.position_manager.get_position_by_ld(data.local_symbol, Direction.SHORT)
                     assert pos.volume >= data.volume
                     close_profit = (pos.price - data.price) * data.volume * self.get_size_from_map(data.local_symbol)
-
                 else:
                     pos = self.position_manager.get_position_by_ld(data.local_symbol, Direction.LONG)
                     assert pos.volume >= data.volume
@@ -345,10 +329,13 @@ class Account:
 
     def pop_order(self, order: OrderData):
         if order.direction == Direction.LONG:
-            self.long_frozen_margin.pop(order.order_id)
+            if order.order_id in self.long_frozen_margin:
+                self.long_frozen_margin.pop(order.order_id)
         if order.direction == Direction.SHORT:
-            self.short_frozen_margin.pop(order.order_id)
-        self.frozen_fee.pop(order.order_id)
+            if order.order_id in self.short_frozen_margin:
+                self.short_frozen_margin.pop(order.order_id)
+        if order.order_id in self.frozen_fee:
+            self.frozen_fee.pop(order.order_id)
 
     def clear_frozen(self):
         """ 撤单的时候应该要清除所有的单子 并同时清除保证金占用和手续费冻结 """
@@ -404,31 +391,30 @@ class Account:
     def is_traded(self, order: OrderData) -> bool:
         """ 当前账户是否足以支撑成交 """
         # 根据传入的单子判断当前的账户可用资金是否足以成交此单
-
         if order.offset != Offset.OPEN:
             """ 交易是否可平不足？ """
+            poss = self.position_manager.get_position(order.local_symbol)
+            if not poss:
+                return False, "此合约上无仓位"
+
             if order.direction == Direction.LONG:
-                pos = self.position_manager.get_position_by_ld(order.local_symbol, Direction.SHORT)
-                if not pos or order.volume > pos.volume:
+                if order.volume > poss.short_pos:
                     """ 仓位不足 """
-                    print(f"平多头仓位不足 {order.local_symbol} volume: {order.volume}")
-                    return False
+                    return False, f"平空头仓位不足 {order.local_symbol} volume: {order.volume}  持仓量: {poss.short_pos}"
                 else:
-                    return True
+                    return True, None
             else:
-                pos = self.position_manager.get_position_by_ld(order.local_symbol, Direction.LONG)
-                if not pos or order.volume > pos.volume:
-                    print(f"平空头仓位不足 {order.local_symbol} volume: {order.volume}")
-                    return False
+                if order.volume > poss.long_pos:
+                    return False, f"平多头仓位不足 {order.local_symbol} volume: {order.volume}  持仓量: {poss.long_pos}"
                 else:
-                    return True
+                    return True, None
         order_amount = order.price * order.volume * self.get_size_from_map(
             order.local_symbol) * self.get_margin_ration(
             order.local_symbol)
         if self.available < order_amount or self.available < 0:
             """ 可用不足"""
-            return False
-        return True
+            return False, f"资金可用不足, {self.available}"
+        return True, None
 
     def update_trade(self, trade: TradeData) -> None:
         """
@@ -458,7 +444,6 @@ class Account:
             date = self.date
         """ 结算撤掉所有单 归还冻结 """
         self.clear_frozen()
-
         if self.available < 0:
             self.logger.info("你的可用不足, 进行减仓")
             self.close_position_by_amount(abs(self.available), self.interface.price_mapping)
@@ -476,6 +461,9 @@ class Account:
                "count": self.count,
                "turnover": self.turnover
                })
+        self.interface.on_event(EVENT_WARNING,
+                                "结算数据:  " + str(
+                                    date) + f"账户净值: {self.balance}" + f"保证金占用: {self.margin} For: {self.pnl_of_every_symbol}")
         self.pre_float = self.float_pnl
         self.daily_life[date] = deepcopy(p._to_dict())
         self.pre_balance = self.balance
@@ -498,7 +486,6 @@ class Account:
         """ 更新本地账户回测参数 """
         for i, v in params.items():
             if i == "initial_capital" and not self.init:
-                # self.balance = v
                 self.pre_balance = v
                 self.initial_capital = v
                 self.long_balance = v

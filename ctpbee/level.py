@@ -163,9 +163,11 @@ class Action(object):
             if not order:
                 print("找不到订单啦... 撤不了哦")
                 return None
-            exchange = order.exchange.value
+            try:
+                exchange = order.exchange.value
+            except AttributeError:
+                exchange = order.exchange
             local_symbol = order.local_symbol
-
         req = helper.generate_cancel_req_by_str(order_id=orderid, exchange=exchange, symbol=local_symbol)
         return self.cancel_order(req)
 
