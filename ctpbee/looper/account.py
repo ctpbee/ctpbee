@@ -183,9 +183,8 @@ class Account:
                 pnl = (self.interface.pre_close_price[
                            pos["local_symbol"]] - self.interface.price_mapping[pos["local_symbol"]]) * pos[
                           "yd_volume"] * self.get_size_from_map(
-                    pos["local_symbol"]) + (self.interface.pre_close_price[
-                                                pos["local_symbol"]] - self.interface.price_mapping[
-                                                pos["local_symbol"]]) * today * self.get_size_from_map(
+                    pos["local_symbol"]) + (pos["price"] - self.interface.price_mapping[
+                    pos["local_symbol"]]) * today * self.get_size_from_map(
                     pos["local_symbol"])
                 result += pnl
 

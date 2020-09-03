@@ -107,7 +107,7 @@ class Action(object):
         if not isinstance(self.app.config['SLIPPAGE_SHORT'], float) and not isinstance(
                 self.app.config['SLIPPAGE_SHORT'], int):
             raise ConfigError(message="滑点配置应为浮点小数")
-        price = price + self.app.config['SLIPPAGE_SHORT']
+        price = price - self.app.config['SLIPPAGE_SHORT']
         req = helper.generate_order_req_by_var(volume=volume, price=price, offset=Offset.OPEN,
                                                direction=Direction.SHORT,
                                                type=price_type, exchange=origin.exchange, symbol=origin.symbol)
@@ -136,7 +136,7 @@ class Action(object):
         if not isinstance(self.app.config['SLIPPAGE_COVER'], float) and not isinstance(
                 self.app.config['SLIPPAGE_COVER'], int):
             raise ConfigError(message="滑点配置应为浮点小数")
-        price = price + self.app.config['SLIPPAGE_COVER']
+        price = price - self.app.config['SLIPPAGE_COVER']
         req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.SHORT,
                                                      type=price_type, exchange=origin.exchange,
                                                      symbol=origin.symbol) for x in
@@ -203,7 +203,7 @@ class Action(object):
                             [Offset.CLOSETODAY, volume - position.yd_volume]] if position.yd_volume != 0 else [
                         [Offset.CLOSETODAY, volume]]
             else:
-                raise ValueError("异常配置, ctpbee只支持today和yesterday两种优先模式")
+                raise ValueError("bad config, ctpbee just on support today and yesterday")
 
         position: PositionData = app.recorder.position_manager.get_position_by_ld(local_symbol, direction)
         if not position:
@@ -211,7 +211,7 @@ class Action(object):
             warn(msg)
             return []
         if position.volume < volume:
-            msg = f"{local_symbol}在{direction.value}上仓位不足, 平掉当前 {direction.value} 的所有持仓, 平仓数量: {position.volume}"
+            msg = f"{local_symbol} position at {direction.value} is not enough, close all the {direction.value} position, close count: {position.volume}"
             warn(msg)
             return cal_req(position, position.volume, app)
         else:
