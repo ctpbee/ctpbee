@@ -2,7 +2,7 @@ import collections
 import random
 import uuid
 from copy import deepcopy
-from datetime import timedelta
+from datetime import timedelta, datetime
 from typing import Text, List
 from warnings import warn
 
@@ -12,6 +12,7 @@ from ctpbee.constant import OrderRequest, Offset, Direction, OrderType, OrderDat
 from ctpbee.exceptions import ConfigError
 from ctpbee.func import helper
 from ctpbee.looper.account import Account
+from ctpbee.looper.date import trade_dates
 
 
 class LocalLooper:
@@ -162,7 +163,10 @@ class LocalLooper:
                 self.account.update_account_from_order(order_data)
                 return 1
             else:
-                self.on_event(EVENT_ERROR, f"账户报单可用不足, 当前可用原因: {reason}")
+                self.on_event(EVENT_ERROR, f"账户报单可用不足, 报单基础信息: "
+                                           f"{order_data.local_symbol} volume: {order_data.volume}"
+                                           f" price: {order_data.price}  {order_data.offset.value}{order_data.direction.value}"
+                                           f" 出现原因: {reason} 当前报单队列存在 {len(self.pending)}")
                 return 0
         else:
             pass
@@ -183,47 +187,46 @@ class LocalLooper:
             nx = "".join(filter(str.isalpha, self.data_entity.local_symbol))
             if nx != px:  # 针对多品种，实现拆分。 更新当前的价格，确保多个
                 continue
-            can, reason = self.account.is_traded(data)
             if self.params.get("deal_pattern") == "match":
                 """ 撮合成交 """
                 # todo: 是否可以模拟一定量的市场冲击响应？ 以靠近更加逼真的回测效果 ？？？？
-                if can:
-                    """ 调用API生成成交单 """
-                    # 同时这里需要处理是否要进行
-                    trade = self._generate_trade_data_from_order(data)
-                    """ 这里按照市价进行匹配成交 """
-                    trade.price = self.data_entity.last_price
-                    self.on_event(EVENT_LOG,
-                                  f"--> {trade.local_symbol} 成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
-                                  f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
-                    self.account.update_trade(trade)
-                    """ 调用strategy的on_trade """
-                    rc.append(data)
-                    data.status = Status.ALLTRADED
-                    self.on_event(EVENT_ORDER, data=data)
-                    self.on_event(EVENT_TRADE, data=trade)
-                    self.traded_order_mapping[trade.order_id] = trade
-                    self.today_volume += data.volume
+
+                """ 调用API生成成交单 """
+                # 同时这里需要处理是否要进行
+                trade = self._generate_trade_data_from_order(data)
+                """ 这里按照市价进行匹配成交 """
+                trade.price = self.data_entity.last_price
+                self.on_event(EVENT_LOG,
+                              f"--> {trade.local_symbol} 成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
+                              f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
+                self.account.update_trade(trade)
+                """ 调用strategy的on_trade """
+                rc.append(data)
+                data.status = Status.ALLTRADED
+                self.on_event(EVENT_ORDER, data=data)
+                self.on_event(EVENT_TRADE, data=trade)
+                self.traded_order_mapping[trade.order_id] = trade
+                self.today_volume += data.volume
                 continue
             if self.params.get("deal_pattern") == "umatch":
                 """ 撮合成交 """
                 # todo: 是否可以模拟一定量的市场冲击响应？ 以靠近更加逼真的回测效果 ？？？？
-                if can:
-                    """ 调用API生成成交单 """
-                    # 同时这里需要处理是否要进行
-                    trade = self._generate_trade_data_from_order(data)
-                    """ 这里按照市价进行匹配成交 """
-                    self.on_event(EVENT_LOG,
-                                  f"--> {trade.local_symbol} 成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
-                                  f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
-                    self.account.update_trade(trade)
-                    """ 调用strategy的on_trade """
-                    rc.append(data)
-                    data.status = Status.ALLTRADED
-                    self.on_event(EVENT_ORDER, data=data)
-                    self.on_event(EVENT_TRADE, data=trade)
-                    self.traded_order_mapping[trade.order_id] = trade
-                    self.today_volume += data.volume
+
+                """ 调用API生成成交单 """
+                # 同时这里需要处理是否要进行
+                trade = self._generate_trade_data_from_order(data)
+                """ 这里按照市价进行匹配成交 """
+                self.on_event(EVENT_LOG,
+                              f"--> {trade.local_symbol} 成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
+                              f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
+                self.account.update_trade(trade)
+                """ 调用strategy的on_trade """
+                rc.append(data)
+                data.status = Status.ALLTRADED
+                self.on_event(EVENT_ORDER, data=data)
+                self.on_event(EVENT_TRADE, data=trade)
+                self.traded_order_mapping[trade.order_id] = trade
+                self.today_volume += data.volume
                 continue
 
             elif self.params.get("deal_pattern") == "price":
@@ -236,43 +239,37 @@ class LocalLooper:
                 short_cross = data.direction == Direction.SHORT and data.price <= short_c and short_c > 0
                 if long_cross:
                     """ 判断账户资金是否足以支撑成交 """
-                    if can:
-                        """ 调用API生成成交单 """
-                        # 同时这里需要处理是否要进行
-                        trade = self._generate_trade_data_from_order(data)
-                        self.on_event(EVENT_LOG, data=
-                        f"成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
-                        f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
-                        """ 调用strategy的on_trade """
-                        rc.append(data)
-                        data.status = Status.ALLTRADED
-                        self.account.update_trade(trade)
-                        self.on_event(EVENT_ORDER, data=deepcopy(data))
-                        self.on_event(EVENT_TRADE, data=deepcopy(trade))
-                        self.traded_order_mapping[trade.order_id] = trade
-                        self.today_volume += data.volume
-                        continue
-                if short_cross:
-                    if can:
-                        """ 调用API生成成交单 """
-                        # 同时这里需要处理是否要进行
-                        trade = self._generate_trade_data_from_order(data)
-                        self.on_event(EVENT_LOG, data=
-                        f"成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
-                        f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
-                        """ 调用strategy的on_trade """
-                        rc.append(data)
-                        data.status = Status.ALLTRADED
-                        self.account.update_trade(trade)
-                        self.on_event(EVENT_ORDER, data=deepcopy(data))
-                        self.on_event(EVENT_TRADE, data=deepcopy(trade))
-                        self.traded_order_mapping[trade.order_id] = trade
-                        self.today_volume += data.volume
-                        continue
+                    # 同时这里需要处理是否要进行
+                    trade = self._generate_trade_data_from_order(data)
+                    self.on_event(EVENT_LOG, data=
+                    f"成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
+                    f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
+                    """ 调用strategy的on_trade """
+                    rc.append(data)
+                    data.status = Status.ALLTRADED
+                    self.account.update_trade(trade)
+                    self.on_event(EVENT_ORDER, data=deepcopy(data))
+                    self.on_event(EVENT_TRADE, data=deepcopy(trade))
+                    self.traded_order_mapping[trade.order_id] = trade
+                    self.today_volume += data.volume
                     continue
-                else:
-                    """ 当前账户不足以支撑成交 """
+                elif short_cross:
+                    """ 调用API生成成交单 """
+                    # 同时这里需要处理是否要进行
+                    trade = self._generate_trade_data_from_order(data)
+                    self.on_event(EVENT_LOG, data=
+                    f"成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
+                    f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
+                    """ 调用strategy的on_trade """
+                    rc.append(data)
+                    data.status = Status.ALLTRADED
+                    self.account.update_trade(trade)
+                    self.on_event(EVENT_ORDER, data=deepcopy(data))
+                    self.on_event(EVENT_TRADE, data=deepcopy(trade))
+                    self.traded_order_mapping[trade.order_id] = trade
+                    self.today_volume += data.volume
                     continue
+                continue
             else:
                 raise TypeError("未支持的成交机制")
         for data in rc:
@@ -356,8 +353,12 @@ class LocalLooper:
                                                           self.pre_close_price[self.data_entity.local_symbol])
             self.on_event(EVENT_BAR, BarData(**entity))
 
-        # 更新接口的日期
-        self.date = entity.datetime.date()
+        if entity.datetime.hour >= 21:
+            """if hour > 21, switch to next trade day"""
+            index = trade_dates.index(str(entity.datetime.date()))
+            self.date = datetime.strptime(trade_dates[index + 1], "%Y-%m-%d").date()
+        else:
+            self.date = entity.datetime.date()
         # 穿过接口日期检查
         self.account.via_aisle()
 

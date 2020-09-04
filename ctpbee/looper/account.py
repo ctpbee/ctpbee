@@ -11,6 +11,8 @@ from copy import deepcopy
 import math
 from datetime import datetime
 
+from ctpbee.looper.date import trade_dates
+
 try:
     from statistics import geometric_mean
 except ImportError:
@@ -222,7 +224,7 @@ class Account:
             else:
                 local_symbol = order.local_symbol
             lc = "".join(filter(str.isalpha, local_symbol))
-            n = self.basic_info[lc][self.interface.date]
+            n = self.basic_info[lc][self.interface.date]  # """ 切换到下一个交易日 """
             if n.commission_type == 2:
                 if close_today:
                     """ 平今 """
@@ -413,7 +415,7 @@ class Account:
             order.local_symbol)
         if self.available < order_amount or self.available < 0:
             """ 可用不足"""
-            return False, f"资金可用不足, {self.available}"
+            return False, f"资金可用不足, 当前可用: {self.available} 当前冻结保证金: {self.frozen_margin}"
         return True, None
 
     def update_trade(self, trade: TradeData) -> None:
