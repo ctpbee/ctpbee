@@ -151,6 +151,7 @@
                 data: _ayis,
                 symbol: "none",
                 type: 'line',
+                roam: true,
                 animationDelay: function (idx) {
                     return idx * 10;
                 },
@@ -180,13 +181,42 @@
                 hideDelay: 100,                                //浮层隐藏的延迟，单位为 ms
                 transitionDuration: 0,                      //提示框浮层的移动动画过渡时间，单位是 s,设置为 0 的时候会紧跟着鼠标移动
                 padding: 5,                                  //图例内边距，单位px  5  [5, 10]  [5,10,5,10]
-            }
+            }, dataZoom: [// 这个dataZoom组件，若未设置xAxisIndex或yAxisIndex，则默认控制x轴。
+                {
+                    type: 'slider',//这个 dataZoom 组件是 slider 型 dataZoom 组件（只能拖动 dataZoom 组件导致窗口变化）
+                    xAxisIndex: 0, //控制x轴
+                    start: 0, 	// 左边在 10% 的位置
+                    end: 100 	// 右边在 60% 的位置
+                },
+                {
+                    type: 'inside',//这个 dataZoom 组件是 inside 型 dataZoom 组件（能在坐标系内进行拖动，以及用滚轮（或移动触屏上的两指滑动）进行缩放）
+                    xAxisIndex: 0,//控制x轴
+                    start: 0,
+                    end: 100
+                },
+                {
+                    type: 'slider',//slider 型 dataZoom 组件
+                    yAxisIndex: 0,//控制y轴
+                    start: 0,
+                    end: 100
+                },
+                {
+                    type: 'inside',// inside 型 dataZoom 组件
+                    yAxisIndex: 0,//控制y轴
+                    start: 0,
+                    end: 100
+                }]
+
 
         };
 
 
         // 使用刚指定的配置项和数据显示图表。
         accout_chart.setOption(option);
+        myChart.on('georoam', function (params) {
+            {#// 控制台打印数据的名称#}
+            {#console.log(params);#}
+        });
 
     </script>
     <script>
@@ -216,12 +246,12 @@
                 }
             },
             yAxis: {},
-
             series: [
                 {
                     name: '当日盈亏',
                     type: 'bar',
                     data: net_pnl_list,
+                    roam: true,
                     animationDelay: function (idx) {
                         return idx * 10;
                     },
@@ -238,9 +268,39 @@
             animationEasing: 'elasticOut',
             animationDelayUpdate: function (idx) {
                 return idx * 5;
-            }
+            },
+            dataZoom: [// 这个dataZoom组件，若未设置xAxisIndex或yAxisIndex，则默认控制x轴。
+                {
+                    type: 'slider',//这个 dataZoom 组件是 slider 型 dataZoom 组件（只能拖动 dataZoom 组件导致窗口变化）
+                    xAxisIndex: 0, //控制x轴
+                    start: 0,
+                    end: 100
+                },
+                {
+                    type: 'inside',//这个 dataZoom 组件是 inside 型 dataZoom 组件（能在坐标系内进行拖动，以及用滚轮（或移动触屏上的两指滑动）进行缩放）
+                    xAxisIndex: 0,//控制x轴
+                    start: 0,
+                    end: 100
+                },
+                {
+                    type: 'slider',//slider 型 dataZoom 组件
+                    yAxisIndex: 0,//控制y轴
+                    start: 0,
+                    end: 100
+                },
+                {
+                    type: 'inside',// inside 型 dataZoom 组件
+                    yAxisIndex: 0,//控制y轴
+                    start: 0,
+                    end: 100
+                }]
+
         };
         net_pnl_chart.setOption(net_option);
+        myChart.on('georoam', function (params) {
+            {#// 控制台打印数据的名称#}
+            {#console.log(params);#}
+        });
 
     </script>
 

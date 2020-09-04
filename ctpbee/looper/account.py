@@ -342,6 +342,7 @@ class Account:
         self.frozen_fee.clear()
         self.long_frozen_margin.clear()
         self.short_frozen_margin.clear()
+        self.position_manager.clear_frozen()
 
     def reset_attr(self):
         self.frozen_premium = 0
@@ -461,15 +462,20 @@ class Account:
                "turnover": self.turnover
                })
         self.interface.on_event(EVENT_WARNING,
-                                "结算数据:  " + str(
-                                    date) + f"账户净值: {self.balance}" + f"保证金占用: {self.margin} For: {self.pnl_of_every_symbol}")
+                                "Settlement:  " + str(
+                                    date) + f" net: {round(self.balance, 2)}"
+                                + f" margin: {round(self.margin, 2)}"
+                                  f" For: {self.pnl_of_every_symbol} "
+                                  f" close_profit: {round(sum(self.close_profit.values()), 2)}"
+                                  f" float_pnl: {round(self.float_pnl, 2)}"
+                                  f" fee:{round(sum(self.fee.values()), 2)} ")
         self.pre_float = self.float_pnl
         self.daily_life[date] = deepcopy(p._to_dict())
         self.pre_balance = self.balance
         self.long_balance = self.balance
         self.short_balance = self.balance
         self.reset_attr()
-        self.position_manager.covert_to_yesterday_holding()
+        self.position_manager.covert_to_yesterday_holding(**self.interface.price_mapping)
 
         # 归还所有的冻结
         self.date = interface_date
