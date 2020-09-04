@@ -309,10 +309,6 @@ class LocalLooper:
             return
         self.data_type = entity.type
         # 回测的时候自动更新策略的日期
-        if entity.datetime.hour > 21:
-            dt = entity.datetime + timedelta(days=1)
-        else:
-            dt = entity.datetime
         try:
             seconds = (entity.datetime - self.datetime).seconds
             if seconds >= 60 * 60 * 4 and (entity.datetime.hour >= 21 or (
@@ -358,7 +354,12 @@ class LocalLooper:
             index = trade_dates.index(str(entity.datetime.date()))
             self.date = datetime.strptime(trade_dates[index + 1], "%Y-%m-%d").date()
         else:
-            self.date = entity.datetime.date()
+            if str(entity.datetime.date()) not in trade_dates:
+                last_day = entity.datetime + timedelta(days=-1)
+                self.date = datetime.strptime(trade_dates[trade_dates.index(str(last_day.date())) + 1],
+                                              "%Y-%m-%d").date()
+            else:
+                self.date = entity.datetime.date()
         # 穿过接口日期检查
         self.account.via_aisle()
 
