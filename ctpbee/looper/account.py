@@ -572,7 +572,7 @@ class Account:
         try:
             profit_ratio = geometric_mean(df["return_x"].to_numpy()) ** 245 - 1
         except ValueError:
-            self.logger.error("计算存在负数, 本次回测作废")
+            print("boom 计算几何平均数存在负数, 本次回测作废")
             return {}
         result['annual_return / 年化收益率'] = str(round(profit_ratio * 100, 2)) + "%"
         result['return_std / 年化标准差'] = str(round(by_year_return_std * 100, 2)) + "%"
