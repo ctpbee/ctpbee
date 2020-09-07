@@ -501,7 +501,7 @@ class LocalPositionManager(dict):
             return None
         return self[local_symbol].get_position_by_direction(direction)
 
-    def covert_to_yesterday_holding(self):
+    def covert_to_yesterday_holding(self, **kwargs):
         """ 将今日持仓转换为昨日持仓 """
         for holding in self.values():
             if holding.long_td != 0:
@@ -511,6 +511,16 @@ class LocalPositionManager(dict):
             if holding.short_td != 0:
                 holding.short_yd += holding.short_td
                 holding.short_td = 0
+        for key, value in kwargs.items():
+            pos = self.get(key)
+            if pos:
+                pos.long_price = value
+                pos.short_price = value
+
+    def clear_frozen(self):
+        for x in self.values():
+            x.active_orders.clear()
+            x.calculate_frozen()
 
     def get_all_positions(self):
         """ 返回所有的持仓信息 """

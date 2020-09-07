@@ -7,7 +7,7 @@ bee bee .... for developer's trading ~~
  now it supports both ctp interface and backtest interface for using.
 
 
-## Before start
+## Environment Setup 
 ```bash
 # just for linux/ Generate Chinese environment
 sudo ctpbee -auto generate
@@ -16,12 +16,12 @@ sudo ctpbee -auto generate
 
 - Thanks to [vnpy](https://github.com/vnpy/vnpy) and [flask](https://github.com/pallets/flask)  
 
-## Install  
+## Quick Install  
 ```bash
 # code install 
 git clone https://github.com/ctpbee/ctpbee && cd ctpbee && python3 setup.py install  
 
-# pip install
+# or by  pip install
 pip3 install ctpbee
 ```
 

@@ -11,6 +11,8 @@ from copy import deepcopy
 import math
 from datetime import datetime
 
+from ctpbee.looper.date import trade_dates
+
 try:
     from statistics import geometric_mean
 except ImportError:
@@ -222,7 +224,7 @@ class Account:
             else:
                 local_symbol = order.local_symbol
             lc = "".join(filter(str.isalpha, local_symbol))
-            n = self.basic_info[lc][self.interface.date]
+            n = self.basic_info[lc][self.interface.date]  # """ 切换到下一个交易日 """
             if n.commission_type == 2:
                 if close_today:
                     """ 平今 """
@@ -342,6 +344,7 @@ class Account:
         self.frozen_fee.clear()
         self.long_frozen_margin.clear()
         self.short_frozen_margin.clear()
+        self.position_manager.clear_frozen()
 
     def reset_attr(self):
         self.frozen_premium = 0
@@ -412,7 +415,7 @@ class Account:
             order.local_symbol)
         if self.available < order_amount or self.available < 0:
             """ 可用不足"""
-            return False, f"资金可用不足, {self.available}"
+            return False, f"资金可用不足, 当前可用: {self.available} 当前冻结保证金: {self.frozen_margin}"
         return True, None
 
     def update_trade(self, trade: TradeData) -> None:
@@ -461,15 +464,20 @@ class Account:
                "turnover": self.turnover
                })
         self.interface.on_event(EVENT_WARNING,
-                                "结算数据:  " + str(
-                                    date) + f"账户净值: {self.balance}" + f"保证金占用: {self.margin} For: {self.pnl_of_every_symbol}")
+                                "Settlement:  " + str(
+                                    date) + f" net: {round(self.balance, 2)}"
+                                + f" margin: {round(self.margin, 2)}"
+                                  f" For: {self.pnl_of_every_symbol} "
+                                  f" close_profit: {round(sum(self.close_profit.values()), 2)}"
+                                  f" float_pnl: {round(self.float_pnl, 2)}"
+                                  f" fee:{round(sum(self.fee.values()), 2)} ")
         self.pre_float = self.float_pnl
         self.daily_life[date] = deepcopy(p._to_dict())
         self.pre_balance = self.balance
         self.long_balance = self.balance
         self.short_balance = self.balance
         self.reset_attr()
-        self.position_manager.covert_to_yesterday_holding()
+        self.position_manager.covert_to_yesterday_holding(**self.interface.price_mapping)
 
         # 归还所有的冻结
         self.date = interface_date
@@ -564,7 +572,7 @@ class Account:
         try:
             profit_ratio = geometric_mean(df["return_x"].to_numpy()) ** 245 - 1
         except ValueError:
-            self.logger.error("计算存在负数, 本次回测作废")
+            print("boom 计算几何平均数存在负数, 本次回测作废")
             return {}
         result['annual_return / 年化收益率'] = str(round(profit_ratio * 100, 2)) + "%"
         result['return_std / 年化标准差'] = str(round(by_year_return_std * 100, 2)) + "%"
