@@ -220,7 +220,6 @@ class BeeTdApi(TdApi):
             self.positions.clear()
             self.position_init_flag = True
 
-
     def onRspQryTradingAccount(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
         account = AccountData(
@@ -642,6 +641,8 @@ class BeeTdApiApp(TdApiApp):
         self.positions = {}
         self.symbol_exchange_mapping = {}
         self.sysid_orderid_map = {}
+
+        self.open_cost_dict = defaultdict(dict)
 
     def on_event(self, type, data):
         event = Event(type=type, data=data)
@@ -1074,3 +1075,7 @@ class BeeTdApiApp(TdApiApp):
         """"""
         if self.connect_status:
             self.exit()
+
+    @property
+    def td_status(self):
+        return self.login_status

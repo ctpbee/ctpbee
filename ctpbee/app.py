@@ -77,7 +77,6 @@ class CtpBee(object):
              TODAY_EXCHANGE=[Exchange.SHFE.value, Exchange.INE.value],  # 需要支持平今的交易所代码列表
              AFTER_TIMEOUT=3,  # 设置after线程执行超时,
              TIMER_INTERVAL=1,
-
              PATTERN="real"
              ))
 

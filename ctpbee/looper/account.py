@@ -154,8 +154,7 @@ class Account:
                            pos["local_symbol"]] - self.interface.price_mapping[pos["local_symbol"]]) * pos[
                           "yd_volume"] * self.get_size_from_map(
                     pos["local_symbol"]) + (self.interface.pre_close_price[
-                                                pos["local_symbol"]] - self.interface.price_mapping[
-                                                pos["local_symbol"]]) * today * self.get_size_from_map(
+                                                pos["local_symbol"]] - pos["price"]) * today * self.get_size_from_map(
                     pos["local_symbol"])
             if pos["local_symbol"] in result.keys():
                 result[pos["local_symbol"]] += pnl
@@ -539,7 +538,7 @@ class Account:
 
     def _cal_result(self, df: DataFrame) -> dict:
         result = dict()
-        df["return"] = np.log(df["balance"] / df["balance"].shift(1)).fillna(0)
+        df["return"] = (df["balance"] / df["balance"].shift(1) - 1).fillna(0)
         df["high_level"] = (
             df["balance"].rolling(
                 min_periods=1, window=len(df), center=False).max()
@@ -559,14 +558,13 @@ class Account:
         result['daily_pnl / 平均日盈亏'] = round(result['total_pnl / 总盈亏'] / result['total_days / 交易天数'], 2)
         result['total_commission / 总手续费'] = round(df["commission"].sum(), 2)
         result['daily_commission / 日均手续费'] = round(result['total_commission / 总手续费'] / result['total_days / 交易天数'], 2)
-        # result['total_slippage'] = df["slippage"].sum()
-        # result['daily_slippage'] = result['total_slippage'] / result['total_days']
         result['total_turnover / 开仓总资金'] = round(df["turnover"].sum(), 2)
         result['daily_turnover / 每日平均开仓资金'] = round(result['total_turnover / 开仓总资金'] / result['total_days / 交易天数'], 2)
         result['total_count / 总成交次数'] = df["count"].sum()
         result['daily_count / 日均成交次数'] = round(result['total_count / 总成交次数'] / result['total_days / 交易天数'], 2)
         result['total_return / 总收益率'] = str(
             round((result['end_balance / 结束资金'] / self.initial_capital - 1) * 100, 2)) + "%"
+
         by_year_return_std = df["return"].std() * np.sqrt(245)
         df["return_x"] = df["return"] + 1
         try:
