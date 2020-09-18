@@ -539,8 +539,6 @@ class Account:
     def _cal_result(self, df: DataFrame) -> dict:
         result = dict()
         df["return"] = (df["balance"] / df["balance"].shift(1) - 1).fillna(0)
-        print(df["return"])
-
         df["high_level"] = (
             df["balance"].rolling(
                 min_periods=1, window=len(df), center=False).max()
