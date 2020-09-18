@@ -4,6 +4,8 @@
 """
 import os
 import webbrowser
+from urllib.parse import urlencode
+
 from jinja2 import Environment, PackageLoader, select_autoescape
 from ctpbee.func import get_ctpbee_path
 
@@ -23,14 +25,18 @@ def render_result(result, kline=None, trades=None, datetimed=None, trade_data=No
     """
     渲染结果并写入到本地html文件， 并返回html文件地址
     """
-
+    """默认回测文件存放文件夹地址"""
+    path = os.path.join(get_ctpbee_path(), "looper")
     time = str(datetimed).replace(" ", "_").replace(".", "_").replace(":", "_")
     filename = "{}_{}".format("_".join(strategy), time)
+    abs_path = os.path.join(path, filename)
+    print(abs_path)
     datetimed = str(datetimed.strftime("%Y-%m-%d_%H_%M_%S"))
     code_string = main_template.render(result=result, strategy=strategy,
                                        account_data=account_data,
                                        net_pnl=net_pnl, cost_time=cost_time,
-                                       datetime=datetimed, file_name=filename)
+                                       datetime=datetimed, file_name=filename,
+                                       abs_path=abs_path)
     trade_code_string = trade_template.render(trade_data=trade_data, position_data=position_data)
 
     """ 回测主文件存放地址"""
@@ -38,9 +44,6 @@ def render_result(result, kline=None, trades=None, datetimed=None, trade_data=No
 
     """ 成交单文件存放地址 """
     trade_path = kwargs.get("trade_file_path", None)
-
-    """默认回测文件存放文件夹地址"""
-    path = join_path(get_ctpbee_path(), "looper")
 
     if not file_path:
         if not os.path.isdir(path):

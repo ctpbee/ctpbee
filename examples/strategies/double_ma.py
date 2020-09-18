@@ -6,15 +6,8 @@ from ctpbee.indicator.ta_lib import ArrayManager
 class DoubleMaStrategy(CtpbeeApi):
     def __init__(self, name):
         super().__init__(name)
-        self.manager = ArrayManager(500)
-        self.instrument_set = ["rb2010.SHFE"]
-        self.fast_window = 10
-        self.slow_window = 20
-        self.pos = 0
-        self.open = False
-        self.price = []
-        self.open = False
-        self.open_price = None
+        self.manager = ArrayManager(100)
+        self.instrument_set = ["rb2101.SHFE"]  # 这个里面的变量 如果你开启了行情分离选项， 当数据进来的时候会判断数据 只会把相应的行情送进来， 还要就是可以通过来订阅指定行情
         self.buy = 0
         self.sell = 0
         self.slow = 60
@@ -51,9 +44,12 @@ class DoubleMaStrategy(CtpbeeApi):
     def on_tick(self, tick):
         pass
 
+    def on_init(self, init: bool):
+        print("初始化成功了, 这里可能会触发两次哦")
+
 
 if __name__ == '__main__':
-    app = CtpBee("doublema", __name__)
+    app = CtpBee("doublema", __name__, refresh=True)
     app.config.from_mapping({
         "CONNECT_INFO": {
             "userid": "089131",
@@ -68,6 +64,7 @@ if __name__ == '__main__':
         "INTERFACE": "ctp",  # 接口声明
         "TD_FUNC": True,  # 开启交易功能
         "MD_FUNC": True,
+        "XMIN": [1]
     })
     strategy = DoubleMaStrategy("doublema")
     app.add_extension(strategy)
