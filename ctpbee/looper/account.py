@@ -427,6 +427,7 @@ class Account:
         self.update_account_from_trade(trade)
         self.position_manager.update_trade(trade=trade)
         tr = ""
+        assert trade.volume > 0
         for pos in self.position_manager.get_all_positions():
             if pos["direction"] == "long":
                 tr += f"{pos['local_symbol']}  long :{pos['volume']} \n"
@@ -466,7 +467,7 @@ class Account:
                                 "Settlement:  " + str(
                                     date) + f" net: {round(self.balance, 2)}"
                                 + f" margin: {round(self.margin, 2)}"
-                                  f" For: {self.pnl_of_every_symbol} "
+                                  f" net_pnl: {self.balance - self.pre_balance} "
                                   f" close_profit: {round(sum(self.close_profit.values()), 2)}"
                                   f" float_pnl: {round(self.float_pnl, 2)}"
                                   f" fee:{round(sum(self.fee.values()), 2)} ")
