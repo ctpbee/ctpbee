@@ -427,6 +427,7 @@ class Account:
         self.update_account_from_trade(trade)
         self.position_manager.update_trade(trade=trade)
         tr = ""
+        assert trade.volume > 0
         for pos in self.position_manager.get_all_positions():
             if pos["direction"] == "long":
                 tr += f"{pos['local_symbol']}  long :{pos['volume']} \n"
