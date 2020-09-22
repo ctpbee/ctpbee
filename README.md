@@ -3,8 +3,9 @@ bee bee .... for developer's trading ~~
 
 >  tiny but strong
 
-`ctpbee` provide a micro core of trading, you can trade and backtest in it,
- now it supports both ctp interface and backtest interface for using.
+`ctpbee` provide a micro core of trading, you can make trade and backtest in it.
+
+> now it supports both ctp interface and backtest interface for using.
 
 
 ## Environment Setup 
@@ -25,9 +26,7 @@ git clone https://github.com/ctpbee/ctpbee && cd ctpbee && python3 setup.py inst
 pip3 install ctpbee
 ```
 
-## Document
-
-[doc address](http://docs.ctpbee.com)  
+Here is the [document address](http://docs.ctpbee.com)  
 
 ## Quick Start 
 ```python
@@ -49,20 +48,26 @@ info = {
 }
 app.config.from_mapping(info)  # loading config from dict object
 app.start() 
-
 ```
 
 ## Command Running 
+
 ![avatar](source/运行.png)
 
-## Looper  
+## BackTest 
+support multiple instrument and multiple frequency
+
 ![avatar](source/回测.png)
 
-## Code Contributed
-I just only accept `PR` code to `dev` branch, please remember that ! 
 
-## At last  
-just so so  ~~  
+##  Development 
+Now I want to build stock support for `ctpbee`, if you have any interest, 
+you can send email to me and join us! 
+
+## Code Contributed
+I just only accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch, please remember that ! 
+
+Hope to build a reliable and easy product ^_^
 
 ## License
 

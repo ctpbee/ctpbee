@@ -20,8 +20,13 @@
     + 登录接口 ----> connect(info)
     + 订阅行情 ----> subscribe(symbol)
     + 取消订阅 ----> unsubscribe(symbol)
-  
     
+    
+#### 接口描述 
+
+- ctp 期货交易实盘接口  
+- looper 回测接口, 支持股票和期货以及数字货币 
+- stock 股票测试接口 ---->    
 
 ###  English version
 #### Here are the guidelines for developing interfaces
