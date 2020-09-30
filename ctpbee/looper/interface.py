@@ -292,7 +292,7 @@ class LocalLooper:
 
     @staticmethod
     def auth_time(time):
-        if 15 < time.hour <= 20 or 3 <= time.hour <= 8:
+        if 15 < time.hour < 20 or 3 <= time.hour < 8:
             return False
         else:
             return True
@@ -311,8 +311,11 @@ class LocalLooper:
         # 回测的时候自动更新策略的日期
         try:
             seconds = (entity.datetime - self.datetime).seconds
-            if seconds >= 60 * 60 * 4 and (entity.datetime.hour >= 21 or (
-                    (14 <= self.datetime.hour <= 15) and entity.datetime.date() != self.datetime.date())):
+            if seconds >= 60 * 60 * 4 and ((entity.datetime.hour >= 20) or (
+                    (
+                            14 <= self.datetime.hour <= 15)
+                    and entity.datetime.date() != self.datetime.date())
+                    and entity.datetime.hour >= 8):  # 换天
                 self.account.settle(entity.datetime.date())
                 # 针对于账户的实现 我们需要将昨仓转换为今仓
                 self.app.recorder.position_manager.covert_to_yesterday_holding()

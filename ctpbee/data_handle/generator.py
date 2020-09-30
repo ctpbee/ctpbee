@@ -23,19 +23,12 @@ class DataGenerator:
         self.volume = None
         self.last_volume = None
         self.open_interest = None
-        self.average_price = None
 
-        self.denominator = 0
-        self.molecule = 0
         self.app = app
 
         self.XMIN = app.config.get("XMIN")
         self._generate_instance()
         self.rd = None
-
-    @property
-    def get_min_1_bar(self):
-        return self.bar
 
     def _generate_instance(self):
         for x in self.XMIN:
@@ -46,7 +39,10 @@ class DataGenerator:
         """
         Update new tick data into generator and new_shared time data.
         """
+        """ 更新判断时间 """
         new_minute = False
+        if not self.bar:
+            new_minute = True
 
         """ 更新价位 """
         self.last_price = tick.last_price
@@ -57,9 +53,9 @@ class DataGenerator:
             self.last_volume = tick.volume
         if self.local_symbol is None:
             self.local_symbol = tick.local_symbol
-        if not self.bar:
-            new_minute = True
+
         elif self.bar.datetime.minute != tick.datetime.minute:
+            """ 如果两个时间不等 那么date的 s 和micros清空  """
             self.bar.datetime = self.bar.datetime.replace(
                 second=0, microsecond=0
             )
@@ -68,6 +64,7 @@ class DataGenerator:
             common_signals.bar_signal.send(event)
             [self.update_bar(x, self.bar) for x in self.XMIN]
             new_minute = True
+
         if new_minute:
             self.last_volume = tick.volume
             gateway_name = tick.gateway_name if getattr(tick, "gateway_name", None) else "looper"

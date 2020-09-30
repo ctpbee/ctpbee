@@ -59,22 +59,8 @@ def letsgo():
     demo = Demo("test")
     # 添加对象, 你可以继承多个类 然后实例化不同的插件 再载入它, 这些都是极其自由化的操作
     app.add_extension(demo)
-    info = {
-        "CONNECT_INFO": {
-            "userid": "8100243",
-            "password": "zzqh123",
-            "brokerid": "8888",
-            "md_address": "tcp://218.56.38.41:41313",
-            "td_address": "tcp://218.56.38.41:41305",
-            "product_info": "",
-            "appid": "client_acmd1234_1.0.0",
-            "auth_code": "FAR3EMEEJIT04HKD",
-        },
-        "INTERFACE": "ctp_se",
-        "TD_FUNC": True,
-        "MD_FUNC": True,
-    }
-    app.config.from_mapping(info)
+
+    app.config.from_mapping("config.json")
     app.start(log_output=True)
     # 单独开一个线程来进行查询持仓和账户信息
 
