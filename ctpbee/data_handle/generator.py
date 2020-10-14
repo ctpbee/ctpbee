@@ -1,143 +1,91 @@
 # encoding: UTF-8
-from types import MethodType
+from copy import deepcopy
 from ctpbee.signals import common_signals
 from ctpbee.constant import BarData, TickData, EVENT_BAR
 from ctpbee.constant import Event
 
 
 class DataGenerator:
-    """
-    For:
-    1. generating 1 minute bar data from tick data
-    2. generateing x minute bar data from 1 minute data
-    3, generate shared time data
-    """
-
     def __init__(self, app):
-        """Constructor"""
-        self.bar = None
-        self.last_tick = None
-        self.local_symbol = None
-        self.last_price = None
-        self.pre_close = None
-        self.volume = None
-        self.last_volume = None
-        self.open_interest = None
-
         self.app = app
-
         self.XMIN = app.config.get("XMIN")
-        self._generate_instance()
-        self.rd = None
+        self.last_entity: {int: None} = {x: None for x in self.XMIN}
 
-    def _generate_instance(self):
-        for x in self.XMIN:
-            setattr(self, "min_{}".format(x), x)
-            setattr(self, "min_{}_bar".format(x), None)
+        self.last_datetime = {x: None for x in self.XMIN}
 
     def update_tick(self, tick: TickData):
-        """
-        Update new tick data into generator and new_shared time data.
-        """
-        """ 更新判断时间 """
-        new_minute = False
-        if not self.bar:
-            new_minute = True
-
-        """ 更新价位 """
-        self.last_price = tick.last_price
-        self.open_interest = tick.open_interest
-        self.volume = tick.volume
-
-        if self.last_volume is None:
-            self.last_volume = tick.volume
-        if self.local_symbol is None:
-            self.local_symbol = tick.local_symbol
-
-        elif self.bar.datetime.minute != tick.datetime.minute:
-            """ 如果两个时间不等 那么date的 s 和micros清空  """
-            self.bar.datetime = self.bar.datetime.replace(
-                second=0, microsecond=0
-            )
-            self.bar.interval = 1
-            event = Event(type=EVENT_BAR, data=self.bar)
-            common_signals.bar_signal.send(event)
-            [self.update_bar(x, self.bar) for x in self.XMIN]
-            new_minute = True
-
-        if new_minute:
-            self.last_volume = tick.volume
-            gateway_name = tick.gateway_name if getattr(tick, "gateway_name", None) else "looper"
-            self.bar = BarData(
-                symbol=tick.symbol,
-                exchange=tick.exchange,
-                datetime=tick.datetime,
-                gateway_name=gateway_name,
-                open_price=tick.last_price,
-                high_price=tick.last_price,
-                low_price=tick.last_price,
-                close_price=tick.last_price,
-            )
-        else:
-            self.bar.high_price = max(self.bar.high_price, tick.last_price)
-            self.bar.low_price = min(self.bar.low_price, tick.last_price)
-            self.bar.close_price = tick.last_price
-            self.bar.datetime = tick.datetime
-
-        if self.last_tick:
-            """ 更新volume的改变 """
-            volume_change = tick.volume - self.last_tick.volume
-            self.bar.volume += max(volume_change, 0)
-        self.last_tick = tick
-
-    def update_bar(self, xmin, bar: BarData):
-        """
-        Update 1 minute bar into generator
-        """
-        xmin_bar = getattr(self, f"min_{xmin}_bar", None)
-        if not xmin_bar:
-            xmin_bar = BarData(
-                symbol=bar.symbol,
-                exchange=bar.exchange,
-                datetime=bar.datetime,
-                gateway_name=bar.gateway_name,
-                open_price=bar.open_price,
-                high_price=bar.high_price,
-                low_price=bar.low_price
-            )
-            setattr(self, f"min_{xmin}_bar", xmin_bar)
-        else:
-            xmin_bar.high_price = max(
-                xmin_bar.high_price, bar.high_price)
-            xmin_bar.low_price = min(
-                xmin_bar.low_price, bar.low_price)
-
-        xmin_bar.close_price = bar.close_price
-        xmin_bar.volume += int(bar.volume)
-
-        if not (bar.datetime.minute + 1) % xmin:
-            xmin_bar.datetime = xmin_bar.datetime.replace(
-                second=0, microsecond=0
-            )
-            xmin_bar.interval = xmin
-            event = Event(type=EVENT_BAR, data=xmin_bar)
-            common_signals.bar_signal.send(event)
-            setattr(self, f"min_{xmin}_bar", None)
-
-    def generate(self):
-        if self.bar is not None:
-            self.bar.interval = 1
-            event = Event(type=EVENT_BAR, data=self.bar)
+        bar = self.resample(tick)
+        for x in bar:
+            event = Event(type=EVENT_BAR, data=x)
             common_signals.bar_signal.send(event)
 
-        for x in self.XMIN:
-            if self.bar is not None:
-                bar = getattr(self, "min_{}_bar".format(x))
-                bar.interval = x
-                event = Event(type=EVENT_BAR, data=bar)
-                common_signals.bar_signal.send(event)
-        self.bar = None
-        [setattr(self, "min_{}_bar".format(x), None) for x in self.XMIN]
+    def resample(self, tick_data: TickData) -> BarData or None:
+        data = []
+        for frq, last in self.last_entity.items():
+            if last is None:
+                self.last_entity[frq] = BarData(
+                    datetime=tick_data.datetime,
+                    high_price=tick_data.last_price,
+                    low_price=tick_data.last_price,
+                    close_price=tick_data.last_price,
+                    open_price=tick_data.last_price,
+                    interval=frq,
+                    volume=0,
+                    first_volume=tick_data.volume,
+                    local_symbol=tick_data.local_symbol,
+                )
+                self.last_datetime[frq] = tick_data.datetime
+            else:
+                if frq != 1 and tick_data.datetime.minute % frq == 0 \
+                        and abs((tick_data.datetime - self.last_datetime[frq]).seconds) >= 60:
+                    temp = deepcopy(last)
+                    self.last_entity[frq] = BarData(
+                        datetime=tick_data.datetime,
+                        high_price=tick_data.last_price,
+                        low_price=tick_data.last_price,
+                        close_price=tick_data.last_price,
+                        open_price=tick_data.last_price,
+                        interval=frq,
+                        volume=tick_data.volume - temp.first_volume,
+                        first_volume=tick_data.volume,
+                        local_symbol=tick_data.local_symbol
+                    )
+                    self.last_datetime[frq] = tick_data.datetime
+                    data.append(temp)
+                elif frq != 1:
+                    self.last_entity[frq].high_price = max(self.last_entity[frq].high_price, tick_data.last_price)
+                    self.last_entity[frq].low_price = min(self.last_entity[frq].low_price, tick_data.last_price)
+                    self.last_entity[frq].close_price = tick_data.last_price
+                    self.last_entity[frq].volume += max(tick_data.volume - self.last_entity[frq].first_volume, 0)
+                    self.last_entity[frq].first_volume = tick_data.volume
+                # 处理一分钟的k线
+                if frq == 1 and tick_data.datetime.second == 0 and \
+                        abs((tick_data.datetime - self.last_datetime[frq]).seconds) > 10:
+                    temp = deepcopy(last)
+                    self.last_entity[frq] = BarData(
+                        datetime=tick_data.datetime,
+                        high_price=tick_data.last_price,
+                        low_price=tick_data.last_price,
+                        close_price=tick_data.last_price,
+                        open_price=tick_data.last_price,
+                        interval=frq,
+                        volume=tick_data.volume - temp.first_volume,
+                        first_volume=tick_data.volume,
+                        local_symbol=tick_data.local_symbol
+                    )
+                    self.last_datetime[frq] = tick_data.datetime
+                    data.append(temp)
+                elif frq == 1:
+                    self.last_entity[frq].high_price = max(self.last_entity[frq].high_price, tick_data.last_price)
+                    self.last_entity[frq].low_price = min(self.last_entity[frq].low_price, tick_data.last_price)
+                    self.last_entity[frq].close_price = tick_data.last_price
+                    self.last_entity[frq].volume += max(tick_data.volume - self.last_entity[frq].first_volume, 0)
+                    self.last_entity[frq].first_volume = tick_data.volume
+
+        return data
 
     def __del__(self):
-        self.generate()
+        for x in self.last_entity.values():
+            event = Event(type=EVENT_BAR, data=x)
+            common_signals.bar_signal.send(event)
+        self.last_entity.clear()

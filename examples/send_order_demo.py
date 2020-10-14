@@ -10,12 +10,13 @@ from ctpbee.constant import ContractData, LogData, TickData, BarData, OrderType,
 class Demo(CtpbeeApi):
     def __init__(self, name):
         super().__init__(name)
-        self.instrument_set = ["rb2010.SHFE", "ag2012.SHFE", "AP010.CZCE"]
+        self.instrument_set = ["rb2101.SHFE"]
         self.isok = False
 
     def on_contract(self, contract: ContractData):
         """ 处理推送的合约信息 """
-        self.app.subscribe(contract.local_symbol)
+        if contract.local_symbol in self.instrument_set:
+            self.app.subscribe(contract.local_symbol)
 
     def on_log(self, log: LogData):
         """ 处理日志信息 ,特殊需求才用到 """
@@ -25,14 +26,15 @@ class Demo(CtpbeeApi):
         """ 处理推送的tick """
         # print(self.center.positions)
         # if not self.isok:
-        print(tick.datetime, tick.symbol)
+        # print(tick.datetime, tick.symbol)
         #     return
         # print(self.center.get_position("rb2010.SHFE"))
+        # print(tick.datetime, tick.last_price)
 
     def on_bar(self, bar: BarData) -> None:
         """ 处理ctpbee生成的bar """
-        print(bar.interval, type(bar.interval))
-        self.action.cover(bar.close_price, 1, bar, price_type=OrderType.MARKET)
+        print(bar.interval, bar.datetime, bar.close_price, bar.volume)
+        # self.action.cover(bar.close_price, 1, bar, price_type=OrderType.MARKET)
 
     def on_init(self, init):
         if init:
@@ -60,7 +62,7 @@ def letsgo():
     # 添加对象, 你可以继承多个类 然后实例化不同的插件 再载入它, 这些都是极其自由化的操作
     app.add_extension(demo)
 
-    app.config.from_mapping("config.json")
+    app.config.from_json("config.json")
     app.start(log_output=True)
     # 单独开一个线程来进行查询持仓和账户信息
 
