@@ -103,7 +103,7 @@ def check(type: AnyStr):
                 if args[0].app.market is None:
                     raise ValueError("当前账户行情api未连接,请检查你的代码中是否使用了行情接口API")
             elif type == "trader":
-                if args[0].app.market is None:
+                if args[0].app.trader is None:
                     raise ValueError("当前账户交易api未连接,请检查你的代码中是否使用了交易接口API")
             else:
                 raise ValueError("非法字符串")
@@ -341,3 +341,4 @@ def exec_intercept(self, func):
             return None
 
     return wrapper
+

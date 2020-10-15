@@ -20,9 +20,11 @@ class M(CtpbeeApi):
         self.a = 0
         self.sta = False
         self.flag = True
+        self.instrument_set = ["rb2101.SHFE"]
 
     def on_bar(self, bar: BarData) -> None:
-        pass
+        if bar.interval == 5 and bar.symbol =="rb2101":
+            print(bar.datetime, bar.close_price)
         # self.action.buy(bar.close_price + 10, 10, bar)
 
     def on_tick(self, tick: TickData) -> None:
@@ -33,8 +35,6 @@ class M(CtpbeeApi):
         #     self.flag = False
 
     def on_contract(self, contract: ContractData):
-        if contract.symbol == "jm2009":
-            print(contract)
         self.action.subscribe(contract.local_symbol)
 
     def on_order(self, order: OrderData) -> None:
@@ -43,8 +43,9 @@ class M(CtpbeeApi):
         pass
 
     def on_realtime(self):
-        print(self.center.positions)
-        print(self.center.active_orders)
+        # print(self.center.positions)
+        # print(self.center.active_orders)
+        pass
 
 
 def create_app():
@@ -71,6 +72,3 @@ if __name__ == '__main__':
     # hickey.start_all(app_func=create_app)
     app = create_app()
     app.start()
-
-    # def generate_order_req_by_str(cls, symbol: str, exchange: str, direction: str, offset: str, type: str, volume,
-    #                               price: float):

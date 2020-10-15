@@ -366,3 +366,5 @@ def data_adapt(data: List[dict],
                 temp[mapping[key]] = value
         result.append(temp)
     return result
+
+
