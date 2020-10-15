@@ -416,3 +416,6 @@ class CtpBee(object):
                 end_thread(self.timer)
         except AttributeError:
             pass
+
+
+

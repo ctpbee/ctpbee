@@ -1,7 +1,7 @@
 """
     for the future of  life
 """
-__version__ = '1.3'
+__version__ = '1.3.1'
 __status__ = 'release level'
 
 # About core
@@ -17,6 +17,7 @@ from ctpbee.signals import send_monitor, cancel_monitor
 from ctpbee.trade_time import TradingDay
 from ctpbee.util import RiskLevel
 from ctpbee.func import hickey, get_ctpbee_path
+from ctpbee.data_handle.generator import HighKlineSupporter
 
 # About data_support
 try:
