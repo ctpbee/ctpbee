@@ -57,7 +57,7 @@ class DataGenerator:
                             close_price=tick_data.last_price,
                             open_price=tick_data.last_price,
                             interval=frq,
-                            volume=0,
+                            volume=tick_data.volume - temp.first_volume,
                             first_volume=tick_data.volume,
                             local_symbol=tick_data.local_symbol
                         )
@@ -87,7 +87,7 @@ class DataGenerator:
                             close_price=tick_data.last_price,
                             open_price=tick_data.last_price,
                             interval=frq,
-                            volume=0,
+                            volume=tick_data.volume - temp.first_volume,
                             first_volume=tick_data.volume,
                             local_symbol=tick_data.local_symbol
                         )
@@ -168,12 +168,13 @@ class HighKlineSupporter:
                             close_price=tick_data.last_price,
                             open_price=tick_data.last_price,
                             interval=frq,
-                            volume=0,
+                            volume=tick_data.volume - temp.first_volume,
                             first_volume=tick_data.volume,
                             local_symbol=tick_data.local_symbol
                         )
                     self.last_datetime[frq] = tick_data.datetime
                     data.append(temp)
+
                 elif frq != 1:
                     self.last_entity[frq].high_price = max(self.last_entity[frq].high_price, tick_data.last_price)
                     self.last_entity[frq].low_price = min(self.last_entity[frq].low_price, tick_data.last_price)
@@ -198,7 +199,7 @@ class HighKlineSupporter:
                             close_price=tick_data.last_price,
                             open_price=tick_data.last_price,
                             interval=frq,
-                            volume=0,
+                            volume=tick_data.volume - temp.first_volume,
                             first_volume=tick_data.volume,
                             local_symbol=tick_data.local_symbol
                         )
