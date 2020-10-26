@@ -71,8 +71,11 @@ def query_func(type: Text, app_name: str = "current_app") -> None:
         app.trader.query_account()
 
 
-class Helper():
-    """ 工具函数 帮助你快速构建查询请求 """
+class Helper(object):
+    """
+    工具函数 帮助你快速构建查询请求
+    提供快速生成对象的方法， 参见函数名。
+    """
     direction_map = {
         "LONG": Direction.LONG,
         "SHORT": Direction.SHORT,
@@ -174,8 +177,16 @@ helper = Helper()
 def auth_time(data_time: time):
     """
     校验时间tick或者bar的时间合不合法
-    for example:
+
+      Args:
+         data_time (time): 时间对象
+
+      Returns:
+         bool: 检查结果，返回True/False
+         
+      Examples:
         data_time = tick.datetime.time()
+        result = auth_time(data_time)
     """
     if not isinstance(data_time, time):
         raise TypeError("参数类型错误, 期望为datetime.time}")
@@ -193,7 +204,11 @@ def auth_time(data_time: time):
 
 
 class Hickey(object):
-    """ ctpbee进程调度 """
+    """
+    Hickey任务调度机制
+
+    主要为了完成自动拉起程序
+    """
     from datetime import time
     logger = logging.getLogger("ctpbee")
     DAY_START = time(9, 0)  # 日盘启动和停止时间
@@ -366,5 +381,3 @@ def data_adapt(data: List[dict],
                 temp[mapping[key]] = value
         result.append(temp)
     return result
-
-

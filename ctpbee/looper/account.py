@@ -346,6 +346,7 @@ class Account:
         self.position_manager.clear_frozen()
 
     def reset_attr(self):
+        """ 重新设置属性 """
         self.frozen_premium = 0
         self.count = 0
         self.turnover = 0
@@ -382,12 +383,6 @@ class Account:
                 break
         if amount > 0:
             raise ValueError(f"你爆仓了!!!!, 什么策略????? 你的保证金: {self.margin} 可用:{self.available}")
-
-    @property
-    def position_amount(self):
-        return sum([self.interface.price_mapping.get(x['local_symbol']) * x["volume"] * self.get_size_from_map(
-            x["local_symbol"]) * self.get_margin_ration(x["local_symbol"]) for x in
-                    self.position_manager.get_all_positions()])
 
     def is_traded(self, order: OrderData) -> bool:
         """ 当前账户是否足以支撑成交 """

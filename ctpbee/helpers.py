@@ -94,7 +94,15 @@ def _matching_loader_thinks_module_is_package(loader, mod_name):
 
 
 def check(type: AnyStr):
-    """ 检查接口是否存在 """
+    """
+    检查接口是否存在
+
+      Args:
+         type (AnyStr): 类型
+
+      Returns:
+         bool: 检查结果，返回True/False
+    """
 
     def midlle(func):
         @wraps(func)
@@ -167,10 +175,14 @@ def graphic_pattern(version, engine_method):
 
 def dynamic_loading_api(f):
     """
-    f 是文件流
-    主要是用来通过文件动态载入策略。 返回策略类的实例， 应该通过Ctpbee.add_extension() 加以载入
+    主要是用来通过文件动态载入策略。 返回策略类的实例， 应该通过CtpBee.add_extension() 加以载入
     你需要在策略代码文件中显式指定ext
-    返回
+
+      Args:
+         f (fs): 文件IO对象
+
+      Returns:
+         CtpbeeApi: 编译好的CtpbeeApi实例对象
     """
     if not isinstance(f, IO) and not isinstance(f, TextIOWrapper):
         raise ValueError(f"请确保你传入的是文件流(IO)，而不是{str(type(f))}")
@@ -183,7 +195,17 @@ def dynamic_loading_api(f):
 
 
 def auth_check_time(timed: datetime):
-    """ 检查启动时间 """
+    """
+     检查时间是否合法
+     todo: 添加市场以兼容股票或者其他的市场
+
+      Args:
+         timed (datetime): 时间对象
+
+      Returns:
+         bool: 验证结果
+    """
+
     data_time = timed.time()
     if not isinstance(data_time, time):
         raise TypeError("参数类型错误, 期望为datatime.time}")
@@ -202,9 +224,13 @@ def auth_check_time(timed: datetime):
 
 def run_forever(app):
     """
-        永久运行函数 60秒检查一次
-        非交易日不进行载入
+   永久运行一个APP
 
+    Args:
+       app (CtpBee): app实例
+
+    Returns:
+       None
     """
 
     running_me = False
@@ -249,7 +275,12 @@ def run_forever(app):
 
 
 def refresh_query(app):
-    """ 循环查询 """
+    """
+    针对流控,实现循环查询，此函数应该在另外一个线程调用
+
+    Args:
+       app (CtpBee): App实例
+    """
     while True:
         cur = datetime.now()
         # if not TradingDay.is_trading_day(cur) or not auth_check_time(cur):
@@ -264,6 +295,13 @@ def refresh_query(app):
 
 
 def helper_call(func):
+    """
+    此装饰器是为了减少代码， 主要是用来执行插件的回调方法
+
+    Args:
+       func (FunctionType): 函数对象
+    """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         d = func(*args, **kwargs)
@@ -282,6 +320,13 @@ def helper_call(func):
 
 
 def async_value_call(func):
+    """
+    异步的Call装饰器，在2.0的时候可能会被使用
+
+    Args:
+       func (FunctionType): 函数对象
+    """
+
     @wraps(func)
     async def wrapper(*args, **kwargs):
         d = await func(*args, **kwargs)
@@ -300,7 +345,6 @@ def async_value_call(func):
 
 
 def _async_raise(tid, exctype):
-    """raises the exception, performs cleanup if needed"""
     tid = ctypes.c_long(tid)
     if not inspect.isclass(exctype):
         exctype = type(exctype)
@@ -316,19 +360,14 @@ def _async_raise(tid, exctype):
 
 def end_thread(thread):
     """
-    which used to kill thread !
+     强行杀掉线程， 不应该被用户使用
     """
     _async_raise(thread.ident, SystemExit)
 
 
-def exec_wrapper(func):
-    """ 错误装饰器 """
-
-
 def exec_intercept(self, func):
     """
-    此函数主要用于CtpbeeApi的Action结果拦截，保证用户简单调用，实现暗地结果处理
-
+    此函数主要用于CtpbeeApi的Action结果拦截，保证用户简单调用，实现暗地结果处理, 用户不应该关注， 不做过多解释
     """
 
     @wraps(func)
@@ -341,4 +380,3 @@ def exec_intercept(self, func):
             return None
 
     return wrapper
-
