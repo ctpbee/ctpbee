@@ -9,7 +9,7 @@ from warnings import warn
 
 from ctpbee.constant import EVENT_INIT_FINISHED, EVENT_TICK, EVENT_BAR, EVENT_ORDER, EVENT_SHARED, EVENT_TRADE, \
     EVENT_POSITION, EVENT_ACCOUNT, EVENT_CONTRACT, OrderData, SharedData, BarData, TickData, TradeData, \
-    PositionData, AccountData, ContractData, Offset, Direction, OrderType, Exchange
+    PositionData, AccountData, ContractData, Offset, Direction, OrderType, Exchange, OrderRequest, CancelRequest
 from ctpbee.data_handle.level_position import ApiPositionManager
 from ctpbee.constant import EVENT_TIMER, Event
 from ctpbee.exceptions import ConfigError
@@ -34,7 +34,16 @@ class Action(object):
         return None
 
     def add_risk_check(self, func):
-        """ 添加风控函数 """
+        """
+        添加函数, 当调用此函数的时候进行风控前置和后置检查
+        todo: 使用装饰器
+
+        Args:
+          func (FuncType): 函数对象
+
+        Returns:
+          None
+        """
         if self.app is None or self.app.risk_decorator is None:
             raise AttributeError("app为None, 不可添加风控函数")
         if inspect.ismethod(func) or inspect.isfunction(func):
@@ -44,6 +53,7 @@ class Action(object):
 
     @property
     def center(self):
+
         return self.app.center
 
     @property
@@ -74,20 +84,34 @@ class Action(object):
         self.app = app
 
     def cancel_all(self):
-        """ 撤掉所有的报单信息 """
+        """
+        撤掉所有的报单
+        """
         for order in self.app.center.active_orders:
             self.cancel(order.order_id, order)
 
     def close_all(self):
-        """ 平全部仓位
-        API 需要进行一个大的ct
+        """
+        非常危险 暂未实现
         """
         raise ValueError("此API 暂时未被启用， 将在1.3.1启用")
 
     def buy(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
             price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
         """
-        开仓 多头
+        多头开仓
+
+        Args:
+          price (float): 价格
+
+          volume(float): 手数， 股票会自动*100
+
+          origin(Any(BarData, TradeData, TickData, OrderData, PositionData)): 快速获取品种和交易所信息
+
+          price_type(OrderType): 价格类型
+
+        Returns:
+          str: 单号
         """
 
         if not isinstance(self.app.config['SLIPPAGE_BUY'], float) and not isinstance(
@@ -101,7 +125,19 @@ class Action(object):
     def short(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
               price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
         """
-         开仓 空头
+        空头开仓
+
+        Args:
+          price (float): 价格
+
+          volume(float): 手数， 股票会自动*100
+
+          origin(Any(BarData, TradeData, TickData, OrderData, PositionData)): 快速获取品种和交易所信息
+
+          price_type(OrderType): 价格类型
+
+        Returns:
+          str: 单号
         """
 
         if not isinstance(self.app.config['SLIPPAGE_SHORT'], float) and not isinstance(
@@ -116,7 +152,19 @@ class Action(object):
     def sell(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData] = None,
              price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
         """
-        平空头
+        平空头, 注意返回是一个list， 因为单号会涉及到平昨平今组合平仓
+
+        Args:
+          price (float): 价格
+
+          volume(float): 手数， 股票会自动*100
+
+          origin(Any(BarData, TradeData, TickData, OrderData, PositionData)): 快速获取品种和交易所信息
+
+          price_type(OrderType): 价格类型
+
+        Returns:
+          List[str]: 单号列表
         """
         if not isinstance(self.app.config['SLIPPAGE_SELL'], float) and not isinstance(
                 self.app.config['SLIPPAGE_SELL'], int):
@@ -131,7 +179,19 @@ class Action(object):
     def cover(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
               price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
         """
-        平多头
+        平多头, 注意返回是一个list， 因为单号会涉及到平昨平今组合平仓
+
+        Args:
+          price (float): 价格
+
+          volume(float): 手数， 股票会自动*100
+
+          origin(Any(BarData, TradeData, TickData, OrderData, PositionData)): 快速获取品种和交易所信息
+
+          price_type(OrderType): 价格类型
+
+        Returns:
+          str: 单号
         """
         if not isinstance(self.app.config['SLIPPAGE_COVER'], float) and not isinstance(
                 self.app.config['SLIPPAGE_COVER'], int):
@@ -144,6 +204,26 @@ class Action(object):
         return [self.send_order(req) for req in req_list if req.volume != 0]
 
     def cancel(self, id: Text, origin: [BarData, TickData, TradeData, OrderData, PositionData] = None, **kwargs):
+        """
+        撤单, 在不涉传递origin的情况下请使用local_symbol和exchange字段传递值
+
+        Args:
+          id (Text): 单号
+
+          origin(Any(BarData, TradeData, TickData, OrderData, PositionData)): 快速获取品种和交易所信息
+
+          exchange(Exchange): 交易所代码
+
+          local_symbol(str): 合约代码
+
+        Returns:
+          str: 单号
+
+        Example:
+            self.cancel("id1", tick)
+            # or
+            self.cancel("id2", None, exchange=Exchange.SHFE, local_symbol="rb2101.SHFE")
+        """
         if "." in id:
             orderid = id.split(".")[1]
         else:
@@ -174,9 +254,19 @@ class Action(object):
     @staticmethod
     def get_req(local_symbol, direction, volume, app) -> List:
         """
-        generate the offset and volume
-        生成平仓所需要的offset和volume
-         """
+        用来获取平仓请求单的函数
+        Args:
+          local_symbol (Text): 本地合约代码
+
+          direction(Direction)): 快速获取品种和交易所信息
+
+          volume(float): 手数
+
+          app(CtpBee): 核心App
+
+        Returns:
+          List[[Offset, volume]]: 持仓构成
+        """
 
         def cal_req(position, volume, app) -> List:
             # 判断是否为上期所或者能源交易所 / whether the exchange is SHFE or INE
@@ -219,51 +309,59 @@ class Action(object):
 
     # 默认四个提供API的封装, 买多卖空等快速函数应该基于send_order进行封装 / default to provide four function
     @check(type="trader")
-    def send_order(self, order, **kwargs):
+    def send_order(self, order: OrderRequest, **kwargs):
+        """
+        底层的发单请求
+        Args:
+          order (OrderRequest): 发单请求
+
+        Returns:
+          str: 发单id
+        """
         return self.app.trader.send_order(order, **kwargs)
 
     @check(type="trader")
-    def cancel_order(self, cancel_req, **kwargs):
+    def cancel_order(self, cancel_req: CancelRequest, **kwargs):
+        """
+        底层的撤单请求
+        Args:
+          cancel_req (CancelRequest): 撤单请求
+
+        Returns:
+          int: 本地撤单发送成功与否
+        """
         return self.app.trader.cancel_order(cancel_req, **kwargs)
 
     @check(type="trader")
     def query_position(self):
+        """
+        底层的查持仓请求， 注意只会发送查询请求，不会返回持仓数据
+
+        Returns:
+          int:  本地查询发送成功与否
+        """
         return self.app.trader.query_position()
 
     @check(type="trader")
     def query_account(self):
+        """
+        底层的查账户数据请求， 注意只会发送查询请求，不会返回账户数据
+
+        Returns:
+          int: 本地查询发送成功与否
+        """
         return self.app.trader.query_account()
-
-    @check(type="trader")
-    def transfer(self, req, type):
-        """
-        req currency attribute
-        ["USD", "HKD", "CNY"]
-        :param req:
-        :param type:
-        :return:
-        """
-        return self.app.trader.transfer(req, type=type)
-
-    @check(type="trader")
-    def query_account_register(self, req):
-        self.app.trader.query_account_register(req)
-
-    @check(type="trader")
-    def query_bank_account_money(self, req):
-        self.app.trader.query_bank_account_money(req)
-
-    @check(type="trader")
-    def query_transfer_serial(self, req):
-        self.trader.query_transfer_serial(req)
-
-    @check(type="trader")
-    def query_bank(self):
-        pass
 
     @check(type="market")
     def subscribe(self, local_symbol: AnyStr):
-        """订阅行情"""
+        """
+        发单请求
+        Args:
+          local_symbol (AnyStr): 合约代码
+
+        Returns:
+          int: 本地订阅发送成功与否
+        """
         if "." in local_symbol:
             local_symbol = local_symbol.split(".")[0]
         return self.app.market.subscribe(local_symbol)
@@ -294,21 +392,19 @@ class BeeApi(object):
 
 class CtpbeeApi(BeeApi):
     """
-    数据模块/策略模块 都是基于此实现的
-        如果你要开发上述插件需要继承此抽象demo
-        usage:
-        ## coding:
-            class Processor(CtpbeeApi):
-                ...
+    数据模块/策略模块 都是基于此实现的, 如果你要开发上述插件需要继承此抽象demo
 
-            data_processor = Processor("data_processor", app)
-                        or
-            data_processor = Processor("data_processor")
-            data_processor.init_app(app)
-                        or
-            app.add_extension(Process("data_processor"))
-    """
+    Example:
+      class Processor(CtpbeeApi):
+          ...
 
+      data_processor = Processor("data_processor", app)
+      #          or
+      data_processor = Processor("data_processor")
+      data_processor.init_app(app)
+      #          or
+      app.add_extension(Process("data_processor"))
+     """
     def __new__(cls, *args, **kwargs):
         map = {
             EVENT_TIMER: cls.on_realtime,
