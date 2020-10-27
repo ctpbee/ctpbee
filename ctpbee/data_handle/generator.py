@@ -4,7 +4,6 @@ from datetime import datetime
 from typing import Iterable, Callable
 
 from ctpbee.date import get_day_from
-from pandas._typing import FuncType
 
 from ctpbee.signals import common_signals
 from ctpbee.constant import BarData, TickData, EVENT_BAR

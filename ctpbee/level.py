@@ -381,11 +381,14 @@ class ActionProxy:
 
 
 class BeeApi(object):
-    def resolve_callback(self, item, result):
+    def _resolve_callback(self, item, result):
         """
         处理回调函数
-        * item: 操作项
-        * result: 执行结果
+
+        Args:
+          item: 操作项
+
+          result: 执行结果
         """
         pass
 
@@ -399,12 +402,15 @@ class CtpbeeApi(BeeApi):
           ...
 
       data_processor = Processor("data_processor", app)
-      #          or
+                or
       data_processor = Processor("data_processor")
       data_processor.init_app(app)
-      #          or
+      #           or
       app.add_extension(Process("data_processor"))
+
+
      """
+
     def __new__(cls, *args, **kwargs):
         map = {
             EVENT_TIMER: cls.on_realtime,
@@ -464,11 +470,24 @@ class CtpbeeApi(BeeApi):
 
     @property
     def complete(self):
-        """ 结束当前任务 """
+        """
+        由run_until_complete所包装的函数返回，结束追踪
+
+        Return:
+          str: "end"
+        """
         return "end"
 
     def run_until_complete(self, target=None, *args, typed=EVENT_TICK):
-        """ 越过函数检查， 进行循环判断,  目前只支持单步队列
+        """
+        越过函数检查， 进行循环判断,  目前只支持单步队列
+        
+        Args:
+          target:目标函数
+          
+          args: 参数
+          
+          typed: 时间类型
         """
         self.func.clear()
         if not isinstance(target, types.MethodType) and not isinstance(target, types.FunctionType):
@@ -477,9 +496,15 @@ class CtpbeeApi(BeeApi):
 
     def __init__(self, extension_name, app=None, **kwargs):
         """
-        init function
-        :param name: extension name , 插件名字
-        :param app: CtpBee 实例
+        初始化调用函数
+
+        Args:
+          extension_name: 插件名称
+
+          app(CtpBee): App核心
+
+        Return:
+            CtpbeeApi: 实例
         """
         self.instrument_set: List or Set = set()
         self.extension_name = extension_name
@@ -506,13 +531,18 @@ class CtpbeeApi(BeeApi):
         self.api_path = self.get_dir(self.path)
         self.level_position_manager = ApiPositionManager(self.extension_name, self.api_path, init)
 
-    def resolve_callback(self, item, result):
+    def _resolve_callback(self, item, result):
         """
-        处理回调函数
-        * item: 操作项
-        * result: 执行结果
-        """
+        处理回调函数，用户不关心此实现
 
+        Args:
+          item: 操作项
+
+          result: 执行结果
+
+        Return:
+            CtpbeeApi: 实例
+        """
         # 买多卖空
         if item == "buy" or item == "short":
             self.order_id_mapping.setdefault(result, False)
@@ -522,10 +552,15 @@ class CtpbeeApi(BeeApi):
                 self.order_id_mapping.setdefault(i, False)
 
     @staticmethod
-    def get_dir(path):
+    def get_dir(path: str):
         """
-        获取API专属的文件夹的路径
-        如果不存在就创建
+        获取API专属的文件夹的路径. 如果不存在就创建
+
+        Args:
+          path: 路径地址
+
+        Return:
+            str: 路径地址
         """
         path = os.path.join(path, "api")
         if not os.path.isdir(path):
@@ -570,43 +605,151 @@ class CtpbeeApi(BeeApi):
             raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
         return self.app.recorder
 
-    def get_strategy(self, strategy_name):
+    def get_strategy(self, strategy_name: str):
+        """
+        根据创建的策略名称来获取其他策略的对象
+
+        Args:
+          strategy_name(str): 策略名称
+
+        Return:
+            CtpbeeApi: 插件实例
+        """
         return self.app.get_extension(strategy_name)
 
     def on_order(self, order: OrderData) -> None:
+        """
+        报单回调触发
+
+        Args:
+          order(OrderData): 报单数据
+
+        Return:
+            None
+        """
         pass
 
     def on_bar(self, bar: BarData) -> None:
+        """
+        k线数据回调触发, 此函数必定被用户重写
+
+        Args:
+          bar(BarData): K线数据
+
+        Return:
+            None
+        """
         raise NotImplemented
 
     def on_tick(self, tick: TickData) -> None:
+        """
+        Tick数据回调触发, 此函数必定被用户重写
+
+        Args:
+          tick(TickData): Tick数据
+
+        Return:
+            None
+        """
         raise NotImplemented
 
     def on_trade(self, trade: TradeData) -> None:
+        """
+        成交单数据回调触发
+
+        Args:
+          trade(TradeData): TradeData数据
+
+        Return:
+            None
+        """
         pass
 
     def on_position(self, position: PositionData) -> None:
+        """
+        持仓数据回调触发
+
+        Args:
+          position(PositionData): PositionData数据
+
+        Return:
+            None
+        """
         pass
 
     def on_account(self, account: AccountData) -> None:
+        """
+        账户数据回调触发
+
+        Args:
+          account(AccountData): AccountData数据
+
+        Return:
+            None
+        """
         pass
 
     def on_contract(self, contract: ContractData):
+        """
+        合约数据回调触发
+
+        Args:
+          contract(ContractData): ContractData数据
+
+        Return:
+            None
+        """
         pass
 
     def on_init(self, init: bool):
+        """
+        账户初始化
+
+        Args:
+          init(bool): 永远为True
+
+        Return:
+            None
+        """
         pass
 
     def on_realtime(self):
+        """
+        1s触发一次的接口
+
+        Return:
+            None
+        """
         pass
 
     def init_app(self, app):
+        """
+        初始化app
+
+        Args:
+          app(CtpBee): 核心App
+
+        Return:
+            None
+        """
         if app is not None:
             self.app = app
             self.app._extensions[self.extension_name] = self
 
     def route(self, handler):
-        """ """
+        """
+        装饰器， 指定路由， 为了方便用户不想写类接口体而存在
+
+        Args:
+          handler(str): 接口类型, 应该为EVENT_TICK此类或者"tick"， 参见constant.py下面的参数
+
+        Examples:
+          strategy = CtpbeeApi("hello_api")
+
+          @strategy.route(handler="tick")
+          def handle_tick(self, tick):
+            print(tick)
+        """
         if handler not in self.map:
             raise TypeError(f"呀， ctpbee暂不支持此函数类型 {handler}, 当前仅支持 {self.map.keys()}")
 
@@ -617,7 +760,9 @@ class CtpbeeApi(BeeApi):
         return converter
 
     def register(self):
-        """ 用于注册函数 """
+        """
+        装饰器, 用于注册函数
+        """
 
         def attribute(func):
             funcd = MethodType(func, self)

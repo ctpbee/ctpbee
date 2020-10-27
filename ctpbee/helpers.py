@@ -374,7 +374,7 @@ def exec_intercept(self, func):
     def wrapper(*args, **kwargs):
         if func:
             result = func(*args, **kwargs)
-            self.api.resolve_callback(func.__name__, result)
+            self.api._resolve_callback(func.__name__, result)
             return result
         else:
             return None
