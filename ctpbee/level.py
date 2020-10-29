@@ -741,7 +741,7 @@ class CtpbeeApi(BeeApi):
         装饰器， 指定路由， 为了方便用户不想写类接口体而存在
 
         Args:
-          handler(str): 接口类型, 应该为EVENT_TICK此类或者"tick"， 参见constant.py下面的参数
+          handler(str): 接口类型, 应该为EVENT_TICK此类常量或者"tick"， 参见constant.py下面的参数
 
         Examples:
           strategy = CtpbeeApi("hello_api")

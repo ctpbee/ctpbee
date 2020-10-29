@@ -35,28 +35,8 @@ class CtpBee(object):
     """
     ctpbee 源于我对于做项目的痛点需求, 旨在开发出一套具有完整api的交易微框架
     I hope it will help you !
-
     """
     # 默认回测配置参数
-    default_params = {
-        'cash': 10000.0,
-        'check_submit': True,
-        'eos_bar': False,
-        'filler': None,
-        "commision": 0.01,
-        'slip_percent': 0.0,
-        'slip_fixed': 0.0,
-        'slip_open': False,
-        'slip_match': True,
-        'slip_limit': True,
-        'slip_out': False,
-        'coc': False,
-        'coo': False,
-        'int2pnl': True,
-        'short_cash': True,
-        'fund_start_val': 100.0,
-        'fund_mode': False
-    }
     default_config = ImmutableDict(
         dict(LOG_OUTPUT=True,  # 是否开启输出模式
              TD_FUNC=False,  # 是否开启交易功能
@@ -69,7 +49,6 @@ class CtpBee(object):
              SLIPPAGE_SELL=0,  # 平空头滑点设置
              SLIPPAGE_SHORT=0,  # 卖空滑点设置
              SLIPPAGE_BUY=0,  # 买多滑点设置
-             LOOPER_PARAMS=default_params,  # 回测需要设置的参数
              SHARED_FUNC=False,  # 分时图数据 --> 等待优化
              REFRESH_INTERVAL=1.5,  # 定时刷新秒数， 需要在CtpBee实例化的时候将refresh设置为True才会生效
              INSTRUMENT_INDEPEND=False,  # 是否开启独立行情，策略对应相应的行情
@@ -195,7 +174,18 @@ class CtpBee(object):
 
     def add_data(self, *data):
         """
-        载入历史回测数据
+        在回测模式下添加历史数据到系统中去
+
+        Args:
+          data (list): 多个数据载入
+
+        Examples:
+            # first style
+            app.add_data(data1_iter, data2_iter)
+
+            # second style
+            data = [data1_iter, data2_iter)
+            app.add_data(*data)
         """
         if self.config.get("PATTERN") == "looper":
             self.data = data
@@ -203,20 +193,37 @@ class CtpBee(object):
             raise TypeError("此API仅仅接受回测模式, 请通过配置文件 PATTERN 修改运行模式")
 
     def update_action_class(self, action_class):
+        """
+        更新操作类,除了在CtpBee的构造函数中传入action外, 你还可以通过此接口更新Action类
+
+        Args:
+          action_class (Action): 操作类
+        """
         if isinstance(action_class, Action):
             raise TypeError(f"更新action_class出现错误, 你传入的action_class类型为{type(action_class)}")
         self.action = action_class(self)
 
     def update_risk_gateway(self, gateway_class):
+        """
+        更新CtpBee中的风控
+
+        Args:
+          gateway_class (RiskLevel): 风险控制类
+        """
         self.risk_decorator = gateway_class
         self.risk_decorator.update_app(self)
 
     def make_config(self):
-        """ 生成class类"""
+        """
+        生成config实例
+        """
         defaults = dict(self.default_config)
         return self.config_class(self.instance_path, defaults)
 
     def auto_find_instance_path(self):
+        """
+        找到实例地址
+        """
         prefix, package_path = find_package(self.import_name)
         if prefix is None:
             return os.path.join(package_path)
@@ -224,17 +231,24 @@ class CtpBee(object):
 
     @property
     def td_login_status(self):
-        """ 交易 API 都应该实现td_status"""
+        """
+        交易接口状态
+        交易 API 都应该实现td_status
+        """
         return self.trader.td_status
 
     @property
     def md_login_status(self):
-        """ 行情 API 都应该实现md_status"""
+        """
+        行情接口状态
+        行情 API 都应该实现md_status
+        """
         return self.market.md_status
 
     def _running(self, logout=True):
         """
-        根据当前配置文件下的信息载入行情api和交易api,记住这个api的选项是可选的
+        根据当前配置文件下的信息载入行情api和交易api
+        注意此函数同时会根据构造函数中的refresh参数决定开启定时线程， 向CtpBee里面提供定时查询账户持仓功能
         """
         self.active = True
         if "CONNECT_INFO" in self.config.keys():
@@ -266,10 +280,12 @@ class CtpBee(object):
 
     def start(self, log_output=True, debug=False):
         """
-        开启处理
-        :param log_output: 是否输出log信息
-        :param debug: 是否开启调试模式 ----> 等待完成
-        :return:
+        开启处理整个事件处理循环
+
+        Args:
+          log_output(bool): 是否输出log信息
+
+          debug(bool): 是否开启调试模式 ----> 等待完成
         """
         if self.config.get("PATTERN") == "real":
             def running_timer(common_signal):
@@ -299,9 +315,14 @@ class CtpBee(object):
     def get_result(self, report: bool = False, **kwargs):
         """
         计算回测结果，生成回测报告
-        :param report: bool ,指定是否输出策略报告
-        :param auto_open: bool, 是否让浏览器自动打开回测报告
-        :param zh:bpol, 是否输出成中文报告
+
+        Args:
+          report(bool): 是否生成报告
+
+          auto_open(bool): 是否让浏览器自动打开回测报告
+
+        Return:
+            Dataframe: 生成结果, 以Dataframe形式.
         """
         strategys = list(self._extensions.keys())
         end_time = datetime.now()
@@ -335,13 +356,22 @@ class CtpBee(object):
         return self.trader.account.result
 
     def add_basic_info(self, info):
-        """ 添加基础手续费以及size_map等信息 """
+        """
+        添加基础手续费以及size_map等信息
+        todo: 暂未开源data_api
+
+        Args:
+            info(dict): 配置信息
+
+        """
         if self.config.get("PATTERN") != "looper":
             raise TypeError("此API仅在回测模式下进行调用")
         self.basic_info = info
 
     def _start_looper(self):
-        """ 基于现有的数据进行回测数据 """
+        """
+        基于现有的数据进行回测数据, 此API用户不需要关注
+        """
         d = VessData(*self.data)
         if self.basic_info is not None:
             self.trader.account.basic_info = self.basic_info
@@ -358,40 +388,91 @@ class CtpBee(object):
                 raise ValueError("数据存在问题, 请检查")
 
     def remove_extension(self, extension_name: Text) -> None:
-        """移除插件"""
+        """
+        移除插件(策略)
+
+        Args:
+          extension_name(Text): 策略名
+
+        """
         if extension_name in self._extensions:
             del self._extensions[extension_name]
 
-    def add_extension(self, extension: CtpbeeApi):
-        """添加插件"""
+    def add_extension(self, extension: CtpbeeApi) -> None:
+        """
+        添加插件(策略)
+
+        Args:
+          extension(CtpbeeApi): 策略实例
+
+        """
         self._extensions.pop(extension.extension_name, None)
         extension.init_app(self)
 
-    def suspend_extension(self, extension_name):
+    def suspend_extension(self, extension_name: Text) -> bool:
+        """
+        停止插件(策略)
+
+        Args:
+           extension_name(Text): 策略名字
+
+        """
         extension = self._extensions.get(extension_name, None)
         if not extension:
             return False
         extension.frozen = True
         return True
 
-    def get_extension(self, extension_name):
+    def get_extension(self, extension_name) -> None or CtpbeeApi:
+        """
+        获取插件(策略)实例
+
+        Args:
+           extension_name(Text): 策略名字
+
+        Return:
+            CtpbeeApi/None: 存在就返回实体，不存在返回None
+
+        """
         if extension_name in self._extensions:
             return self._extensions.get(extension_name)
         else:
             return None
 
-    def enable_extension(self, extension_name):
+    def enable_extension(self, extension_name) -> bool:
+        """
+        启用插件(策略)实例
+
+        Args:
+           extension_name(Text): 策略名字
+
+        Return:
+            bool: 操作结果
+
+        """
         extension = self._extensions.get(extension_name, None)
         if not extension:
             return False
         extension.frozen = False
         return True
 
-    def del_extension(self, extension_name):
+    def del_extension(self, extension_name: Text):
+        """
+        卸载插件(策略)实例
+
+        Args:
+           extension_name(Text): 策略名字
+
+        Return:
+            None
+
+        """
         self._extensions.pop(extension_name, None)
 
     def reload(self):
-        """ 重新载入接口 """
+        """
+        重新载入接口
+        """
         if self.market is not None:
             self.market.close()
         if self.trader is not None:
@@ -402,7 +483,10 @@ class CtpBee(object):
         self._running()
 
     def release(self):
-        """ 释放账户,安全退出 """
+        """
+        释放账户,安全退出
+        todo: fix this API
+        """
         try:
             if self.market is not None:
                 self.market.close()
@@ -416,6 +500,3 @@ class CtpBee(object):
                 end_thread(self.timer)
         except AttributeError:
             pass
-
-
-
