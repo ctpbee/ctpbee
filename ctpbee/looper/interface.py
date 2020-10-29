@@ -307,6 +307,11 @@ class LocalLooper:
             self.date = entity.datetime.date()
         if not self.auth_time(entity.datetime):
             return
+        if entity.type == "bar" and entity.close_price <= 0:
+            return
+        elif entity.type == "tick" and entity.last_price <= 0:
+            return
+
         self.data_type = entity.type
         # 回测的时候自动更新策略的日期
         try:
@@ -315,7 +320,7 @@ class LocalLooper:
                     (
                             14 <= self.datetime.hour <= 15)
                     and entity.datetime.date() != self.datetime.date())
-                    and entity.datetime.hour >= 8):  # 换天
+                                           and entity.datetime.hour >= 8):  # 换天
                 self.account.settle(entity.datetime.date())
                 # 针对于账户的实现 我们需要将昨仓转换为今仓
                 self.app.recorder.position_manager.covert_to_yesterday_holding()

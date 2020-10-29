@@ -5,6 +5,7 @@ ctpbee里面的核心数据访问模块
 
 """
 from abc import ABC
+from typing import Text
 
 from ctpbee.constant import Direction
 
@@ -61,7 +62,6 @@ class BasicCenterModel(ABC):
 
     def __getattr__(self, item):
         """ 返回"""
-
         if item not in self.__dict__.keys():
             return Missing.create_obj(item)
         return self.__dict__[item]
@@ -103,49 +103,93 @@ class Center(BasicCenterModel, dict):
 
     @property
     def last_order_id(self):
+        """
+        返回最新的一个orderid
+        """
         return self.orders[-1].order_id
 
     @property
     def last_order(self):
+        """
+        返回最新的一个报单
+        """
         return self.orders[-1]
 
     @property
     def active_orders(self):
-        """ 返回所有的未成交单 """
+        """返回所有的未成交单
+        """
         return self.app.recorder.get_all_active_orders()
 
     @property
     def trades(self):
-        """ 返回所有的成交单 """
+        """
+        返回所有的成交单
+        """
         return self.app.recorder.get_all_trades()
 
     @property
     def account(self):
+        """
+        返回账户信息
+        """
         return self.app.recorder.get_account()
 
     @property
     def positions(self):
+        """
+        返回所有的仓位信息
+        """
         return self.app.recorder.position_manager.get_all_positions()
 
     def get_tick(self, local_symbol):
-        """ 获取指定合约最近的一条tick"""
+        """
+        获取指定合约最近的一条tick
+
+        Args:
+          local_symbol(Text): 合约代码
+        """
         try:
             return self.app.recorder.get_tick(local_symbol)[:-1]
         except IndexError:
             return Missing.create_obj("get_tick")
 
+    def get_contract(self, local_symbol: Text):
+        """
+        获取指定合约信息
+
+        Args:
+          local_symbol(Text): 合约代码
+
+        Return:
+          ContractData: 合约信息
+        """
+        return self.app.recorder.get_contract(local_symbol)
+
     def get_active_order(self, local_symbol):
-        """ 拿到指定合约的未成交单子"""
+        """
+        拿到指定合约的未成交单子
+
+        Args:
+          local_symbol(Text): 合约代码
+
+        Return:
+            List[OrderData]
+        """
         return self.app.recorder.get_all_active_orders(local_symbol)
 
     def get_position(self, local_symbol) -> PositionModel:
         """
         返回指定合约的持仓信息
         注意你返回是一个PositionModel对象
-        for exmaple:
-            ag_model = self.get_position("ag1912.SHFE")
-            打印长头持仓数目
-            print(ag_model.long_pos)
+
+        Args:
+          local_symbol(Text): 合约代码
+
+        Examples:
+          ag_model = self.get_position("ag1912.SHFE")
+          打印长头持仓数目
+          print(ag_model.long_volume)
         """
         position_long = self.app.recorder.position_manager.get_position_by_ld(local_symbol, Direction.LONG)
         position_short = self.app.recorder.position_manager.get_position_by_ld(local_symbol, Direction.SHORT)

@@ -52,13 +52,18 @@ class AliasDayResult:
 
 class Account:
     """
-    账户类
+    此账户可以作为一个基本的账户类进行使用， 但是不能作为完整一个App.
+    需要配合 Interface 提供实时价格和收盘价格进行使用.
 
-    支持成交之后修改资金 ， 对外提供API
-
+    详细参见函数API
     """
 
     def __init__(self, interface, name=None):
+        """
+        核心账户
+        Args
+
+        """
         self.account_id = name if name is not None else uuid.uuid4()
         # 成交接口
         self.interface = interface
@@ -346,6 +351,7 @@ class Account:
         self.position_manager.clear_frozen()
 
     def reset_attr(self):
+        """ 重新设置属性 """
         self.frozen_premium = 0
         self.count = 0
         self.turnover = 0
@@ -382,12 +388,6 @@ class Account:
                 break
         if amount > 0:
             raise ValueError(f"你爆仓了!!!!, 什么策略????? 你的保证金: {self.margin} 可用:{self.available}")
-
-    @property
-    def position_amount(self):
-        return sum([self.interface.price_mapping.get(x['local_symbol']) * x["volume"] * self.get_size_from_map(
-            x["local_symbol"]) * self.get_margin_ration(x["local_symbol"]) for x in
-                    self.position_manager.get_all_positions()])
 
     def is_traded(self, order: OrderData) -> bool:
         """ 当前账户是否足以支撑成交 """
