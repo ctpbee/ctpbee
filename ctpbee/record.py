@@ -66,12 +66,11 @@ class Recorder(object):
         for x in self.app._extensions.values():
             x()
 
+    @helper_call
     def process_init_event(self, event):
         """ 处理初始化完成事件 """
         if event.data:
             self.app.init_finished = True
-        for x in self.app._extensions.values():
-            x(deepcopy(event))
 
     def process_warning_event(self, event):
         self.app.logger.warning(event.data)
@@ -106,7 +105,7 @@ class Recorder(object):
 
     @helper_call
     def process_tick_event(self, event: Event):
-        tick:TickData = event.data
+        tick: TickData = event.data
         self.ticks[tick.local_symbol] = tick
         self.position_manager.update_tick(tick, tick.pre_settlement_price)
         # 生成datetime对象
@@ -141,14 +140,6 @@ class Recorder(object):
         trade = event.data
         self.trades[trade.local_trade_id] = trade
         self.position_manager.update_trade(trade)
-        for value in self.app._extensions.values():
-            if self.app.config['INSTRUMENT_INDEPEND']:
-                if len(value.instrument_set) == 0:
-                    warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
-                if event.data.local_symbol in value.instrument_set:
-                    value(deepcopy(event))
-            else:
-                value(deepcopy(event))
 
     @helper_call
     def process_position_event(self, event: Event):
@@ -156,14 +147,6 @@ class Recorder(object):
         position = event.data
         self.positions[position.local_position_id] = position
         self.position_manager.update_position(position)
-        for value in self.app._extensions.values():
-            if self.app.config['INSTRUMENT_INDEPEND']:
-                if len(value.instrument_set) == 0:
-                    warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
-                if event.data.local_symbol in value.instrument_set:
-                    value(deepcopy(event))
-            else:
-                value(deepcopy(event))
 
     def process_account_event(self, event: Event):
         """"""

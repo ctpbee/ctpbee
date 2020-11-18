@@ -441,7 +441,6 @@ class CtpbeeApi(BeeApi):
 
     def __call__(self, event: Event = None):
         # 特别处理两种情况
-
         if event and event.type == EVENT_ORDER:
             if event.data.local_order_id in self.order_id_mapping:
                 self.level_position_manager.on_order(event.data)

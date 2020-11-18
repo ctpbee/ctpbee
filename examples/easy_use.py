@@ -54,12 +54,12 @@ class Main(CtpbeeApi):
 
 
 if __name__ == '__main__':
-    app = CtpBee("test", __name__, refresh=True)
-    just_use = JustUse("Hi")
-    app.config.from_json("config.json")
-    app.add_extension(just_use)
-    app.start(log_output=True)
-    print("one start")
+    # app = CtpBee("test", __name__, refresh=True)
+    # just_use = JustUse("Hi")
+    # app.config.from_json("config.json")
+    # app.add_extension(just_use)
+    # app.start(log_output=True)
+    # print("one start")
     info = {
         "CONNECT_INFO": {
             "userid": "089131",

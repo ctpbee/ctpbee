@@ -83,8 +83,9 @@ class Center(BasicCenterModel, dict):
         self.app = app
 
     def __getitem__(self, extension_name):
-        """ 重写此处API
-            item应该作为插件名字
+        """
+        重写此处API
+        item应该作为插件名字
         """
         return self.app._extensions.get(extension_name, None)
 
@@ -117,7 +118,8 @@ class Center(BasicCenterModel, dict):
 
     @property
     def active_orders(self):
-        """返回所有的未成交单
+        """
+        返回所有的未成交单
         """
         return self.app.recorder.get_all_active_orders()
 

@@ -299,7 +299,11 @@ class Account:
             else:
                 if data.direction == Direction.LONG:
                     pos = self.position_manager.get_position_by_ld(data.local_symbol, Direction.SHORT)
-                    assert pos.volume >= data.volume
+                    try:
+                        assert pos.volume >= data.volume
+                    except Exception:
+                        print(pos.volume, data.volume)
+                        raise ValueError
                     close_profit = (pos.price - data.price) * data.volume * self.get_size_from_map(data.local_symbol)
                 else:
                     pos = self.position_manager.get_position_by_ld(data.local_symbol, Direction.LONG)
