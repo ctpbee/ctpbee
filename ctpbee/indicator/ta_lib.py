@@ -6,6 +6,8 @@ Vnpy里面提高的指标系统
 import numpy as np
 import warnings
 
+from ctpbee.constant import TickData
+
 try:
     import talib
 except ImportError:
@@ -195,3 +197,61 @@ class ArrayManager(object):
         if array:
             return up, down
         return up[-1], down[-1]
+
+    @staticmethod
+    def get_open_interest_delta_forward(open_interest_delta, volume_delta):
+        """根据成交量的差和持仓量的差来获取仓位变化的方向
+            return: open_interest_delta_forward_enum
+        """
+        if open_interest_delta == 0 and volume_delta == 0:
+            """ 持仓量和成交量没有发生变化 """
+            local_open_interest_delta_forward = "NONE"
+        elif open_interest_delta == 0 and volume_delta > 0:
+            """ 持仓量不变 但是发生了成交 """
+            local_open_interest_delta_forward = "EXCHANGE"
+        elif open_interest_delta > 0:
+            """ 持仓量增大 说明发生了开仓  """
+            if open_interest_delta - volume_delta == 0:
+                """ 如果持仓量的变化 要大于成交量  --> 双开 """
+                local_open_interest_delta_forward = "OPENFWDOUBLE"
+            else:
+                """ 否则是多开 """
+                local_open_interest_delta_forward = "OPEN"
+        elif open_interest_delta < 0:
+            """" 持仓量减少 说明发生了平仓 """
+            if open_interest_delta + volume_delta == 0:
+                local_open_interest_delta_forward = "CLOSEFWDOUBLE"
+            else:
+                local_open_interest_delta_forward = "CLOSE"
+        else:
+            raise ValueError("这里不可能被触发")
+        return local_open_interest_delta_forward
+
+    def get_order_direction(self, last_tick: TickData, pre_tick: TickData, volume_delta_flag=True,
+                            open_interest_delta_flag=False):
+        """获取成交的区域，根据当前tick的成交价和上个tick的ask和bid价格进行比对
+           return: order_forward_enum
+        """
+        assert last_tick.local_symbol == pre_tick.local_symbol
+        if last_tick.last_price >= pre_tick.ask_price_1:
+            direction = "UP"
+        elif last_tick.last_price <= pre_tick.bid_price_1:
+            direction = "DOWN"
+        else:
+            if last_tick.last_price >= last_tick.ask_price_1:
+                direction = "UP"
+            elif last_tick.last_price <= last_tick.bid_price_1:
+                direction = "DOWN"
+            else:
+                direction = "MIDDLE"
+        if volume_delta_flag:
+            volume_delta = last_tick.volume
+        else:
+            volume_delta = last_tick.volume - pre_tick.volume
+        if open_interest_delta_flag:
+            open_delta = last_tick.open_interest
+        else:
+            open_delta = last_tick.open_interest - pre_tick.open_interest
+        offset = self.get_open_interest_delta_forward(volume_delta=volume_delta, open_interest_delta=open_delta)
+        result = f"{direction}-{offset}"
+        return result, volume_delta, open_delta

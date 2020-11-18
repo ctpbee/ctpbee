@@ -47,6 +47,7 @@ class Demo(CtpbeeApi):
 
     def on_trade(self, trade: TradeData) -> None:
         """ 成交回报 """
+        print(trade, "\n")
 
     def on_position(self, position: PositionData) -> None:
         """ 处理持仓回报 """
