@@ -1,26 +1,19 @@
 {
   "CONNECT_INFO": {
-    "userid": "170440",
-    "password": "985621",
+    "userid": "089131",
+    "password": "350888",
     "brokerid": "9999",
-    "md_address": "tcp://218.202.237.33 :10112",
-    "td_address": "tcp://218.202.237.33 :10102",
+         "md_address": "tcp://218.202.237.33:10112",
+            "td_address": "tcp://218.202.237.33:10102",
     "product_info": "",
     "appid": "simnow_client_test",
     "auth_code": "0000000000000000"
   },
   "INTERFACE": "ctp",
-  "TD_FUNC": true,
   "MD_FUNC": true,
-  "REFRESH_INTERVAL": 1.5,
-  "INSTRUMENT_INDEPEND": false,
-  "SLIPPAGE_SHORT": 0,
-  "SLIPPAGE_BUY": 0,
-  "SLIPPAGE_COVER": 0,
-  "SLIPPAGE_SELL": 0,
-  "CLOSE_PATTERN": "yesterday",
-  "SHARED_FUNC": false,
+  "TD_FUNC": true,
   "XMIN": [
+    1,
     3
   ]
 }
