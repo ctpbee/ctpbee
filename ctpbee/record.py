@@ -66,11 +66,12 @@ class Recorder(object):
         for x in self.app._extensions.values():
             x()
 
-    @helper_call
     def process_init_event(self, event):
         """ 处理初始化完成事件 """
         if event.data:
             self.app.init_finished = True
+        for value in self.app._extensions.values():
+            value(deepcopy(event))
 
     def process_warning_event(self, event):
         self.app.logger.warning(event.data)

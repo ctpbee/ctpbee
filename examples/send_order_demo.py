@@ -39,7 +39,14 @@ class Demo(CtpbeeApi):
     def on_init(self, init):
         if init:
             self.isok = True
-            print("初始化完成")
+        orders = self.center.orders
+        trades = self.recorder.get_all_trades()
+        data = {"data": self.center.orders, "trade": trades}
+        print("===> ")
+        from ctpbee import dumps
+        strr = dumps(data)
+        with open("data.json", "w") as f:
+            f.write(strr)
 
     def on_order(self, order: OrderData) -> None:
         """ 报单回报 """
@@ -47,7 +54,7 @@ class Demo(CtpbeeApi):
 
     def on_trade(self, trade: TradeData) -> None:
         """ 成交回报 """
-        print(trade, "\n")
+        # print(trade, "\n")
 
     def on_position(self, position: PositionData) -> None:
         """ 处理持仓回报 """
