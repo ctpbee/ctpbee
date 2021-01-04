@@ -10,8 +10,12 @@ def plot_multi(data, cols=None, spacing=.1, **kwargs):
     # Get default color style from pandas - can be changed to any other color list
     if cols is None: cols = data.columns
     if len(cols) == 0: return
-    colors = getattr(getattr(plotting, '_matplotlib').style, '_get_standard_colors')(num_colors=len(cols))
-
+    try:
+        colors = getattr(getattr(plotting, '_matplotlib').style, '_get_standard_colors')(num_colors=len(cols))
+    except AttributeError:
+        colors = plotting._style._get_standard_colors(num_colors=len(cols))
+    except Exception:
+        raise ValueError("版本错误无法获取颜色")
     # First axis
     ax = data.loc[:, cols[0]].plot(label=cols[0], color=colors[0], **kwargs)
     ax.set_ylabel(ylabel=cols[0])
