@@ -18,6 +18,7 @@ from ctpbee.constant import \
      MarketDataRequest)
 from ctpbee.context import current_app
 from ctpbee.context import get_app
+from ctpbee.date import trade_dates
 from ctpbee.exceptions import TraderError, MarketError
 from ctpbee.signals import send_monitor, cancel_monitor
 
@@ -363,21 +364,3 @@ def get_ctpbee_path():
     if not os.path.exists(ctpbee_path):
         os.mkdir(ctpbee_path)
     return ctpbee_path
-
-
-def data_adapt(data: List[dict],
-               mapping={"open": "open_price", "close": "close_price", "code": "local_symbol", "vol": "volume",
-                        "high": "high_price", "low": "low_price"}):
-    """ 数据格式适应器
-    使得外部数据格式被转化为ctpbee可以接受的格式
-    data: 数据
-    mapping: { 外部key: ctpbee接受的key }
-    """
-    result = []
-    for x in data:
-        temp = {}
-        for key, value in x.items():
-            if key in mapping.keys():
-                temp[mapping[key]] = value
-        result.append(temp)
-    return result

@@ -169,9 +169,12 @@ class ApiPositionManager(dict):
         """
 
         def update_local_cache(file_path, local, self):
-            with open(file_path, "r") as fp:
-                p = json.load(fp)
-                p[local] = self[local].to_dict()
+            try:
+                with open(file_path, "r") as fp:
+                    p = json.load(fp)
+            except JSONDecodeError:
+                p = {}
+            p[local] = self[local].to_dict()
             with open(file_path, "w") as fp:
                 dump(obj=p, fp=fp)
 
