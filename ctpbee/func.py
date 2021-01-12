@@ -191,11 +191,11 @@ def auth_time(data_time: time):
     """
     if not isinstance(data_time, time):
         raise TypeError("参数类型错误, 期望为datetime.time}")
-    DAY_START = time(8, 55)  # 日盘启动和停止时间
+    DAY_START = time(9, 0)  # 日盘启动和停止时间
     DAY_END = time(15, 0)
-    NIGHT_START = time(20, 55)
+    NIGHT_START = time(21, 0)
     NIGHT_END = time(2, 30)
-    if data_time <= DAY_END and data_time >= DAY_START:
+    if DAY_END >= data_time >= DAY_START:
         return True
     if data_time >= NIGHT_START:
         return True
