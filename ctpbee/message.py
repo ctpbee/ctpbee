@@ -18,12 +18,15 @@ class MessageHelper:
 
 
 class Mail(MessageHelper):
-    def __init__(self, config: dict):
-        self.to = config.get("TO", [])
-        self.passwd = config.get("PASSWD")
-        self.user_email = config.get("USER_EMAIL")
-        self.port = config.get("PORT", 465)
-        self.smtp = config.get("SERVER_URI")
+    def __init__(self, mail_config: dict):
+        self.to = mail_config.get("TO", [])
+        self.passwd = mail_config.get("PASSWD")
+        self.user_email = mail_config.get("USER_EMAIL")
+        self.port = mail_config.get("PORT", 465)
+        self.smtp = mail_config.get("SERVER_URI")
+
+        self.smtp_api = smtplib.SMTP_SSL(self.smtp, self.port)
+        self.smtp_api.login(self.user_email, self.passwd)
 
     def send_message(self, title="ctpbee 日内邮件提醒", sub="日内邮件提醒", message: str = None):
         email = MIMEMultipart()
@@ -32,10 +35,8 @@ class Mail(MessageHelper):
         email['To'] = self.to[0]
         text = MIMEText(f"{datetime.now()} \n邮件类型: {sub}\n{message if message is not None else ''}")
         email.attach(text)
-        smtp = smtplib.SMTP_SSL(self.smtp, self.port)
-        smtp.login(self.user_email, self.passwd)
         try:
-            smtp.sendmail(self.user_email, self.to, email.as_string())  # 发送邮件
+            self.smtp.sendmail(self.user_email, self.to, email.as_string())  # 发送邮件
         except smtplib.SMTPDataError as e:
             print(f"{datetime.now()} 邮件发送失败 Reason: {e}")
 
@@ -49,13 +50,14 @@ class Mail(MessageHelper):
             direction = '多' if order.direction == Direction.LONG else '空'
         else:
             direction = '空' if order.direction == Direction.LONG else '多'
+
+        offset = '开' if order.offset == Offset.OPEN else '平'
+        beh = offset + direction
         text = MIMEText(f"报单价格: {order.price}\n报单手数: {order.volume} \n"
-                        f"报单行为: {'开' if order.offset == Offset.OPEN else '平'}{direction} \n")
+                        f"报单行为: {beh} \n")
         email.attach(text)
-        smtp = smtplib.SMTP_SSL(self.smtp, self.port)
-        smtp.login(self.user_email, self.passwd)
         try:
-            smtp.sendmail(self.user_email, self.to, email.as_string())  # 发送邮件
+            self.smtp_api.sendmail(self.user_email, self.to, email.as_string())  # 发送邮件
         except smtplib.SMTPDataError as e:
             print(f"{datetime.now()} 邮件发送失败 Reason: {e}")
 
@@ -73,5 +75,5 @@ if __name__ == '__main__':
         "PASSWD": "passwd",
         "PORT": 465
     }
-    mail = Mail(config=config)
+    mail = Mail(mail_config=config)
     mail.send_message(message="你好呀")
