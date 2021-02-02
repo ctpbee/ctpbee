@@ -63,6 +63,7 @@ class ArrayManager(object):
             self.close_array[-1] = data.last_price
         self.volume_array[-1] = data.volume
 
+
     @property
     def open(self):
         """
