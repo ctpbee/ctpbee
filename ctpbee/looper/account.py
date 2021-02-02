@@ -11,7 +11,7 @@ from copy import deepcopy
 import math
 from datetime import datetime
 
-from ctpbee.looper.date import trade_dates
+from ctpbee.date import trade_dates
 
 try:
     from statistics import geometric_mean

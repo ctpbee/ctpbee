@@ -1,7 +1,7 @@
 """
     for the future of  life
 """
-__version__ = '1.3.4'
+__version__ = '1.3.5'
 __status__ = 'release level'
 
 # About core
@@ -18,10 +18,3 @@ from ctpbee.trade_time import TradingDay
 from ctpbee.util import RiskLevel
 from ctpbee.func import hickey, get_ctpbee_path
 from ctpbee.data_handle.generator import HighKlineSupporter
-
-# About data_support
-try:
-    import pymongo
-    from ctpbee.qa_support.qa_app import QADataSupport
-except ImportError as e:
-    pass

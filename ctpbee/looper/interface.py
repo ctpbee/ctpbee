@@ -12,7 +12,7 @@ from ctpbee.constant import OrderRequest, Offset, Direction, OrderType, OrderDat
 from ctpbee.exceptions import ConfigError
 from ctpbee.func import helper
 from ctpbee.looper.account import Account
-from ctpbee.looper.date import trade_dates
+from ctpbee.date import trade_dates
 
 
 class LocalLooper:

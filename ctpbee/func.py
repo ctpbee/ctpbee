@@ -175,7 +175,7 @@ class Helper(object):
 helper = Helper()
 
 
-def auth_time(data_time: time):
+def auth_time(data_time: time, type="future"):
     """
     校验时间tick或者bar的时间合不合法
 
@@ -191,16 +191,26 @@ def auth_time(data_time: time):
     """
     if not isinstance(data_time, time):
         raise TypeError("参数类型错误, 期望为datetime.time}")
-    DAY_START = time(8, 55)  # 日盘启动和停止时间
+
+    DAY_START = time(9, 0)  # 日盘启动和停止时间
+    if type == "stock":
+        DAY_START = time(9, 30)
+    DAY_FIRST_END = time(11, 30)  # 日盘启动和停止时间
+    DAT_SEC_START = time(13, 30)
+    if type == "stock":
+        DAT_SEC_START = time(13, 0)
     DAY_END = time(15, 0)
-    NIGHT_START = time(20, 55)
+    NIGHT_START = time(21, 0)
     NIGHT_END = time(2, 30)
-    if data_time <= DAY_END and data_time >= DAY_START:
+    if DAY_FIRST_END >= data_time >= DAY_START:
         return True
-    if data_time >= NIGHT_START:
+    if DAT_SEC_START <= data_time <= DAY_END:
         return True
-    if data_time <= NIGHT_END:
-        return True
+    if type == "future":
+        if data_time >= NIGHT_START:
+            return True
+        if data_time <= NIGHT_END:
+            return True
     return False
 
 

@@ -383,8 +383,8 @@ class BeeTdApi(TdApi):
         if not self.connect_status:
             path = get_folder_path(self.gateway_name.lower() + f"/{self.userid}")
             self.createFtdcTraderApi(str(path) + "\\Td")
-            self.subscribePrivateTopic(0)
-            self.subscribePublicTopic(0)
+            self.subscribePrivateTopic(2)
+            self.subscribePublicTopic(2)
             self.registerFront(info.get("td_address"))
             self.init()
         else:
