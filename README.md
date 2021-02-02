@@ -1,5 +1,5 @@
 # ctpbee 
-bee bee .... for developer's trading ~~ 
+bee bee .... for developer's trading ~  
 
 >  tiny but strong
 

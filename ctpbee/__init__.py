@@ -2,9 +2,9 @@
     for the future of  life
 """
 __version__ = '1.3.5'
-__status__ = 'release level'
+__status__ = 'develop level'
 
-# About core
+# Here are some import
 from ctpbee.app import CtpBee
 from ctpbee.signals import common_signals
 from ctpbee.context import current_app, switch_app, get_app, del_app
@@ -18,3 +18,4 @@ from ctpbee.trade_time import TradingDay
 from ctpbee.util import RiskLevel
 from ctpbee.func import hickey, get_ctpbee_path
 from ctpbee.data_handle.generator import HighKlineSupporter
+from ctpbee.message import Mail
