@@ -355,7 +355,7 @@ class Action(object):
     @check(type="market")
     def subscribe(self, local_symbol: AnyStr):
         """
-        发单请求
+        订阅行情请求
         Args:
           local_symbol (AnyStr): 合约代码
 
@@ -365,6 +365,20 @@ class Action(object):
         if "." in local_symbol:
             local_symbol = local_symbol.split(".")[0]
         return self.app.market.subscribe(local_symbol)
+
+    @check(type="market")
+    def unsubscribe(self, local_symbol: AnyStr):
+        """
+        取消订阅请求
+        Args:
+          local_symbol (AnyStr): 合约代码
+
+        Returns:
+          int: 本地订阅发送成功与否
+        """
+        if "." in local_symbol:
+            local_symbol = local_symbol.split(".")[0]
+        return self.app.market.unsubscribe(local_symbol)
 
     def __repr__(self):
         return f"{self.__name__} "
