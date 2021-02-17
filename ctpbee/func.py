@@ -221,7 +221,6 @@ class Hickey(object):
     主要为了完成自动拉起程序
     """
     from datetime import time
-    logger = logging.getLogger("ctpbee")
     DAY_START = time(9, 0)  # 日盘启动和停止时间
     DAY_END = time(15, 5)
     NIGHT_START = time(21, 0)  # 夜盘启动和停止时间
@@ -242,6 +241,8 @@ class Hickey(object):
         }
 
     def auth_time(self, current: datetime):
+        if str(current.date()) not in trade_dates:
+            return False
         if ((current.today().weekday() == 6) or
                 (current.today().weekday() == 5 and current.time() > self.NIGHT_END) or
                 (current.today().weekday() == 0 and current.time() < self.DAY_START)):
@@ -309,15 +310,15 @@ class Hickey(object):
             if p is None and status:
                 p = Process(target=self.run_all_app, args=(app_func,))
                 p.start()
-                print("program start successful")
+                print("===> program start successful")
             if not status and p is not None:
-                print("invalid time, 查杀子进程")
+                print("===> 非交易时间, 即将查杀子进程")
                 if platform.uname().system == "Windows":
                     os.popen('taskkill /F /pid ' + str(p.pid))
                 else:
                     import signal
                     os.kill(p.pid, signal.SIGKILL)
-                self.logger.info("关闭成功")
+
                 p = None
             sleep(30)
 
@@ -368,7 +369,7 @@ def get_ctpbee_path():
     elif system_ == "Darwin":
         home_path = os.environ['HOME']
     else:
-        raise Exception("bee does not know the system!")
+        raise Exception("ctpbee does not know the system!")
     ctpbee_path = os.path.join(home_path, ".ctpbee")
     if not os.path.exists(ctpbee_path):
         os.mkdir(ctpbee_path)

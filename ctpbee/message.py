@@ -39,6 +39,10 @@ class Mail(MessageHelper):
             self.smtp.sendmail(self.user_email, self.to, email.as_string())  # 发送邮件
         except smtplib.SMTPDataError as e:
             print(f"{datetime.now()} 邮件发送失败 Reason: {e}")
+        except smtplib.SMTPServerDisconnected:
+            self.smtp_api = smtplib.SMTP_SSL(self.smtp, self.port)
+            self.smtp_api.login(self.user_email, self.passwd)
+            self.smtp_api.sendmail(self.user_email, self.to, email.as_string())  # 发送邮件
 
     def send_trade(self, order: OrderData or TradeData):
         email = MIMEMultipart()
@@ -60,6 +64,10 @@ class Mail(MessageHelper):
             self.smtp_api.sendmail(self.user_email, self.to, email.as_string())  # 发送邮件
         except smtplib.SMTPDataError as e:
             print(f"{datetime.now()} 邮件发送失败 Reason: {e}")
+        except smtplib.SMTPServerDisconnected:
+            self.smtp_api = smtplib.SMTP_SSL(self.smtp, self.port)
+            self.smtp_api.login(self.user_email, self.passwd)
+            self.smtp_api.sendmail(self.user_email, self.to, email.as_string())  # 发送邮件
 
 
 class DingTalk(MessageHelper):
