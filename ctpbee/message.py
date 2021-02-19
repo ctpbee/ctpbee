@@ -36,7 +36,7 @@ class Mail(MessageHelper):
         text = MIMEText(f"{datetime.now()} \n邮件类型: {sub}\n{message if message is not None else ''}")
         email.attach(text)
         try:
-            self.smtp.sendmail(self.user_email, self.to, email.as_string())  # 发送邮件
+            self.smtp_api.sendmail(self.user_email, self.to, email.as_string())  # 发送邮件
         except smtplib.SMTPDataError as e:
             print(f"{datetime.now()} 邮件发送失败 Reason: {e}")
         except smtplib.SMTPServerDisconnected:
