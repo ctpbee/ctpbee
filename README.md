@@ -60,14 +60,16 @@ support multiple instrument and multiple frequency
 ![avatar](source/回测.png)
 
 
-
-
 ##  Development 
 Now I want to build stock support for `ctpbee`, if you have any interest, 
 you can send email to me and join us! 
 
 ## Code Contributed
 I just only accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch, please remember that ! 
+
+## High Performance Version 
+Python version is too slow for HFT.  If you need faster speed and are interested in `Rust` , 
+please read the code of [FlashFunk](https://github.com/HFQR/FlashFunk) 
 
 
 ## License
