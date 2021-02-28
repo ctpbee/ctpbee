@@ -326,6 +326,7 @@ class BeeTdApi(TdApi):
             ordertype = ORDERTYPE_CTP2VT[data["OrderPriceType"]]
         else:
             ordertype = "non_support"
+        is_local = True if int(self.frontid) == int(frontid) and int(self.sessionid) == int(sessionid) else False
         order = OrderData(
             symbol=symbol,
             exchange=exchange,
@@ -338,7 +339,8 @@ class BeeTdApi(TdApi):
             traded=data["VolumeTraded"],
             status=STATUS_CTP2VT[data["OrderStatus"]],
             time=data["InsertTime"],
-            gateway_name=self.gateway_name
+            gateway_name=self.gateway_name,
+            is_local=is_local
         )
         self.on_event(type=EVENT_ORDER, data=order)
         self.sysid_orderid_map[data["OrderSysID"]] = order_id
@@ -354,7 +356,6 @@ class BeeTdApi(TdApi):
             return
 
         order_id = self.sysid_orderid_map[data["OrderSysID"]]
-
         trade = TradeData(
             symbol=symbol,
             exchange=exchange,

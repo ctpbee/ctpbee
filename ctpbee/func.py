@@ -241,12 +241,21 @@ class Hickey(object):
         }
 
     def auth_time(self, current: datetime):
-        if str(current.date()) not in trade_dates:
+        current_string = str(current.date())
+
+        last_day = str((current + timedelta(days=-1)).date())
+        """
+        如果前一天是交易日， 今天不是 那么交易到今晚晚上2点：30
+        
+        如果前一天不是交易日，今天是  那么早盘前 不启动 
+        
+        如果前一天不是交易日, 今天也不是交易日 那么不启动 
+        """
+        if (last_day in trade_dates and current_string not in trade_dates and current.time() > self.NIGHT_END) or \
+                (last_day not in trade_dates and current_string in trade_dates and current.time() < self.DAY_START) or \
+                (last_day not in trade_dates and current_string not in trade_dates):
             return False
-        if ((current.today().weekday() == 6) or
-                (current.today().weekday() == 5 and current.time() > self.NIGHT_END) or
-                (current.today().weekday() == 0 and current.time() < self.DAY_START)):
-            return False
+
         if self.DAY_END >= current.time() >= self.DAY_START:
             return True
         if current.time() >= self.NIGHT_START:

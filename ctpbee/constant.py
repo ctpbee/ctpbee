@@ -177,7 +177,7 @@ EVENT_WARNING = "warning"
 
 
 @dataclass(init=False, repr=False)
-class BaseData:
+class Entity:
     """
     Any data object needs a gateway_name as source
     and should inherit base data.
@@ -310,7 +310,7 @@ class BaseRequest:
         return asdict(self)
 
 
-class TickData(BaseData):
+class TickData(Entity):
     """
     Tick data contains information about:
         * last trade in market
@@ -371,7 +371,7 @@ class TickData(BaseData):
             self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
-class BarData(BaseData):
+class BarData(Entity):
     """
     Candlestick bar data of a certain trading period.
     """
@@ -400,7 +400,8 @@ class BarData(BaseData):
             except AttributeError:
                 self.local_symbol = f"{self.symbol}.{self.exchange}"
 
-class OrderData(BaseData):
+
+class OrderData(Entity):
     """
     Order data contains information for tracking lastest status
     of a specific order.
@@ -418,6 +419,7 @@ class OrderData(BaseData):
     traded: float = 0
     status: Status = Status.SUBMITTING
     time: str = ""
+    is_local = True
 
     def __post_init__(self):
         """"""
@@ -446,7 +448,7 @@ class OrderData(BaseData):
         return req
 
 
-class TradeData(BaseData):
+class TradeData(Entity):
     """
     Trade data contains information of a fill of an order. One order
     can have several trade fills.
@@ -464,6 +466,7 @@ class TradeData(BaseData):
     volume: float = 0
     time: str = ""
     order_time: str = ""
+    is_local = True
 
     def __post_init__(self):
         """"""
@@ -475,7 +478,7 @@ class TradeData(BaseData):
         self.local_trade_id = f"{self.gateway_name}.{self.tradeid}"
 
 
-class PositionData(BaseData):
+class PositionData(Entity):
     """
     Positon data is used for tracking each individual position holding.
     """
@@ -496,7 +499,7 @@ class PositionData(BaseData):
         self.local_position_id = f"{self.local_symbol}.{self.direction}"
 
 
-class AccountData(BaseData):
+class AccountData(Entity):
     """
     Account data contains information about balance, frozen and
     available.
@@ -513,7 +516,7 @@ class AccountData(BaseData):
         self.local_account_id = f"{self.gateway_name}.{self.accountid}"
 
 
-class LogData(BaseData):
+class LogData(Entity):
     """
     Log data is used for recording log messages on GUI or in log files.
     """
@@ -526,7 +529,7 @@ class LogData(BaseData):
         self.time = datetime.now()
 
 
-class LastData(BaseData):
+class LastData(Entity):
     symbol: str
     exchange: Exchange
     pre_open_interest: float
@@ -538,7 +541,7 @@ class LastData(BaseData):
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
-class ContractData(BaseData):
+class ContractData(Entity):
     """
     Contract data contains basic information about each contract traded.
     """
@@ -645,7 +648,7 @@ class CancelRequest(BaseRequest):
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
-class SharedData(BaseData):
+class SharedData(Entity):
     local_symbol: str
     datetime: datetime
 
