@@ -153,8 +153,7 @@ except Exception:
     long_description = ""
 
 pkgs = ['ctpbee', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.interface',
-        'ctpbee.interface.ctp', "ctpbee.interface.looper", 'ctpbee.jsond', "ctpbee.looper", "ctpbee.indicator",
-        "ctpbee.qa_support"]
+        'ctpbee.interface.ctp', "ctpbee.interface.looper", 'ctpbee.jsond', "ctpbee.looper", "ctpbee.indicator"]
 
 setup(
     name='ctpbee',
