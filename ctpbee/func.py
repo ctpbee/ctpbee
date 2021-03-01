@@ -6,7 +6,7 @@
 import logging
 import os
 import platform
-from datetime import time, datetime, timedelta
+from datetime import time, datetime, timedelta, date
 from inspect import isfunction
 from multiprocessing import Process
 from time import sleep
@@ -214,6 +214,30 @@ def auth_time(data_time: time, type="future"):
     return False
 
 
+DAY_START = time(9, 0)  # 日盘启动和停止时间
+DAY_END = time(15, 5)
+NIGHT_START = time(21, 0)  # 夜盘启动和停止时间
+NIGHT_END = time(2, 35)
+
+
+def get_current_trade_day(timing: datetime) -> None or date:
+    current_string = str(timing.date())
+
+    last_day = str((timing + timedelta(days=-1)).date())
+
+    if timing.time() <= DAY_END and current_string in trade_dates:
+        return current_string
+    if timing.time() > DAY_END and current_string in trade_dates:
+        index = trade_dates.index(current_string)
+        return trade_dates[index + 1]
+
+    if current_string not in trade_dates and last_day in trade_dates and timing.time() < NIGHT_END:
+        """ 如果是周六凌晨2：30以前， 当前不为交易日 且前一日为交易日 返回下一个交易日"""
+        index = trade_dates.index(last_day)
+        return trade_dates[index + 1]
+    return None
+
+
 class Hickey(object):
     """
     Hickey任务调度机制
@@ -305,6 +329,7 @@ class Hickey(object):
             "Hope you will have a  good profit ^_^")
         if not isfunction(app_func):
             raise TypeError(f"请检查你传入的app_func是否是创建app的函数,  而不是{type(app_func)}")
+
         for i, v in self.open_trading[interface].items():
             setattr(self, i, self.add_seconds(getattr(self, i), in_front))
         p = None

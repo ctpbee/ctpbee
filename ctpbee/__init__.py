@@ -1,7 +1,7 @@
 """
     for the future of  life
 """
-__version__ = '1.3.6'
+__version__ = '1.3.7'
 __status__ = 'develop level'
 
 # Here are some import
@@ -16,6 +16,7 @@ from ctpbee.log import VLogger
 from ctpbee.signals import send_monitor, cancel_monitor
 from ctpbee.trade_time import TradingDay
 from ctpbee.util import RiskLevel
-from ctpbee.func import hickey, get_ctpbee_path
+from ctpbee.func import hickey, get_ctpbee_path, get_current_trade_day
 from ctpbee.data_handle.generator import HighKlineSupporter
 from ctpbee.message import Mail
+from ctpbee.date import get_day_from

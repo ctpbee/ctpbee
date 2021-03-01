@@ -67,6 +67,7 @@ class BeeTdApi(TdApi):
         self.position_instrument_mapping = dict()
         self.init_status = False
         self.contact_data = {}
+        self.local_order_id = []
 
     @property
     def td_status(self):
@@ -327,6 +328,10 @@ class BeeTdApi(TdApi):
         else:
             ordertype = "non_support"
         is_local = True if int(self.frontid) == int(frontid) and int(self.sessionid) == int(sessionid) else False
+
+        if is_local:
+            self.local_order_id.append(order_id)
+
         order = OrderData(
             symbol=symbol,
             exchange=exchange,
@@ -356,6 +361,8 @@ class BeeTdApi(TdApi):
             return
 
         order_id = self.sysid_orderid_map[data["OrderSysID"]]
+        is_local = order_id in self.local_order_id
+
         trade = TradeData(
             symbol=symbol,
             exchange=exchange,
@@ -366,6 +373,7 @@ class BeeTdApi(TdApi):
             price=data["Price"],
             volume=data["Volume"],
             time=data["TradeTime"],
+            is_local=is_local,
             gateway_name=self.gateway_name
         )
         self.on_event(type=EVENT_TRADE, data=trade)
@@ -384,8 +392,8 @@ class BeeTdApi(TdApi):
         if not self.connect_status:
             path = get_folder_path(self.gateway_name.lower() + f"/{self.userid}")
             self.createFtdcTraderApi(str(path) + "\\Td")
-            self.subscribePrivateTopic(2)
-            self.subscribePublicTopic(2)
+            self.subscribePrivateTopic(0)
+            self.subscribePublicTopic(0)
             self.registerFront(info.get("td_address"))
             self.init()
         else:
