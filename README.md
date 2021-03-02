@@ -72,6 +72,18 @@ Python version is too slow for HFT.  If you need faster speed and are interested
 please read the code of [FlashFunk](https://github.com/HFQR/FlashFunk) 
 
 
+## IM
+Due to the laziness of the main developer, fans have spontaneously formed a QQ group`521545606`. 
+
+You can join the group by search `ctpbee` or `521545606` in QQ and contact with them. 
+
+If you  have any confusion about developing, please send email to me. 
+
+Email: `somewheve@gmail.com`
+
+
+At last, have a good luck.
+
 ## License
 
 - MIT
