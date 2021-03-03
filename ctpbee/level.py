@@ -428,7 +428,7 @@ class CtpbeeApi(BeeApi):
     def __new__(cls, *args, **kwargs):
         map = {
             EVENT_TIMER: cls.on_realtime,
-            EVENT_INIT_FINISHED: cls.on_init,
+            # EVENT_INIT_FINISHED: cls.on_init,
             EVENT_TICK: cls.on_tick,
             EVENT_BAR: cls.on_bar,
             EVENT_ORDER: cls.on_order,
@@ -439,7 +439,7 @@ class CtpbeeApi(BeeApi):
         }
         parmeter = {
             EVENT_TIMER: EVENT_TIMER,
-            EVENT_INIT_FINISHED: EVENT_INIT_FINISHED,
+            # EVENT_INIT_FINISHED: EVENT_INIT_FINISHED,
             EVENT_POSITION: EVENT_POSITION,
             EVENT_TRADE: EVENT_TRADE,
             EVENT_BAR: EVENT_BAR,
@@ -451,23 +451,27 @@ class CtpbeeApi(BeeApi):
         }
         setattr(cls, "map", map)
         setattr(cls, "parmeter", parmeter)
+
         return super().__new__(cls)
 
     def __call__(self, event: Event = None):
         # 特别处理两种情况
-        if event and event.type == EVENT_ORDER:
-            if event.data.local_order_id in self.order_id_mapping:
-                self.level_position_manager.on_order(event.data)
-        if event and event.type == EVENT_TRADE:
-            """如果发现单号是已经存进来的"""
-            if event.data.local_order_id in self.order_id_mapping:
-                self.level_position_manager.on_trade(event.data)
-
-        if not event:
-            if not self.frozen:
-                self.map[EVENT_TIMER](self)
+        if not event and not self.frozen:
+            self.map[EVENT_TIMER](self)
+            if self.__init_ready:
+                self._count += 1
+            if self._count == 10:
+                self.on_init(True)
         else:
-            if event and not self.frozen and (event.type == EVENT_TICK or event.type == EVENT_BAR) and len(
+            if event.type == EVENT_ORDER:
+                if event.data.local_order_id in self.order_id_mapping:
+                    self.level_position_manager.on_order(event.data)
+            if event.type == EVENT_TRADE:
+                """如果发现单号是已经存进来的"""
+                if event.data.local_order_id in self.order_id_mapping:
+                    self.level_position_manager.on_trade(event.data)
+
+            if not self.frozen and (event.type == EVENT_TICK or event.type == EVENT_BAR) and len(
                     self.func) != 0:
                 args = list(self.func[0][2])
                 if event.type == self.func[0][1]:
@@ -476,10 +480,13 @@ class CtpbeeApi(BeeApi):
                     result = self.func[0][0](*args)
                     if result == self.complete:
                         self.func.clear()
-                    return None
-            func = self.map[event.type]
-            if not self.frozen:
-                func(self, event.data)
+                return None
+            if event.type == EVENT_INIT_FINISHED:
+                self.__init_ready = True
+            else:
+                func = self.map[event.type]
+                if not self.frozen:
+                    func(self, event.data)
 
     @property
     def complete(self):
@@ -523,7 +530,8 @@ class CtpbeeApi(BeeApi):
         self.extension_name = extension_name
         self.app = app
         self.func = []
-        init = False
+        self._count = 0
+        self.__init_ready = False
         if self.app is not None:
             self.init_app(self.app)
         # 是否冻结
@@ -534,7 +542,7 @@ class CtpbeeApi(BeeApi):
                 raise ValueError("请填写正确的缓存绝对路径")
         else:
             self.path = get_ctpbee_path()
-        init = kwargs.get("init_position")
+        init = kwargs.get("init_position", False)
         if init and not isinstance(init, bool):
             raise TypeError(f"init参数应该设置为True或者False，而不是{type(init)}")
 

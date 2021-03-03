@@ -28,7 +28,7 @@ pip3 install ctpbee
 
 Here is the [document address](http://docs.ctpbee.com)  
 
-## Quick Start 
+## QUICK LOOK 
 ```python
 from ctpbee import CtpBee
 app = CtpBee("ctpbee", __name__) 
