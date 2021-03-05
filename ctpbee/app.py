@@ -308,7 +308,7 @@ class CtpBee(object):
             self.trader = Trader(self.app_signal, self)
             self.market = Market(self.app_signal)
             print(">>>> 回测接口载入成功")
-            self._start_looper()
+            return self._start_looper()
         else:
             raise ValueError("错误的参数, 仅仅支持")
 
@@ -384,8 +384,10 @@ class CtpBee(object):
             except StopIteration:
                 self.logger.info("回测结束,正在生成结果")
                 break
-            except  ValueError:
+            except ValueError:
                 raise ValueError("数据存在问题, 请检查")
+
+        return self.trader
 
     def remove_extension(self, extension_name: Text) -> None:
         """

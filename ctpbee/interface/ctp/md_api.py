@@ -91,7 +91,7 @@ class BeeMdApi(MdApi):
         symbol = data["InstrumentID"]
         exchange = symbol_exchange_map.get(symbol, "")
         if not exchange:
-            return
+            exchange = Exchange.NONE
 
         timestamp = f"{data['ActionDay']} {data['UpdateTime']}.{int(data['UpdateMillisec'] / 100)}"
         try:
@@ -102,7 +102,7 @@ class BeeMdApi(MdApi):
             symbol=symbol,
             exchange=exchange,
             datetime=datetimed,
-            name=symbol_name_map[symbol],
+            name=symbol_name_map.get(symbol, "None"),
             volume=data["Volume"],
             last_price=data["LastPrice"],
             limit_up=data["UpperLimitPrice"],

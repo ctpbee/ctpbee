@@ -1,3 +1,11 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from typing import List
+
+# import matplotlib.text.Text
+from matplotlib.font_manager import FontProperties
+
+
 def plot_multi(data, cols=None, spacing=.1, **kwargs):
     """ 帮助快速绘画出多个图
      从网上找的 QAQ 好用
@@ -35,3 +43,41 @@ def plot_multi(data, cols=None, spacing=.1, **kwargs):
 
     ax.legend(lines, labels, loc=0)
     return ax
+
+
+def Aux(yy: List, xx: List, ovx: dict):
+    """
+    yx: 纵坐标数据
+    ax: 横坐标数据
+    ovx: {
+        "buy": [横坐标下标]
+        "sell": [横坐标下标]
+    }
+
+
+    """
+    fig, ax = plt.subplots()
+
+    line, = ax.plot(xx, yy, lw=2)
+    for index in ovx["buy"]:
+        ax.annotate('↑', xy=(xx[index], yy[index]),
+                    fontproperties=FontProperties(size=20),
+                    color="red",
+                    annotation_clip=True,
+                    )
+    for index in ovx["sell"]:
+        ax.annotate('↓', xy=(xx[index], yy[index]),
+                    fontproperties=FontProperties(size=20),
+                    # arrowprops=dict(facecolor='green', shrink=0.05),
+                    color="green",
+                    annotation_clip=True,
+                    )
+    # ax.set_ylim(-2, 2)
+    return plt
+
+
+if __name__ == '__main__':
+    t = np.arange(0.0, 5.0, 0.01)
+    s = np.cos(5 * np.pi * t)
+    o = Aux(s, t, {"buy": [11, 100], "sell": [200]})
+    o.show()

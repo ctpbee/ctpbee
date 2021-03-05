@@ -110,6 +110,7 @@ class Exchange(Enum):
     OKEX = "OKEX"
     HUOBI = "HUOBI"
     BITFINEX = "BITFINEX"
+    NONE = "none"
 
 
 TODAY_EXCHANGE = [Exchange.INE, Exchange.SHFE]
