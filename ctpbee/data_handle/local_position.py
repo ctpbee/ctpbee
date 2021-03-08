@@ -522,49 +522,83 @@ class LocalPositionManager(dict):
             x.active_orders.clear()
             x.calculate_frozen()
 
-    def get_all_positions(self):
-        """ 返回所有的持仓信息 """
-        position_list = []
+    def get_all_position_objects(self):
+        """ 返回PositionData格式的持仓数据 """
+        pos = []
+
         for x in self.values():
             if x.local_symbol == "":
                 continue
             if x.long_pos != 0:
-                temp = {}
-                temp['exchange'] = x.exchange
-                temp['direction'] = "long"
-                temp['position_profit'] = x.long_pnl
-                temp['symbol'] = x.local_symbol
-                temp['local_symbol'] = x.local_symbol
-                temp['price'] = x.long_price
-                temp['volume'] = x.long_pos
-                temp['yd_volume'] = x.long_yd
-                temp["frozen"] = x.long_pos_frozen
-                temp["available"] = x.long_pos - x.long_pos_frozen
-                temp['stare_position_profit'] = x.long_stare_pnl
-                if x.long_pos == x.long_yd:
-                    temp['position_date'] = 2
-                elif x.long_pos != x.long_yd:
-                    temp['position_date'] = 1
-                position_list.append(temp)
-            if x.short_pos != 0:
-                temp = {}
-                temp['exchange'] = x.exchange
-                temp['direction'] = "short"
-                temp['position_profit'] = x.short_pnl
-                temp['symbol'] = x.local_symbol
-                temp['local_symbol'] = x.local_symbol
-                temp['price'] = x.short_price
-                temp['volume'] = x.short_pos
-                temp['yd_volume'] = x.short_yd
-                temp["frozen"] = x.short_pos_frozen
-                temp["available"] = x.short_pos - x.short_pos_frozen
-                temp['stare_position_profit'] = x.short_stare_pnl
-                if x.short_pos == x.short_yd:
-                    temp['position_date'] = 2
-                elif x.short_pos != x.short_yd:
-                    temp['position_date'] = 1
-                position_list.append(temp)
-        return position_list
+                pos.append(PositionData(
+                    symbol=x.symbol,
+                    exchange=x.exchange,
+                    direction=Direction.LONG,
+                    volume=x.long_volume,
+                    frozen=x.long_pos_frozen,
+                    price=x.long_price,
+                    pnl=long_pnl,
+                    yd_volume=long_yd
+                ))
+            elif x.short_pos != 0:
+                pos.append(PositionData(
+                    symbol=x.symbol,
+                    exchange=x.exchange,
+                    direction=Direction.SHORT,
+                    volume=x.short_volume,
+                    frozen=x.short_pos_frozen,
+                    price=x.short_price,
+                    pnl=short_pnl,
+                    yd_volume=short_yd
+                ))
+        return pos
+
+    def get_all_positions(self, obj=False):
+        """ 返回所有的持仓信息 """
+        if obj:
+            return self.get_all_position_objects()
+        else:
+            position_list = []
+            for x in self.values():
+                if x.local_symbol == "":
+                    continue
+                if x.long_pos != 0:
+                    temp = {}
+                    temp['exchange'] = x.exchange
+                    temp['direction'] = "long"
+                    temp['position_profit'] = x.long_pnl
+                    temp['symbol'] = x.local_symbol
+                    temp['local_symbol'] = x.local_symbol
+                    temp['price'] = x.long_price
+                    temp['volume'] = x.long_pos
+                    temp['yd_volume'] = x.long_yd
+                    temp["frozen"] = x.long_pos_frozen
+                    temp["available"] = x.long_pos - x.long_pos_frozen
+                    temp['stare_position_profit'] = x.long_stare_pnl
+                    if x.long_pos == x.long_yd:
+                        temp['position_date'] = 2
+                    elif x.long_pos != x.long_yd:
+                        temp['position_date'] = 1
+                    position_list.append(temp)
+                if x.short_pos != 0:
+                    temp = {}
+                    temp['exchange'] = x.exchange
+                    temp['direction'] = "short"
+                    temp['position_profit'] = x.short_pnl
+                    temp['symbol'] = x.local_symbol
+                    temp['local_symbol'] = x.local_symbol
+                    temp['price'] = x.short_price
+                    temp['volume'] = x.short_pos
+                    temp['yd_volume'] = x.short_yd
+                    temp["frozen"] = x.short_pos_frozen
+                    temp["available"] = x.short_pos - x.short_pos_frozen
+                    temp['stare_position_profit'] = x.short_stare_pnl
+                    if x.short_pos == x.short_yd:
+                        temp['position_date'] = 2
+                    elif x.short_pos != x.short_yd:
+                        temp['position_date'] = 1
+                    position_list.append(temp)
+            return position_list
 
     @property
     def length(self):

@@ -377,10 +377,17 @@ class CtpBee(object):
             self.trader.account.basic_info = self.basic_info
         """ trader初始化参数"""
         self.trader.init_params(params=self.config)
+
+        flag = False
         while True:
             try:
-                p = next(d)
-                self.trader(p)
+                if flag:
+                    p = next(d)
+                    self.trader(p)
+                else:
+                    from ctpbee.constant import EVENT_INIT_FINISHED
+                    self.app_signal.init_signal.send(Event(type=EVENT_INIT_FINISHED, data=None))
+                    flag = True
             except StopIteration:
                 self.logger.info("回测结束,正在生成结果")
                 break
