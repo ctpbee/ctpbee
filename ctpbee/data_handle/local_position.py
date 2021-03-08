@@ -537,8 +537,8 @@ class LocalPositionManager(dict):
                     volume=x.long_volume,
                     frozen=x.long_pos_frozen,
                     price=x.long_price,
-                    pnl=long_pnl,
-                    yd_volume=long_yd
+                    pnl=x.long_pnl,
+                    yd_volume=x.long_yd
                 ))
             elif x.short_pos != 0:
                 pos.append(PositionData(
@@ -548,8 +548,8 @@ class LocalPositionManager(dict):
                     volume=x.short_volume,
                     frozen=x.short_pos_frozen,
                     price=x.short_price,
-                    pnl=short_pnl,
-                    yd_volume=short_yd
+                    pnl=x.short_pnl,
+                    yd_volume=x.short_yd
                 ))
         return pos
 
