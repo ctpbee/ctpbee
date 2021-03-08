@@ -158,6 +158,8 @@ class CtpBee(object):
         self.r_flag = True
 
         self.center: Center = Center(self)
+
+        self._init_interface = False
         """ update """
         if self.risk_decorator is not None:
             self.risk_decorator.update_app(self)
@@ -250,23 +252,11 @@ class CtpBee(object):
         根据当前配置文件下的信息载入行情api和交易api
         注意此函数同时会根据构造函数中的refresh参数决定开启定时线程， 向CtpBee里面提供定时查询账户持仓功能
         """
-        self.active = True
-        if "CONNECT_INFO" in self.config.keys():
-            info = self.config.get("CONNECT_INFO")
-        else:
-            raise ConfigError(message="没有相应的登录信息", args=("没有发现登录信息",))
+
         show_me = graphic_pattern(__version__, self.engine_method)
         if logout:
             print(show_me)
-        MdApi, TdApi = Interface.get_interface(self)
-        if self.config.get("MD_FUNC"):
-            self.market = MdApi(self.app_signal)
-            self.market.connect(info)
-
-        if self.config.get("TD_FUNC"):
-            self.trader = TdApi(self.app_signal)
-            self.trader.connect(info)
-
+        self.init_interface()
         if self.refresh:
             if self.r is not None:
                 self.r_flag = False
@@ -277,6 +267,30 @@ class CtpBee(object):
                 self.r = Thread(target=refresh_query, args=(self,), daemon=True)
                 self.r.start()
             self.r_flag = True
+
+    def init_interface(self):
+        if self.config.get("PATTERN", "real") == "real" and not self._init_interface:
+            self.active = True
+            if "CONNECT_INFO" in self.config.keys():
+                info = self.config.get("CONNECT_INFO")
+            else:
+                raise ConfigError(message="没有相应的登录信息", args=("没有发现登录信息",))
+            MdApi, TdApi = Interface.get_interface(self)
+            if self.config.get("MD_FUNC"):
+                self.market = MdApi(self.app_signal)
+                self.market.connect(info)
+
+            if self.config.get("TD_FUNC"):
+                self.trader = TdApi(self.app_signal)
+                self.trader.connect(info)
+            self._init_interface = True
+        elif self.config.get("PATTERN", "real") == "looper" and not self._init_interface:
+
+            self.config["INTERFACE"] = "looper"
+            Market, Trader = Interface.get_interface(app=self)
+            self.trader = Trader(self.app_signal, self)
+            self.market = Market(self.app_signal)
+            self._init_interface = True
 
     def start(self, log_output=True, debug=False):
         """
@@ -304,9 +318,7 @@ class CtpBee(object):
             show_me = graphic_pattern(__version__, self.engine_method)
             if log_output:
                 print(show_me)
-            Trader, Market = Interface.get_interface(app=self)
-            self.trader = Trader(self.app_signal, self)
-            self.market = Market(self.app_signal)
+            self.init_interface()
             print(">>>> 回测接口载入成功")
             return self._start_looper()
         else:

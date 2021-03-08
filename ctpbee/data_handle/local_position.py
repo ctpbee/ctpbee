@@ -96,12 +96,10 @@ class PositionHolding:
 
     @property
     def long_available(self):
-        print(self.long_pos, self.long_pos_frozen)
         return self.long_pos - self.long_pos_frozen
 
     @property
     def short_available(self):
-        print(self.short_pos, self.short_pos_frozen)
         return self.short_pos - self.short_pos_frozen
 
     def update_trade(self, trade):
@@ -525,13 +523,8 @@ class LocalPositionManager(dict):
     def get_all_position_objects(self):
         """ 返回PositionData格式的持仓数据 """
         pos = []
-
-        print(self.values())
-
         for x in self.values():
-            print(x.local_symbol, x.long_pos, x.short_pos)
             if len(x.local_symbol) == 0:
-                print("纳尼")
                 continue
             if x.long_pos != 0:
                 p = PositionData(
@@ -557,7 +550,6 @@ class LocalPositionManager(dict):
                     yd_volume=x.short_yd
                 )
                 pos.append(p)
-        print(pos)
         return pos
 
     def get_all_positions(self, obj=False):

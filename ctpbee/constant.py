@@ -496,7 +496,10 @@ class PositionData(Entity):
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        try:
+            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        except AttributeError:
+            self.local_symbol = f"{self.symbol}.{self.exchange}"
         self.local_position_id = f"{self.local_symbol}.{self.direction}"
 
 
