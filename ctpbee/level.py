@@ -456,7 +456,7 @@ class CtpbeeApi(BeeApi):
 
     def __call__(self, event: Event = None):
         # 特别处理两种情况
-        if not event and not self.frozen:
+        if not event and not self.frozen and self.app.config["PATTERN"] == "real":
             self.map[EVENT_TIMER](self)
             if self.__init_ready:
                 self._count += 1
@@ -483,6 +483,9 @@ class CtpbeeApi(BeeApi):
                 return None
             if event.type == EVENT_INIT_FINISHED:
                 self.__init_ready = True
+                if self.app.config["PATTERN"] == "looper":
+                    self.on_init(True)
+                    pass
             else:
                 func = self.map[event.type]
                 if not self.frozen:

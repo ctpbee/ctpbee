@@ -526,31 +526,38 @@ class LocalPositionManager(dict):
         """ 返回PositionData格式的持仓数据 """
         pos = []
 
+        print(self.values())
+
         for x in self.values():
-            if x.local_symbol == "":
+            print(x.local_symbol, x.long_pos, x.short_pos)
+            if len(x.local_symbol) == 0:
+                print("纳尼")
                 continue
             if x.long_pos != 0:
-                pos.append(PositionData(
+                p = PositionData(
                     symbol=x.symbol,
                     exchange=x.exchange,
                     direction=Direction.LONG,
-                    volume=x.long_volume,
+                    volume=x.long_pos,
                     frozen=x.long_pos_frozen,
                     price=x.long_price,
                     pnl=x.long_pnl,
                     yd_volume=x.long_yd
-                ))
-            elif x.short_pos != 0:
-                pos.append(PositionData(
+                )
+                pos.append(p)
+            if x.short_pos != 0:
+                p = PositionData(
                     symbol=x.symbol,
                     exchange=x.exchange,
                     direction=Direction.SHORT,
-                    volume=x.short_volume,
+                    volume=x.short_pos,
                     frozen=x.short_pos_frozen,
                     price=x.short_price,
                     pnl=x.short_pnl,
                     yd_volume=x.short_yd
-                ))
+                )
+                pos.append(p)
+        print(pos)
         return pos
 
     def get_all_positions(self, obj=False):

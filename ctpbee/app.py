@@ -385,6 +385,7 @@ class CtpBee(object):
                     p = next(d)
                     self.trader(p)
                 else:
+                    print("===> 发送初始化信号")
                     from ctpbee.constant import EVENT_INIT_FINISHED
                     self.app_signal.init_signal.send(Event(type=EVENT_INIT_FINISHED, data=None))
                     flag = True
