@@ -364,8 +364,8 @@ class CtpBee(object):
                                  account_data=account_data, datetimed=end_time, position_data=position_data,
                                  cost_time=cost_time, **kwargs)
             print(f"请复制下面的路径到浏览器打开----> \n {path}")
-            return path
-        return self.trader.account.result
+
+        return self.trader.account.result, list(self.trader.traded_order_mapping.values())
 
     def add_basic_info(self, info):
         """
@@ -379,6 +379,8 @@ class CtpBee(object):
         if self.config.get("PATTERN") != "looper":
             raise TypeError("此API仅在回测模式下进行调用")
         self.basic_info = info
+        if self.trader is not None:
+            self.trader.account.basic_info = self.basic_info
 
     def _start_looper(self):
         """

@@ -45,7 +45,7 @@ def plot_multi(data, cols=None, spacing=.1, **kwargs):
     return ax
 
 
-def Aux(yy: List, xx: List, ovx: dict):
+def Aux(yy: List, xx: List, ovx: dict, **kwargs):
     """
     yx: 纵坐标数据
     ax: 横坐标数据
@@ -56,7 +56,7 @@ def Aux(yy: List, xx: List, ovx: dict):
 
 
     """
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(**kwargs)
 
     line, = ax.plot(xx, yy, lw=2)
     for index in ovx["buy"]:

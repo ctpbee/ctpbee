@@ -111,6 +111,7 @@ class Account:
         self.close_profit = {}
         self.turnover = 0
         self.pre_float = 0
+        self.position_manager = LocalPositionManager(self)
 
     @property
     def margin(self):
@@ -134,40 +135,6 @@ class Account:
                                               ))
 
     @property
-    def pnl_of_every_symbol(self):
-        result = {}
-        for key, value in self.fee.items():
-            result[key] = -value
-        for key, value in self.close_profit.items():
-            if key in result.keys():
-                result[key] += value
-            else:
-                result[key] = value
-        for pos in self.position_manager.get_all_positions():
-            today = pos["volume"] - pos["yd_volume"]
-            price = self.interface.pre_close_price[pos["local_symbol"]]
-
-            if pos['direction'] == "long":
-                """ 判断昨仓还是今仓 """
-                pnl = (self.interface.price_mapping[pos["local_symbol"]] - price) * pos[
-                    "yd_volume"] * self.get_size_from_map(
-                    pos["local_symbol"]) + (self.interface.price_mapping[pos["local_symbol"]] - pos[
-                    "price"]) * today * self.get_size_from_map(
-                    pos["local_symbol"])
-            else:
-                pnl = (self.interface.pre_close_price[
-                           pos["local_symbol"]] - self.interface.price_mapping[pos["local_symbol"]]) * pos[
-                          "yd_volume"] * self.get_size_from_map(
-                    pos["local_symbol"]) + (self.interface.pre_close_price[
-                                                pos["local_symbol"]] - pos["price"]) * today * self.get_size_from_map(
-                    pos["local_symbol"])
-            if pos["local_symbol"] in result.keys():
-                result[pos["local_symbol"]] += pnl
-            else:
-                result[pos["local_symbol"]] = pnl
-        return result
-
-    @property
     def frozen(self):
         return sum(self.frozen_fee.values())
 
@@ -175,25 +142,14 @@ class Account:
     def float_pnl(self):
         result = 0
         for pos in self.position_manager.get_all_positions():
-            today = pos["volume"] - pos["yd_volume"]
-            price = self.interface.pre_close_price[pos["local_symbol"]]
             if pos['direction'] == "long":
-                """ 判断昨仓还是今仓 """
-                pnl = (self.interface.price_mapping[pos["local_symbol"]] - price) * pos[
-                    "yd_volume"] * self.get_size_from_map(
-                    pos["local_symbol"]) + (self.interface.price_mapping[pos["local_symbol"]] - pos[
-                    "price"]) * today * self.get_size_from_map(
+                result += (self.interface.price_mapping[pos["local_symbol"]] - pos[
+                    "price"]) * pos["volume"] * self.get_size_from_map(
                     pos["local_symbol"])
-                result += pnl
             else:
-                pnl = (self.interface.pre_close_price[
-                           pos["local_symbol"]] - self.interface.price_mapping[pos["local_symbol"]]) * pos[
-                          "yd_volume"] * self.get_size_from_map(
-                    pos["local_symbol"]) + (pos["price"] - self.interface.price_mapping[
-                    pos["local_symbol"]]) * today * self.get_size_from_map(
+                result += (pos["price"] - self.interface.price_mapping[
+                    pos["local_symbol"]]) * pos["volume"] * self.get_size_from_map(
                     pos["local_symbol"])
-                result += pnl
-
         return result
 
     @property
@@ -279,12 +235,6 @@ class Account:
                 self.fee[data.local_symbol] = fee
             else:
                 self.fee[data.local_symbol] += fee
-            """ 余额减去实际发生手续费用 """
-            if self.pnl_of_every_symbol.get(data.local_symbol) is None:
-                self.pnl_of_every_symbol[data.local_symbol] = fee
-            else:
-                self.pnl_of_every_symbol[
-                    data.local_symbol] += fee
 
             if data.offset == Offset.OPEN:
                 """  开仓增加保证金 """
@@ -313,6 +263,7 @@ class Account:
                     self.close_profit[data.local_symbol] = close_profit
                 else:
                     self.close_profit[data.local_symbol] += close_profit
+            # self.position_manager.update_trade(trade=data)
 
         else:
             raise TypeError("错误的数据类型，期望成交单数据 TradeData 而不是 {}".format(type(data)))
@@ -359,7 +310,6 @@ class Account:
         self.frozen_premium = 0
         self.count = 0
         self.turnover = 0
-        self.pnl_of_every_symbol.clear()
         self.close_profit.clear()
         self.interface.today_volume = 0
         for x in self.fee.keys():
@@ -459,7 +409,6 @@ class Account:
                "margin": self.margin,
                "available": self.available,
                "short_balance": self.short_balance,
-               "ery": self.pnl_of_every_symbol,
                "long_balance": self.long_balance,
                "date": date,
                "commission": sum([x for x in self.fee.values()]),
@@ -482,7 +431,6 @@ class Account:
         self.short_balance = self.balance
         self.reset_attr()
         self.position_manager.covert_to_yesterday_holding(**self.interface.price_mapping)
-
         # 归还所有的冻结
         self.date = interface_date
 
@@ -506,11 +454,6 @@ class Account:
             else:
                 pass
             setattr(self, i, v)
-        if not self.init_position_manager_flag:
-            self.position_manager = LocalPositionManager(self)
-            self.init_position_manager_flag = True
-        else:
-            pass
 
     @property
     def result(self):

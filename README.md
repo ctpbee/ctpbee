@@ -5,10 +5,9 @@ bee bee .... for developer's trading ~
 
 `ctpbee` provide a micro core of trading, you can make trade and backtest in it.
 
-> now it supports both ctp interface and backtest interface for using.
 
 
-## Environment Setup 
+## 环境设置
 ```bash
 # just for linux/ Generate Chinese environment
 sudo ctpbee -auto generate

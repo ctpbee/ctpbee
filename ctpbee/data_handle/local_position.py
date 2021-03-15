@@ -42,9 +42,6 @@ class LocalVariable:
             self.short = 0
 
 
-# local position support
-
-
 class PositionHolding:
     """ 单个合约的持仓 """
 
@@ -59,9 +56,8 @@ class PositionHolding:
         self.active_orders = {}
         self.size = 1
         from ctpbee.looper.account import Account
-        if isinstance(app, Account):
-            # if app.balance
-            pass
+        if isinstance(app, Account):  # if app.balance
+            self.size = app.get_size_from_map(local_symbol)
         else:
             if app.recorder.get_contract(self.local_symbol) is not None:
                 self.size = app.recorder.get_contract(self.local_symbol).size
@@ -69,6 +65,8 @@ class PositionHolding:
                 self.size = app.trader.account.get_size_from_map(local_symbol=local_symbol)
             else:
                 raise ValueError("获取合约信息失败, 持仓盈亏计算失败")
+        if self.size is None:
+            raise ValueError(f"当前仓位: {self.local_symbol} 合约乘数设置出现问题")
         self.long_pos = 0
         self.long_yd = 0
         self.long_td = 0
@@ -126,8 +124,6 @@ class PositionHolding:
                     if self.short_td < 0:
                         self.short_yd += self.short_td
                         self.short_td = 0
-
-        # 空头 {'OI001.CZCE': 1590.0},
 
         elif trade.direction == Direction.SHORT:
             # 开仓
@@ -360,16 +356,14 @@ class PositionHolding:
         # 只有开仓会影响持仓均价
         if trade.offset == Offset.OPEN:
             if trade.direction == Direction.LONG:
-                cost = self.long_price * self.long_pos
-                cost += trade.volume * trade.price
+                cost = self.long_price * self.long_pos + trade.volume * trade.price
                 new_pos = self.long_pos + trade.volume
                 if new_pos:
                     self.long_price = cost / new_pos
                 else:
                     self.long_price = 0
             else:
-                cost = self.short_price * self.short_pos
-                cost += trade.volume * trade.price
+                cost = self.short_price * self.short_pos + trade.volume * trade.price
                 new_pos = self.short_pos + trade.volume
                 if new_pos:
                     self.short_price = cost / new_pos
@@ -400,6 +394,9 @@ class PositionHolding:
                 yd_volume=self.short_yd
             )
         return None
+
+    def __repr__(self):
+        return f"Pos<local_symbol:{self.local_symbol} long_direction: {self.long_pos}---{self.long_price} pnl: {self.long_pnl}    short_direction: {self.short_pos}---{self.short_price} pnl:{self.short_pnl}>"
 
 
 class LocalPositionManager(dict):
@@ -510,10 +507,20 @@ class LocalPositionManager(dict):
                 holding.short_yd += holding.short_td
                 holding.short_td = 0
         for key, value in kwargs.items():
-            pos = self.get(key)
-            if pos:
-                pos.long_price = value
-                pos.short_price = value
+            pos = self.get(key, None)
+            if pos is not None:
+                if pos.long_pos != 0:
+                    self[key].long_price = value
+                    self[key].long_pnl = 0
+                else:
+                    self[key].long_price = 0
+                    self[key].long_pnl = 0
+                if pos.short_pos != 0:
+                    self[key].short_price = value
+                    self[key].short_pnl = 0
+                else:
+                    self[key].short_price = 0
+                    self[key].short_pnl = 0
 
     def clear_frozen(self):
         for x in self.values():

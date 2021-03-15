@@ -166,7 +166,7 @@ class LocalLooper:
                 self.on_event(EVENT_ERROR, f"账户报单可用不足, 报单基础信息: "
                                            f"{order_data.local_symbol} volume: {order_data.volume}"
                                            f" price: {order_data.price}  {order_data.offset.value}{order_data.direction.value}"
-                                           f" 出现原因: {reason} 当前报单队列存在 {len(self.pending)}")
+                                           f" 出现原因: {reason} 当前报单队列存在 {len(self.pending)} 仓位占用保证金: {self.account.margin} 当前仓位构成: {self.account.position_manager}")
                 return 0
         else:
             pass
