@@ -8,6 +8,8 @@ from enum import Enum
 from logging import INFO
 from typing import Any
 
+from ctpbee.research.match import Order
+
 
 class Missing:
     value = "属性缺失"
@@ -110,6 +112,7 @@ class Exchange(Enum):
     OKEX = "OKEX"
     HUOBI = "HUOBI"
     BITFINEX = "BITFINEX"
+    NONE = "none"
 
 
 TODAY_EXCHANGE = [Exchange.INE, Exchange.SHFE]
@@ -174,6 +177,22 @@ EVENT_SHARED = "shared"
 EVENT_LAST = "last"
 EVENT_INIT_FINISHED = "init"
 EVENT_WARNING = "warning"
+
+
+class MatchSupport:
+    """ 快速到处为匹配成交需要的格式 """
+
+    def _to_order(self):
+        if self.offset == Offset.OPEN:
+            offset = "open"
+        else:
+            offset = "close"
+        if self.direction == Direction.LONG:
+            direction = "long"
+        else:
+            direction = "short"
+        return Order(local_symbol=self.local_symbol, counted=self.volume, price=self.price, offset=offset,
+                     direction=direction, datetime=self.time)
 
 
 @dataclass(init=False, repr=False)
@@ -401,7 +420,7 @@ class BarData(Entity):
                 self.local_symbol = f"{self.symbol}.{self.exchange}"
 
 
-class OrderData(Entity):
+class OrderData(Entity, MatchSupport):
     """
     Order data contains information for tracking lastest status
     of a specific order.
@@ -448,7 +467,7 @@ class OrderData(Entity):
         return req
 
 
-class TradeData(Entity):
+class TradeData(Entity, MatchSupport):
     """
     Trade data contains information of a fill of an order. One order
     can have several trade fills.
@@ -495,7 +514,10 @@ class PositionData(Entity):
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        try:
+            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        except AttributeError:
+            self.local_symbol = f"{self.symbol}.{self.exchange}"
         self.local_position_id = f"{self.local_symbol}.{self.direction}"
 
 

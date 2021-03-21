@@ -25,3 +25,7 @@ class LooperMe:
 
     def connect(self, info):
         print("虚拟行情已经载入，请使用外部行情")
+
+    def unsubscribe(self, local_symbol):
+        import warnings
+        warnings.warn("正在回测接口中调用无效的取消订阅接口")

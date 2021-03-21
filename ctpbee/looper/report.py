@@ -30,7 +30,6 @@ def render_result(result, kline=None, trades=None, datetimed=None, trade_data=No
     time = str(datetimed).replace(" ", "_").replace(".", "_").replace(":", "_")
     filename = "{}_{}".format("_".join(strategy), time)
     abs_path = os.path.join(path, filename)
-    print(abs_path)
     datetimed = str(datetimed.strftime("%Y-%m-%d_%H_%M_%S"))
     code_string = main_template.render(result=result, strategy=strategy,
                                        account_data=account_data,

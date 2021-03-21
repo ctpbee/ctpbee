@@ -5,19 +5,18 @@ bee bee .... for developer's trading ~
 
 `ctpbee` provide a micro core of trading, you can make trade and backtest in it.
 
-> now it supports both ctp interface and backtest interface for using.
 
 
-## Environment Setup 
+## 环境设置
 ```bash
 # just for linux/ Generate Chinese environment
 sudo ctpbee -auto generate
 ```
-## Origin 
+## 灵感起源 
 
 - Thanks to [vnpy](https://github.com/vnpy/vnpy) and [flask](https://github.com/pallets/flask)  
 
-## Quick Install  
+## 快速安装  
 ```bash
 # code install 
 git clone https://github.com/ctpbee/ctpbee && cd ctpbee && python3 setup.py install  
@@ -25,10 +24,11 @@ git clone https://github.com/ctpbee/ctpbee && cd ctpbee && python3 setup.py inst
 # or by  pip install
 pip3 install ctpbee
 ```
+## 文档信息
 
-Here is the [document address](http://docs.ctpbee.com)  
+点击阅读 [document address](http://docs.ctpbee.com)  
 
-## Quick Start 
+## 快速开始  
 ```python
 from ctpbee import CtpBee
 app = CtpBee("ctpbee", __name__) 
@@ -50,26 +50,23 @@ app.config.from_mapping(info)  # loading config from dict object
 app.start() 
 ```
 
-## Command Running 
+## 命令行运行截图 
 
 ![avatar](source/运行.png)
 
-## BackTest 
-support multiple instrument and multiple frequency
+## 回测截图 
+支持多周期多合约回测
 
 ![avatar](source/回测.png)
 
 
-##  Development 
-Now I want to build stock support for `ctpbee`, if you have any interest, 
-you can send email to me and join us! 
 
-## Code Contributed
+## PR支持
 I just only accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch, please remember that ! 
 
-## High Performance Version 
-Python version is too slow for HFT.  If you need faster speed and are interested in `Rust` , 
-please read the code of [FlashFunk](https://github.com/HFQR/FlashFunk) 
+## 高性能版本 
+对于更高性能和速度要求（PS: 别再优化Python了） 请 👉 [FlashFunk](https://github.com/HFQR/FlashFunk)，
+
 
 
 ## IM

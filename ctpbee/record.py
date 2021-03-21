@@ -206,11 +206,11 @@ class Recorder(object):
         """
         return list(self.trades.values())
 
-    def get_all_positions(self):
+    def get_all_positions(self, obj=False):
         """
         Get all position data.
         """
-        return self.position_manager.get_all_positions()
+        return self.position_manager.get_all_positions(obj=obj)
 
     def get_errors(self):
         return self.errors
