@@ -26,7 +26,7 @@ class LocalLooper:
     def __init__(self, app_signal, app):
         """ 需要构建完整的成交回报以及发单报告,
         在account里面需要存储大量的存储
-         在我们此处实现过程也通过调用事件引擎来进行调用
+         在我们此处实现过程也通过调用事件引擎来进行调用\
          """
         self.app = app
         # 活跃报单数量
@@ -216,7 +216,7 @@ class LocalLooper:
 
                 """ 调用API生成成交单 """
                 # 同时这里需要处理是否要进行
-                trade = self._generate_trade_data_from_order(data)
+                trade = self._generate_trade_data_from_order(order_data=active_order)
                 """ 这里按照市价进行匹配成交 """
                 self.on_event(EVENT_LOG,
                               f"--> {trade.local_symbol} 成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
@@ -225,7 +225,7 @@ class LocalLooper:
                 """ 调用strategy的on_trade """
                 ARC.append(active_order.order_id)
                 self.traded_order_mapping[trade.order_id] = trade
-                self.today_volume += data.volume
+                self.today_volume += active_order.volume
                 continue
             elif self.params.get("deal_pattern") == "simnow":
                 can_trade = False

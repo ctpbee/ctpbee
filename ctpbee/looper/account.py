@@ -299,6 +299,12 @@ class Account:
 
     def clear_frozen(self):
         """ 撤单的时候应该要清除所有的单子 并同时清除保证金占用和手续费冻结 """
+        from ctpbee.constant import EVENT_ORDER, Status
+        for order in list(self.interface.pending.values()):
+            """ 结算后需要把未所有的单子撤掉 """
+            order.status = Status.CANCELLED
+            self.interface.on_event(EVENT_ORDER, order)
+
         self.interface.pending.clear()
         self.frozen_fee.clear()
         self.long_frozen_margin.clear()
