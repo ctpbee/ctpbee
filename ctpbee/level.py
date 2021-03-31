@@ -234,7 +234,10 @@ class Action(object):
                 exchange = exchange.value
             local_symbol = kwargs.get("local_symbol")
         elif origin:
-            exchange = origin.exchange.value
+            try:
+                exchange = origin.exchange.value
+            except AttributeError:
+                exchange = origin.exchange
             local_symbol = origin.local_symbol
 
         if origin is None and len(kwargs) == 0:

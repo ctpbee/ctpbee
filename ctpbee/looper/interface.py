@@ -26,12 +26,12 @@ class LocalLooper:
     def __init__(self, app_signal, app):
         """ 需要构建完整的成交回报以及发单报告,
         在account里面需要存储大量的存储
-         在我们此处实现过程也通过调用事件引擎来进行调用
+         在我们此处实现过程也通过调用事件引擎来进行调用\
          """
         self.app = app
         # 活跃报单数量
         self.change_month_record = {}
-        self.pending = []
+        self.pending = {}
 
         self.sessionid = random.randint(1000, 10000)
         self.frontid = random.randint(10001, 500000)
@@ -80,6 +80,9 @@ class LocalLooper:
         # 仓位详细
         self.position_detail = dict()
 
+        self.ask_price_mapping = dict()
+        self.bid_price_mapping = dict()
+
     def get_trades(self):
         return list(self.traded_order_mapping.values())
 
@@ -111,7 +114,7 @@ class LocalLooper:
         """ 将发单请求转换为发单数据 """
         self.order_ref += 1
         order_id = f"{self.frontid}-{self.sessionid}-{self.order_ref}"
-        return req._create_order_data(gateway_name="looper", order_id=order_id, time=self.datetime)
+        return deepcopy(req)._create_order_data(gateway_name="looper", order_id=order_id, time=self.datetime)
 
     def _generate_trade_data_from_order(self, order_data: OrderData):
         """ 将orderdata转换成成交单 """
@@ -132,21 +135,19 @@ class LocalLooper:
         self.intercept_gateway(cancel_req)
 
     def cancel_order(self, cancel_req: CancelRequest, **kwargs):
-        rx = []
-        for x in self.pending:
-            if x.order_id == cancel_req.order_id:
-                x.status = Status.CANCELLED
-                # 回调 on_order做处理
-                self.on_event(EVENT_ORDER, deepcopy(x))
-                # 移除掉冻结 使得成为可能
-                self.account.pop_order(x)
-                # 更新仓位信息
-                self.account.position_manager.update_order(x)
-                rx.append(x)
-        for x in rx:
-            self.pending.remove(x)
+        if cancel_req.order_id in self.pending.keys():
+            order = self.pending[cancel_req.order_id]
+            order.status = Status.CANCELLED
+            # 移除掉冻结 使得成为可能
+            self.account.pop_order(order)
+            self.account.position_manager.update_order(order)
+            self.on_event(EVENT_ORDER, order)
+            self.pending.pop(cancel_req.order_id)
 
     def cancel_all(self):
+        for x in self.pending:
+            x.status = Status.CANCELLED
+            self.on_event(EVENT_ORDER, x)
         self.pending.clear()
         return 1
 
@@ -157,8 +158,8 @@ class LocalLooper:
             order_data = self._generate_order_data_from_req(data)
             result, reason = self.account.is_traded(order=order_data)
             if result:
-                self.pending.append(order_data)
                 order_data.status = Status.NOTTRADED
+                self.pending[order_data.order_id] = deepcopy(order_data)
                 self.on_event(EVENT_ORDER, order_data)
                 self.account.update_account_from_order(order_data)
                 return 1
@@ -181,99 +182,123 @@ class LocalLooper:
             p : 成交回报
             todo: 处理冻结 ??
         """
-        rc = []
-        for data in self.pending:
-            px = "".join(filter(str.isalpha, data.local_symbol))
+        ARC = []
+        for active_order in self.pending.values():
+            px = "".join(filter(str.isalpha, active_order.local_symbol))
             nx = "".join(filter(str.isalpha, self.data_entity.local_symbol))
             if nx != px:  # 针对多品种，实现拆分。 更新当前的价格，确保多个
                 continue
+            code = active_order.local_symbol
             if self.params.get("deal_pattern") == "match":
                 """ 撮合成交 """
                 # todo: 是否可以模拟一定量的市场冲击响应？ 以靠近更加逼真的回测效果 ？？？？
 
                 """ 调用API生成成交单 """
                 # 同时这里需要处理是否要进行
-                trade = self._generate_trade_data_from_order(data)
+                trade = self._generate_trade_data_from_order(active_order)
                 """ 这里按照市价进行匹配成交 """
-                trade.price = self.data_entity.last_price
+                try:
+                    trade.price = self.data_entity.last_price
+                except:
+                    trade.price = self.data_entity.close_price
                 self.on_event(EVENT_LOG,
                               f"--> {trade.local_symbol} 成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
                               f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
                 self.account.update_trade(trade)
                 """ 调用strategy的on_trade """
-                rc.append(data)
-                data.status = Status.ALLTRADED
-                self.on_event(EVENT_ORDER, data=data)
-                self.on_event(EVENT_TRADE, data=trade)
+                ARC.append(active_order.order_id)
                 self.traded_order_mapping[trade.order_id] = trade
-                self.today_volume += data.volume
+                self.today_volume += active_order.volume
                 continue
-            if self.params.get("deal_pattern") == "umatch":
+            elif self.params.get("deal_pattern") == "umatch":
                 """ 撮合成交 """
                 # todo: 是否可以模拟一定量的市场冲击响应？ 以靠近更加逼真的回测效果 ？？？？
 
                 """ 调用API生成成交单 """
                 # 同时这里需要处理是否要进行
-                trade = self._generate_trade_data_from_order(data)
+                trade = self._generate_trade_data_from_order(order_data=active_order)
                 """ 这里按照市价进行匹配成交 """
                 self.on_event(EVENT_LOG,
                               f"--> {trade.local_symbol} 成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
                               f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
                 self.account.update_trade(trade)
                 """ 调用strategy的on_trade """
-                rc.append(data)
-                data.status = Status.ALLTRADED
-                self.on_event(EVENT_ORDER, data=data)
-                self.on_event(EVENT_TRADE, data=trade)
+                ARC.append(active_order.order_id)
                 self.traded_order_mapping[trade.order_id] = trade
-                self.today_volume += data.volume
+                self.today_volume += active_order.volume
                 continue
+            elif self.params.get("deal_pattern") == "simnow":
+                can_trade = False
+                # 此处Tick级别回测以对价做撮合
+                if active_order.direction == Direction.LONG and self.price_mapping[
+                    code] < active_order.price:
+                    can_trade = True
+                    if self.data_entity.type == "tick":
+                        price = self.data_entity.ask_price_1
+                    else:
+                        price = self.data_entity.close_price
 
+                if active_order.direction == Direction.SHORT and self.price_mapping[
+                    code] > active_order.price:
+                    can_trade = True
+                    if self.data_entity.type == "tick":
+                        price = self.data_entity.bid_price_1
+                    else:
+                        price = self.data_entity.close_price
+                if can_trade:
+                    trade = self._generate_trade_data_from_order(order_data=active_order)
+                    trade.price = price
+                    """ 这里按照市价进行匹配成交 """
+                    self.on_event(EVENT_LOG,
+                                  f"--> {trade.local_symbol} 成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
+                                  f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
+                    self.account.update_trade(trade)
+                    ARC.append(active_order.order_id)
+                    self.traded_order_mapping[trade.order_id] = trade
+                    self.today_volume += active_order.volume
             elif self.params.get("deal_pattern") == "price":
                 """ 限价成交 """
                 # 先判断价格和手数是否满足限制条件
                 # 进行成交判断
                 long_c = self.data_entity.low_price if self.data_type == "bar" else self.data_entity.ask_price_1
                 short_c = self.data_entity.high_price if self.data_type == "bar" is not None else self.data_entity.bid_price_1
-                long_cross = data.direction == Direction.LONG and 0 < long_c <= data.price
-                short_cross = data.direction == Direction.SHORT and data.price <= short_c and short_c > 0
+                long_cross = active_order.direction == Direction.LONG and 0 < long_c <= active_order.price
+                short_cross = active_order.direction == Direction.SHORT and active_order.price <= short_c and short_c > 0
                 if long_cross:
                     """ 判断账户资金是否足以支撑成交 """
                     # 同时这里需要处理是否要进行
-                    trade = self._generate_trade_data_from_order(data)
+                    trade = self._generate_trade_data_from_order(active_order)
                     self.on_event(EVENT_LOG, data=
                     f"成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
                     f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
                     """ 调用strategy的on_trade """
-                    rc.append(data)
-                    data.status = Status.ALLTRADED
+                    ARC.append(active_order.order_id)
                     self.account.update_trade(trade)
-                    self.on_event(EVENT_ORDER, data=deepcopy(data))
-                    self.on_event(EVENT_TRADE, data=deepcopy(trade))
                     self.traded_order_mapping[trade.order_id] = trade
-                    self.today_volume += data.volume
+                    self.today_volume += active_order.volume
                     continue
                 elif short_cross:
                     """ 调用API生成成交单 """
                     # 同时这里需要处理是否要进行
-                    trade = self._generate_trade_data_from_order(data)
+                    trade = self._generate_trade_data_from_order(active_order)
                     self.on_event(EVENT_LOG, data=
                     f"成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
                     f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
                     """ 调用strategy的on_trade """
-                    rc.append(data)
-                    data.status = Status.ALLTRADED
+                    ARC.append(active_order.order_id)
                     self.account.update_trade(trade)
-                    self.on_event(EVENT_ORDER, data=deepcopy(data))
-                    self.on_event(EVENT_TRADE, data=deepcopy(trade))
                     self.traded_order_mapping[trade.order_id] = trade
-                    self.today_volume += data.volume
+                    self.today_volume += active_order.volume
                     continue
                 continue
             else:
                 raise TypeError("未支持的成交机制")
-        for data in rc:
-            self.pending.remove(data)
+        for key in ARC:
+            active_order = self.pending[key]
+            active_order.status = Status.ALLTRADED
+            self.on_event(EVENT_ORDER, data=active_order)
+            self.on_event(EVENT_TRADE, data=self.traded_order_mapping[key])
+            self.pending.pop(key)
 
     def _init_params(self, params):
         """ 回测参数设置 """
