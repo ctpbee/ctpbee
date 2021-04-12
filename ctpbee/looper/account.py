@@ -112,6 +112,7 @@ class Account:
         self.turnover = 0
         self.pre_float = 0
         self.position_manager = LocalPositionManager(self)
+        self.code_pnl = {}
 
     @property
     def margin(self):
@@ -151,6 +152,34 @@ class Account:
                     pos["local_symbol"]]) * pos["volume"] * self.get_size_from_map(
                     pos["local_symbol"])
         return result
+
+    def get_code_float_pnl(self):
+        """ 获取每个品种当时的浮动盈亏 """
+        result = {}
+        for pos in self.position_manager.get_all_positions():
+            if pos['direction'] == "long":
+                pnl = (self.interface.price_mapping[pos["local_symbol"]] - pos[
+                    "price"]) * pos["volume"] * self.get_size_from_map(
+                    pos["local_symbol"])
+            else:
+                pnl = (pos["price"] - self.interface.price_mapping[
+                    pos["local_symbol"]]) * pos["volume"] * self.get_size_from_map(
+                    pos["local_symbol"])
+            if result.get(pos["local_symbol"]) is None:
+                result[pos["local_symbol"]] = pnl
+            else:
+                result[pos["local_symbol"]] += pnl
+        return result
+
+    def get_code_pnl(self):
+        pnl = {}
+        pnl.update(self.code_pnl)
+        for code, profit in self.get_code_float_pnl().items():
+            if code in pnl:
+                pnl[code] += profit
+            else:
+                pnl[code] = profit
+        return pnl
 
     @property
     def balance(self) -> float:
@@ -263,7 +292,10 @@ class Account:
                     self.close_profit[data.local_symbol] = close_profit
                 else:
                     self.close_profit[data.local_symbol] += close_profit
-            # self.position_manager.update_trade(trade=data)
+                if self.code_pnl.get(data.local_symbol) is None:
+                    self.code_pnl[data.local_symbol] = close_profit
+                else:
+                    self.code_pnl[data.local_symbol] += close_profit
 
         else:
             raise TypeError("错误的数据类型，期望成交单数据 TradeData 而不是 {}".format(type(data)))
@@ -300,10 +332,12 @@ class Account:
     def clear_frozen(self):
         """ 撤单的时候应该要清除所有的单子 并同时清除保证金占用和手续费冻结 """
         from ctpbee.constant import EVENT_ORDER, Status
-        for order in list(self.interface.pending.values()):
-            """ 结算后需要把未所有的单子撤掉 """
-            order.status = Status.CANCELLED
-            self.interface.on_event(EVENT_ORDER, order)
+        # for order in list(self.interface.pending.values()):
+        #     """ 结算后需要把未所有的单子撤掉 """
+        #     order.status = Status.CANCELLED
+        #     order.time.hour = 15
+        #     order.time.minute = 1
+        #     self.interface.on_event(EVENT_ORDER, order)
 
         self.interface.pending.clear()
         self.frozen_fee.clear()
@@ -317,6 +351,7 @@ class Account:
         self.count = 0
         self.turnover = 0
         self.close_profit.clear()
+        self.code_pnl.clear()
         self.interface.today_volume = 0
         for x in self.fee.keys():
             self.fee[x] = 0
@@ -422,6 +457,7 @@ class Account:
                "count": self.count,
                "turnover": self.turnover
                })
+        code_pnl = self.get_code_pnl()
         self.interface.on_event(EVENT_WARNING,
                                 "Settlement:  " + str(
                                     date) + f" net: {round(self.balance, 2)}"
@@ -429,6 +465,7 @@ class Account:
                                   f" net_pnl: {self.balance - self.pre_balance} "
                                   f" close_profit: {round(sum(self.close_profit.values()), 2)}"
                                   f" float_pnl: {round(self.float_pnl, 2)}"
+                                  f" code_pnl: {code_pnl}"
                                   f" fee:{round(sum(self.fee.values()), 2)} ")
         self.pre_float = self.float_pnl
         self.daily_life[date] = deepcopy(p._to_dict())
