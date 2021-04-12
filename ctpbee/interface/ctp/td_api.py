@@ -256,30 +256,34 @@ class BeeTdApi(TdApi):
             create_date = None
 
         if product:
-            contract = ContractData(
-                symbol=data["InstrumentID"],
-                exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
-                name=data["InstrumentName"],
-                product=product,
-                max_market_order_volume=data['MaxMarketOrderVolume'],
-                min_market_order_volume=data['MinMarketOrderVolume'],
-                max_limit_order_volume=data['MaxLimitOrderVolume'],
-                min_limit_order_volume=data['MaxLimitOrderVolume'],
-                size=data["VolumeMultiple"],
-                pricetick=data["PriceTick"],
-                delivery_month=data['DeliveryMonth'],
-                delivery_year=data['DeliveryYear'],
-                long_margin_ratio=data['LongMarginRatio'],
-                short_margin_ratio=data['ShortMarginRatio'],
-                combination_type=data['CombinationType'],
-                gateway_name=self.gateway_name,
-                end_delivery_date=end_delivery_date,
-                start_delivery_date=start_delivery_date,
-                open_date=open_date,
-                is_trading=is_trading,
-                create_date=create_date
-
-            )
+            try:
+                contract = ContractData(
+                    symbol=data["InstrumentID"],
+                    exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
+                    name=data["InstrumentName"],
+                    product=product,
+                    max_market_order_volume=data['MaxMarketOrderVolume'],
+                    min_market_order_volume=data['MinMarketOrderVolume'],
+                    max_limit_order_volume=data['MaxLimitOrderVolume'],
+                    min_limit_order_volume=data['MaxLimitOrderVolume'],
+                    size=data["VolumeMultiple"],
+                    pricetick=data["PriceTick"],
+                    delivery_month=data['DeliveryMonth'],
+                    delivery_year=data['DeliveryYear'],
+                    long_margin_ratio=data['LongMarginRatio'],
+                    short_margin_ratio=data['ShortMarginRatio'],
+                    combination_type=data['CombinationType'],
+                    gateway_name=self.gateway_name,
+                    end_delivery_date=end_delivery_date,
+                    start_delivery_date=start_delivery_date,
+                    open_date=open_date,
+                    is_trading=is_trading,
+                    create_date=create_date
+                )
+            except KeyError as e:
+                import warnings
+                warnings.warn(f"未预料到的合约问题 错误信息: {e}")
+                return
             self.symbol_exchange_mapping[data["InstrumentID"]] = EXCHANGE_CTP2VT[data["ExchangeID"]]
 
             # For option only
