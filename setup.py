@@ -46,7 +46,7 @@ setup(
     zip_safe=False,
     include_package_data=True,
     data_files=[],
-    package_data={'ctpbee': ['api/ctp/*', 'holiday.json', "*.html"]},
+    package_data={'ctpbee': ['api/ctp/*', "*.html"]},
     ext_modules=[],
     classifiers=[
         'Development Status :: 4 - Beta',

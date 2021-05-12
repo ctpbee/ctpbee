@@ -16,7 +16,7 @@ from threading import RLock
 from time import sleep
 from typing import AnyStr, IO
 
-from ctpbee.trade_time import TradingDay
+from ctpbee.date import trade_dates
 
 _missing = object()
 
@@ -239,7 +239,9 @@ def run_forever(app):
         if not app.p_flag:
             break
         current_time = datetime.now()
-        if TradingDay.is_holiday(current_time) or TradingDay.is_weekend(current_time):
+        date = str(current_time.date())
+
+        if date not in trade_dates:
             running_me = False
         else:
             running_me = True

@@ -7,24 +7,9 @@ import os
 import subprocess
 import sys
 
-from .trade_time import Papa
-
 parser = argparse.ArgumentParser(description="bee bee bee~")
-parser.add_argument('-tt', '--tradetime', help='更新交易日历/Update transaction calendar;'
-                                               'Example: -tt 2019 or -tt 2004-2020 or -tt now')
 
 parser.add_argument("-auto", '--generate', help="对于linux自动生成中文环境")
-
-
-def tradetime_handle(year):
-    if "-" in year:
-        y = year.split("-")
-    elif year == 'now':
-        y = [2004, datetime.datetime.now().year]
-    else:
-        y = [2004, year]
-    Papa.run(y)
-    Papa.write()
 
 
 def update_locale():
@@ -55,5 +40,3 @@ def execute():
     if auto == "generate":
         update_locale()
         return
-
-

@@ -14,7 +14,6 @@ from ctpbee.jsond import dumps, loads
 from ctpbee.level import CtpbeeApi, Action
 from ctpbee.log import VLogger
 from ctpbee.signals import send_monitor, cancel_monitor
-from ctpbee.trade_time import TradingDay
 from ctpbee.util import RiskLevel
 from ctpbee.func import hickey, get_ctpbee_path, get_current_trade_day
 from ctpbee.data_handle.generator import HighKlineSupporter

@@ -78,7 +78,7 @@ if __name__ == '__main__':
     }
 
     market = CtpBee("market", __name__)
-    main = Main("main")
+    main = Main("DailyCTA")
     market.config.from_mapping(info)
     market.add_extension(main)
     market.start(log_output=False)

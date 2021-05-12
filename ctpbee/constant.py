@@ -1,7 +1,7 @@
 """
-Basic data structure used for general trading function in VN Trader.
 """
 
+import os
 from dataclasses import dataclass, asdict
 from datetime import datetime, date
 from enum import Enum
@@ -744,6 +744,20 @@ class Event:
     def __str__(self):
         return "Event(type={})".format(self.type)
 
+
+class Msg:
+    ZH_NO_BEE_APP_ERROR = "没有载入CtpBee，请尝试通过init_app载入app"
+    EN_NO_BEE_APP_ERROR = "not loading Ctpbee, please try to load app by init_app"
+
+    def __init__(self, language: str = "zh"):
+        """
+        相关文本字符串提醒 注意是一次性提取
+        """
+        # for i,v in self.__dict__:
+        #     if isinstance()
+
+
+msg = Msg(os.environ.get("MESSAGE_LANGUAGE", "zh"))
 
 data_class = [TickData, BarData, OrderData, TradeData, PositionData, AccountData, LogData, ContractData, SharedData]
 request_class = [SubscribeRequest, OrderRequest, CancelRequest, AccountRegisterRequest, AccountBanlanceRequest,
