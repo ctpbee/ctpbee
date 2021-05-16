@@ -295,23 +295,17 @@ class MiniTdApi(TdApi):
 
     def connect(
             self,
-            address: str,
-            userid: str,
-            password: str,
-            brokerid: int,
-            auth_code: str,
-            appid: str,
-            product_info
+            info: dict
     ):
         """
         Start connection to server.
         """
-        self.userid = userid
-        self.password = password
-        self.brokerid = brokerid
-        self.auth_code = auth_code
-        self.appid = appid
-        self.product_info = product_info
+        self.userid = info.get("userid")
+        self.password = info.get("password")
+        self.brokerid = info.get("brokerid")
+        self.auth_code = info.get("auth_code")
+        self.appid = info.get("appid")
+        self.product_info = info.get("product_info")
 
         if not self.connect_status:
             path = get_folder_path(self.gateway_name.lower())
@@ -320,7 +314,7 @@ class MiniTdApi(TdApi):
             self.subscribePrivateTopic(0)
             self.subscribePublicTopic(0)
 
-            self.registerFront(address)
+            self.registerFront(info.get("td_address"))
             self.init()
 
             self.connect_status = True

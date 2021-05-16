@@ -133,13 +133,14 @@ class MiniMdApi(MdApi):
 
         self.on_event(EVENT_TICK, tick)
 
-    def connect(self, address: str, userid: str, password: str, brokerid: int):
+    def connect(self, info):
         """
         Start connection to server.
         """
-        self.userid = userid
-        self.password = password
-        self.brokerid = brokerid
+        address = info["md_address"]
+        self.userid = info["userid"]
+        self.password = info["password"]
+        self.brokerid = info["brokerid"]
 
         # If not connected, then start connection first.
         if not self.connect_status:

@@ -1,4 +1,4 @@
-from ctpbee import CtpbeeApi, CtpBee, helper
+from ctpbee import CtpbeeApi, CtpBee
 from ctpbee.constant import *
 
 
@@ -74,12 +74,10 @@ if __name__ == '__main__':
         "INTERFACE": "ctp",  # 接口声明
         "TD_FUNC": True,  # 开启交易功能
         "MD_FUNC": True,
-        "XMIN": [1, 3, 6]
     }
-
     market = CtpBee("market", __name__)
     main = Main("DailyCTA")
     market.config.from_mapping(info)
     market.add_extension(main)
-    market.start(log_output=False)
+    market.start(log_output=True)
     print("second start")
