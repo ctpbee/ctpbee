@@ -2,16 +2,17 @@ from .lib import *
 from ..func import get_folder_path
 
 
-class MiniTdApi(TdApi):
+class MTdApi(MiniTdApi):
     """"""
 
-    def __init__(self, gateway):
+    def __init__(self, app_signal):
         """Constructor"""
-        super(MiniTdApi, self).__init__()
+        super(MTdApi, self).__init__()
         self.gateway_name = "ctp_mini"
 
         self.reqid = 0
         self.order_ref = 0
+        self.app_signal = app_signal
 
         self.connect_status = False
         self.login_status = False
@@ -306,17 +307,18 @@ class MiniTdApi(TdApi):
         self.auth_code = info.get("auth_code")
         self.appid = info.get("appid")
         self.product_info = info.get("product_info")
+        address = info.get("td_address")
+        if not address.startswith("tcp://"):
+            address = "tcp://" + address
 
         if not self.connect_status:
-            path = get_folder_path(self.gateway_name.lower())
+            path = get_folder_path(self.gateway_name.lower() + f"/{self.userid}")
             self.createFtdcTraderApi(str(path) + "\\Td")
 
             self.subscribePrivateTopic(0)
             self.subscribePublicTopic(0)
-
-            self.registerFront(info.get("td_address"))
+            self.registerFront(address)
             self.init()
-
             self.connect_status = True
         else:
             self.authenticate()
@@ -446,5 +448,5 @@ class MiniTdApi(TdApi):
 
     def close(self):
         """"""
-        if self.connect_status:
-            self.exit()
+        # if self.connect_status:
+        #     self.()

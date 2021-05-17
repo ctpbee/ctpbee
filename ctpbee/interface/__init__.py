@@ -36,8 +36,8 @@ class Interface:
             from ctpbee.interface.looper import LooperMe, LooperYou
             return LooperMe, LooperYou
         if interface == "ctp_mini":
-            from ctpbee.interface.ctp_mini import MiniMdApi, MiniTdApi
-            return MiniMdApi, MiniTdApi
+            from ctpbee.interface.ctp_mini import MMdApi, MTdApi
+            return MMdApi, MTdApi
         else:
             raise ValueError("错误参数")
 

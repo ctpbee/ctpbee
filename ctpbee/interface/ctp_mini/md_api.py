@@ -5,11 +5,11 @@ from .lib import *
 from ..func import get_folder_path
 
 
-class MiniMdApi(MdApi):
+class MMdApi(MiniMdApi):
 
     def __init__(self, app_signal):
         """Constructor"""
-        super(MiniMdApi, self).__init__()
+        super(MMdApi, self).__init__()
 
         self.gateway_name = "ctp_mini"
         self.reqid = 0
@@ -60,6 +60,7 @@ class MiniMdApi(MdApi):
 
             for symbol in self.subscribed:
                 self.subscribeMarketData(symbol)
+            self.on_event(EVENT_LOG, "行情服务重新订阅")
         else:
             self.on_event(EVENT_ERROR, f"行情服务器登录失败: {error}")
 
@@ -83,55 +84,55 @@ class MiniMdApi(MdApi):
         symbol = data["InstrumentID"]
         exchange = symbol_exchange_map.get(symbol, "")
         if not exchange:
-            return
+            exchange = Exchange.NONE
 
         timestamp = f"{data['ActionDay']} {data['UpdateTime']}.{int(data['UpdateMillisec'] / 100)}"
-        dt = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S.%f")
-        dt = CHINA_TZ.localize(dt)
-
+        try:
+            datetimed = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S.%f")
+        except ValueError as e:
+            datetimed = datetime.strptime(str(date.today()) + " " + timestamp, "%Y-%m-%d %H:%M:%S.%f")
         tick = TickData(
             symbol=symbol,
             exchange=exchange,
-            datetime=dt,
-            name=symbol_name_map[symbol],
+            datetime=datetimed,
+            name=symbol_name_map.get(symbol, "None"),
             volume=data["Volume"],
-            open_interest=data["OpenInterest"],
             last_price=data["LastPrice"],
             limit_up=data["UpperLimitPrice"],
             limit_down=data["LowerLimitPrice"],
+            open_interest=data['OpenInterest'],
             open_price=data["OpenPrice"],
             high_price=data["HighestPrice"],
             low_price=data["LowestPrice"],
             pre_close=data["PreClosePrice"],
-            bid_price_1=data["BidPrice1"],
-            ask_price_1=data["AskPrice1"],
-            bid_volume_1=data["BidVolume1"],
-            ask_volume_1=data["AskVolume1"],
+            turnover=data['Turnover'],
+            bid_price_1=data.get("BidPrice1", 0),
+            bid_price_2=data.get("BidPrice2", 0),
+            bid_price_3=data.get("BidPrice3", 0),
+            bid_price_4=data.get("BidPrice4", 0),
+            bid_price_5=data.get("BidPrice5", 0),
+            ask_price_1=data.get("AskPrice1", 0),
+            ask_price_2=data.get("AskPrice2", 0),
+            ask_price_3=data.get("AskPrice3", 0),
+            ask_price_4=data.get("AskPrice4", 0),
+            ask_price_5=data.get("AskPrice5", 0),
+            bid_volume_1=data.get("BidVolume1", 0),
+            bid_volume_2=data.get("BidVolume2", 0),
+            bid_volume_3=data.get("BidVolume3", 0),
+            bid_volume_4=data.get("BidVolume4", 0),
+            bid_volume_5=data.get("BidVolume5", 0),
+            ask_volume_1=data.get("AskVolume1", 0),
+            ask_volume_2=data.get("AskVolume2", 0),
+            ask_volume_3=data.get("AskVolume3", 0),
+            ask_volume_4=data.get("AskVolume4", 0),
+            ask_volume_5=data.get("AskVolume5", 0),
+            average_price=data['AveragePrice'],
+            pre_settlement_price=data['PreSettlementPrice'],
+            settlement_price=data['SettlementPrice'],
+            pre_open_interest=data['PreOpenInterest'],
             gateway_name=self.gateway_name
         )
-
-        if data["BidPrice2"]:
-            tick.bid_price_2 = data["BidPrice2"]
-            tick.bid_price_3 = data["BidPrice3"]
-            tick.bid_price_4 = data["BidPrice4"]
-            tick.bid_price_5 = data["BidPrice5"]
-
-            tick.ask_price_2 = data["AskPrice2"]
-            tick.ask_price_3 = data["AskPrice3"]
-            tick.ask_price_4 = data["AskPrice4"]
-            tick.ask_price_5 = data["AskPrice5"]
-
-            tick.bid_volume_2 = data["BidVolume2"]
-            tick.bid_volume_3 = data["BidVolume3"]
-            tick.bid_volume_4 = data["BidVolume4"]
-            tick.bid_volume_5 = data["BidVolume5"]
-
-            tick.ask_volume_2 = data["AskVolume2"]
-            tick.ask_volume_3 = data["AskVolume3"]
-            tick.ask_volume_4 = data["AskVolume4"]
-            tick.ask_volume_5 = data["AskVolume5"]
-
-        self.on_event(EVENT_TICK, tick)
+        self.on_event(type=EVENT_TICK, data=tick)
 
     def connect(self, info):
         """
@@ -141,10 +142,9 @@ class MiniMdApi(MdApi):
         self.userid = info["userid"]
         self.password = info["password"]
         self.brokerid = info["brokerid"]
-
         # If not connected, then start connection first.
         if not self.connect_status:
-            path = get_folder_path(self.gateway_name.lower())
+            path = get_folder_path(self.gateway_name.lower() + f"/{self.userid}")
             self.createFtdcMdApi(str(path) + "\\Md")
 
             self.registerFront(address)
@@ -168,13 +168,15 @@ class MiniMdApi(MdApi):
         self.reqid += 1
         self.reqUserLogin(req, self.reqid)
 
-    def subscribe(self, req: SubscribeRequest):
+    def subscribe(self, symbol):
         """
         Subscribe to tick data update.
         """
-        if self.login_status:
-            self.subscribeMarketData(req.symbol)
-        self.subscribed.add(req.symbol)
+        result = None
+        if self.login_status and symbol not in self.subscribed:
+            result = self.subscribeMarketData(symbol)
+        self.subscribed.add(symbol)
+        return result
 
     def close(self):
         """

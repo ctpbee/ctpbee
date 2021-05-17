@@ -54,7 +54,10 @@ def Aux(yy: List, xx: List, ovx: dict, **kwargs):
 
 
     """
-    import matplotlib.pyplot as plt
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError:
+        raise ImportError("please install matplotlib by pip")
     fig, ax = plt.subplots(**kwargs)
     from matplotlib.font_manager import FontProperties
     line, = ax.plot(xx, yy, lw=2)
