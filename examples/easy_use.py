@@ -24,7 +24,6 @@ if __name__ == '__main__':
     # app.add_extension(just_use)
     # app.start(log_output=True)
     # print("one start")
-
     market = CtpBee("market", __name__)
     main = Main("DailyCTA")
     market.config.from_json("config.json")

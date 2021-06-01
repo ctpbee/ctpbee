@@ -241,8 +241,9 @@ class MTdApi(MiniTdApi):
         order_id = f"{frontid}_{sessionid}_{order_ref}"
         is_local = True if int(self.frontid) == int(frontid) and int(self.sessionid) == int(sessionid) else False
         timestamp = f"{data['InsertDate']} {data['InsertTime']}"
-        dt = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S")
-        dt = CHINA_TZ.localize(dt)
+        # dt = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S")
+        # dt = CHINA_TZ.localize(dt)
+        dt = timestamp
         if is_local:
             self.local_order_id.append(order_id)
         order = OrderData(

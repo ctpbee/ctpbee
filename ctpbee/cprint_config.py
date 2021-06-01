@@ -17,7 +17,7 @@ from colour_printing.config import CPConfig, Term
 
 from datetime import datetime
 
-from colour_printing import Mode, Fore, Back
+from colour_printing import Fore
 
 get_time = lambda: datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S.%f')[:-3]
 

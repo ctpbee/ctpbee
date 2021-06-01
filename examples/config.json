@@ -3,8 +3,8 @@
     "userid": "170874",
     "password": "wi1015..",
     "brokerid": "9999",
-    "md_address": "tcp://218.202.237.33:10112",
-    "td_address": "tcp://218.202.237.33:10102",
+    "md_address": "tcp://218.202.237.33:10213",
+    "td_address": "tcp://218.202.237.33:10203",
     "product_info": "",
     "appid": "simnow_client_test",
     "auth_code": "0000000000000000"

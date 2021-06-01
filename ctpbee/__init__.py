@@ -1,10 +1,10 @@
 """
     for the future of  life
 """
-__version__ = '1.4.0'
+__version__ = '1.4.2'
 __status__ = 'release level'
 
-# Here are some import
+# Here are pre import
 from ctpbee.app import CtpBee
 from ctpbee.signals import common_signals
 from ctpbee.context import current_app, switch_app, get_app, del_app

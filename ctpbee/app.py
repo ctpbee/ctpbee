@@ -8,7 +8,6 @@ from threading import Thread
 from time import sleep
 from typing import Text
 
-from werkzeug.datastructures import ImmutableDict
 
 from ctpbee import __version__
 from ctpbee.looper.data import VessData
@@ -37,8 +36,7 @@ class CtpBee(object):
     I hope it will help you !
     """
     # 默认回测配置参数
-    default_config = ImmutableDict(
-        dict(LOG_OUTPUT=True,  # 是否开启输出模式
+    default_config = dict(LOG_OUTPUT=True,  # 是否开启输出模式
              TD_FUNC=False,  # 是否开启交易功能
              INTERFACE="ctp",  # 接口参数，默认指定国内期货ctp
              MD_FUNC=True,  # 是否开启行情功能
@@ -57,7 +55,7 @@ class CtpBee(object):
              AFTER_TIMEOUT=3,  # 设置after线程执行超时,
              TIMER_INTERVAL=1,
              PATTERN="real"
-             ))
+             )
 
     config_class = Config
     import_name = None

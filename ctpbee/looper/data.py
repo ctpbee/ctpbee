@@ -9,7 +9,7 @@ todo: 优化数据访问速度
 """
 from datetime import datetime
 from itertools import chain
-from typing import List, Iterable, Tuple, Sized, Generator
+from typing import Iterable, Tuple, Sized, Generator
 
 
 class Bumblebee(dict):

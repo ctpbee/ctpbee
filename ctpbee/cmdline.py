@@ -1,10 +1,5 @@
 import argparse
-import copy
-import distutils.cmd
-import distutils.log
-import datetime
 import os
-import subprocess
 import sys
 
 parser = argparse.ArgumentParser(description="bee bee bee~")
@@ -29,12 +24,6 @@ def execute():
         print('[*]Tip: ctpbee -h view help')
         sys.exit(0)
     args = parser.parse_args()
-    # argv_value
-    year = args.tradetime
-    # handle
-    if year:
-        tradetime_handle(year)
-        return
 
     auto = args.generate
     if auto == "generate":

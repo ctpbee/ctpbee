@@ -4,8 +4,6 @@
 """
 import os
 import webbrowser
-from urllib.parse import urlencode
-
 from jinja2 import Environment, PackageLoader, select_autoescape
 from ctpbee.func import get_ctpbee_path
 
