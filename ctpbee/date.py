@@ -1,5 +1,3 @@
-from datetime import datetime
-
 trade_dates = [
     '1990-12-19',
     '1990-12-20',

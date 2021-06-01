@@ -2,9 +2,6 @@
 code are from [werkzeug](https://werkzeug.palletsprojects.com/en/2.0.x/) !!!
 In order to reduce the package volume, just copy code into here
 """
-from threading import Lock
-from typing import Text
-
 import copy
 import math
 import operator
@@ -12,6 +9,8 @@ import sys
 import typing as t
 import warnings
 from functools import partial
+from threading import Lock
+from typing import Text
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
 

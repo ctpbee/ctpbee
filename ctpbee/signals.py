@@ -55,7 +55,6 @@ class AppSignal:
         self.warning_signal = NamedSignal(f"{ids}+warning")
 
 
-
 # 发单监视器
 send_monitor = signal("send_order")
 # 撤单监视器

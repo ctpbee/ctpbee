@@ -3,10 +3,10 @@
 use for refrence from flask config
 """
 import errno
+import json
 import os
 import types
 from typing import Text
-import json
 
 
 class ConfigAttribute(object):

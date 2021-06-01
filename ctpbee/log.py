@@ -12,6 +12,7 @@ log格式
 
 if __name__ == '__main__':
     from ctpbee.cprint_config import CP
+
     logger_me = VLogger(CP)
 
     # logger_me.set_formatter("handler")

@@ -6,7 +6,7 @@ from typing import Set, List, AnyStr, Text
 from warnings import warn
 
 from ctpbee.constant import EVENT_INIT_FINISHED, EVENT_TICK, EVENT_BAR, EVENT_ORDER, EVENT_SHARED, EVENT_TRADE, \
-    EVENT_POSITION, EVENT_ACCOUNT, EVENT_CONTRACT, OrderData, SharedData, BarData, TickData, TradeData, \
+    EVENT_POSITION, EVENT_ACCOUNT, EVENT_CONTRACT, OrderData, BarData, TickData, TradeData, \
     PositionData, AccountData, ContractData, Offset, Direction, OrderType, Exchange, OrderRequest, CancelRequest
 from ctpbee.constant import EVENT_TIMER, Event
 from ctpbee.exceptions import ConfigError

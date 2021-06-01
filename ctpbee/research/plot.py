@@ -1,13 +1,6 @@
-from ctpbee.constant import BarData
-from jinja2 import Template
-import os
-import webbrowser
-from urllib.parse import urlencode
-
 from jinja2 import Environment, PackageLoader, select_autoescape
-from ctpbee.func import get_ctpbee_path
 
-from ctpbee.func import join_path
+from ctpbee.constant import BarData
 
 env = Environment(
     loader=PackageLoader('ctpbee', 'research'),

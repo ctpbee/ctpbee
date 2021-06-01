@@ -3,8 +3,9 @@ Vnpy里面提高的指标系统
 需要你自行安装TA-LIB
 """
 
-import numpy as np
 import warnings
+
+import numpy as np
 
 from ctpbee.constant import TickData
 
@@ -62,7 +63,6 @@ class ArrayManager(object):
         else:
             self.close_array[-1] = data.last_price
         self.volume_array[-1] = data.volume
-
 
     @property
     def open(self):

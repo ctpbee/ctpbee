@@ -1,5 +1,5 @@
-from ctpbee.constant import Offset, TradeData, Direction
 from ctpbee import CtpbeeApi, CtpBee
+from ctpbee.constant import Offset, TradeData, Direction
 from ctpbee.indicator.ta_lib import ArrayManager
 
 

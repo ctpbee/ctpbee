@@ -1,5 +1,3 @@
-from time import sleep
-
 from ctpbee import CtpbeeApi, CtpBee
 from ctpbee.constant import *
 

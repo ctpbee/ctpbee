@@ -13,11 +13,10 @@
 #########################################################################################
 """
 
-from colour_printing.config import CPConfig, Term
-
 from datetime import datetime
 
 from colour_printing import Fore
+from colour_printing.config import CPConfig, Term
 
 get_time = lambda: datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S.%f')[:-3]
 

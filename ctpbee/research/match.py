@@ -1,9 +1,9 @@
 """
 实现了
 """
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import List
-from copy import deepcopy
 
 
 @dataclass

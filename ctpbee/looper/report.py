@@ -4,9 +4,10 @@
 """
 import os
 import webbrowser
-from jinja2 import Environment, PackageLoader, select_autoescape
-from ctpbee.func import get_ctpbee_path
 
+from jinja2 import Environment, PackageLoader, select_autoescape
+
+from ctpbee.func import get_ctpbee_path
 from ctpbee.func import join_path
 
 env = Environment(

@@ -1,5 +1,4 @@
 from ctpbee.constant import Offset, TradeData, Direction
-from ctpbee.qa_support import QADataSupport
 
 from ctpbee.indicator.ta_lib import ArrayManager
 

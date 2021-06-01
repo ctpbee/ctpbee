@@ -2,16 +2,9 @@
 使用装饰器示例
 """
 
-from datetime import datetime
-from time import sleep
-
-from ctpbee.constant import *
-from ctpbee import Action, hickey
 from ctpbee import CtpBee
 from ctpbee import CtpbeeApi
-from ctpbee import RiskLevel
-from ctpbee import VLogger
-from ctpbee import helper
+from ctpbee.constant import *
 
 
 class M(CtpbeeApi):
@@ -23,7 +16,7 @@ class M(CtpbeeApi):
         self.instrument_set = ["rb2101.SHFE"]
 
     def on_bar(self, bar: BarData) -> None:
-        if bar.interval == 5 and bar.symbol =="rb2101":
+        if bar.interval == 5 and bar.symbol == "rb2101":
             print(bar.datetime, bar.close_price)
         # self.action.buy(bar.close_price + 10, 10, bar)
 

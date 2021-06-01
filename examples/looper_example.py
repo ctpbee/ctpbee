@@ -1,8 +1,8 @@
-from ctpbee.constant import Offset, TradeData, Direction, OrderData
-from ctpbee import CtpbeeApi, CtpBee
-from ctpbee.qa_support import QADataSupport
-from ctpbee.indicator.ta_lib import ArrayManager
 from data_api import DataApi
+
+from ctpbee import CtpbeeApi, CtpBee
+from ctpbee.constant import TradeData, OrderData
+from ctpbee.indicator.ta_lib import ArrayManager
 
 
 class DoubleMaStrategy(CtpbeeApi):
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     strategy = DoubleMaStrategy("ma")
 
     data_api = DataApi()
-    data = data_api.get_tick("rb2010", start_date="2020-04-10", end_date="2020-07-21",today=False)
+    data = data_api.get_tick("rb2010", start_date="2020-04-10", end_date="2020-07-21", today=False)
     # data = data_support.get_future_min("rb2010.SHFE", frq="1min", start="2019-10-01", end="2020-07-15")
     app.add_data(data)
     app.add_extension(strategy)

@@ -1,9 +1,9 @@
 from datetime import datetime
 from functools import total_ordering
-from queue import Queue
 
-from ctpbee import CtpbeeApi, auth_time
 from pymongo import MongoClient
+
+from ctpbee import CtpbeeApi
 
 DATABASE_NAME = "ctpbee_tick"
 mongo_client = MongoClient()
@@ -137,9 +137,10 @@ def create_app():
 
 
 if __name__ == '__main__':
-    from ctpbee import hickey
+
     app, last = create_app()
     import time
+
     time.sleep(1)
     for x in last.recorder.get_all_contracts():
         app.action.subscribe(x.local_symbol)

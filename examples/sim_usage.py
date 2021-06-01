@@ -1,8 +1,6 @@
 """
  本地模拟示例
 """
-from datetime import datetime
-from time import sleep
 
 from ctpbee import CtpBee
 from ctpbee import CtpbeeApi
@@ -11,6 +9,7 @@ from ctpbee.constant import BarData, TickData
 api = CtpbeeApi("实盘")
 
 pre = CtpbeeApi("模拟")
+
 
 class Me(CtpbeeApi):
 

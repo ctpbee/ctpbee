@@ -1,16 +1,13 @@
-
 import random
 import uuid
 from copy import deepcopy
 from datetime import timedelta, datetime
 
-
 from ctpbee.constant import OrderRequest, Direction, OrderData, CancelRequest, TradeData, BarData, \
     TickData, Status, Event, EVENT_ORDER, EVENT_TRADE, EVENT_LOG, EVENT_ERROR, \
     EVENT_INIT_FINISHED, EVENT_BAR, EVENT_TICK
-
-from ctpbee.looper.account import Account
 from ctpbee.date import trade_dates
+from ctpbee.looper.account import Account
 
 
 class LocalLooper:

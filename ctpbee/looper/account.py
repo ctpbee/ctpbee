@@ -6,12 +6,10 @@
     result: 回测结果
 """
 
+import math
 from collections import defaultdict
 from copy import deepcopy
-import math
 from datetime import datetime
-
-from ctpbee.date import trade_dates
 
 try:
     from statistics import geometric_mean
@@ -335,7 +333,6 @@ class Account:
 
     def clear_frozen(self):
         """ 撤单的时候应该要清除所有的单子 并同时清除保证金占用和手续费冻结 """
-        from ctpbee.constant import EVENT_ORDER, Status
         # for order in list(self.interface.pending.values()):
         #     """ 结算后需要把未所有的单子撤掉 """
         #     order.status = Status.CANCELLED
