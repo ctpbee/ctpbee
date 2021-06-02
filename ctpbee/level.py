@@ -1,16 +1,13 @@
 import inspect
 import os
-import sys
 import types
-from functools import partial
 from types import MethodType
 from typing import Set, List, AnyStr, Text
 from warnings import warn
 
 from ctpbee.constant import EVENT_INIT_FINISHED, EVENT_TICK, EVENT_BAR, EVENT_ORDER, EVENT_SHARED, EVENT_TRADE, \
-    EVENT_POSITION, EVENT_ACCOUNT, EVENT_CONTRACT, OrderData, SharedData, BarData, TickData, TradeData, \
+    EVENT_POSITION, EVENT_ACCOUNT, EVENT_CONTRACT, OrderData, BarData, TickData, TradeData, \
     PositionData, AccountData, ContractData, Offset, Direction, OrderType, Exchange, OrderRequest, CancelRequest
-from ctpbee.data_handle.level_position import ApiPositionManager
 from ctpbee.constant import EVENT_TIMER, Event
 from ctpbee.exceptions import ConfigError
 from ctpbee.func import helper, get_ctpbee_path
@@ -466,14 +463,6 @@ class CtpbeeApi(BeeApi):
             if self._count == 10:
                 self.on_init(True)
         else:
-            if event.type == EVENT_ORDER:
-                if event.data.local_order_id in self.order_id_mapping:
-                    self.level_position_manager.on_order(event.data)
-            if event.type == EVENT_TRADE:
-                """如果发现单号是已经存进来的"""
-                if event.data.local_order_id in self.order_id_mapping:
-                    self.level_position_manager.on_trade(event.data)
-
             if not self.frozen and (event.type == EVENT_TICK or event.type == EVENT_BAR) and len(
                     self.func) != 0:
                 args = list(self.func[0][2])
@@ -556,7 +545,8 @@ class CtpbeeApi(BeeApi):
         self.order_id_mapping = {}
 
         self.api_path = self.get_dir(self.path)
-        self.level_position_manager = ApiPositionManager(self.extension_name, self.api_path, init)
+
+        self.description = ""
 
     def _resolve_callback(self, item, result):
         """

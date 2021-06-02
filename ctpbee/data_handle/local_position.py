@@ -22,7 +22,6 @@ Notice : 神兽保佑 ，测试一次通过
 from typing import Text
 
 """ 本地持仓对象 """
-import warnings
 from copy import copy
 
 from ctpbee.constant import PositionData, Offset, Direction, OrderRequest, OrderData, \

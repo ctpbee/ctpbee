@@ -1,5 +1,4 @@
 from ctpbee.constant import Offset, TradeData, Direction
-from ctpbee.qa_support import QADataSupport
 
 from ctpbee.indicator.ta_lib import ArrayManager
 
@@ -86,7 +85,7 @@ class OIDoubleMaStrategy(LooperApi):
 
     def on_bar(self, bar):
         """ """
-        self.manager.update_bar(bar)
+        self.manager.add_data(bar)
         if not self.manager.inited:
             return
         fast_avg = self.manager.sma(self.fast, array=True)

@@ -1,9 +1,6 @@
-import numpy as np
-import matplotlib.pyplot as plt
 from typing import List
 
-# import matplotlib.text.Text
-from matplotlib.font_manager import FontProperties
+import numpy as np
 
 
 def plot_multi(data, cols=None, spacing=.1, **kwargs):
@@ -13,6 +10,7 @@ def plot_multi(data, cols=None, spacing=.1, **kwargs):
      data: DataFrame
      cols: 列表
      """
+
     from pandas import plotting
 
     # Get default color style from pandas - can be changed to any other color list
@@ -56,8 +54,12 @@ def Aux(yy: List, xx: List, ovx: dict, **kwargs):
 
 
     """
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError:
+        raise ImportError("please install matplotlib by pip")
     fig, ax = plt.subplots(**kwargs)
-
+    from matplotlib.font_manager import FontProperties
     line, = ax.plot(xx, yy, lw=2)
     for index in ovx["buy"]:
         ax.annotate('↑', xy=(xx[index], yy[index]),

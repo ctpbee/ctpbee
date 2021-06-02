@@ -1,9 +1,6 @@
 ---
-name: Suggestions / 功能建议
-about: 让我们了解你的需求
-title: CEP.[Number]
-labels: enhancement
-assignees: ''
+name: Suggestions / 功能建议 about: 让我们了解你的需求 title: CEP.[Number]
+labels: enhancement assignees: ''
 
 ---
 

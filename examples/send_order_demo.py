@@ -2,9 +2,9 @@
 下单示例
 """
 
-from ctpbee import CtpbeeApi, helper, CtpBee
-from ctpbee.constant import ContractData, LogData, TickData, BarData, OrderType, Offset, OrderData, \
-    TradeData, PositionData, Direction, AccountData, Exchange
+from ctpbee import CtpbeeApi, CtpBee
+from ctpbee.constant import ContractData, LogData, TickData, BarData, OrderData, \
+    TradeData, PositionData, AccountData
 
 
 class Demo(CtpbeeApi):

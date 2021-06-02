@@ -1,5 +1,4 @@
-接口开发准则 /  Interface development criteria
-
+接口开发准则 / Interface development criteria
 
 ### 中文版本
 
@@ -13,23 +12,24 @@
     + 查询持仓 ----> query_position()
     + 发送初始化信息 ---> EVENT_INIT_FINISHED
     + 登录接口 ----> connect(info)
-    
-    
+
+
 - 行情API
 
     + 登录接口 ----> connect(info)
     + 订阅行情 ----> subscribe(symbol)
     + 取消订阅 ----> unsubscribe(symbol)
-    
-    
-#### 接口描述 
 
-- ctp 期货交易实盘接口  
-- looper 回测接口, 支持股票和期货以及数字货币 
-- stock 股票测试接口 ---->    
+#### 接口描述
 
-###  English version
+- ctp 期货交易实盘接口
+- looper 回测接口, 支持股票和期货以及数字货币
+- stock 股票测试接口 ---->
+
+### English version
+
 #### Here are the guidelines for developing interfaces
+
 - Development when realizing function of trade
     + send interface ----> send_order(req, **kwargs)
     + cancel interface ----> cancel_order(req, **kwargs)

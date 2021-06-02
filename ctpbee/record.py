@@ -1,14 +1,12 @@
-import warnings
 from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime
 
+import ctpbee.signals as signal
+from ctpbee.constant import Event, TickData
 from ctpbee.data_handle import generator
 from ctpbee.data_handle.local_position import LocalPositionManager
-from ctpbee.constant import Event, TickData
 from ctpbee.helpers import helper_call
-
-import ctpbee.signals as signal
 
 
 class Recorder(object):

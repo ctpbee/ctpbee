@@ -23,6 +23,7 @@ from collections import defaultdict
 
 from ctpbee.constant import *
 from ctpbee.interface.ctp.lib import *
+from ctpbee.interface.func import *
 
 
 class BeeTdApi(TdApi):

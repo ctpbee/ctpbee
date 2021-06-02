@@ -1,34 +1,30 @@
 # coding:utf-8
 import os
-import sys
 from datetime import datetime
 from inspect import ismethod
-
 from threading import Thread
 from time import sleep
 from typing import Text
 
-from werkzeug.datastructures import ImmutableDict
-
 from ctpbee import __version__
-from ctpbee.looper.data import VessData
-from ctpbee.looper.report import render_result
-from ctpbee.util import RiskLevel
 from ctpbee.center import Center
 from ctpbee.config import Config
+from ctpbee.constant import Event, EVENT_TIMER
 from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
-from ctpbee.constant import Event, EVENT_TIMER
+from ctpbee.cprint_config import CP
 from ctpbee.exceptions import ConfigError
 from ctpbee.helpers import end_thread
 from ctpbee.helpers import find_package, refresh_query, graphic_pattern
 from ctpbee.interface import Interface
+from ctpbee.jsond import dumps
 from ctpbee.level import CtpbeeApi, Action
 from ctpbee.log import VLogger
+from ctpbee.looper.data import VessData
+from ctpbee.looper.report import render_result
 from ctpbee.record import Recorder
-from ctpbee.cprint_config import CP
-from ctpbee.jsond import dumps
 from ctpbee.signals import AppSignal, common_signals
+from ctpbee.util import RiskLevel
 
 
 class CtpBee(object):
@@ -37,27 +33,26 @@ class CtpBee(object):
     I hope it will help you !
     """
     # 默认回测配置参数
-    default_config = ImmutableDict(
-        dict(LOG_OUTPUT=True,  # 是否开启输出模式
-             TD_FUNC=False,  # 是否开启交易功能
-             INTERFACE="ctp",  # 接口参数，默认指定国内期货ctp
-             MD_FUNC=True,  # 是否开启行情功能
-             XMIN=[],  # k线序列周期， 支持一小时以内的k线任意生成
-             ALL_SUBSCRIBE=False,
-             SHARE_MD=False,  # 是否多账户之间共享行情，---> 等待完成
-             SLIPPAGE_COVER=0,  # 平多头滑点设置
-             SLIPPAGE_SELL=0,  # 平空头滑点设置
-             SLIPPAGE_SHORT=0,  # 卖空滑点设置
-             SLIPPAGE_BUY=0,  # 买多滑点设置
-             SHARED_FUNC=False,  # 分时图数据 --> 等待优化
-             REFRESH_INTERVAL=1.5,  # 定时刷新秒数， 需要在CtpBee实例化的时候将refresh设置为True才会生效
-             INSTRUMENT_INDEPEND=False,  # 是否开启独立行情，策略对应相应的行情
-             CLOSE_PATTERN="today",  # 面对支持平今的交易所，优先平今或者平昨 ---> today: 平今, yesterday: 平昨， 其他:d
-             TODAY_EXCHANGE=[Exchange.SHFE.value, Exchange.INE.value],  # 需要支持平今的交易所代码列表
-             AFTER_TIMEOUT=3,  # 设置after线程执行超时,
-             TIMER_INTERVAL=1,
-             PATTERN="real"
-             ))
+    default_config = dict(LOG_OUTPUT=True,  # 是否开启输出模式
+                          TD_FUNC=False,  # 是否开启交易功能
+                          INTERFACE="ctp",  # 接口参数，默认指定国内期货ctp
+                          MD_FUNC=True,  # 是否开启行情功能
+                          XMIN=[],  # k线序列周期， 支持一小时以内的k线任意生成
+                          ALL_SUBSCRIBE=False,
+                          SHARE_MD=False,  # 是否多账户之间共享行情，---> 等待完成
+                          SLIPPAGE_COVER=0,  # 平多头滑点设置
+                          SLIPPAGE_SELL=0,  # 平空头滑点设置
+                          SLIPPAGE_SHORT=0,  # 卖空滑点设置
+                          SLIPPAGE_BUY=0,  # 买多滑点设置
+                          SHARED_FUNC=False,  # 分时图数据 --> 等待优化
+                          REFRESH_INTERVAL=1.5,  # 定时刷新秒数， 需要在CtpBee实例化的时候将refresh设置为True才会生效
+                          INSTRUMENT_INDEPEND=False,  # 是否开启独立行情，策略对应相应的行情
+                          CLOSE_PATTERN="today",  # 面对支持平今的交易所，优先平今或者平昨 ---> today: 平今, yesterday: 平昨， 其他:d
+                          TODAY_EXCHANGE=[Exchange.SHFE.value, Exchange.INE.value],  # 需要支持平今的交易所代码列表
+                          AFTER_TIMEOUT=3,  # 设置after线程执行超时,
+                          TIMER_INTERVAL=1,
+                          PATTERN="real"
+                          )
 
     config_class = Config
     import_name = None
@@ -73,7 +68,7 @@ class CtpBee(object):
                  action_class: Action or None = None,
                  engine_method: str = "thread",
                  logger_class=None, logger_config=None,
-                 refresh: bool = False,
+                 refresh: bool = True,
                  risk: RiskLevel = None,
                  instance_path=None):
         """
@@ -82,7 +77,7 @@ class CtpBee(object):
         action_class: 执行器 > 默认使用系统自带的Action, 或者由用户继承，然后传入类
         engine_method: Actor模型采用的底层的引擎
         logger_class: logger类，可以自己定义
-        refresh: 是否自己主动持仓
+        refresh: 是否自己主动查询持仓 默认开启
         risk: 风险管理类, 可以自己继承RiskLevel进行定制
         sim: 是否进行模拟
         """

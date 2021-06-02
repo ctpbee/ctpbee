@@ -1,8 +1,8 @@
 import types
 from functools import wraps
 from threading import Thread
-from ctpbee.helpers import end_thread
 
+from ctpbee.helpers import end_thread
 from ctpbee.signals import common_signals
 
 

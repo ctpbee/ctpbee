@@ -3,11 +3,10 @@ from copy import deepcopy
 from datetime import datetime
 from typing import Iterable, Callable
 
-from ctpbee.date import get_day_from
-
-from ctpbee.signals import common_signals
 from ctpbee.constant import BarData, TickData, EVENT_BAR
 from ctpbee.constant import Event
+from ctpbee.date import get_day_from
+from ctpbee.signals import common_signals
 
 
 class DataGenerator:

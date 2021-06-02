@@ -1,18 +1,13 @@
-import collections
 import random
 import uuid
 from copy import deepcopy
 from datetime import timedelta, datetime
-from typing import Text, List
-from warnings import warn
 
-from ctpbee.constant import OrderRequest, Offset, Direction, OrderType, OrderData, CancelRequest, TradeData, BarData, \
-    TickData, PositionData, Status, Exchange, Event, EVENT_ORDER, EVENT_TRADE, EVENT_LOG, EVENT_ERROR, \
-    EVENT_INIT_FINISHED, EVENT_BAR, EVENT_TICK, EVENT_WARNING
-from ctpbee.exceptions import ConfigError
-from ctpbee.func import helper
-from ctpbee.looper.account import Account
+from ctpbee.constant import OrderRequest, Direction, OrderData, CancelRequest, TradeData, BarData, \
+    TickData, Status, Event, EVENT_ORDER, EVENT_TRADE, EVENT_LOG, EVENT_ERROR, \
+    EVENT_INIT_FINISHED, EVENT_BAR, EVENT_TICK
 from ctpbee.date import trade_dates
+from ctpbee.looper.account import Account
 
 
 class LocalLooper:

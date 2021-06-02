@@ -6,12 +6,10 @@
     result: 回测结果
 """
 
+import math
 from collections import defaultdict
 from copy import deepcopy
-import math
 from datetime import datetime
-
-from ctpbee.date import trade_dates
 
 try:
     from statistics import geometric_mean
@@ -243,6 +241,9 @@ class Account:
         else:
             return self.size_map.get(local_symbol)
 
+    def get_commission_mapping(self):
+        """ 获取每个合约的手续费信息 """
+
     def update_account_from_trade(self, data: TradeData or OrderData):
         """ 更新基础属性方法
         # 下单更新冻结的保证金
@@ -292,6 +293,7 @@ class Account:
                     self.close_profit[data.local_symbol] = close_profit
                 else:
                     self.close_profit[data.local_symbol] += close_profit
+
                 if self.code_pnl.get(data.local_symbol) is None:
                     self.code_pnl[data.local_symbol] = close_profit
                 else:
@@ -331,7 +333,6 @@ class Account:
 
     def clear_frozen(self):
         """ 撤单的时候应该要清除所有的单子 并同时清除保证金占用和手续费冻结 """
-        from ctpbee.constant import EVENT_ORDER, Status
         # for order in list(self.interface.pending.values()):
         #     """ 结算后需要把未所有的单子撤掉 """
         #     order.status = Status.CANCELLED
@@ -555,19 +556,47 @@ class Account:
         result['daily_count / 日均成交次数'] = round(result['total_count / 总成交次数'] / result['total_days / 交易天数'], 2)
         result['total_return / 总收益率'] = str(
             round((result['end_balance / 结束资金'] / self.initial_capital - 1) * 100, 2)) + "%"
+        # 2021-04-29   somewheve
+        # solution: fix to use function  to calculate shape
+        #
+        # by_year_return_std = df["return"].std() * np.sqrt(245)
+        # df["return_x"] = df["return"] + 1
+        # try:
+        #     profit_ratio = geometric_mean(df["return_x"].to_numpy()) ** 245 - 1
+        # except ValueError:
+        #     print("boom 计算几何平均数存在负数, 本次回测作废")
+        #     return {}
+        # result['annual_return / 年化收益率'] = str(round(profit_ratio * 100, 2)) + "%"
+        # result['return_std / 年化标准差'] = str(round(by_year_return_std * 100, 2)) + "%"
+        # result['volatility / 波动率'] = str(round(df["return"].std() * 100, 2)) + "%"
+        # if by_year_return_std != 0:
+        #     result['sharpe / 年化夏普率'] = (profit_ratio - 2.5 / 100) / by_year_return_std
+        # else:
+        #     result['sharpe / 年化夏普率'] = "计算出错"
+        result['annual_return / 年化收益率'], result['return_std / 年化标准差'], result['volatility / 波动率'], result[
+            'sharpe / 年化夏普率'] = shape_cal(df["return"])
 
-        by_year_return_std = df["return"].std() * np.sqrt(245)
-        df["return_x"] = df["return"] + 1
-        try:
-            profit_ratio = geometric_mean(df["return_x"].to_numpy()) ** 245 - 1
-        except ValueError:
-            print("boom 计算几何平均数存在负数, 本次回测作废")
-            return {}
-        result['annual_return / 年化收益率'] = str(round(profit_ratio * 100, 2)) + "%"
-        result['return_std / 年化标准差'] = str(round(by_year_return_std * 100, 2)) + "%"
-        result['volatility / 波动率'] = str(round(df["return"].std() * 100, 2)) + "%"
-        if by_year_return_std != 0:
-            result['sharpe / 年化夏普率'] = (profit_ratio - 2.5 / 100) / by_year_return_std
-        else:
-            result['sharpe / 年化夏普率'] = "计算出错"
         return result
+
+
+def shape_cal(rt):
+    """
+    根据收益率计算
+        年化收益率,
+
+    """
+    by_year_return_std = rt.std() * np.sqrt(245)
+    rtx = rt + 1
+    try:
+        profit_ratio = geometric_mean(rtx.to_numpy()) ** 245 - 1
+    except ValueError:
+        print("boom 计算几何平均数存在负数, 本次计算出错 作废")
+        return 0, 0, 0, 0
+    annual_return = str(round(profit_ratio * 100, 2)) + "%"
+    volatility = str(round(rt.std() * 100, 2)) + "%"
+    return_std = str(round(by_year_return_std * 100, 2)) + "%"
+    if by_year_return_std != 0:
+        shape = (profit_ratio - 2.5 / 100) / by_year_return_std
+    else:
+        shape = "计算出错"
+    return annual_return, return_std, volatility, shape

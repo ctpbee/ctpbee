@@ -1,7 +1,7 @@
 """
 ctpbee里面内置模拟成交网关 ---> 主要调用回测接口进行处理
 """
-from ctpbee.constant import Event, EVENT_POSITION, AccountData, EVENT_ACCOUNT
+from ctpbee.constant import EVENT_POSITION, EVENT_ACCOUNT
 from ctpbee.looper.interface import LocalLooper
 
 
