@@ -9,7 +9,7 @@ bee bee .... for developer's trading ~
 ## 环境设置
 
 ```bash
-# just for linux/ Generate Chinese environment
+#  linux用户快速生成中文支持/ windows用户无须设置 
 sudo ctpbee -auto generate
 ```
 
@@ -20,10 +20,10 @@ sudo ctpbee -auto generate
 ## 快速安装
 
 ```bash
-# code install 
+# 源码安装 
 git clone https://github.com/ctpbee/ctpbee && cd ctpbee && python3 setup.py install  
 
-# or by  pip install
+# pip源安装
 pip3 install ctpbee
 ```
 
@@ -84,7 +84,7 @@ app.start()
 
 ## PR支持
 
-I just only accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch, please remember that !
+Only Accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch, please remember that !
 
 ## 高性能版本
 

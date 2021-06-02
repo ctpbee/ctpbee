@@ -5,7 +5,7 @@ from ctpbee.constant import *
 class Main(CtpbeeApi):
     def on_tick(self, tick: TickData) -> None:
         """ """
-        print(tick)
+        print(self.center.positions)
 
     def on_bar(self, bar: BarData) -> None:
         pass
@@ -22,7 +22,7 @@ if __name__ == '__main__':
     # app.add_extension(just_use)
     # app.start(log_output=True)
     # print("one start")
-    market = CtpBee("market", __name__)
+    market = CtpBee("market", __name__,refresh=True)
     main = Main("DailyCTA")
     market.config.from_json("config.json")
     market.add_extension(main)

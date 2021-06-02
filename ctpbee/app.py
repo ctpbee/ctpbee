@@ -68,7 +68,7 @@ class CtpBee(object):
                  action_class: Action or None = None,
                  engine_method: str = "thread",
                  logger_class=None, logger_config=None,
-                 refresh: bool = False,
+                 refresh: bool = True,
                  risk: RiskLevel = None,
                  instance_path=None):
         """
@@ -77,7 +77,7 @@ class CtpBee(object):
         action_class: 执行器 > 默认使用系统自带的Action, 或者由用户继承，然后传入类
         engine_method: Actor模型采用的底层的引擎
         logger_class: logger类，可以自己定义
-        refresh: 是否自己主动持仓
+        refresh: 是否自己主动查询持仓 默认开启
         risk: 风险管理类, 可以自己继承RiskLevel进行定制
         sim: 是否进行模拟
         """
