@@ -7,12 +7,8 @@
 dist
 build
 
+workspace
 
-# vnctptd and vnctpmd
-vnctpmd.cpython-37m-x86_64-linux-gnu.so
-vnctptd.cpython-37m-x86_64-linux-gnu.so
-vnctpmd_se.cpython-37m-x86_64-linux-gnu.so
-vnctptd_se.cpython-37m-x86_64-linux-gnu.so
 
 # pycharm
 *.idea
@@ -28,3 +24,7 @@ venv
 
 # personal info
 test.py
+
+
+# personal strategy test
+personal

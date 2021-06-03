@@ -22,17 +22,17 @@ Notice : 神兽保佑 ，测试一次通过
 from collections import defaultdict
 
 from ctpbee.constant import *
-from ctpbee.event_engine import Event
 from ctpbee.interface.ctp.lib import *
+from ctpbee.interface.func import *
 
 
 class BeeTdApi(TdApi):
     """"""
 
-    def __init__(self, event_engine):
+    def __init__(self, app_signal):
         """Constructor"""
         super(BeeTdApi, self).__init__()
-        self.event_engine = event_engine
+        self.app_signal = app_signal
         self.gateway_name = "ctp"
 
         self.reqid = 0
@@ -63,13 +63,21 @@ class BeeTdApi(TdApi):
         self.sysid_orderid_map = {}
         self.open_cost_dict = defaultdict(dict)
 
+        self.position_init_flag = False
+        self.instrunment_init_flag = False
+        self.position_instrument_mapping = dict()
+        self.init_status = False
+        self.contact_data = {}
+        self.local_order_id = []
+
     @property
     def td_status(self):
         return self.login_status
 
     def on_event(self, type, data):
         event = Event(type=type, data=data)
-        self.event_engine.put(event)
+        signal = getattr(self.app_signal, f"{type}_signal")
+        signal.send(event)
 
     def onFrontConnected(self):
         """"""
@@ -164,52 +172,55 @@ class BeeTdApi(TdApi):
         # Get buffered position object
         key = f"{data['InstrumentID'], data['PosiDirection']}"
         position = self.positions.get(key, None)
-        if not position:
-            position = PositionData(
-                symbol=data["InstrumentID"],
-                exchange=symbol_exchange_map[data["InstrumentID"]],
-                direction=DIRECTION_CTP2VT[data["PosiDirection"]],
-                gateway_name=self.gateway_name
-            )
-            self.positions[key] = position
+        try:
+            if not position:
+                position = PositionData(
+                    symbol=data["InstrumentID"],
+                    exchange=symbol_exchange_map[data["InstrumentID"]],
+                    direction=DIRECTION_CTP2VT[data["PosiDirection"]],
+                    gateway_name=self.gateway_name
+                )
+                self.positions[key] = position
+            # For SHFE position data update
+            if position.exchange == Exchange.SHFE:
+                if data["YdPosition"] and not data["TodayPosition"]:
+                    position.yd_volume = data["Position"]
+            # For other exchange position data update
+            else:
+                position.yd_volume = data["Position"] - data["TodayPosition"]
 
-        # For SHFE position data update
-        if position.exchange == Exchange.SHFE:
-            if data["YdPosition"] and not data["TodayPosition"]:
-                position.yd_volume = data["Position"]
-        # For other exchange position data update
-        else:
-            position.yd_volume = data["Position"] - data["TodayPosition"]
+            # Get contract size (spread contract has no size value)
+            size = symbol_size_map.get(position.symbol, 0)
 
-        # Get contract size (spread contract has no size value)
-        size = symbol_size_map.get(position.symbol, 0)
+            # Calculate previous position cost
+            cost = position.price * position.volume * size
 
-        # Calculate previous position cost
-        cost = position.price * position.volume * size
+            # Update new position volume
+            position.volume += data["Position"]
+            position.pnl += data["PositionProfit"]
 
-        # Update new position volume
-        position.volume += data["Position"]
-        position.pnl += data["PositionProfit"]
+            if position.direction == Direction.LONG:
+                self.open_cost_dict[position.symbol]["long"] = data['OpenCost']
+            elif position.direction == Direction.SHORT:
+                self.open_cost_dict[position.symbol]["short"] = data['OpenCost']
+            # Calculate average position price
+            if position.volume and size:
+                cost += data["PositionCost"]
+                position.price = cost / (position.volume * size)
 
-        if position.direction == Direction.LONG:
-            self.open_cost_dict[position.symbol]["long"] = data['OpenCost']
-        elif position.direction == Direction.SHORT:
-            self.open_cost_dict[position.symbol]["short"] = data['OpenCost']
-        # Calculate average position price
-        if position.volume and size:
-            cost += data["PositionCost"]
-            position.price = cost / (position.volume * size)
-
-        # Get frozen volume
-        if position.direction == Direction.LONG:
-            position.frozen += data["ShortFrozen"]
-        else:
-            position.frozen += data["LongFrozen"]
-
+            # Get frozen volume
+            if position.direction == Direction.LONG:
+                position.frozen += data["ShortFrozen"]
+            else:
+                position.frozen += data["LongFrozen"]
+        except KeyError:
+            pass
         if last:
             for position in self.positions.values():
                 self.on_event(type=EVENT_POSITION, data=position)
+                self.position_instrument_mapping[position.local_symbol] = False
             self.positions.clear()
+            self.position_init_flag = True
 
     def onRspQryTradingAccount(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
@@ -220,7 +231,11 @@ class BeeTdApi(TdApi):
             gateway_name=self.gateway_name
         )
         account.available = data["Available"]
-
+        if self.instrunment_init_flag and not self.init_status:
+            self.reqid += 1
+            self.init_status = True
+            self.reqQryDepthMarketData({}, self.reqid)
+            self.on_event(type=EVENT_INIT_FINISHED, data=True)
         self.on_event(type=EVENT_ACCOUNT, data=account)
 
     def onRspQryInstrument(self, data: dict, error: dict, reqid: int, last: bool):
@@ -242,30 +257,34 @@ class BeeTdApi(TdApi):
             create_date = None
 
         if product:
-            contract = ContractData(
-                symbol=data["InstrumentID"],
-                exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
-                name=data["InstrumentName"],
-                product=product,
-                max_market_order_volume=data['MaxMarketOrderVolume'],
-                min_market_order_volume=data['MinMarketOrderVolume'],
-                max_limit_order_volume=data['MaxLimitOrderVolume'],
-                min_limit_order_volume=data['MaxLimitOrderVolume'],
-                size=data["VolumeMultiple"],
-                pricetick=data["PriceTick"],
-                delivery_month=data['DeliveryMonth'],
-                delivery_year=data['DeliveryYear'],
-                long_margin_ratio=data['LongMarginRatio'],
-                short_margin_ratio=data['ShortMarginRatio'],
-                combination_type=data['CombinationType'],
-                gateway_name=self.gateway_name,
-                end_delivery_date=end_delivery_date,
-                start_delivery_date=start_delivery_date,
-                open_date=open_date,
-                is_trading=is_trading,
-                create_date=create_date
-
-            )
+            try:
+                contract = ContractData(
+                    symbol=data["InstrumentID"],
+                    exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
+                    name=data["InstrumentName"],
+                    product=product,
+                    max_market_order_volume=data['MaxMarketOrderVolume'],
+                    min_market_order_volume=data['MinMarketOrderVolume'],
+                    max_limit_order_volume=data['MaxLimitOrderVolume'],
+                    min_limit_order_volume=data['MaxLimitOrderVolume'],
+                    size=data["VolumeMultiple"],
+                    pricetick=data["PriceTick"],
+                    delivery_month=data['DeliveryMonth'],
+                    delivery_year=data['DeliveryYear'],
+                    long_margin_ratio=data['LongMarginRatio'],
+                    short_margin_ratio=data['ShortMarginRatio'],
+                    combination_type=data['CombinationType'],
+                    gateway_name=self.gateway_name,
+                    end_delivery_date=end_delivery_date,
+                    start_delivery_date=start_delivery_date,
+                    open_date=open_date,
+                    is_trading=is_trading,
+                    create_date=create_date
+                )
+            except KeyError as e:
+                import warnings
+                warnings.warn(f"未预料到的合约问题 错误信息: {e}")
+                return
             self.symbol_exchange_mapping[data["InstrumentID"]] = EXCHANGE_CTP2VT[data["ExchangeID"]]
 
             # For option only
@@ -283,8 +302,7 @@ class BeeTdApi(TdApi):
 
         if last:
             # 请求计算所有合约所用到的具体数据
-            self.reqid += 1
-            self.reqQryDepthMarketData({}, self.reqid)
+            self.instrunment_init_flag = True
             self.on_event(EVENT_LOG, data="合约信息查询成功")
 
             for data in self.order_data:
@@ -309,12 +327,16 @@ class BeeTdApi(TdApi):
         order_ref = data["OrderRef"]
         if int(order_ref) > self.order_ref:
             self.order_ref = int(order_ref) + 1
-
         order_id = f"{frontid}_{sessionid}_{order_ref}"
         if data['OrderPriceType'] in ORDERTYPE_VT2CTP.values():
             ordertype = ORDERTYPE_CTP2VT[data["OrderPriceType"]]
         else:
             ordertype = "non_support"
+        is_local = True if int(self.frontid) == int(frontid) and int(self.sessionid) == int(sessionid) else False
+
+        if is_local:
+            self.local_order_id.append(order_id)
+
         order = OrderData(
             symbol=symbol,
             exchange=exchange,
@@ -327,7 +349,8 @@ class BeeTdApi(TdApi):
             traded=data["VolumeTraded"],
             status=STATUS_CTP2VT[data["OrderStatus"]],
             time=data["InsertTime"],
-            gateway_name=self.gateway_name
+            gateway_name=self.gateway_name,
+            is_local=is_local
         )
         self.on_event(type=EVENT_ORDER, data=order)
         self.sysid_orderid_map[data["OrderSysID"]] = order_id
@@ -343,6 +366,7 @@ class BeeTdApi(TdApi):
             return
 
         order_id = self.sysid_orderid_map[data["OrderSysID"]]
+        is_local = order_id in self.local_order_id
 
         trade = TradeData(
             symbol=symbol,
@@ -354,6 +378,7 @@ class BeeTdApi(TdApi):
             price=data["Price"],
             volume=data["Volume"],
             time=data["TradeTime"],
+            is_local=is_local,
             gateway_name=self.gateway_name
         )
         self.on_event(type=EVENT_TRADE, data=trade)
@@ -498,9 +523,12 @@ class BeeTdApi(TdApi):
             last_price=data['LastPrice']
         )
         self.on_event(type=EVENT_LAST, data=market)
+        self.position_instrument_mapping[market.symbol] = True
         if last:
             # 回调初始化完成
-            self.on_event(type=EVENT_INIT_FINISHED, data=True)
+            if False not in self.position_instrument_mapping.values():
+                self.init_status = True
+                self.on_event(type=EVENT_INIT_FINISHED, data=True)
 
     def request_market_data(self, req: object):
         """ 请求市场数据 """
@@ -531,7 +559,7 @@ class BeeTdApi(TdApi):
             "TimeCondition": THOST_FTDC_TC_GFD,
             "VolumeCondition": THOST_FTDC_VC_AV,
             "MinVolume": 1,
-            "ExchangeID": req.exchange.value
+            "ExchangeID": req.exchange.value if isinstance(req.exchange, Exchange) else req.exchange
         }
 
         if req.type == OrderType.FAK:
@@ -593,19 +621,20 @@ class BeeTdApi(TdApi):
     def close(self):
         """"""
         if self.connect_status:
-            self.exit()
+            print("我在释放交易接口")
+            p = self.exit()
 
 
 class BeeTdApiApp(TdApiApp):
     """ 申请穿透式网关 """
 
-    def __init__(self, event_engine):
+    def __init__(self, app_signal):
         """Constructor"""
         super().__init__()
         self.gateway_name = "ctp"
         self.reqid = 0
         self.order_ref = 0
-        self.event_engine = event_engine
+        self.app_signal = app_signal
 
         self.connect_status = False
         self.login_status = False
@@ -627,9 +656,12 @@ class BeeTdApiApp(TdApiApp):
         self.symbol_exchange_mapping = {}
         self.sysid_orderid_map = {}
 
+        self.open_cost_dict = defaultdict(dict)
+
     def on_event(self, type, data):
         event = Event(type=type, data=data)
-        self.event_engine.put(event)
+        signal = getattr(self.app_signal, f"{type}_signal")
+        signal.send(event)
 
     def onFrontConnected(self):
         """"""
@@ -692,8 +724,8 @@ class BeeTdApiApp(TdApiApp):
             status=Status.REJECTED,
             gateway_name=self.gateway_name
         )
-        self.gateway.on_order(order)
-
+        self.on_event(type=EVENT_ORDER, data=order)
+        error['detail'] = "交易委托失败"
         self.on_event(type=EVENT_ERROR, data=error)
 
     def onRspOrderAction(self, data: dict, error: dict, reqid: int, last: bool):
@@ -721,48 +753,53 @@ class BeeTdApiApp(TdApiApp):
         # Get buffered position object
         key = f"{data['InstrumentID'], data['PosiDirection']}"
         position = self.positions.get(key, None)
-        if not position:
-            position = PositionData(
-                symbol=data["InstrumentID"],
-                exchange=symbol_exchange_map[data["InstrumentID"]],
-                direction=DIRECTION_CTP2VT[data["PosiDirection"]],
-                gateway_name=self.gateway_name
-            )
-            self.positions[key] = position
+        try:
+            if not position:
+                position = PositionData(
+                    symbol=data["InstrumentID"],
+                    exchange=symbol_exchange_map[data["InstrumentID"]],
+                    direction=DIRECTION_CTP2VT[data["PosiDirection"]],
+                    gateway_name=self.gateway_name
+                )
+                self.positions[key] = position
 
-        # For SHFE position data update
-        if position.exchange == Exchange.SHFE:
-            if data["YdPosition"] and not data["TodayPosition"]:
-                position.yd_volume = data["Position"]
-        # For other exchange position data update
-        else:
-            position.yd_volume = data["Position"] - data["TodayPosition"]
+            # For SHFE position data update
+            if position.exchange == Exchange.SHFE:
+                if data["YdPosition"] and not data["TodayPosition"]:
+                    position.yd_volume = data["Position"]
+            # For other exchange position data update
+            else:
+                position.yd_volume = data["Position"] - data["TodayPosition"]
 
-        # Get contract size (spread contract has no size value)
-        size = symbol_size_map.get(position.symbol, 0)
+            # Get contract size (spread contract has no size value)
+            size = symbol_size_map.get(position.symbol, 0)
 
-        # Calculate previous position cost
-        cost = position.price * position.volume * size
+            # Calculate previous position cost
+            cost = position.price * position.volume * size
 
-        # Update new position volume
-        position.volume += data["Position"]
-        position.pnl += data["PositionProfit"]
+            # Update new position volume
+            position.volume += data["Position"]
+            position.pnl += data["PositionProfit"]
 
-        # Calculate average position price
-        if position.volume and size:
-            cost += data["PositionCost"]
-            position.price = cost / (position.volume * size)
+            if position.direction == Direction.LONG:
+                self.open_cost_dict[position.symbol]["long"] = data['OpenCost']
+            elif position.direction == Direction.SHORT:
+                self.open_cost_dict[position.symbol]["short"] = data['OpenCost']
+            # Calculate average position price
+            if position.volume and size:
+                cost += data["PositionCost"]
+                position.price = cost / (position.volume * size)
 
-        # Get frozen volume
-        if position.direction == Direction.LONG:
-            position.frozen += data["ShortFrozen"]
-        else:
-            position.frozen += data["LongFrozen"]
-
+            # Get frozen volume
+            if position.direction == Direction.LONG:
+                position.frozen += data["ShortFrozen"]
+            else:
+                position.frozen += data["LongFrozen"]
+        except KeyError:
+            pass
         if last:
             for position in self.positions.values():
                 self.on_event(type=EVENT_POSITION, data=position)
-
             self.positions.clear()
 
     def onRspQryTradingAccount(self, data: dict, error: dict, reqid: int, last: bool):
@@ -774,7 +811,6 @@ class BeeTdApiApp(TdApiApp):
             gateway_name=self.gateway_name
         )
         account.available = data["Available"]
-
         self.on_event(type=EVENT_ACCOUNT, data=account)
 
     def onRspQryInstrument(self, data: dict, error: dict, reqid: int, last: bool):
@@ -865,7 +901,6 @@ class BeeTdApiApp(TdApiApp):
         if not exchange:
             self.trade_data.append(data)
             return
-
         order_id = self.sysid_orderid_map[data["OrderSysID"]]
 
         trade = TradeData(
@@ -897,7 +932,6 @@ class BeeTdApiApp(TdApiApp):
             self.createFtdcTraderApi(str(path) + "\\Td")
             self.subscribePrivateTopic(0)
             self.subscribePublicTopic(0)
-
             self.registerFront(info.get("td_address"))
             self.init()
 
@@ -925,7 +959,7 @@ class BeeTdApiApp(TdApiApp):
         try:
             exchange = self.symbol_exchange_mapping[data['InstrumentID']]
         except KeyError:
-            return分钟
+            return
         market = LastData(
             symbol=data['InstrumentID'],
             exchange=exchange,
@@ -1055,3 +1089,7 @@ class BeeTdApiApp(TdApiApp):
         """"""
         if self.connect_status:
             self.exit()
+
+    @property
+    def td_status(self):
+        return self.login_status

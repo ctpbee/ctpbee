@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block header %}
+    <title>回测成交单</title>
+{% endblock %}
+
+
+{% block body %}
+    <h2 class="ui header">回测结果</h2>
+    <table class="ui celled table">
+        <thead>
+        <tr>
+            <th>合约</th>
+            <th>发单时间</th>
+            <th>成交时间</th>
+            <th>成交价格</th>
+            <th>成交手数</th>
+            <th>成交方向</th>
+            <th>成交行为</th>
+            <th>持仓情况</th>
+        </tr>
+        </thead>
+        <tbody id="code">
+        </tbody>
+    </table>
+    </div>
+{% endblock %}
+
+
+{% block script %}
+    <script>
+
+        function generate_td(label, value) {
+            return "<td data-label=" + label + '">' + value + "</td>";
+        }
+
+        var trade_data = {{ trade_data | tojson }};
+        var position = {{ position_data | tojson }};
+        html = "";
+        for (var _i in trade_data) {
+            temp = JSON.parse(trade_data[_i]);
+            console.log(temp)
+            html += "<tr>";
+            html += generate_td("合约代码", temp.local_symbol);
+            html += generate_td("发单时间", temp.order_time);
+            html += generate_td("成交时间", temp.time);
+            html += generate_td("成交价格", temp.price);
+            html += generate_td("成交手数", temp.volume);
+            html += generate_td("成交方向", temp.direction);
+            html += generate_td("成交行为", temp.offset);
+            html += generate_td("持仓情况", position[temp.time]);
+            html + "</tr>"
+        }
+        $("#code").append(html)
+    </script>
+
+{% endblock %}

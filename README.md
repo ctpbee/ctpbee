@@ -1,84 +1,56 @@
-# ctpbee 
-bee bee .... 为二次开发而生 ~~
+# ctpbee
 
+bee bee .... for developer's trading ~
 
-![ctpbee](https://github.com/ctpbee/ctpbee/blob/master/docs/source/ctpbee.jpg)
+> tiny but strong
 
-ctpbee 提供了一个可供使用的交易微框架, 你可以通过这个微小的核心来构建值得信赖的工具， 
-当然这需要你的编程功力。 你所需要关心的是如何编程来处理行情和交易信息即可。
+`ctpbee` provide a micro core of trading, you can make trade and backtest in it.
 
-## 开始之前 
+## 环境设置
+
 ```bash
-# just for linux 
-sudo locale-gen zh_CN.GB18030  
+#  linux用户快速生成中文支持/ windows用户无须设置 
+sudo ctpbee -auto generate
 ```
-## 起源
 
-- 衍生自 [vnpy](https://github.com/vnpy/vnpy) 和 [flask](https://github.com/pallets/flask)  
+## 灵感起源
 
-## 安装 
+- using ctp interface from [vnpy](https://github.com/vnpy/vnpy)
+
+## 快速安装
+
 ```bash
-# code install 
+# 源码安装 
 git clone https://github.com/ctpbee/ctpbee && cd ctpbee && python3 setup.py install  
 
-# pip install
+# pip源安装
 pip3 install ctpbee
 ```
 
-## docker 快速部署
+## 文档信息
 
-```
-docker pull yutiansut/ctpbee:latest
-docker run -p 5000:5000 yutiansut/ctpbee:latest
-```
+点击阅读 [document address](http://docs.ctpbee.com)
 
-本地打开 localhost:5000 即可使用
+## 快速开始
 
-## 文档
-本地生成:
-
-    1. git clone https://github.com/ctpbee/ctpbee 
-    2. pip3 install sphinx
-    3. cd ./ctpbee/docs && make html
-    4. 你可以在docs/build/html 下面看到index.html, 浏览器打开即可
-    
-在线:
-    [文档](http://docs.ctpbee.com)
-
-## 社区支持
-[地址](http://community.ctpbee.com)
-    
-    
-## 功能支持
-
-- [x] k线数据支持
-- [x] 分时图数据支持
-- [x] 交易支持
-- [x] 行情支持 --> 需要自己编写相应的数据库写入代码。
-- [x] 自由自在的发单方式
-- [x] 多账户支持
-- [x] 支持申请穿透式接口
-- [x] 快速下单助手
-- [x] 风控层建立
-- [x] 跟单信号
-- [x] 多路行情对比 --> [looper_me](https://github.com/ctpbee/looper_me)
-- [x] 数据快速支持 --> [ctpbee_converter](https://github.com/ctpbee/data_converter)
-- [ ] 策略层对接CTA  --> 即将以[ctpbee_cta](https://github.com/ctpbee/ctpbee_cta)
-- [ ] 回测系统搭建  --> interface/looper
-
-
-## 一些可能会减少你工作量的工作
-- [x] 7×24小时无人值守 (可选)
-- [x] 定时查持仓和账户信息  (可选)
-- [x] 策略对应订阅行情 (可选)
-- [ ] 性能优化 --> julia支持 ？
-- [ ] 对接多种指标计算                     
-- [ ] 优化代码
-
-## 快速开始 
 ```python
 from ctpbee import CtpBee
-app = CtpBee("ctpbee", __name__) 
+from ctpbee import CtpbeeApi
+
+sta = CtpbeeApi("hello world")
+
+
+@sta.route(handler="tick")
+def on_tick(context, tick):
+    print(tick)
+
+
+@sta.route(handler="bar")
+def on_tick(context, bar):
+    print(bar)
+
+
+app = CtpBee("ctpbee", __name__)
 info = {
     "CONNECT_INFO": {
         "userid": "",
@@ -88,26 +60,49 @@ info = {
         "td_address": "",
         "appid": "",
         "auth_code": "",
-        "product_info":""
+        "product_info": ""
     },
-    "INTERFACE":"ctp",
-    "TD_FUNC": True,  # 开启交易功能 
+    "INTERFACE": "ctp",
+    "TD_FUNC": True,  # Open trading feature
 }
-app.config.from_mapping(info)  # 从dict中载入信息 对于更多配置载入方式, 请参阅文档或者阅读代码
+app.config.from_mapping(info)  # loading config from dict object
+app.add_extension(sta)
 app.start() 
 ```
 
+更多功能 请阅读[document address](http://docs.ctpbee.com)
 
+## 命令行运行截图
 
+![avatar](source/运行.png)
 
-## 发展计划
-ctpbee主要面对开发者, 希望能得到各位大佬的支持. 后续不再开发examples. 
-策略以及指标等工具都以ctpbee_** 形式发布. ctpbee只提供最小的内核. 本人崇尚开源, 无论你是交易者还是程序员, 只要你有新的想法以及对开源感兴趣, 欢迎基于ctpbee 开发出新的可用工具. 我会维护一个工具列表, 指引用户前往使用. 
+## 回测截图
 
-## 最后一句 
-如果这个能帮助到你, 请点击star来支持我噢. ^_^  
+支持多周期多合约回测
 
-如果你希望贡献代码, 欢迎加群一起讨论和或者提交PR  QQ群号(: 756319143) [点进加入群聊以了解更多](https://jq.qq.com/?_wv=1027&k=5xWbIq3)
+![avatar](source/回测.png)
 
-如果你有遇到问题请发邮件给我 邮箱: somewheve@gmail.com 我会及时回复! 
-最后一句 ----> 祝各位大佬都能赚钱 ！
+## PR支持
+
+Only Accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch, please remember that !
+
+## 高性能版本
+
+对于更高性能和速度要求（PS: 别再优化Python了） 请 👉 [FlashFunk](https://github.com/HFQR/FlashFunk)，
+
+## IM
+
+Due to the laziness of the main developer, fans have spontaneously formed a QQ group`521545606`.
+
+You can join the group by search `ctpbee` or `521545606` in QQ and contact with them.
+
+If you have any confusion about developing, please send email to me.
+
+Email: `somewheve@gmail.com`
+
+At last, have a good luck.
+
+## License
+
+- MIT
+

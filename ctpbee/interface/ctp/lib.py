@@ -1,7 +1,5 @@
-import os
-from pathlib import Path
+from ctpbee_api.ctp import *
 
-from ctpbee.api.ctp import *
 from ctpbee.constant import (
     Direction,
     Offset,
@@ -11,36 +9,6 @@ from ctpbee.constant import (
     Status,
     OptionType
 )
-
-
-def _get_trader_dir(temp_name: str):
-    """
-    Get path where trader is running in.
-    """
-    cwd = Path.cwd()
-    temp_path = cwd.joinpath(temp_name)
-    if temp_path.exists():
-        return cwd, temp_path
-    # Otherwise use home path of system.
-    home_path = Path.home()
-
-    temp_path = home_path.joinpath(temp_name)
-    if not temp_path.exists():
-        temp_path.mkdir()
-    return home_path, temp_path
-
-
-def get_folder_path(folder_name: str):
-    """
-    Get path for temp folder with folder name.
-    """
-    TRADER_DIR, TEMP_DIR = _get_trader_dir(".ctpbee")
-    folder_path = TEMP_DIR.joinpath(folder_name)
-    if not folder_path.exists():
-        print(folder_path)
-        os.makedirs(folder_path)
-    return folder_path
-
 
 STATUS_CTP2VT = {
     THOST_FTDC_OAS_Submitted: Status.SUBMITTING,
@@ -56,6 +24,7 @@ DIRECTION_VT2CTP = {
     Direction.LONG: THOST_FTDC_D_Buy,
     Direction.SHORT: THOST_FTDC_D_Sell
 }
+
 DIRECTION_CTP2VT = {v: k for k, v in DIRECTION_VT2CTP.items()}
 DIRECTION_CTP2VT[THOST_FTDC_PD_Long] = Direction.LONG
 DIRECTION_CTP2VT[THOST_FTDC_PD_Short] = Direction.SHORT

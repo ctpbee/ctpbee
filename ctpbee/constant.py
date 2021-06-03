@@ -1,14 +1,14 @@
 """
-Basic data structure used for general trading function in VN Trader.
 """
 
+import os
 from dataclasses import dataclass, asdict
 from datetime import datetime, date
 from enum import Enum
 from logging import INFO
 from typing import Any
 
-from pandas import DataFrame
+from ctpbee.research.match import Order
 
 
 class Missing:
@@ -96,7 +96,7 @@ class Exchange(Enum):
     SSE = "SSE"
     SZSE = "SZSE"
     SGE = "SGE"
-
+    CTP = "ctp"
     # Global
     SMART = "SMART"
     NYMEX = "NYMEX"
@@ -112,6 +112,7 @@ class Exchange(Enum):
     OKEX = "OKEX"
     HUOBI = "HUOBI"
     BITFINEX = "BITFINEX"
+    NONE = "none"
 
 
 TODAY_EXCHANGE = [Exchange.INE, Exchange.SHFE]
@@ -135,7 +136,8 @@ EXCHANGE_MAPPING = {
     "BITMEX": Exchange.BITMEX,
     "OKEX": Exchange.OKEX,
     "HUOBI": Exchange.HUOBI,
-    "BITFINEX": Exchange.BITFINEX
+    "BITFINEX": Exchange.BITFINEX,
+    "CTP": Exchange.CTP
 }
 
 
@@ -174,10 +176,27 @@ EVENT_ACCOUNT = "account"
 EVENT_SHARED = "shared"
 EVENT_LAST = "last"
 EVENT_INIT_FINISHED = "init"
+EVENT_WARNING = "warning"
+
+
+class MatchSupport:
+    """ 快速到处为匹配成交需要的格式 """
+
+    def _to_order(self):
+        if self.offset == Offset.OPEN:
+            offset = "open"
+        else:
+            offset = "close"
+        if self.direction == Direction.LONG:
+            direction = "long"
+        else:
+            direction = "short"
+        return Order(local_symbol=self.local_symbol, counted=self.volume, price=self.price, offset=offset,
+                     direction=direction, datetime=self.time)
 
 
 @dataclass(init=False, repr=False)
-class BaseData:
+class Entity:
     """
     Any data object needs a gateway_name as source
     and should inherit base data.
@@ -235,17 +254,20 @@ class BaseData:
         return temp
 
     def _to_df(self):
-        # todo: df support
-        temp = {}
-        for x in dir(self):
-            if x.startswith("_") or x.startswith("create"):
-                continue
-            if isinstance(getattr(self, x), Enum):
-                temp[x] = getattr(self, x).value
-                continue
-            temp[x] = getattr(self, x)
-
-        return DataFrame([temp], columns=list(temp.keys()).remove("datetime")).set_index(['datetime']) if temp.get("datetime", None) is not None else DataFrame([temp], columns=list(temp.keys()))
+        try:
+            from pandas import DataFrame
+            temp = {}
+            for x in dir(self):
+                if x.startswith("_") or x.startswith("create"):
+                    continue
+                if isinstance(getattr(self, x), Enum):
+                    temp[x] = getattr(self, x).value
+                    continue
+                temp[x] = getattr(self, x)
+            return DataFrame([temp], columns=list(temp.keys()).remove("datetime")).set_index(['datetime']) if temp.get(
+                "datetime", None) is not None else DataFrame([temp], columns=list(temp.keys()))
+        except ImportError:
+            raise ImportError("请使用pip install pandas 以获取此特性")
 
     def _asdict(self):
         """ 转换为字典 里面会有enum """
@@ -307,7 +329,7 @@ class BaseRequest:
         return asdict(self)
 
 
-class TickData(BaseData):
+class TickData(Entity):
     """
     Tick data contains information about:
         * last trade in market
@@ -325,11 +347,14 @@ class TickData(BaseData):
     limit_down: float = 0
     open_interest: int = 0
     average_price: float = 0
+    settlement_price: float = 0
     pre_settlement_price: float = 0
+    pre_open_interest: int = 0
     open_price: float = 0
     high_price: float = 0
     low_price: float = 0
     pre_close: float = 0
+    turnover: float = 0
 
     bid_price_1: float = 0
     bid_price_2: float = 0
@@ -357,10 +382,15 @@ class TickData(BaseData):
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        l = getattr(self, "local_symbol", None)
+        if l is not None:
+            setattr(self, "symbol", l.split(".")[0])
+            setattr(self, "exchange", l.split(".")[1])
+        else:
+            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
-class BarData(BaseData):
+class BarData(Entity):
     """
     Candlestick bar data of a certain trading period.
     """
@@ -374,13 +404,23 @@ class BarData(BaseData):
     high_price: float = 0
     low_price: float = 0
     close_price: float = 0
+    is_next: bool = False
+    is_last: bool = False
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        l = getattr(self, "local_symbol", None)
+        if l is not None:
+            setattr(self, "symbol", l.split(".")[0])
+            setattr(self, "exchange", l.split(".")[1])
+        else:
+            try:
+                self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+            except AttributeError:
+                self.local_symbol = f"{self.symbol}.{self.exchange}"
 
 
-class OrderData(BaseData):
+class OrderData(Entity, MatchSupport):
     """
     Order data contains information for tracking lastest status
     of a specific order.
@@ -398,10 +438,14 @@ class OrderData(BaseData):
     traded: float = 0
     status: Status = Status.SUBMITTING
     time: str = ""
+    is_local = True
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        try:
+            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        except AttributeError as e:
+            self.local_symbol = f"{self.symbol}.{self.exchange}"
         self.local_order_id = f"{self.gateway_name}.{self.order_id}"
 
     def _is_active(self):
@@ -423,7 +467,7 @@ class OrderData(BaseData):
         return req
 
 
-class TradeData(BaseData):
+class TradeData(Entity, MatchSupport):
     """
     Trade data contains information of a fill of an order. One order
     can have several trade fills.
@@ -440,15 +484,20 @@ class TradeData(BaseData):
     price: float = 0
     volume: float = 0
     time: str = ""
+    order_time: str = ""
+    is_local = True
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        try:
+            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        except AttributeError:
+            self.local_symbol = f"{self.symbol}.{self.exchange}"
         self.local_order_id = f"{self.gateway_name}.{self.order_id}"
         self.local_trade_id = f"{self.gateway_name}.{self.tradeid}"
 
 
-class PositionData(BaseData):
+class PositionData(Entity):
     """
     Positon data is used for tracking each individual position holding.
     """
@@ -465,11 +514,14 @@ class PositionData(BaseData):
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        try:
+            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        except AttributeError:
+            self.local_symbol = f"{self.symbol}.{self.exchange}"
         self.local_position_id = f"{self.local_symbol}.{self.direction}"
 
 
-class AccountData(BaseData):
+class AccountData(Entity):
     """
     Account data contains information about balance, frozen and
     available.
@@ -486,7 +538,7 @@ class AccountData(BaseData):
         self.local_account_id = f"{self.gateway_name}.{self.accountid}"
 
 
-class LogData(BaseData):
+class LogData(Entity):
     """
     Log data is used for recording log messages on GUI or in log files.
     """
@@ -499,7 +551,7 @@ class LogData(BaseData):
         self.time = datetime.now()
 
 
-class LastData(BaseData):
+class LastData(Entity):
     symbol: str
     exchange: Exchange
     pre_open_interest: float
@@ -511,7 +563,7 @@ class LastData(BaseData):
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
-class ContractData(BaseData):
+class ContractData(Entity):
     """
     Contract data contains basic information about each contract traded.
     """
@@ -580,9 +632,12 @@ class OrderRequest(BaseRequest):
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        try:
+            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        except AttributeError:
+            self.local_symbol = f"{self.symbol}.{self.exchange}"
 
-    def _create_order_data(self, order_id: str, gateway_name: str):
+    def _create_order_data(self, order_id: str, gateway_name: str, time=None):
         """
         Create order data from request.
         """
@@ -596,6 +651,7 @@ class OrderRequest(BaseRequest):
             price=self.price,
             volume=self.volume,
             gateway_name=gateway_name,
+            time=time
         )
         return order
 
@@ -614,7 +670,7 @@ class CancelRequest(BaseRequest):
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
-class SharedData(BaseData):
+class SharedData(Entity):
     local_symbol: str
     datetime: datetime
 
@@ -669,6 +725,39 @@ class MarketDataRequest(BaseRequest):
     symbol: str
     exchange: Exchange
 
+
+EVENT_TIMER = "timer"
+
+
+class Event:
+    """
+    Event object consists of a type string which is used
+    by event engine for distributing event, and a data
+    object which contains the real data.
+    """
+
+    def __init__(self, type: str, data: Any = None):
+        """"""
+        self.type = type
+        self.data = data
+
+    def __str__(self):
+        return "Event(type={})".format(self.type)
+
+
+class Msg:
+    ZH_NO_BEE_APP_ERROR = "没有载入CtpBee，请尝试通过init_app载入app"
+    EN_NO_BEE_APP_ERROR = "not loading Ctpbee, please try to load app by init_app"
+
+    def __init__(self, language: str = "zh"):
+        """
+        相关文本字符串提醒 注意是一次性提取
+        """
+        # for i,v in self.__dict__:
+        #     if isinstance()
+
+
+msg = Msg(os.environ.get("MESSAGE_LANGUAGE", "zh"))
 
 data_class = [TickData, BarData, OrderData, TradeData, PositionData, AccountData, LogData, ContractData, SharedData]
 request_class = [SubscribeRequest, OrderRequest, CancelRequest, AccountRegisterRequest, AccountBanlanceRequest,

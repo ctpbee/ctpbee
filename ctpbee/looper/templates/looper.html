@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block head %}
+
+    <style>
+        .border {
+            border-left: 1px solid lightslategray;
+            border-top: 1px solid lightslategray;
+            border-bottom: 1px solid lightslategray;
+            border-right: 1px solid lightslategray;
+            margin-left: 20px;
+            margin-right: 20px;
+            padding: 10px;
+        }
+
+        .no_up_color {
+            border-left: 1px solid lightslategray;
+            border-bottom: 1px solid lightslategray;
+            border-right: 1px solid lightslategray;
+            margin-left: 20px;
+            margin-right: 20px;
+            padding: 10px;
+        }
+
+
+        .words {
+            text-align: center;
+        }
+    </style>
+
+
+{% endblock %}
+
+{% block body %}
+    <div class="ui">
+        <div class="ui grid">
+            <div class="twelve wide column">
+                <h1 class="ui header titled">回测报告</h1>
+                <table class="ui celled table" style="margin-left: 20px">
+                    <thead>
+                    <tr class="words">
+                        <th>策略名字</th>
+                        <th>回测报告生成时间</th>
+                        <th>回测耗时</th>
+                        <th>回测分析报告</th>
+                        <th>成交明细</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr class="words">
+                        <td data-label="name"> {% for x in strategy %}
+                            <a class="title_block titled"> {{ x }} </a>
+                        {% endfor %}
+                        </td>
+                        <td data-label="datetime"><p class="title_block titled">{{ datetime }} </p></td>
+                        <td data-label="cost_time"><p class="title_block titled">{{ cost_time }} </p></td>
+                        <td data-label="develop"> Developing</td>
+                        <td data-label="detail"><a id="trade_url" class="urls">成交单</a></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div id="account" style="width: 100%;height:400px;" class="border"></div>
+                <div id="net_value" style="width: 100%;height:400px;" class="no_up_color"></div>
+            </div>
+
+            <div class="four wide column">
+                <table class="ui celled table">
+                    <thead>
+                    <tr>
+                        <th>参数</th>
+                        <th>结果</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for i,v in result.items() %}
+                        <tr>
+                            <td data-label="参数">{{ i }}</td>
+                            <td data-label="结果">{{ v }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+
+{% endblock %}
+
+
+{% block script %}
+    <script>
+        var upColor = '#ec0000';
+        var downColor = '#00da3c';
+        var accout_chart = echarts.init(document.getElementById('account'));
+        // 指定图表的配置项和数据
+        var account_data = {{ account_data | tojson }};
+        var _axis = [];
+        var _ayis = [];
+        var min_value = account_data[0];
+        var max_value = account_data[0];
+
+        for (var i in account_data) {
+            if (min_value >= account_data[i]) {
+                min_value = account_data[i]
+            }
+            if (max_value <= account_data[i]) {
+                max_value = account_data[i]
+            }
+            _axis.push(i);
+            _ayis.push(account_data[i]);
+        }
+        var option = {
+            title: {
+                text: '账户资金曲线图',
+                x: 'center'
+            },
+            xAxis: {
+                data: _axis,
+                name: "日期"
+            },
+            yAxis: {
+                type: 'value',
+                show: true,
+                max: function (value) {
+                    return (value.max + 0.01 * (value.min)).toFixed(2);
+                },
+                min: function (value) {
+                    return (value.min - 0.01 * (value.min)).toFixed(2);
+                },
+                minInterval: 1,
+                splitLine: {
+                    show: true
+                },
+                name: '净值',
+                axisLabel: {
+                    formatter: '{value}'
+                },
+                scale: true,
+
+
+            },
+            series: [{
+                data: _ayis,
+                symbol: "none",
+                type: 'line',
+                roam: true,
+                animationDelay: function (idx) {
+                    return idx * 10;
+                },
+                areaStyle: {
+                    normal: {
+                        //颜色渐变函数 前四个参数分别表示四个位置依次为左、下、右、上
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                            offset: 0,
+                            color: 'rgba(64, 224, 208,0.3)'
+                        }, {
+                            offset: .34,
+                            color: 'rgba(64, 224, 208,0.2)'
+                        }, {
+                            offset: 1,
+                            color: 'rgba(64, 224, 208,0.1)'
+                        }])
+
+                    }
+                },
+                itemStyle: {
+                    normal: {
+                        lineStyle: {
+                            color: 'rgba(64, 224, 208,1)'
+                        }
+                    }
+                },
+            }],
+            tooltip: {                                      //提示框组件
+                trigger: 'axis',                            //触发类型,'item'数据项图形触发，主要在散点图，饼图等无类目轴的图表中使用。 'axis'坐标轴触发，主要在柱状图，折线图等会使用类目轴的图表中使用。
+                triggerOn: "mousemove",                      //提示框触发的条件,'mousemove'鼠标移动时触发。'click'鼠标点击时触发。'mousemove|click'同时鼠标移动和点击时触发。'none'不在 'mousemove' 或 'click' 时触发
+                showContent: true,                           //是否显示提示框浮层
+                showDelay: 0,                                  //浮层显示的延迟，单位为 ms
+                hideDelay: 100,                                //浮层隐藏的延迟，单位为 ms
+                transitionDuration: 0,                      //提示框浮层的移动动画过渡时间，单位是 s,设置为 0 的时候会紧跟着鼠标移动
+                padding: 5,                                  //图例内边距，单位px  5  [5, 10]  [5,10,5,10]
+            }, dataZoom: [// 这个dataZoom组件，若未设置xAxisIndex或yAxisIndex，则默认控制x轴。
+                {
+                    type: 'inside',//这个 dataZoom 组件是 slider 型 dataZoom 组件（只能拖动 dataZoom 组件导致窗口变化）
+                    xAxisIndex: 0, //控制x轴
+                    start: 0, 	// 左边在 10% 的位置
+                    end: 100 	// 右边在 60% 的位置
+                },
+                {
+                    type: 'inside',//这个 dataZoom 组件是 inside 型 dataZoom 组件（能在坐标系内进行拖动，以及用滚轮（或移动触屏上的两指滑动）进行缩放）
+                    xAxisIndex: 0,//控制x轴
+                    start: 0,
+                    end: 100
+                },
+                {
+                    type: 'inside',//slider 型 dataZoom 组件
+                    yAxisIndex: 0,//控制y轴
+                    start: 0,
+                    end: 100
+                },
+                {
+                    type: 'inside',// inside 型 dataZoom 组件
+                    yAxisIndex: 0,//控制y轴
+                    start: 0,
+                    end: 100
+                }]
+
+
+        };
+        // 使用刚指定的配置项和数据显示图表。
+        accout_chart.setOption(option);
+
+    </script>
+    <script>
+        var net_pnl_data = {{ net_pnl | tojson }};
+        var net_pnl_chart = echarts.init(document.getElementById('net_value'));
+        var xAxisData = [];
+        var net_pnl_list = [];
+        for (var i in net_pnl_data) {
+            xAxisData.push(i);
+            net_pnl_list.push(net_pnl_data[i]);
+        }
+
+        net_option = {
+            title: {
+                text: '每日盈亏分布图',
+                x: 'center'
+            },
+            legend: {
+                data: ['bar'],
+                align: 'left'
+            },
+            tooltip: {},
+            xAxis: {
+                data: xAxisData,
+                silent: false,
+                splitLine: {
+                    show: false
+                }
+            },
+            yAxis: {},
+            series: [
+                {
+                    name: '当日盈亏',
+                    type: 'bar',
+                    data: net_pnl_list,
+                    roam: true,
+                    animationDelay: function (idx) {
+                        return idx * 10;
+                    },
+                    itemStyle: {
+                        color: function (params) {
+                            if (params.value >= 0)
+                                return upColor;
+                            else
+                                return downColor;
+                        }
+                    }
+                },
+            ],
+            animationEasing: 'elasticOut',
+            animationDelayUpdate: function (idx) {
+                return idx * 5;
+            },
+            dataZoom: [// 这个dataZoom组件，若未设置xAxisIndex或yAxisIndex，则默认控制x轴。
+                {
+                    type: 'inside',//这个 dataZoom 组件是 slider 型 dataZoom 组件（只能拖动 dataZoom 组件导致窗口变化）
+                    xAxisIndex: 0, //控制x轴
+                    start: 0,
+                    end: 100
+                },
+                {
+                    type: 'inside',//这个 dataZoom 组件是 inside 型 dataZoom 组件（能在坐标系内进行拖动，以及用滚轮（或移动触屏上的两指滑动）进行缩放）
+                    xAxisIndex: 0,//控制x轴
+                    start: 0,
+                    end: 100
+                },
+                {
+                    type: 'inside',//slider 型 dataZoom 组件
+                    yAxisIndex: 0,//控制y轴
+                    start: 0,
+                    end: 100
+                },
+                {
+                    type: 'inside',// inside 型 dataZoom 组件
+                    yAxisIndex: 0,//控制y轴
+                    start: 0,
+                    end: 100
+                }]
+
+        };
+        net_pnl_chart.setOption(net_option);
+
+    </script>
+
+    <script>
+        var trade_path = "./" + "{{ file_name | safe}}" + "-trade.html";
+        $("#trade_url").attr("href", trade_path);
+    </script>
+
+{% endblock %}

@@ -16,7 +16,7 @@ from threading import RLock
 from time import sleep
 from typing import AnyStr, IO
 
-from ctpbee.trade_time import TradingDay
+from ctpbee.date import trade_dates
 
 _missing = object()
 
@@ -94,17 +94,25 @@ def _matching_loader_thinks_module_is_package(loader, mod_name):
 
 
 def check(type: AnyStr):
-    """ 检查接口是否存在 """
+    """
+    检查接口是否存在
+
+      Args:
+         type (AnyStr): 类型
+
+      Returns:
+         bool: 检查结果，返回True/False
+    """
 
     def midlle(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             if type == "market":
                 if args[0].app.market is None:
-                    raise ValueError("当前账户行情api未连接")
+                    raise ValueError("当前账户行情api未连接,请检查你的代码中是否使用了行情接口API")
             elif type == "trader":
-                if args[0].app.market is None:
-                    raise ValueError("当前账户交易api未连接")
+                if args[0].app.trader is None:
+                    raise ValueError("当前账户交易api未连接,请检查你的代码中是否使用了交易接口API")
             else:
                 raise ValueError("非法字符串")
             return func(*args, **kwargs)
@@ -114,7 +122,7 @@ def check(type: AnyStr):
     return midlle
 
 
-def graphic_pattern(version, work_mode, engine_method):
+def graphic_pattern(version, engine_method):
     first = f"""                                                            
                @             @                           
                 )           (                                 
@@ -122,7 +130,7 @@ def graphic_pattern(version, work_mode, engine_method):
           ##                     ##                            
          ##                       ##                                                  
         ##   ctpbee   :{version.ljust(12, ' ')}##                          
-        ##   work_mode:{work_mode.ljust(12, ' ')}##                          
+        ##                         ##                          
         ##   engine   :{engine_method.ljust(12, ' ')}##                          
          ##                       ##                          
           ++++++++    +    ++++++++                      
@@ -139,7 +147,7 @@ def graphic_pattern(version, work_mode, engine_method):
           +#######################+                            
          ##                       ##                                                  
          ##  ctpbee:    {version.ljust(10, ' ')}##                          
-         ##  work_mode: {work_mode.ljust(10, ' ')}##                          
+         ##                       ##                          
          ##  engine:    {engine_method.ljust(10, ' ')}##                          
          ##                       ##                          
           ++++++++    +    ++++++++                      
@@ -154,7 +162,7 @@ def graphic_pattern(version, work_mode, engine_method):
     *          -------------------------------------           *
     *          |                                   |           *
     *          |      ctpbee:    {version.ljust(16, " ")}  |           *
-    *          |      work_mode: {work_mode.ljust(16, " ")}  |           *
+    *          |                                   |           *
     *          |      engine:    {engine_method.ljust(16, " ")}  |           *
     *          |                                   |           *
     *          -------------------------------------           *
@@ -167,10 +175,14 @@ def graphic_pattern(version, work_mode, engine_method):
 
 def dynamic_loading_api(f):
     """
-    f 是文件流
-    主要是用来通过文件动态载入策略。 返回策略类的实例， 应该通过Ctpbee.add_extension() 加以载入
+    主要是用来通过文件动态载入策略。 返回策略类的实例， 应该通过CtpBee.add_extension() 加以载入
     你需要在策略代码文件中显式指定ext
-    返回
+
+      Args:
+         f (fs): 文件IO对象
+
+      Returns:
+         CtpbeeApi: 编译好的CtpbeeApi实例对象
     """
     if not isinstance(f, IO) and not isinstance(f, TextIOWrapper):
         raise ValueError(f"请确保你传入的是文件流(IO)，而不是{str(type(f))}")
@@ -183,7 +195,17 @@ def dynamic_loading_api(f):
 
 
 def auth_check_time(timed: datetime):
-    """ 检查启动时间 """
+    """
+     检查时间是否合法
+     todo: 添加市场以兼容股票或者其他的市场
+
+      Args:
+         timed (datetime): 时间对象
+
+      Returns:
+         bool: 验证结果
+    """
+
     data_time = timed.time()
     if not isinstance(data_time, time):
         raise TypeError("参数类型错误, 期望为datatime.time}")
@@ -202,9 +224,13 @@ def auth_check_time(timed: datetime):
 
 def run_forever(app):
     """
-        永久运行函数 60秒检查一次
-        非交易日不进行载入
+   永久运行一个APP
 
+    Args:
+       app (CtpBee): app实例
+
+    Returns:
+       None
     """
 
     running_me = False
@@ -213,7 +239,9 @@ def run_forever(app):
         if not app.p_flag:
             break
         current_time = datetime.now()
-        if TradingDay.is_holiday(current_time) or TradingDay.is_weekend(current_time):
+        date = str(current_time.date())
+
+        if date not in trade_dates:
             running_me = False
         else:
             running_me = True
@@ -225,7 +253,7 @@ def run_forever(app):
             """ 到了该启动的时间但是没运行 """
             app.recorder.clear_all()  # 清空记录器中所有的数据
             app.reload()  # 重载接口
-            for x in app.extensions.keys():
+            for x in app._extensions.keys():
                 app.enable_extension(x)
             print(f"重新进行自动登录， 时间: {str(current_time)}")
             running_status = True
@@ -235,10 +263,10 @@ def run_forever(app):
 
         elif not running_me and running_status:
             """ 非交易日 并且在运行 """
-            for x in app.extensions.keys():
+            for x in app._extensions.keys():
                 app.suspend_extension(x)
-                if hasattr(app.extensions[x], "f_init"):
-                    app.extensions[x].f_init = False
+                if hasattr(app._extensions[x], "f_init"):
+                    app._extensions[x].f_init = False
             print(f"当前时间不允许， 时间: {str(current_time)}, 即将阻断运行")
             running_status = False
 
@@ -249,26 +277,39 @@ def run_forever(app):
 
 
 def refresh_query(app):
-    """ 循环查询 """
+    """
+    针对流控,实现循环查询，此函数应该在另外一个线程调用
+
+    Args:
+       app (CtpBee): App实例
+    """
     while True:
-        sleep(1)
         cur = datetime.now()
-        if not TradingDay.is_trading_day(cur) or not auth_check_time(cur):
-            continue
-        app.query_position()
+        # if not TradingDay.is_trading_day(cur) or not auth_check_time(cur):
+        #     continue
+        sleep(1)
+        app.trader.query_position()
         sleep(app.config['REFRESH_INTERVAL'])
-        app.query_account()
+        app.trader.query_account()
+
         if not app.r_flag:
             break
 
 
-def value_call(func):
+def helper_call(func):
+    """
+    此装饰器是为了减少代码， 主要是用来执行插件的回调方法
+
+    Args:
+       func (FunctionType): 函数对象
+    """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         d = func(*args, **kwargs)
         self, event = args
-        for value in self.app.extensions.values():
-            if self.app.config['INSTRUMENT_INDEPEND']:
+        for value in self.app._extensions.values():
+            if self.app.config.get('INSTRUMENT_INDEPEND'):
                 if len(value.instrument_set) == 0:
                     warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
                 if event.data.local_symbol in value.instrument_set:
@@ -280,12 +321,19 @@ def value_call(func):
     return wrapper
 
 
-async def async_value_call(func):
+def async_value_call(func):
+    """
+    异步的Call装饰器，在2.0的时候可能会被使用
+
+    Args:
+       func (FunctionType): 函数对象
+    """
+
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        d = func(*args, **kwargs)
+        d = await func(*args, **kwargs)
         self, event = args
-        for value in self.app.extensions.values():
+        for value in self.app._extensions.values():
             if self.app.config['INSTRUMENT_INDEPEND']:
                 if len(value.instrument_set) == 0:
                     warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
@@ -299,7 +347,6 @@ async def async_value_call(func):
 
 
 def _async_raise(tid, exctype):
-    """raises the exception, performs cleanup if needed"""
     tid = ctypes.c_long(tid)
     if not inspect.isclass(exctype):
         exctype = type(exctype)
@@ -315,10 +362,23 @@ def _async_raise(tid, exctype):
 
 def end_thread(thread):
     """
-    which used to kill thread !
+     强行杀掉线程， 不应该被用户使用
     """
     _async_raise(thread.ident, SystemExit)
 
 
-def exec_wrapper(func):
-    """ 错误装饰器 """
+def exec_intercept(self, func):
+    """
+    此函数主要用于CtpbeeApi的Action结果拦截，保证用户简单调用，实现暗地结果处理, 用户不应该关注， 不做过多解释
+    """
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if func:
+            result = func(*args, **kwargs)
+            self.api._resolve_callback(func.__name__, result)
+            return result
+        else:
+            return None
+
+    return wrapper

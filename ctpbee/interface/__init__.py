@@ -28,13 +28,16 @@ class Interface:
     def load_interface(cls, interface):
         if interface == "ctp":
             from ctpbee.interface.ctp import BeeTdApi, BeeMdApi
-            return (BeeMdApi, BeeTdApi)
+            return BeeMdApi, BeeTdApi
         if interface == "ctp_se":
             from ctpbee.interface.ctp import BeeTdApiApp, BeeMdApiApp
-            return (BeeMdApiApp, BeeTdApiApp)
-        if interface == "xin":
-            from ctpbee.interface.xin import XinTdApi, XinMdApi
-            return (XinMdApi, XinTdApi)
+            return BeeMdApiApp, BeeTdApiApp
+        if interface == "looper":
+            from ctpbee.interface.looper import LooperMe, LooperYou
+            return LooperMe, LooperYou
+        if interface == "ctp_mini":
+            from ctpbee.interface.ctp_mini import MMdApi, MTdApi
+            return MMdApi, MTdApi
         else:
             raise ValueError("错误参数")
 

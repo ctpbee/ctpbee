@@ -3,12 +3,10 @@
 use for refrence from flask config
 """
 import errno
+import json
 import os
 import types
-
-from flask import json
-from flask._compat import string_types, iteritems
-from werkzeug.utils import import_string
+from typing import Text
 
 
 class ConfigAttribute(object):
@@ -36,6 +34,15 @@ class Config(dict):
         self.root_path = root_path
 
     def from_pyfile(self, filename, silent=False):
+        """
+        编译py文件，读取其中配置
+
+        Args:
+          filename(Text): py文件名
+
+        Return:
+          bool: 导入是否正确
+        """
         filename = os.path.join(self.root_path, filename)
         d = types.ModuleType('config')
         d.__file__ = filename
@@ -52,30 +59,46 @@ class Config(dict):
         self.from_object(d)
         return True
 
-    def from_object(self, obj):
-        """从实例中导入配置 , 最佳体验为可将配置写在一个dataclass中
-        for example:
-        class Ext:
-            TD_FUNC = True
-            MD_FUNC = True
-        ext = Ext()
-        app.config.from_object(ext)
+    def save(self, path):
         """
-        if isinstance(obj, string_types):
-            obj = import_string(obj)
+        导出为json文件
+
+        Examples:
+          app.config.save("a.json")
+        """
+
+        with open(path, "w") as f:
+            json.dump(self, f)
+
+    def from_object(self, obj):
+        """
+        从实例中导入配置 , 最佳体验为可将配置写在一个dataclass中
+
+        Examples:
+          class Ext:
+              TD_FUNC = True
+              MD_FUNC = True
+          ext = Ext()
+          app.config.from_object(ext)
+        """
         for key in dir(obj):
             if key.isupper():
                 self[key] = getattr(obj, key)
 
-    def from_json(self, filename, silent=False):
-        """从json文件中导入文件配置
-        for example:
-        app.config.from_json(json_file_path) -- > absolute path or relative path
+    def from_json(self, filename: Text, silent=False):
+        """
+        从json文件中导入文件配置
+
+        Args:
+          filename(Text): json文件名
+
+        Examples:
+          app.config.from_json(json_file_path) -- > absolute path or relative path
         """
         filename = os.path.join(self.root_path, filename)
         try:
-            with open(filename) as json_file:
-                obj = json.loads(json_file.read())
+            with open(filename, "r") as f:
+                obj = json.load(f)
         except IOError as e:
             if silent and e.errno in (errno.ENOENT, errno.EISDIR):
                 return False
@@ -86,8 +109,10 @@ class Config(dict):
     def from_mapping(self, *mapping, **kwargs):
         """
         从mapping映射中导入配置
-        config = {"TD_FUNC":True}
-        app.config.from_mapping(config)
+
+        Examples:
+          config = {"TD_FUNC":True}
+          app.config.from_mapping(config)
         """
         mappings = []
         if len(mapping) == 1:
@@ -105,21 +130,6 @@ class Config(dict):
                 if key.isupper():
                     self[key] = value
         return True
-
-    def get_namespace(self, namespace, lowercase=True, trim_namespace=True):
-        """获取命名空间"""
-        rv = {}
-        for k, v in iteritems(self):
-            if not k.startswith(namespace):
-                continue
-            if trim_namespace:
-                key = k[len(namespace):]
-            else:
-                key = k
-            if lowercase:
-                key = key.lower()
-            rv[key] = v
-        return rv
 
     def __repr__(self):
         return '<%s %s>' % (self.__class__.__name__, dict.__repr__(self))
