@@ -12,7 +12,6 @@ from ctpbee.config import Config
 from ctpbee.constant import Event, EVENT_TIMER
 from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
-from ctpbee.cprint_config import CP
 from ctpbee.exceptions import ConfigError
 from ctpbee.helpers import end_thread
 from ctpbee.helpers import find_package, refresh_query, graphic_pattern
@@ -67,7 +66,6 @@ class CtpBee(object):
                  import_name,
                  action_class: Action or None = None,
                  engine_method: str = "thread",
-                 logger_class=None, logger_config=None,
                  refresh: bool = True,
                  risk: RiskLevel = None,
                  instance_path=None):
@@ -89,16 +87,8 @@ class CtpBee(object):
         self.engine_method = engine_method
         self.refresh = refresh
         self.active = False
-        # 是否加载以使用默认的logger类/ choose if use the default logging class
-        if logger_class is None:
-            self.logger = VLogger(CP, app_name=self.name)
-            self.logger.set_default(name=self.logger.app_name, owner=self.name)
-        else:
-            if logger_config:
-                self.logger = logger_class(logger_config, app_name=self.name)
-            else:
-                self.logger = logger_class(CP, app_name=self.name)
-            self.logger.set_default(name=self.logger.app_name, owner='App')
+        self.logger = VLogger
+        self.logger.set_field_default(name=self.name, owner=self.name)
 
         self.app_signal = AppSignal(self.name)
 
