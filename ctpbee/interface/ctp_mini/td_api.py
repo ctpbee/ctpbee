@@ -102,7 +102,7 @@ class MTdApi(MiniTdApi):
             status=Status.REJECTED,
             gateway_name=self.gateway_name
         )
-        self.gateway.on_order(order)
+        self.on_event(EVENT_ORDER, order)
         error['detail'] = "交易委托失败"
         self.on_event(EVENT_ERROR, error)
 
