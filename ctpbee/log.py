@@ -7,36 +7,40 @@ log格式
 
 """
 from cologer import loger,Fore,Back,Style
+from datetime import datetime
 
-loger.set_format('{time} {name}     {level}  {owner}   {message}')
+def get_time(): return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+loger.set_format('{created} {name}     {levelname}  {owner}   {message}')
+
 # info 
-loger.info.fields.time.set_fore(Fore.RED)
+loger.info.fields.created.set_fore(Fore.RED).set_default(get_time)
 loger.info.fields.name
-loger.info.fields.level.set_fore(Fore.MAGENTA)
+loger.info.fields.levelname.set_fore(Fore.MAGENTA).set_default("INFO")
 loger.info.fields.owner.set_fore(Fore.CYAN)
 loger.info.fields.message.set_fore(Fore.GREEN)
 # success 
-loger.success.fields.time.set_fore(Fore.CYAN)
+loger.success.fields.created.set_fore(Fore.CYAN).set_default(get_time)
 loger.success.fields.name.set_fore(Fore.CYAN)
-loger.success.fields.level
+loger.success.fields.levelname.set_default("SUCCESS")
 loger.success.fields.owner.set_fore(Fore.CYAN)
 loger.success.fields.message.set_fore(Fore.CYAN)
 # warning 
-loger.warning.fields.time.set_fore(Fore.RED)
+loger.warning.fields.created.set_fore(Fore.RED).set_default(get_time)
 loger.warning.fields.name
-loger.warning.fields.level.set_fore(Fore.MAGENTA)
+loger.warning.fields.levelname.set_fore(Fore.MAGENTA).set_default("WARNING")
 loger.warning.fields.owner.set_fore(Fore.CYAN)
 loger.warning.fields.message.set_fore(Fore.YELLOW)
 # error 
-loger.error.fields.time.set_fore(Fore.RED)
+loger.error.fields.created.set_fore(Fore.RED).set_default(get_time)
 loger.error.fields.name
-loger.error.fields.level.set_fore(Fore.MAGENTA)
+loger.error.fields.levelname.set_fore(Fore.MAGENTA).set_default("ERROR")
 loger.error.fields.owner.set_fore(Fore.CYAN)
 loger.error.fields.message.set_fore(Fore.RED)
 # debug 
-loger.debug.fields.time.set_fore(Fore.RED)
+loger.debug.fields.created.set_fore(Fore.RED).set_default(get_time)
 loger.debug.fields.name
-loger.debug.fields.level.set_fore(Fore.MAGENTA)
+loger.debug.fields.levelname.set_fore(Fore.MAGENTA).set_default("DEBUG")
 loger.debug.fields.owner.set_fore(Fore.CYAN)
 loger.debug.fields.message.set_fore(Fore.MAGENTA)
 
