@@ -9,7 +9,7 @@
     "appid": "simnow_client_test",
     "auth_code": "0000000000000000"
   },
-  "INTERFACE": "ctp",
+  "INTERFACE": "ctp_mini",
   "MD_FUNC": true,
   "TD_FUNC": true,
   "XMIN": [
