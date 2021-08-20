@@ -104,7 +104,7 @@ def check(type: AnyStr):
          bool: 检查结果，返回True/False
     """
 
-    def midlle(func):
+    def middle(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             if type == "market":
@@ -119,7 +119,7 @@ def check(type: AnyStr):
 
         return wrapper
 
-    return midlle
+    return middle
 
 
 def graphic_pattern(version, engine_method):
