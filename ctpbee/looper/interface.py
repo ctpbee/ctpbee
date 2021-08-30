@@ -256,7 +256,7 @@ class LocalLooper:
                 # 先判断价格和手数是否满足限制条件
                 # 进行成交判断
                 long_c = self.data_entity.low_price if self.data_type == "bar" else self.data_entity.ask_price_1
-                short_c = self.data_entity.high_price if self.data_type == "bar" is not None else self.data_entity.bid_price_1
+                short_c = self.data_entity.high_price if self.data_type == "bar" else self.data_entity.bid_price_1
                 long_cross = active_order.direction == Direction.LONG and 0 < long_c <= active_order.price
                 short_cross = active_order.direction == Direction.SHORT and active_order.price <= short_c and short_c > 0
                 if long_cross:

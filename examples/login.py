@@ -1,5 +1,11 @@
 from ctpbee import CtpbeeApi, CtpBee
+from ctpbee import VLogger
 from ctpbee.constant import *
+
+
+class OK(VLogger):
+    def handle_record(self):
+        pass
 
 
 class Main(CtpbeeApi):
