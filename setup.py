@@ -12,8 +12,8 @@ if sys.version_info < (3, 6):
     raise RuntimeError('当前ctpbee只支持python36以及更高版本/ ctpbee only support python36 and higher ')
 
 # libraries
-install_requires = ["pytz", "blinker", "requests", "simplejson", "lxml",
-                    'cologer', "ctpbee_api", "numpy"]
+install_requires = ["pytz", "blinker", "requests", "simplejson", "lxml", "jinja2",
+                    'cologer>=2.0', "ctpbee_api>=0.23", "numpy"]
 
 if sys.version_info.major == 3 and sys.version_info.minor == 6:
     install_requires.append("dataclasses")
@@ -27,7 +27,7 @@ except Exception:
     long_description = ""
 
 pkgs = ['ctpbee', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.interface',
-        'ctpbee.interface.ctp', "ctpbee.interface.looper", 'ctpbee.jsond', "ctpbee.looper",
+        'ctpbee.interface.ctp', "ctpbee.interface.looper", "ctpbee.interface.ctp_mini", 'ctpbee.jsond', "ctpbee.looper",
         "ctpbee.indicator", "ctpbee.research"]
 
 setup(
