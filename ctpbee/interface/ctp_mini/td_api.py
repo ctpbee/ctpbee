@@ -35,6 +35,11 @@ class MTdApi(MiniTdApi):
         self.sysid_orderid_map = {}
         self.local_order_id = []
 
+        self.position_init_flag = False
+        self.instrunment_init_flag = False
+        self.init_status = False
+        self.position_instrument_mapping = dict()
+
     @property
     def td_status(self):
         return self.login_status
@@ -167,8 +172,8 @@ class MTdApi(MiniTdApi):
         if last:
             for position in self.positions.values():
                 self.on_event(EVENT_POSITION, position)
-
             self.positions.clear()
+            self.position_init_flag = True
 
     def onRspQryTradingAccount(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
@@ -182,7 +187,9 @@ class MTdApi(MiniTdApi):
             gateway_name=self.gateway_name
         )
         account.available = data["Available"]
-
+        if self.position_init_flag and self.instrunment_init_flag and not self.init_status:
+            self.init_status = True
+            self.on_event(type=EVENT_INIT_FINISHED, data=True)
         self.on_event(EVENT_ACCOUNT, account)
 
     def onRspQryInstrument(self, data: dict, error: dict, reqid: int, last: bool):
@@ -215,6 +222,7 @@ class MTdApi(MiniTdApi):
             symbol_size_map[contract.symbol] = contract.size
 
         if last:
+            self.instrunment_init_flag = True
             self.on_event(EVENT_LOG, "合约信息查询成功")
 
             for data in self.order_data:
