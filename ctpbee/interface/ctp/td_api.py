@@ -66,6 +66,7 @@ class BeeTdApi(TdApi):
         self.position_init_flag = False
         self.instrunment_init_flag = False
         self.position_instrument_mapping = dict()
+
         self.init_status = False
         self.contact_data = {}
         self.local_order_id = []
