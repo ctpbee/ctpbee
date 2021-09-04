@@ -86,19 +86,10 @@ app.start()
 
 Only Accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch, please remember that !
 
-## 高性能版本
+## For a high performance version
 
-对于更高性能和速度要求（PS: 别再优化Python了） 请 👉 [FlashFunk](https://github.com/HFQR/FlashFunk)，
+click the 👉 [FlashFunk](https://github.com/HFQR/FlashFunk) for more detail.
 
-## IM
-
-Due to the laziness of the main developer, fans have spontaneously formed a QQ group`521545606`.
-
-You can join the group by search `ctpbee` or `521545606` in QQ and contact with them.
-
-If you have any confusion about developing, please send email to me.
-
-Email: `somewheve@gmail.com`
 
 At last, have a good luck.
 
