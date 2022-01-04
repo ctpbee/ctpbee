@@ -162,7 +162,7 @@ class Interval(Enum):
 
 enums = [Interval, Currency, Exchange, OptionType, OrderType, Product, Status, Offset, Direction]
 
-ACTIVE_STATUSES = set([Status.NOTTRADED, Status.PARTTRADED])
+ACTIVE_STATUSES = {Status.NOTTRADED, Status.PARTTRADED}
 
 EVENT_LOG = "log"
 EVENT_CONTRACT = "contract"
