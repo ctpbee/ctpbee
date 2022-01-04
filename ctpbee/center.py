@@ -5,9 +5,9 @@ ctpbee里面的核心数据访问模块
 
 """
 from abc import ABC
-from typing import Text
+from typing import Text, List
 
-from ctpbee.constant import Direction
+from ctpbee.constant import Direction, TickData, ContractData, OrderData, TradeData, AccountData
 
 
 class Missing:
@@ -124,14 +124,14 @@ class Center(BasicCenterModel, dict):
         return self.app.recorder.get_all_active_orders()
 
     @property
-    def trades(self):
+    def trades(self) -> List[TradeData]:
         """
         返回所有的成交单
         """
         return self.app.recorder.get_all_trades()
 
     @property
-    def account(self):
+    def account(self) -> AccountData:
         """
         返回账户信息
         """
@@ -142,9 +142,9 @@ class Center(BasicCenterModel, dict):
         """
         返回所有的仓位信息
         """
-        return self.app.recorder.position_manager.get_all_positions()
+        return self.app.recorder.position_manager.get_all_positions(obj=True)
 
-    def get_tick(self, local_symbol):
+    def get_tick(self, local_symbol) -> TickData:
         """
         获取指定合约最近的一条tick
 
@@ -152,11 +152,11 @@ class Center(BasicCenterModel, dict):
           local_symbol(Text): 合约代码
         """
         try:
-            return self.app.recorder.get_tick(local_symbol)[:-1]
+            return self.app.recorder.get_tick(local_symbol)[-1]
         except IndexError:
             return Missing.create_obj("get_tick")
 
-    def get_contract(self, local_symbol: Text):
+    def get_contract(self, local_symbol: Text) -> ContractData or None:
         """
         获取指定合约信息
 
@@ -168,7 +168,7 @@ class Center(BasicCenterModel, dict):
         """
         return self.app.recorder.get_contract(local_symbol)
 
-    def get_active_order(self, local_symbol):
+    def get_active_order(self, local_symbol) -> List[OrderData]:
         """
         拿到指定合约的未成交单子
 
@@ -180,7 +180,7 @@ class Center(BasicCenterModel, dict):
         """
         return self.app.recorder.get_all_active_orders(local_symbol)
 
-    def get_position(self, local_symbol) -> PositionModel:
+    def get_position(self, local_symbol: str) -> PositionModel or None:
         """
         返回指定合约的持仓信息
         注意你返回是一个PositionModel对象

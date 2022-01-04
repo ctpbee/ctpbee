@@ -174,12 +174,13 @@ class Helper(object):
 helper = Helper()
 
 
-def auth_time(data_time: time, type="future"):
+def auth_time(data_time: time, type_="future"):
     """
     校验时间tick或者bar的时间合不合法
 
       Args:
          data_time (time): 时间对象
+         type_(str): 数据种类
 
       Returns:
          bool: 检查结果，返回True/False
@@ -192,7 +193,7 @@ def auth_time(data_time: time, type="future"):
         raise TypeError("参数类型错误, 期望为datetime.time}")
 
     day_start = time(9, 0)  # 日盘启动和停止时间
-    if type == "stock":
+    if type_ == "stock":
         day_start = time(9, 30)
     day_first_end = time(11, 30)  # 日盘启动和停止时间
     dat_sec_start = time(13, 0)

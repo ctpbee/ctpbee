@@ -1,8 +1,8 @@
 from typing import List
 
 import numpy as np
-
-
+from pandas.plotting._matplotlib.style import get_standard_colors
+np.histogram()
 def plot_multi(data, cols=None, spacing=.1, **kwargs):
     """ 帮助快速绘画出多个图
      从网上找的 QAQ 好用
@@ -12,14 +12,13 @@ def plot_multi(data, cols=None, spacing=.1, **kwargs):
      """
 
     from pandas import plotting
-
     # Get default color style from pandas - can be changed to any other color list
     if cols is None: cols = data.columns
     if len(cols) == 0: return
     try:
         colors = getattr(getattr(plotting, '_matplotlib').style, '_get_standard_colors')(num_colors=len(cols))
     except AttributeError:
-        colors = plotting._style._get_standard_colors(num_colors=len(cols))
+        colors = get_standard_colors(num_colors=len(cols))
     except Exception:
         raise ValueError("版本错误无法获取颜色")
     # First axis
