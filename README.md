@@ -86,12 +86,8 @@ app.start()
 
 Only Accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch, please remember that !
 
-## For a high performance version
 
-click the 👉 [FlashFunk](https://github.com/HFQR/FlashFunk) for more detail.
-
-
-At last, have a good luck.
+> 对于高频解决方案, 请 👉 [FlashFunk](https://github.com/HFQR/FlashFunk)
 
 ## License
 

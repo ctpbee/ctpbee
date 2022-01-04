@@ -343,11 +343,15 @@ class PositionHolding:
             self.long_pnl = 0
         except AttributeError:
             self.long_pnl = 0
+        except OverflowError:
+            self.long_pnl = 0
         try:
             self.short_stare_pnl = self.short_pos * (self.pre_settlement_price - self.short_price) * self.size
         except ZeroDivisionError:
             self.short_pnl = 0
         except AttributeError:
+            self.short_pnl = 0
+        except OverflowError:
             self.short_pnl = 0
 
     def calculate_price(self, trade):

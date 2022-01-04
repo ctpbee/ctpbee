@@ -5,6 +5,7 @@ from types import MethodType
 from typing import Set, List, AnyStr, Text
 from warnings import warn
 
+from ctpbee.center import Center
 from ctpbee.constant import EVENT_INIT_FINISHED, EVENT_TICK, EVENT_BAR, EVENT_ORDER, EVENT_SHARED, EVENT_TRADE, \
     EVENT_POSITION, EVENT_ACCOUNT, EVENT_CONTRACT, OrderData, BarData, TickData, TradeData, \
     PositionData, AccountData, ContractData, Offset, Direction, OrderType, Exchange, OrderRequest, CancelRequest
@@ -12,6 +13,7 @@ from ctpbee.constant import EVENT_TIMER, Event
 from ctpbee.exceptions import ConfigError
 from ctpbee.func import helper, get_ctpbee_path
 from ctpbee.helpers import check, exec_intercept
+from ctpbee.record import Recorder
 
 
 class Action(object):
@@ -25,12 +27,12 @@ class Action(object):
         setattr(instance, "__name__", cls.__name__)
         return instance
 
-    def __getattr__(self, item):
+    def __getattr__(self, item) -> None:
         message = f"尝试在{self.__name__}中调用一个不存在的属性{item}"
         warn(message)
         return None
 
-    def add_risk_check(self, func):
+    def add_risk_check(self, func) -> None:
         """
         添加函数, 当调用此函数的时候进行风控前置和后置检查
         todo: 使用装饰器
@@ -45,16 +47,15 @@ class Action(object):
             raise AttributeError("app为None, 不可添加风控函数")
         if inspect.ismethod(func) or inspect.isfunction(func):
             setattr(self, func.__name__, self.app.risk_decorator(func))
-            return
+            return None
         raise ValueError(f"请确保传入的func 类型为函数, 当前传入参数类型为{type(func)}")
 
     @property
-    def center(self):
-
+    def center(self) -> Center:
         return self.app.center
 
     @property
-    def recorder(self):
+    def recorder(self) -> Recorder:
         return self.app.recorder
 
     @property
@@ -428,7 +429,6 @@ class CtpbeeApi(BeeApi):
     def __new__(cls, *args, **kwargs):
         map = {
             EVENT_TIMER: cls.on_realtime,
-            # EVENT_INIT_FINISHED: cls.on_init,
             EVENT_TICK: cls.on_tick,
             EVENT_BAR: cls.on_bar,
             EVENT_ORDER: cls.on_order,
@@ -439,7 +439,6 @@ class CtpbeeApi(BeeApi):
         }
         parmeter = {
             EVENT_TIMER: EVENT_TIMER,
-            # EVENT_INIT_FINISHED: EVENT_INIT_FINISHED,
             EVENT_POSITION: EVENT_POSITION,
             EVENT_TRADE: EVENT_TRADE,
             EVENT_BAR: EVENT_BAR,
@@ -569,7 +568,7 @@ class CtpbeeApi(BeeApi):
                 self.order_id_mapping.setdefault(i, False)
 
     @staticmethod
-    def get_dir(path: str):
+    def get_dir(path: str) -> str:
         """
         获取API专属的文件夹的路径. 如果不存在就创建
 
@@ -585,13 +584,13 @@ class CtpbeeApi(BeeApi):
         return path
 
     @property
-    def action(self):
+    def action(self) -> Action:
         if self.app is None:
             raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
         return ActionProxy(self.app.action, self)
 
     @property
-    def center(self):
+    def center(self) -> Center:
         if self.app is None:
             raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
         return self.app.center
@@ -706,7 +705,7 @@ class CtpbeeApi(BeeApi):
         """
         pass
 
-    def on_contract(self, contract: ContractData):
+    def on_contract(self, contract: ContractData) -> None:
         """
         合约数据回调触发
 
@@ -718,7 +717,7 @@ class CtpbeeApi(BeeApi):
         """
         pass
 
-    def on_init(self, init: bool):
+    def on_init(self, init: bool) -> None:
         """
         账户初始化
 
@@ -739,7 +738,7 @@ class CtpbeeApi(BeeApi):
         """
         pass
 
-    def init_app(self, app):
+    def init_app(self, app) -> None:
         """
         初始化app
 
@@ -753,7 +752,7 @@ class CtpbeeApi(BeeApi):
             self.app = app
             self.app._extensions[self.extension_name] = self
 
-    def route(self, handler):
+    def route(self, handler: str):
         """
         装饰器， 指定路由， 为了方便用户不想写类接口体而存在
 
