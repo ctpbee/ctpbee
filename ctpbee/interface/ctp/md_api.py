@@ -1,8 +1,8 @@
-from blinker import NamedSignal
-
 import ctpbee.signals
+from blinker import NamedSignal
 from ctpbee.constant import *
 from ctpbee.interface.func import *
+
 from .lib import *
 
 
@@ -91,12 +91,19 @@ class BeeMdApi(MdApi):
         exchange = symbol_exchange_map.get(symbol, "")
         if not exchange:
             exchange = Exchange.NONE
+        # 针对大商所进行处理 see https://github.com/ctpbee/ctpbee/issues/165
+        if exchange == Exchange.DCE:
+            datetimed = datetime.strptime(
+                str(date.today()) + " " + f"{data['UpdateTime']}.{int(data['UpdateMillisec'] / 100)}",
+                "%Y-%m-%d %H:%M:%S.%f")
+        else:
+            # 正常情况下tick的处理
+            timestamp = f"{data['ActionDay']} {data['UpdateTime']}.{int(data['UpdateMillisec'] / 100)}"
+            try:
+                datetimed = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S.%f")
+            except ValueError as e:
+                datetimed = datetime.strptime(str(date.today()) + " " + timestamp, "%Y-%m-%d %H:%M:%S.%f")
 
-        timestamp = f"{data['ActionDay']} {data['UpdateTime']}.{int(data['UpdateMillisec'] / 100)}"
-        try:
-            datetimed = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S.%f")
-        except ValueError as e:
-            datetimed = datetime.strptime(str(date.today()) + " " + timestamp, "%Y-%m-%d %H:%M:%S.%f")
         tick = TickData(
             symbol=symbol,
             exchange=exchange,

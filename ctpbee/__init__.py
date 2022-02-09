@@ -6,6 +6,7 @@ __status__ = 'release level'
 
 # Here are pre import
 from ctpbee.app import CtpBee
+from ctpbee.array import Array, LArray
 from ctpbee.context import current_app, switch_app, get_app, del_app
 from ctpbee.data_handle.generator import HighKlineSupporter
 from ctpbee.date import get_day_from
