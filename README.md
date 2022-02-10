@@ -72,7 +72,7 @@ app.start()
 
 更多功能 请阅读[document address](http://docs.ctpbee.com)
 
-## 命令行运行截图
+## 命令行运行
 
 ![avatar](source/运行.png)
 
@@ -87,7 +87,11 @@ app.start()
 Only Accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch, please remember that !
 
 
-> 对于高频解决方案, 请 👉 [FlashFunk](https://github.com/HFQR/FlashFunk)
+> 对于高频解决方案, 请 👉 [FlashFunk](https://github.com/HFQR/FlashFunk) 
+> 注意: 本项目受限于协议问题无法开源数据底层.
+
+> 对于本地数据自动运维方案, 请👉 [Hive](https://github.com/ctpbee/hive)
+
 
 ## License
 
