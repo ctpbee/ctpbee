@@ -111,7 +111,7 @@ class Array:
         将返回的结果全部收回
         """
         # 生成rolling数据
-        return from_iterator(self.__rolling(n))
+        return from_iterator(self.__rolling(n), self.value_type)
 
     def __chunks(self, n) -> Iterable:
         start = 0
@@ -127,19 +127,19 @@ class Array:
             yield self._array[start:length]
 
     def collect(self) -> List[Any]:
-        self._array = list(self._array)
+        return list(self._array)
 
     def chunks(self, n: int):
         """
         实现指定数字间隔读取
         """
-        return from_iterator(self.__chunks(n))
+        return from_iterator(self.__chunks(n), self.value_type)
 
-    def apply(self, func):
+    def apply(self, func) :
         """
         对元素统一实现函数方法,类似于pandas -> apply方法
         """
-        from_iterator(self.map(func))
+        return from_iterator(self.map(func), self.value_type)
 
     def map(self, func) -> Iterable:
         return map(func, self._array)
@@ -180,7 +180,7 @@ class LArray(Array, ABC):
     """固定长度的数组"""
 
     def __init__(self, length=100, value_type="long_float"):
-
+        self.value_type = value_type
         if value_type.lower() == "any":
             self._array = []
             self._length = length
@@ -203,7 +203,15 @@ class LArray(Array, ABC):
         return f"<LArray:(Length={self._length} {self._array})>"
 
 
-def from_iterator(value: Iterable) -> Array:
-    acc = Array()
+def from_iterator(value: Iterable, value_type="any") -> Array:
+    acc = Array(value_type=value_type)
     acc.update(value)
     return acc
+
+
+if __name__ == '__main__':
+    a = [1, 2, 2, 1, 1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 21, 1]
+    app = LArray(value_type="any")
+    app.update(a)
+    d = app.chunks(3).apply(lambda x: x)
+    print(d)

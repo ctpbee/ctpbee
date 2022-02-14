@@ -92,8 +92,6 @@ Only Accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch,
 
 > 对于本地数据自动运维方案, 请👉 [Hive](https://github.com/ctpbee/hive)
 
-
 ## License
 
 - MIT
-
