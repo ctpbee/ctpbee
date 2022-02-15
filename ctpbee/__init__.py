@@ -1,7 +1,7 @@
 """
     for the future of  life
 """
-__version__ = '1.5.1'
+__version__ = '1.5.2'
 __status__ = 'release level'
 
 # Here are pre import
