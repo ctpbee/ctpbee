@@ -200,27 +200,41 @@ class BeeTdApi(TdApi):
             position.volume += data["Position"]
             position.pnl += data["PositionProfit"]
 
-            if position.direction == Direction.LONG:
-                self.open_cost_dict[position.symbol]["long"] = data['OpenCost']
-            elif position.direction == Direction.SHORT:
-                self.open_cost_dict[position.symbol]["short"] = data['OpenCost']
             # Calculate average position price
             if position.volume and size:
                 cost += data["PositionCost"]
                 position.price = cost / (position.volume * size)
+                self.open_cost_dict[position.symbol]["size"] = size
 
             # Get frozen volume
             if position.direction == Direction.LONG:
                 position.frozen += data["ShortFrozen"]
+                if not self.open_cost_dict[position.symbol].get("long"):
+                    self.open_cost_dict[position.symbol]["long"] = 0
+                self.open_cost_dict[position.symbol]["long"] += data['OpenCost']
+                position.open_price = self.open_cost_dict[position.symbol]["long"] / (position.volume * size)
+
+                # 先算出当前的最新价格
+                current_price = position.pnl / (size * position.volume) + position.price
+                position.float_pnl = (current_price - position.open_price) * size * position.volume
             else:
                 position.frozen += data["LongFrozen"]
+                if not self.open_cost_dict[position.symbol].get("short"):
+                    self.open_cost_dict[position.symbol]["short"] = 0
+                self.open_cost_dict[position.symbol]["short"] += data['OpenCost']
+                position.open_price = self.open_cost_dict[position.symbol]["short"] / (position.volume * size)
+                current_price = position.price - position.pnl / (size * position.volume)
+                position.float_pnl = (position.open_price - current_price) * size * position.volume
+                
         except KeyError:
             pass
+
         if last:
             for position in self.positions.values():
                 self.on_event(type=EVENT_POSITION, data=position)
                 self.position_instrument_mapping[position.local_symbol] = False
             self.positions.clear()
+            self.open_cost_dict.clear()
             self.position_init_flag = True
 
     def onRspQryTradingAccount(self, data: dict, error: dict, reqid: int, last: bool):

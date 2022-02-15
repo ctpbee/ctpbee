@@ -72,6 +72,7 @@ class PositionHolding:
         self.long_pnl = 0
         self.long_stare_pnl = 0
         self.long_price = 0
+        self.long_open_price = 0
 
         self.short_pos = 0
         self.short_yd = 0
@@ -79,6 +80,7 @@ class PositionHolding:
         self.short_pnl = 0
         self.short_stare_pnl = 0
         self.short_price = 0
+        self.short_open_price = 0
 
         self.long_pos_frozen = 0
         self.long_yd_frozen = 0
@@ -168,6 +170,7 @@ class PositionHolding:
             self.long_td = self.long_pos - self.long_yd
             self.long_pnl = position.pnl
             self.long_price = position.price
+            self.long_open_price = position.open_price
 
         elif position.direction == Direction.SHORT:
             self.short_pos = position.volume
@@ -175,6 +178,7 @@ class PositionHolding:
             self.short_td = self.short_pos - self.short_yd
             self.short_pnl = position.pnl
             self.short_price = position.price
+            self.short_open_price = position.open_price
 
     def update_order(self, order: OrderData):
         """"""
@@ -194,7 +198,7 @@ class PositionHolding:
         self.update_order(order)
 
     def update_tick(self, tick, pre_settlement_price):
-        """行情更新"""
+        """ 行情更新 """
         self.pre_settlement_price = pre_settlement_price
         self.last_price = tick.last_price
         self.calculate_pnl()
@@ -338,21 +342,21 @@ class PositionHolding:
     def calculate_stare_pnl(self):
         """计算盯市盈亏"""
         try:
-            self.long_stare_pnl = self.long_pos * (self.long_price - self.pre_settlement_price) * self.size
+            self.long_stare_pnl = self.long_pos * (self.last_price - self.long_open_price) * self.size
         except ZeroDivisionError:
-            self.long_pnl = 0
+            self.long_stare_pnl = 0
         except AttributeError:
-            self.long_pnl = 0
+            self.long_stare_pnl = 0
         except OverflowError:
-            self.long_pnl = 0
+            self.long_stare_pnl = 0
         try:
-            self.short_stare_pnl = self.short_pos * (self.pre_settlement_price - self.short_price) * self.size
+            self.short_stare_pnl = self.short_pos * (self.short_open_price - self.last_price) * self.size
         except ZeroDivisionError:
-            self.short_pnl = 0
+            self.short_stare_pnl = 0
         except AttributeError:
-            self.short_pnl = 0
+            self.short_stare_pnl = 0
         except OverflowError:
-            self.short_pnl = 0
+            self.short_stare_pnl = 0
 
     def calculate_price(self, trade):
         """计算持仓均价（基于成交数据）"""
@@ -360,18 +364,24 @@ class PositionHolding:
         if trade.offset == Offset.OPEN:
             if trade.direction == Direction.LONG:
                 cost = self.long_price * self.long_pos + trade.volume * trade.price
+                open_cost = self.long_open_price * self.long_pos + trade.volume * trade.price
                 new_pos = self.long_pos + trade.volume
                 if new_pos:
                     self.long_price = cost / new_pos
+                    self.long_open_price = open_cost / new_pos
                 else:
                     self.long_price = 0
+                    self.long_open_price = 0
             else:
                 cost = self.short_price * self.short_pos + trade.volume * trade.price
+                open_cost = self.short_open_price * self.short_pos + trade.volume * trade.price
                 new_pos = self.short_pos + trade.volume
                 if new_pos:
                     self.short_price = cost / new_pos
+                    self.short_open_price = open_cost / new_pos
                 else:
                     self.short_price = 0
+                    self.short_open_price = 0
 
     def get_position_by_direction(self, direction):
         if direction == Direction.LONG:
@@ -383,7 +393,9 @@ class PositionHolding:
                 pnl=self.long_pnl,
                 price=self.long_price,
                 frozen=self.long_pos_frozen,
-                yd_volume=self.long_yd
+                open_price=self.long_open_price,
+                yd_volume=self.long_yd,
+                float_pnl=self.long_stare_pnl,
             )
         elif direction == Direction.SHORT:
             return PositionData(
@@ -394,7 +406,9 @@ class PositionHolding:
                 pnl=self.short_pnl,
                 price=self.short_price,
                 frozen=self.short_pos_frozen,
-                yd_volume=self.short_yd
+                yd_volume=self.short_yd,
+                float_pnl=self.short_stare_pnl,
+                open_price=self.short_open_price,
             )
         return None
 
@@ -545,7 +559,9 @@ class LocalPositionManager(dict):
                     frozen=x.long_pos_frozen,
                     price=x.long_price,
                     pnl=x.long_pnl,
-                    yd_volume=x.long_yd
+                    yd_volume=x.long_yd,
+                    float_pnl=x.long_stare_pnl,
+                    open_price=x.long_open_price,
                 )
                 pos.append(p)
             if x.short_pos != 0:
@@ -557,7 +573,9 @@ class LocalPositionManager(dict):
                     frozen=x.short_pos_frozen,
                     price=x.short_price,
                     pnl=x.short_pnl,
-                    yd_volume=x.short_yd
+                    yd_volume=x.short_yd,
+                    open_price=x.short_open_price,
+                    float_pnl=x.short_stare_pnl,
                 )
                 pos.append(p)
         return pos
@@ -572,36 +590,20 @@ class LocalPositionManager(dict):
                 if x.local_symbol == "":
                     continue
                 if x.long_pos != 0:
-                    temp = {}
-                    temp['exchange'] = x.exchange
-                    temp['direction'] = "long"
-                    temp['position_profit'] = x.long_pnl
-                    temp['symbol'] = x.local_symbol
-                    temp['local_symbol'] = x.local_symbol
-                    temp['price'] = x.long_price
-                    temp['volume'] = x.long_pos
-                    temp['yd_volume'] = x.long_yd
-                    temp["frozen"] = x.long_pos_frozen
-                    temp["available"] = x.long_pos - x.long_pos_frozen
-                    temp['stare_position_profit'] = x.long_stare_pnl
+                    temp = {'exchange': x.exchange, 'direction': "long", 'position_profit': x.long_pnl,
+                            'symbol': x.local_symbol, 'local_symbol': x.local_symbol, 'price': x.long_price,
+                            'volume': x.long_pos, 'yd_volume': x.long_yd, "frozen": x.long_pos_frozen,
+                            "available": x.long_pos - x.long_pos_frozen, 'float_pnl': x.long_stare_pnl}
                     if x.long_pos == x.long_yd:
                         temp['position_date'] = 2
                     elif x.long_pos != x.long_yd:
                         temp['position_date'] = 1
                     position_list.append(temp)
                 if x.short_pos != 0:
-                    temp = {}
-                    temp['exchange'] = x.exchange
-                    temp['direction'] = "short"
-                    temp['position_profit'] = x.short_pnl
-                    temp['symbol'] = x.local_symbol
-                    temp['local_symbol'] = x.local_symbol
-                    temp['price'] = x.short_price
-                    temp['volume'] = x.short_pos
-                    temp['yd_volume'] = x.short_yd
-                    temp["frozen"] = x.short_pos_frozen
-                    temp["available"] = x.short_pos - x.short_pos_frozen
-                    temp['stare_position_profit'] = x.short_stare_pnl
+                    temp = {'exchange': x.exchange, 'direction': "short", 'position_profit': x.short_pnl,
+                            'symbol': x.local_symbol, 'local_symbol': x.local_symbol, 'price': x.short_price,
+                            'volume': x.short_pos, 'yd_volume': x.short_yd, "frozen": x.short_pos_frozen,
+                            "available": x.short_pos - x.short_pos_frozen, 'float_pnl': x.short_stare_pnl}
                     if x.short_pos == x.short_yd:
                         temp['position_date'] = 2
                     elif x.short_pos != x.short_yd:
@@ -611,4 +613,7 @@ class LocalPositionManager(dict):
 
     @property
     def length(self):
+        return len(self)
+
+    def len(self):
         return len(self)

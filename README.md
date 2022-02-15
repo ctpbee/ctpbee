@@ -92,6 +92,12 @@ Only Accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch,
 
 > 对于本地数据自动运维方案, 请👉 [Hive](https://github.com/ctpbee/hive)
 
+
+## 免责声明 
+
+开源仅作爱好，本人不对代码产生的任何使用后果负责。
+功能尽可能会保持稳定。但是为了你的实盘账户着想，请先用`simnow`账户测试完善再上实盘！
+
 ## License
 
 - MIT
