@@ -138,7 +138,7 @@ class MTdApi(MiniTdApi):
                 position = PositionData(
                     symbol=data["InstrumentID"],
                     exchange=symbol_exchange_map[data["InstrumentID"]],
-                    direction=DIRECTION_MINI2VT[data["PosiDirection"]],
+                    direction=DIRECTION_CTP2VT[data["PosiDirection"]],
                     gateway_name=self.gateway_name
                 )
                 self.positions[key] = position
@@ -169,22 +169,28 @@ class MTdApi(MiniTdApi):
             # Get frozen volume
             if position.direction == Direction.LONG:
                 position.frozen += data["ShortFrozen"]
-                if not self.open_cost_dict[position.symbol].get("long"):
-                    self.open_cost_dict[position.symbol]["long"] = 0
-                self.open_cost_dict[position.symbol]["long"] += data['OpenCost']
-                position.open_price = self.open_cost_dict[position.symbol]["long"] / (position.volume * size)
 
-                # 先算出当前的最新价格
-                current_price = position.pnl / (size * position.volume) + position.price
-                position.float_pnl = (current_price - position.open_price) * size * position.volume
+                if position.volume and size:
+                    if not self.open_cost_dict[position.symbol].get("long"):
+                        self.open_cost_dict[position.symbol]["long"] = 0
+
+                    self.open_cost_dict[position.symbol]["long"] += data['OpenCost']
+                    position.open_price = self.open_cost_dict[position.symbol]["long"] / (position.volume * size)
+
+                    # 先算出当前的最新价格
+                    current_price = position.pnl / (size * position.volume) + position.price
+                    position.float_pnl = (current_price - position.open_price) * size * position.volume
             else:
                 position.frozen += data["LongFrozen"]
-                if not self.open_cost_dict[position.symbol].get("short"):
-                    self.open_cost_dict[position.symbol]["short"] = 0
-                self.open_cost_dict[position.symbol]["short"] += data['OpenCost']
-                position.open_price = self.open_cost_dict[position.symbol]["short"] / (position.volume * size)
-                current_price = position.price - position.pnl / (size * position.volume)
-                position.float_pnl = (position.open_price - current_price) * size * position.volume
+
+                if position.volume and size:
+                    if not self.open_cost_dict[position.symbol].get("short"):
+                        self.open_cost_dict[position.symbol]["short"] = 0
+
+                    self.open_cost_dict[position.symbol]["short"] += data['OpenCost']
+                    position.open_price = self.open_cost_dict[position.symbol]["short"] / (position.volume * size)
+                    current_price = position.price - position.pnl / (size * position.volume)
+                    position.float_pnl = (position.open_price - current_price) * size * position.volume
 
         except KeyError:
             pass
