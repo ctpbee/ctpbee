@@ -138,7 +138,7 @@ class MTdApi(MiniTdApi):
                 position = PositionData(
                     symbol=data["InstrumentID"],
                     exchange=symbol_exchange_map[data["InstrumentID"]],
-                    direction=DIRECTION_CTP2VT[data["PosiDirection"]],
+                    direction=DIRECTION_MINI2VT[data["PosiDirection"]],
                     gateway_name=self.gateway_name
                 )
                 self.positions[key] = position
