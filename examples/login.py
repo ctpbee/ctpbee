@@ -11,9 +11,9 @@ class Main(CtpbeeApi):
 
     def on_tick(self, tick: TickData) -> None:
         """ """
-        # model = self.center.get_position("rb2205.SHFE")
-        # if model is not None:
-        #     print(model.long_float_pnl, model.short_float_pnl)
+        model = self.center.get_position("rb2205.SHFE")
+        if model is not None:
+            print(model.long_float_pnl, model.short_float_pnl)
         pass
 
     def on_trade(self, trade: TradeData) -> None:
