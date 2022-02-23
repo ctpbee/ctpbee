@@ -1,11 +1,10 @@
 {
   "CONNECT_INFO": {
-    "userid": "170874",
-    "password": "wi1015..",
+    "userid": "089131",
+    "password": "350888",
     "brokerid": "9999",
-    "md_address": "tcp://218.202.237.33:10213",
-    "td_address": "tcp://218.202.237.33:10203",
-    "product_info": "",
+    "md_address": "tcp://180.168.146.187:10211",
+    "td_address": "tcp://180.168.146.187:10201",
     "appid": "simnow_client_test",
     "auth_code": "0000000000000000"
   },

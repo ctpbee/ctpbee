@@ -127,10 +127,13 @@ class MTdApi(MiniTdApi):
 
     def onRspQryInvestorPosition(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
-        if data and data["InstrumentID"] in symbol_exchange_map:
-            # Get buffered position object
-            key = f"{data['InstrumentID'], data['PosiDirection']}"
-            position = self.positions.get(key, None)
+        if not data:
+            return
+
+        # Get buffered position object
+        key = f"{data['InstrumentID'], data['PosiDirection']}"
+        position = self.positions.get(key, None)
+        try:
             if not position:
                 position = PositionData(
                     symbol=data["InstrumentID"],
@@ -139,7 +142,6 @@ class MTdApi(MiniTdApi):
                     gateway_name=self.gateway_name
                 )
                 self.positions[key] = position
-
             # For SHFE position data update
             if position.exchange == Exchange.SHFE:
                 if data["YdPosition"] and not data["TodayPosition"]:
@@ -162,17 +164,43 @@ class MTdApi(MiniTdApi):
             if position.volume and size:
                 cost += data["PositionCost"]
                 position.price = cost / (position.volume * size)
+                self.open_cost_dict[position.symbol]["size"] = size
 
             # Get frozen volume
             if position.direction == Direction.LONG:
                 position.frozen += data["ShortFrozen"]
+
+                if position.volume and size:
+                    if not self.open_cost_dict[position.symbol].get("long"):
+                        self.open_cost_dict[position.symbol]["long"] = 0
+
+                    self.open_cost_dict[position.symbol]["long"] += data['OpenCost']
+                    position.open_price = self.open_cost_dict[position.symbol]["long"] / (position.volume * size)
+
+                    # 先算出当前的最新价格
+                    current_price = position.pnl / (size * position.volume) + position.price
+                    position.float_pnl = (current_price - position.open_price) * size * position.volume
             else:
                 position.frozen += data["LongFrozen"]
 
+                if position.volume and size:
+                    if not self.open_cost_dict[position.symbol].get("short"):
+                        self.open_cost_dict[position.symbol]["short"] = 0
+
+                    self.open_cost_dict[position.symbol]["short"] += data['OpenCost']
+                    position.open_price = self.open_cost_dict[position.symbol]["short"] / (position.volume * size)
+                    current_price = position.price - position.pnl / (size * position.volume)
+                    position.float_pnl = (position.open_price - current_price) * size * position.volume
+
+        except KeyError:
+            pass
+
         if last:
             for position in self.positions.values():
-                self.on_event(EVENT_POSITION, position)
+                self.on_event(type=EVENT_POSITION, data=position)
+                self.position_instrument_mapping[position.local_symbol] = False
             self.positions.clear()
+            self.open_cost_dict.clear()
             self.position_init_flag = True
 
     def onRspQryTradingAccount(self, data: dict, error: dict, reqid: int, last: bool):

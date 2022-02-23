@@ -511,6 +511,8 @@ class PositionData(Entity):
     price: float = 0
     pnl: float = 0
     yd_volume: float = 0
+    open_price: float = 0
+    float_pnl: float = 0
 
     def __post_init__(self):
         """"""

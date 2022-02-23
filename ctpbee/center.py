@@ -98,26 +98,26 @@ class Center(BasicCenterModel, dict):
         return "ctpbee 统一数据调用接口"
 
     @property
-    def orders(self):
+    def orders(self) -> List[OrderData]:
         """ 返回所有的报单 """
         return self.app.recorder.get_all_orders()
 
     @property
-    def last_order_id(self):
+    def last_order_id(self) -> str:
         """
         返回最新的一个orderid
         """
         return self.orders[-1].order_id
 
     @property
-    def last_order(self):
+    def last_order(self) -> OrderData:
         """
         返回最新的一个报单
         """
         return self.orders[-1]
 
     @property
-    def active_orders(self):
+    def active_orders(self) -> List[OrderData]:
         """
         返回所有的未成交单
         """

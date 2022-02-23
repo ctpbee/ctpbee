@@ -25,6 +25,13 @@ class Action(object):
     def __new__(cls, *args, **kwargs):
         instance = object.__new__(cls)
         setattr(instance, "__name__", cls.__name__)
+
+        cls.buy_open = cls.buy  # 买开
+        cls.buy_close = cls.cover  # 买平
+
+        cls.sell_open = cls.short  # 卖开
+        cls.sell_close = cls.sell  # 卖平
+
         return instance
 
     def __getattr__(self, item) -> None:
@@ -422,8 +429,6 @@ class CtpbeeApi(BeeApi):
       data_processor.init_app(app)
       #           or
       app.add_extension(Process("data_processor"))
-
-
      """
 
     def __new__(cls, *args, **kwargs):

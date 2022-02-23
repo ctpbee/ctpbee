@@ -11,28 +11,31 @@ class Main(CtpbeeApi):
 
     def on_tick(self, tick: TickData) -> None:
         """ """
-        # Receive Tick in here
-        if not self.ok and self.init:
-            self.action.buy(tick.bid_price_1 - 10, 1, tick)
-            self.ok = True
-
-        for order in self.center.active_orders:
-            self.action.cancel(order.order_id, order)
+        model = self.center.get_position("rb2205.SHFE")
+        if model is not None:
+            print(model.long_float_pnl, model.short_float_pnl)
+        pass
 
     def on_trade(self, trade: TradeData) -> None:
-        if self.init and trade.offset == Offset.OPEN:
-            self.action.cover(trade.price - 1, 1, trade)
+        pass
 
     def on_position(self, position: PositionData) -> None:
+        # print(position.local_symbol, position.direction, position.float_pnl)
         pass
 
     def on_bar(self, bar: BarData) -> None:
         pass
 
+    def on_realtime(self):
+        pass
+        # pos = self.center.get_position("rb2205.SHFE")
+        # print(pos)
+
     def on_contract(self, contract: ContractData):
         # setup the code and subscribe market
         # also you can use app.subscribe()
-        if contract.symbol == "rb2201":
+        pass
+        if contract.local_symbol == "rb2205.SHFE":
             self.action.subscribe(contract.local_symbol)
 
     def on_init(self, init: bool):

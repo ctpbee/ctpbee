@@ -86,11 +86,18 @@ class MMdApi(MiniMdApi):
         if not exchange:
             exchange = Exchange.NONE
 
-        timestamp = f"{data['ActionDay']} {data['UpdateTime']}.{int(data['UpdateMillisec'] / 100)}"
-        try:
-            datetimed = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S.%f")
-        except ValueError as e:
-            datetimed = datetime.strptime(str(date.today()) + " " + timestamp, "%Y-%m-%d %H:%M:%S.%f")
+        if exchange == Exchange.DCE:
+            datetimed = datetime.strptime(
+                str(date.today()) + " " + f"{data['UpdateTime']}.{int(data['UpdateMillisec'] / 100)}",
+                "%Y-%m-%d %H:%M:%S.%f")
+        else:
+            # 正常情况下tick的处理
+            timestamp = f"{data['ActionDay']} {data['UpdateTime']}.{int(data['UpdateMillisec'] / 100)}"
+            try:
+                datetimed = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S.%f")
+            except ValueError as e:
+                datetimed = datetime.strptime(str(date.today()) + " " + timestamp, "%Y-%m-%d %H:%M:%S.%f")
+
         tick = TickData(
             symbol=symbol,
             exchange=exchange,

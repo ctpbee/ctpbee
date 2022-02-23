@@ -168,6 +168,10 @@ class Recorder(object):
     def get_all_bar(self):
         return self.bar
 
+    def get_last_price(self, local_symbol) -> None or float:
+        tick = self.ticks.get(local_symbol)
+        return tick.last_price if tick is not None else None
+
     def get_tick(self, local_symbol):
         return self.ticks.get(local_symbol, None)
 
