@@ -94,16 +94,16 @@ if __name__ == '__main__':
 
 ## 功能支持
 
--[x] 简单易用的下单功能
--[x] 仓位盈亏计算
--[x] 多周期多合约回测
--[x] 实时行情
--[x] k线生成
--[x] 回测报告生成
--[x] 自动运维
--[x] ctp/ctp_mini支持
+- [x] 简单易用的下单功能
+- [x] 仓位盈亏计算
+- [x] 多周期多合约回测
+- [x] 实时行情
+- [x] k线生成
+- [x] 回测报告生成
+- [x] 自动运维
+- [x] ctp/ctp_mini支持
 
-更多相关信息, 请参阅[document address](http://docs.ctpbee.com)
+更多相关信息, 请参阅[文档](http://docs.ctpbee.com)
 
 ## 命令行运行效果
 
@@ -128,6 +128,8 @@ Only Accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch,
 ## 免责声明
 
 本项目长期维护, 开源仅作爱好，本人不对代码产生的任何使用后果负责。功能尽可能会保持稳定, 但是为了你的实盘账户着想，请先用`simnow`账户测试完善再上实盘！
+
+如有问题, 请提issue, 会在1-2个工作日进行回复。
 
 ## License
 
