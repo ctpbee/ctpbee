@@ -42,6 +42,7 @@ class TL(CtpbeeApi):
         #self.instrument_set = limit_ctp_symbol
         self.instrument_set =["rb2205.SHFE"] #need to fill in  
         print(self.instrument_set)
+        self.clock = 0
         self.isok = True 
 
     def on_contract(self, contract: ContractData):
@@ -148,10 +149,10 @@ class TL(CtpbeeApi):
 
     def on_realtime(self):
         #定时清理掉未成交的单
-        ao = self.center.active_orders
-        if (len(ao)):
-            time.sleep(10) 
-            self.action.cancel_all() 
+        self.clock += 1
+        if(self.clock >= 10 and len(self.center.active_orders)):
+            self.action.cancel_all()
+            self.clock = 0
         pass 
 
 def obey():
