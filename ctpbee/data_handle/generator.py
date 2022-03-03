@@ -40,8 +40,16 @@ class DataGenerator:
                 )
                 self.last_datetime[frq] = tick_data.datetime
             else:
-                if frq != 1 and tick_data.datetime.minute % frq == 0 and abs(
-                        (tick_data.datetime - self.last_datetime[frq]).seconds) >= 60:
+                last_datetime = self.last_datetime[frq]
+                if ((last_datetime.minute == tick_data.datetime.minute) and
+                    (last_datetime.hour == tick_data.datetime.hour)
+                    ) or tick_data.datetime.minute % frq != 0:
+                    self.last_entity[frq].high_price = max(self.last_entity[frq].high_price, tick_data.last_price)
+                    self.last_entity[frq].low_price = min(self.last_entity[frq].low_price, tick_data.last_price)
+                    self.last_entity[frq].close_price = tick_data.last_price
+                    self.last_entity[frq].volume += max(tick_data.volume - self.last_entity[frq].first_volume, 0)
+                    self.last_entity[frq].first_volume = tick_data.volume
+                else:
                     temp = deepcopy(last)
                     if self.check_tick(tick_data):
                         temp.high_price = max(temp.high_price, tick_data.last_price)
@@ -60,41 +68,11 @@ class DataGenerator:
                         local_symbol=tick_data.local_symbol
                     )
                     self.last_datetime[frq] = tick_data.datetime
+                    if abs((tick_data.datetime - last_datetime).seconds) < (frq == 1 and 10 or 60):
+                        # 时间太短，丢弃？
+                        continue
+                    temp.datetime = temp.datetime.replace(second=0, microsecond=0)
                     data.append(temp)
-                elif frq != 1:
-                    self.last_entity[frq].high_price = max(self.last_entity[frq].high_price, tick_data.last_price)
-                    self.last_entity[frq].low_price = min(self.last_entity[frq].low_price, tick_data.last_price)
-                    self.last_entity[frq].close_price = tick_data.last_price
-                    self.last_entity[frq].volume += max(tick_data.volume - self.last_entity[frq].first_volume, 0)
-                    self.last_entity[frq].first_volume = tick_data.volume
-                # 处理一分钟的k线
-                if frq == 1 and tick_data.datetime.second == 0 and \
-                        abs((tick_data.datetime - self.last_datetime[frq]).seconds) > 10:
-                    temp = deepcopy(last)
-                    if self.check_tick(tick_data):
-                        temp.high_price = max(temp.high_price, tick_data.last_price)
-                        temp.low_price = min(temp.low_price, tick_data.last_price)
-                        temp.close_price = tick_data.last_price
-                        temp.volume += max(tick_data.volume - temp.first_volume, 0)
-                    self.last_entity[frq] = BarData(
-                        datetime=tick_data.datetime,
-                        high_price=tick_data.last_price,
-                        low_price=tick_data.last_price,
-                        close_price=tick_data.last_price,
-                        open_price=tick_data.last_price,
-                        interval=frq,
-                        volume=tick_data.volume - temp.first_volume,
-                        first_volume=tick_data.volume,
-                        local_symbol=tick_data.local_symbol
-                    )
-                    self.last_datetime[frq] = tick_data.datetime
-                    data.append(temp)
-                elif frq == 1:
-                    self.last_entity[frq].high_price = max(self.last_entity[frq].high_price, tick_data.last_price)
-                    self.last_entity[frq].low_price = min(self.last_entity[frq].low_price, tick_data.last_price)
-                    self.last_entity[frq].close_price = tick_data.last_price
-                    self.last_entity[frq].volume += max(tick_data.volume - self.last_entity[frq].first_volume, 0)
-                    self.last_entity[frq].first_volume = tick_data.volume
         return data
 
     @staticmethod
