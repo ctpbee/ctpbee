@@ -68,9 +68,9 @@ class DataGenerator:
                         local_symbol=tick_data.local_symbol
                     )
                     self.last_datetime[frq] = tick_data.datetime
-                    if abs((tick_data.datetime - last_datetime).seconds) < (frq == 1 and 10 or 60):
-                        # 时间太短，丢弃？
-                        continue
+                    # if abs((tick_data.datetime - last_datetime).seconds) < (frq == 1 and 10 or 60):
+                    #     # 时间太短，丢弃？
+                    #     continue
                     temp.datetime = temp.datetime.replace(second=0, microsecond=0)
                     data.append(temp)
         return data
