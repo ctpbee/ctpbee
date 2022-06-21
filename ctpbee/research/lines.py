@@ -30,7 +30,7 @@ def plot_multi(data, cols=None, spacing=.1, **kwargs):
         # Multiple y-axes
         ax_new = ax.twinx()
         ax_new.spines['right'].set_position(('axes', 1 + spacing * (n - 1)))
-        data.loc[:, cols[n]].plot(ax=ax_new, label=cols[n], color=colors[n % len(colors)])
+        data.loc[:, cols[n]].plot(ax=ax_new, label=cols[n], color=colors[n])
         ax_new.set_ylabel(ylabel=cols[n])
 
         # Proper legend position

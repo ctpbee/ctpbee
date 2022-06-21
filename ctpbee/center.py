@@ -144,15 +144,16 @@ class Center(BasicCenterModel, dict):
         """
         return self.app.recorder.position_manager.get_all_positions(obj=True)
 
-    def get_tick(self, local_symbol) -> TickData:
+    def get_tick(self, local_symbol) -> List[TickData] or None:
         """
-        获取指定合约最近的一条tick
+        获取指定合约的tick数列信息 
+        在合约不存在的情况返回为空
 
         Args:
           local_symbol(Text): 合约代码
         """
         try:
-            return self.app.recorder.get_tick(local_symbol)[-1]
+            return self.app.recorder.get_tick(local_symbol)
         except IndexError:
             return Missing.create_obj("get_tick")
 

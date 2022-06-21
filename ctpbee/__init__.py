@@ -1,8 +1,8 @@
 """
     for the future of  life
 """
-__version__ = '1.5.2'
-__status__ = 'release level'
+__version__ = '1.6.0'
+__status__ = 'dev level'
 
 # Here are pre import
 from ctpbee.app import CtpBee

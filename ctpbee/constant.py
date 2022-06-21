@@ -54,14 +54,6 @@ class Product(Enum):
     EQUITY = "股票"
     FUTURES = "期货"
     OPTION = "期权"
-    INDEX = "指数"
-    FOREX = "外汇"
-    SPOT = "现货"
-    ETF = "ETF"
-    BOND = "债券"
-    WARRANT = "权证"
-    SPREAD = "价差"
-    FUND = "基金"
 
 
 class OrderType(Enum):
@@ -87,32 +79,13 @@ class Exchange(Enum):
     """
     Exchange.
     """
-    # Chinese
     CFFEX = "CFFEX"
     SHFE = "SHFE"
     CZCE = "CZCE"
     DCE = "DCE"
     INE = "INE"
-    SSE = "SSE"
-    SZSE = "SZSE"
-    SGE = "SGE"
     CTP = "ctp"
-    # Global
-    SMART = "SMART"
-    NYMEX = "NYMEX"
-    GLOBEX = "GLOBEX"
-    IDEALPRO = "IDEALPRO"
-    CME = "CME"
-    ICE = "ICE"
-    SEHK = "SEHK"
-    HKFE = "HKFE"
 
-    # CryptoCurrency
-    BITMEX = "BITMEX"
-    OKEX = "OKEX"
-    HUOBI = "HUOBI"
-    BITFINEX = "BITFINEX"
-    NONE = "none"
 
 
 TODAY_EXCHANGE = [Exchange.INE, Exchange.SHFE]
@@ -122,32 +95,8 @@ EXCHANGE_MAPPING = {
     "CZCE": Exchange.CZCE,
     "DCE": Exchange.DCE,
     "INE": Exchange.INE,
-    "SSE": Exchange.SSE,
-    "SZSE": Exchange.SZSE,
-    "SGE": Exchange.SGE,
-    "SMART": Exchange.SMART,
-    "NYMEX": Exchange.NYMEX,
-    "GLOBEX": Exchange.GLOBEX,
-    "IDEALPRO": Exchange.IDEALPRO,
-    "CME": Exchange.CME,
-    "ICE": Exchange.ICE,
-    "SEHK": Exchange.SEHK,
-    "HKFE": Exchange.HKFE,
-    "BITMEX": Exchange.BITMEX,
-    "OKEX": Exchange.OKEX,
-    "HUOBI": Exchange.HUOBI,
-    "BITFINEX": Exchange.BITFINEX,
     "CTP": Exchange.CTP
 }
-
-
-class Currency(Enum):
-    """
-    Currency.
-    """
-    USD = "USD"
-    HKD = "HKD"
-    CNY = "CNY"
 
 
 class Interval(Enum):
@@ -160,7 +109,7 @@ class Interval(Enum):
     WEEKLY = "w"
 
 
-enums = [Interval, Currency, Exchange, OptionType, OrderType, Product, Status, Offset, Direction]
+enums = [Interval, Exchange, OptionType, OrderType, Product, Status, Offset, Direction]
 
 ACTIVE_STATUSES = {Status.NOTTRADED, Status.PARTTRADED}
 
@@ -217,7 +166,6 @@ class Entity:
             self.__post_init__()
 
     def __init_subclass__(cls, **kwargs):
-        # ??? excuse me ....
         cls.__dict__['__annotations__']['gateway_name'] = str
         cls.__dict__['__annotations__']['local_symbol'] = str
 
@@ -331,10 +279,7 @@ class BaseRequest:
 
 class TickData(Entity):
     """
-    Tick data contains information about:
-        * last trade in market
-        * orderbook snapshot
-        * intraday market statistics.
+    Tick Attributes
     """
     symbol: str
     exchange: Any

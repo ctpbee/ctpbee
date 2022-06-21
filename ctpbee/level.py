@@ -604,19 +604,23 @@ class CtpbeeApi(BeeApi):
     def logger(self):
         return self.app.logger
 
-    def warning(self, msg, **kwargs):
+    def warning(self, *msg, **kwargs):
+        msg = " ".join(msg)
         kwargs['owner'] = "API: " + self.extension_name
         self.logger.warning(msg, **kwargs)
 
-    def info(self, msg, **kwargs):
+    def info(self, *msg, **kwargs):
+        msg = " ".join(msg)
         kwargs['owner'] = "API: " + self.extension_name
         self.logger.info(msg, **kwargs)
 
-    def error(self, msg, **kwargs):
+    def error(self, *msg, **kwargs):
+        msg = " ".join(msg)
         kwargs['owner'] = "API: " + self.extension_name
         self.logger.error(msg, **kwargs)
 
-    def debug(self, msg, **kwargs):
+    def debug(self, *msg, **kwargs):
+        msg = " ".join(msg)
         kwargs['owner'] = "API: " + self.extension_name
         self.logger.debug(msg, **kwargs)
 
