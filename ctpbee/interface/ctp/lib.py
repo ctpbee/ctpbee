@@ -54,7 +54,6 @@ EXCHANGE_CTP2VT = {
 PRODUCT_CTP2VT = {
     THOST_FTDC_PC_Futures: Product.FUTURES,
     THOST_FTDC_PC_Options: Product.OPTION,
-    THOST_FTDC_PC_Combination: Product.SPREAD
 }
 
 OPTIONTYPE_CTP2VT = {

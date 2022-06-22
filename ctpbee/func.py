@@ -86,9 +86,6 @@ class Helper(object):
         "CZCE": Exchange.CZCE,
         "CFFEX": Exchange.CFFEX,
         "DCE": Exchange.DCE,
-        "SSE": Exchange.SSE,
-        "SZSE": Exchange.SZSE,
-        "SGE": Exchange.SGE,
         "CTP": Exchange.CTP
     }
 

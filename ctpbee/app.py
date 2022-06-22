@@ -23,7 +23,6 @@ from ctpbee.looper.data import VessData
 from ctpbee.looper.report import render_result
 from ctpbee.record import Recorder
 from ctpbee.signals import AppSignal, common_signals
-from ctpbee.util import RiskLevel
 
 
 class CtpBee(object):
@@ -67,16 +66,14 @@ class CtpBee(object):
                  action_class: Action or None = None,
                  engine_method: str = "thread",
                  refresh: bool = True,
-                 risk: RiskLevel = None,
                  instance_path=None):
         """
         name: 创建运行核心的名字
         import_name: 导入包的名字， 用__name__即可'
         action_class: 执行器 > 默认使用系统自带的Action, 或者由用户继承，然后传入类
         engine_method: Actor模型采用的底层的引擎
-        logger_class: logger类，可以自己定义
+        logger_class: logger类,可以自己定义
         refresh: 是否自己主动查询持仓 默认开启
-        risk: 风险管理类, 可以自己继承RiskLevel进行定制
         sim: 是否进行模拟
         """
         self.start_datetime = datetime.now()
@@ -97,14 +94,6 @@ class CtpBee(object):
         else:
             raise TypeError("引擎参数错误，只支持 thread 和 async，请检查代码")
 
-        """
-              If no risk is specified by default, set the risk_decorator to None
-              如果默认不指定action参数， 那么使用设置风控装饰器为空
-              """
-        if risk is None:
-            self.risk_decorator = None
-        else:
-            self.risk_decorator = risk
         """
         If no action is specified by default, use the default Action class
         如果默认不指定action参数， 那么使用默认的Action类 
@@ -146,8 +135,6 @@ class CtpBee(object):
 
         self._init_interface = False
         """ update """
-        if self.risk_decorator is not None:
-            self.risk_decorator.update_app(self)
 
         for x in dir(self.action):
             func = getattr(self.action, x)
@@ -190,15 +177,6 @@ class CtpBee(object):
             raise TypeError(f"更新action_class出现错误, 你传入的action_class类型为{type(action_class)}")
         self.action = action_class(self)
 
-    def update_risk_gateway(self, gateway_class):
-        """
-        更新CtpBee中的风控
-
-        Args:
-          gateway_class (RiskLevel): 风险控制类
-        """
-        self.risk_decorator = gateway_class
-        self.risk_decorator.update_app(self)
 
     def make_config(self):
         """

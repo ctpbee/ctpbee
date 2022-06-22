@@ -19,4 +19,3 @@ from ctpbee.log import VLogger
 from ctpbee.message import Mail
 from ctpbee.signals import common_signals
 from ctpbee.signals import send_monitor, cancel_monitor
-from ctpbee.util import RiskLevel
