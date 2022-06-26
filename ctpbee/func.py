@@ -74,7 +74,7 @@ def query_func(type: Text, app_name: str = "current_app") -> None:
 class Helper(object):
     """
     工具函数 帮助你快速构建查询请求
-    提供快速生成对象的方法， 参见函数名。
+    提供快速生成对象的方法, 参见函数名。
     """
     direction_map = {
         "LONG": Direction.LONG,
@@ -180,7 +180,7 @@ def auth_time(data_time: time, type_="future"):
          type_(str): 数据种类
 
       Returns:
-         bool: 检查结果，返回True/False
+         bool: 检查结果,返回True/False
          
       Examples:
         data_time = tick.datetime.time()
@@ -227,7 +227,7 @@ def get_current_trade_day(timing: datetime) -> None or date:
         return trade_dates[index + 1]
 
     if current_string not in trade_dates and last_day in trade_dates and timing.time() < NIGHT_END:
-        """ 如果是周六凌晨2：30以前， 当前不为交易日 且前一日为交易日 返回下一个交易日"""
+        """ 如果是周六凌晨2：30以前, 当前不为交易日 且前一日为交易日 返回下一个交易日"""
         index = trade_dates.index(last_day)
         return trade_dates[index + 1]
     return None
@@ -264,9 +264,9 @@ class Hickey(object):
 
         last_day = str((current + timedelta(days=-1)).date())
         """
-        如果前一天是交易日， 今天不是 那么交易到今晚晚上2点：30
+        如果前一天是交易日, 今天不是 那么交易到今晚晚上2点：30
         
-        如果前一天不是交易日，今天是  那么早盘前 不启动 
+        如果前一天不是交易日,今天是  那么早盘前 不启动 
         
         如果前一天不是交易日, 今天也不是交易日 那么不启动 
         """
@@ -365,10 +365,10 @@ class Hickey(object):
         :return: None
         """
         if flag not in self.TIME_MAPPING.keys():
-            raise ValueError(f"注意你的flag是不被接受的，我们仅仅支持\n "
+            raise ValueError(f"注意你的flag是不被接受的,我们仅仅支持\n "
                              f"{str(list(self.TIME_MAPPING.keys()))}四种")
         if not isinstance(timed, time):
-            raise ValueError(f"timed错误的数据类型，期望 time, 当前{str(type(timed))}")
+            raise ValueError(f"timed错误的数据类型,期望 time, 当前{str(type(timed))}")
 
         setattr(self, self.TIME_MAPPING[flag], timed)
 
