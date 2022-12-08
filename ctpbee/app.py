@@ -216,15 +216,21 @@ class CtpBee(object):
         根据当前配置文件下的信息载入行情api和交易api
         注意此函数同时会根据构造函数中的refresh参数决定开启定时线程, 向CtpBee里面提供定时查询账户持仓功能
         """
-
         show_me = graphic_pattern(__version__, self.engine_method)
         if logout:
             print(show_me)
         self.init_interface()
-        if self.refresh and self.config["PATTERN"] == "real":
-            if self.r is None:
+        if self.config["PATTERN"] == "real":
+            if self.refresh:
                 self.r = Thread(target=refresh_query,
                                 args=(self, common_signals,), daemon=False)
+                self.r.start()
+            else:
+                def func():
+                    while True:
+                        pass
+
+                self.r = Thread(target=func, daemon=False)
                 self.r.start()
         else:
             pass
