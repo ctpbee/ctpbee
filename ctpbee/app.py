@@ -22,7 +22,7 @@ from ctpbee.log import VLogger
 from ctpbee.looper.data import VessData
 from ctpbee.looper.report import render_result
 from ctpbee.record import Recorder
-from ctpbee.signals import AppSignal,common_signals
+from ctpbee.signals import AppSignal, common_signals
 
 
 class CtpBee(object):
@@ -221,18 +221,13 @@ class CtpBee(object):
         if logout:
             print(show_me)
         self.init_interface()
-        if self.refresh:
-            if self.r is not None:
-                self.r_flag = False
-                sleep(self.config['REFRESH_INTERVAL'] + 1.5)
+        if self.refresh and self.config["PATTERN"] == "real":
+            if self.r is None:
                 self.r = Thread(target=refresh_query,
-                                args=(self,common_signals,), daemon=True)
+                                args=(self, common_signals,), daemon=False)
                 self.r.start()
-            else:
-                self.r = Thread(target=refresh_query,
-                                args=(self, common_signals, ), daemon=True)
-                self.r.start()
-            self.r_flag = True
+        else:
+            pass
 
     def init_interface(self):
         if self.config.get("PATTERN", "real") == "real" and not self._init_interface:
