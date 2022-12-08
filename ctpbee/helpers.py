@@ -277,7 +277,7 @@ def run_forever(app):
         sleep(1)
 
 
-def refresh_query(app, signals):
+def refresh_query(app, signals, refresh):
     """
     fixme: 或许此函数会消耗大量性能 能不能按照0.5s 作为一次判断 
     针对流控,实现循环查询,此函数应该在另外一个线程调用
@@ -290,11 +290,12 @@ def refresh_query(app, signals):
     """
     p = datetime.now()
     q = datetime.now()
+    c = datetime.now()
+
     count = 0
     while True:
         now = datetime.now()
-
-        if (now - p).seconds >= app.config['REFRESH_INTERVAL']:
+        if refresh and (now - p).seconds >= app.config['REFRESH_INTERVAL']:
             if count == 0:
                 app.trader.query_position()
                 p = now
@@ -303,11 +304,11 @@ def refresh_query(app, signals):
                 app.trader.query_account()
                 p = now
                 count = 0
-        if signals is not None and (now - q).seconds >= app.config['TIMER_INTERVAL']:
+
+        if signals is not None and (now - c).seconds >= app.config['TIMER_INTERVAL']:
             event = Event(type=EVENT_TIMER)
             signals.timer_signal.send(event)
-            q = now
-
+            c = now
         if not app.r_flag:
             break
 
