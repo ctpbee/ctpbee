@@ -77,7 +77,6 @@ class Action(object):
         for order in self.app.center.active_orders:
             self.cancel(order.order_id, order)
 
-
     def buy(self, price: float, volume: float, origin: BarData or TickData or TradeData or OrderData or PositionData,
             price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
         """
@@ -211,7 +210,7 @@ class Action(object):
             orderid = id.split(".")[1]
         else:
             orderid = id
-        if origin is None and len(kwargs) !=0:
+        if origin is None and len(kwargs) != 0:
             """ 传入origin """
             exchange = kwargs.get("exchange")
             if isinstance(exchange, Exchange):
@@ -221,7 +220,7 @@ class Action(object):
             """ 传入kwargs """
             exchange = origin.exchange
             if isinstance(exchange, Exchange):
-                exchange = exchange.value           
+                exchange = exchange.value
             local_symbol = origin.local_symbol
         else:
             """ 如果两个都不传"""
@@ -231,7 +230,7 @@ class Action(object):
                 return None
             exchange = order.exchange
             if isinstance(exchange, Exchange):
-                exchange = exchange.value            
+                exchange = exchange.value
             local_symbol = order.local_symbol
         req = helper.generate_cancel_req_by_str(order_id=orderid, exchange=exchange, symbol=local_symbol)
         return self.cancel_order(req)
@@ -427,12 +426,13 @@ class CtpbeeApi(BeeApi):
 
     def __call__(self, event: Event = None):
         # 特别处理两种情况
-        if not event and not self.frozen and self.app.config["PATTERN"] == "real":
-            self.map[EVENT_TIMER](self)
-            if self.__init_ready:
-                self._count += 1
-            if self._count == 10:
-                self.on_init(True)
+        if not event:
+            if not self.frozen and self.app.config["PATTERN"] == "real":
+                self.map[EVENT_TIMER](self)
+                if self.__init_ready:
+                    self._count += 1
+                if self._count == 10:
+                    self.on_init(True)
         else:
             if not self.frozen and (event.type == EVENT_TICK or event.type == EVENT_BAR) and len(
                     self.func) != 0:
