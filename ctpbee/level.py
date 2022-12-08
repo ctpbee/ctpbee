@@ -85,7 +85,7 @@ class Action(object):
         Args:
           price (float): 价格
 
-          volume(float): 手数， 股票会自动*100
+          volume(float): 手数, 股票会自动*100
 
           origin(Any(BarData, TradeData, TickData, OrderData, PositionData)): 快速获取品种和交易所信息
 
@@ -112,7 +112,7 @@ class Action(object):
         Args:
           price (float): 价格
 
-          volume(float): 手数， 股票会自动*100
+          volume(float): 手数, 股票会自动*100
 
           origin(Any(BarData, TradeData, TickData, OrderData, PositionData)): 快速获取品种和交易所信息
 
@@ -134,12 +134,12 @@ class Action(object):
     def sell(self, price: float, volume: float, origin: BarData or TickData or TradeData or OrderData = None,
              price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
         """
-        平空头, 注意返回是一个list， 因为单号会涉及到平昨平今组合平仓
+        平空头, 注意返回是一个list, 因为单号会涉及到平昨平今组合平仓
 
         Args:
           price (float): 价格
 
-          volume(float): 手数， 股票会自动*100
+          volume(float): 手数, 股票会自动*100
 
           origin(Any(BarData, TradeData, TickData, OrderData, PositionData)): 快速获取品种和交易所信息
 
@@ -161,12 +161,12 @@ class Action(object):
     def cover(self, price: float, volume: float, origin: BarData or TickData or TradeData or OrderData or PositionData,
               price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
         """
-        平多头, 注意返回是一个list， 因为单号会涉及到平昨平今组合平仓
+        平多头, 注意返回是一个list, 因为单号会涉及到平昨平今组合平仓
 
         Args:
           price (float): 价格
 
-          volume(float): 手数， 股票会自动*100
+          volume(float): 手数, 股票会自动*100
 
           origin(Any(BarData, TradeData, TickData, OrderData, PositionData)): 快速获取品种和交易所信息
 
@@ -319,7 +319,7 @@ class Action(object):
     @check(type="trader")
     def query_position(self):
         """
-        底层的查持仓请求， 注意只会发送查询请求，不会返回持仓数据
+        底层的查持仓请求, 注意只会发送查询请求,不会返回持仓数据
 
         Returns:
           int:  本地查询发送成功与否
@@ -329,7 +329,7 @@ class Action(object):
     @check(type="trader")
     def query_account(self):
         """
-        底层的查账户数据请求， 注意只会发送查询请求，不会返回账户数据
+        底层的查账户数据请求, 注意只会发送查询请求,不会返回账户数据
 
         Returns:
           int: 本地查询发送成功与否
@@ -457,7 +457,7 @@ class CtpbeeApi(BeeApi):
     @property
     def complete(self):
         """
-        由run_until_complete所包装的函数返回，结束追踪
+        由run_until_complete所包装的函数返回,结束追踪
 
         Return:
           str: "end"
@@ -466,7 +466,7 @@ class CtpbeeApi(BeeApi):
 
     def run_until_complete(self, target=None, *args, typed=EVENT_TICK):
         """
-        越过函数检查， 进行循环判断,  目前只支持单步队列
+        越过函数检查, 进行循环判断,  目前只支持单步队列
         
         Args:
           target:目标函数
@@ -510,7 +510,7 @@ class CtpbeeApi(BeeApi):
             self.path = get_ctpbee_path()
         init = kwargs.get("init_position", False)
         if init and not isinstance(init, bool):
-            raise TypeError(f"init参数应该设置为True或者False，而不是{type(init)}")
+            raise TypeError(f"init参数应该设置为True或者False,而不是{type(init)}")
 
         # 单号如
         self.order_id_mapping = {}
@@ -521,7 +521,7 @@ class CtpbeeApi(BeeApi):
 
     def _resolve_callback(self, item, result):
         """
-        处理回调函数，用户不关心此实现
+        处理回调函数,用户不关心此实现
 
         Args:
           item: 操作项
@@ -558,13 +558,13 @@ class CtpbeeApi(BeeApi):
     @property
     def action(self) -> Action:
         if self.app is None:
-            raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
+            raise ValueError("没有载入CtpBee,请尝试通过init_app载入app")
         return self.app.action
 
     @property
     def center(self) -> Center:
         if self.app is None:
-            raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
+            raise ValueError("没有载入CtpBee,请尝试通过init_app载入app")
         return self.app.center
 
     @property
@@ -594,7 +594,7 @@ class CtpbeeApi(BeeApi):
     @property
     def recorder(self):
         if self.app is None:
-            raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
+            raise ValueError("没有载入CtpBee,请尝试通过init_app载入app")
         return self.app.recorder
 
     def get_strategy(self, strategy_name: str):
@@ -730,10 +730,10 @@ class CtpbeeApi(BeeApi):
 
     def route(self, handler: str):
         """
-        装饰器， 指定路由， 为了方便用户不想写类接口体而存在
+        装饰器, 指定路由, 为了方便用户不想写类接口体而存在
 
         Args:
-          handler(str): 接口类型, 应该为EVENT_TICK此类常量或者"tick"， 参见constant.py下面的参数
+          handler(str): 接口类型, 应该为EVENT_TICK此类常量或者"tick", 参见constant.py下面的参数
 
         Examples:
           strategy = CtpbeeApi("hello_api")
@@ -743,7 +743,7 @@ class CtpbeeApi(BeeApi):
             print(tick)
         """
         if handler not in self.map:
-            raise TypeError(f"呀， ctpbee暂不支持此函数类型 {handler}, 当前仅支持 {self.map.keys()}")
+            raise TypeError(f"呀, ctpbee暂不支持此函数类型 {handler}, 当前仅支持 {self.map.keys()}")
 
         def converter(func):
             self.map[handler] = func

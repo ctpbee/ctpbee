@@ -17,6 +17,7 @@ from time import sleep
 from typing import AnyStr, IO
 
 from ctpbee.date import trade_dates
+from ctpbee.constant import Event, EVENT_TIMER
 
 _missing = object()
 
@@ -101,7 +102,7 @@ def check(type: AnyStr):
          type (AnyStr): 类型
 
       Returns:
-         bool: 检查结果，返回True/False
+         bool: 检查结果,返回True/False
     """
 
     def middle(func):
@@ -175,7 +176,7 @@ def graphic_pattern(version, engine_method):
 
 def dynamic_loading_api(f):
     """
-    主要是用来通过文件动态载入策略。 返回策略类的实例， 应该通过CtpBee.add_extension() 加以载入
+    主要是用来通过文件动态载入策略。 返回策略类的实例, 应该通过CtpBee.add_extension() 加以载入
     你需要在策略代码文件中显式指定ext
 
       Args:
@@ -185,7 +186,7 @@ def dynamic_loading_api(f):
          CtpbeeApi: 编译好的CtpbeeApi实例对象
     """
     if not isinstance(f, IO) and not isinstance(f, TextIOWrapper):
-        raise ValueError(f"请确保你传入的是文件流(IO)，而不是{str(type(f))}")
+        raise ValueError(f"请确保你传入的是文件流(IO),而不是{str(type(f))}")
     d = types.ModuleType("object")
     d.__file__ = f.name
     exec(compile(f.read(), f.name, 'exec'), d.__dict__)
@@ -255,7 +256,7 @@ def run_forever(app):
             app.reload()  # 重载接口
             for x in app._extensions.keys():
                 app.enable_extension(x)
-            print(f"重新进行自动登录， 时间: {str(current_time)}")
+            print(f"重新进行自动登录, 时间: {str(current_time)}")
             running_status = True
 
         elif running_me and running_status:
@@ -267,7 +268,7 @@ def run_forever(app):
                 app.suspend_extension(x)
                 if hasattr(app._extensions[x], "f_init"):
                     app._extensions[x].f_init = False
-            print(f"当前时间不允许， 时间: {str(current_time)}, 即将阻断运行")
+            print(f"当前时间不允许, 时间: {str(current_time)}, 即将阻断运行")
             running_status = False
 
         elif not running_me and not running_status:
@@ -276,21 +277,36 @@ def run_forever(app):
         sleep(1)
 
 
-def refresh_query(app):
+def refresh_query(app, signals):
     """
-    针对流控,实现循环查询，此函数应该在另外一个线程调用
+    fixme: 或许此函数会消耗大量性能 能不能按照0.5s 作为一次判断 
+    针对流控,实现循环查询,此函数应该在另外一个线程调用
+    
+    同时给common_signal传递1s一个信号基准
 
     Args:
        app (CtpBee): App实例
+       signals(CommonSignals): 公共信号 
     """
+    p = datetime.now()
+    q = datetime.now()
+    count = 0
     while True:
-        cur = datetime.now()
-        # if not TradingDay.is_trading_day(cur) or not auth_check_time(cur):
-        #     continue
-        sleep(1)
-        app.trader.query_position()
-        sleep(app.config['REFRESH_INTERVAL'])
-        app.trader.query_account()
+        now = datetime.now()
+
+        if (now - p).seconds >= app.config['REFRESH_INTERVAL']:
+            if count == 0:
+                app.trader.query_position()
+                p = now
+                count = 1
+            elif count == 1:
+                app.trader.query_account()
+                p = now
+                count = 0
+        if (now - q).seconds >= app.config['TIMER_INTERVAL']:
+            event = Event(type=EVENT_TIMER)
+            signals.timer_signal.send(event)
+            q = now
 
         if not app.r_flag:
             break
@@ -298,7 +314,7 @@ def refresh_query(app):
 
 def helper_call(func):
     """
-    此装饰器是为了减少代码， 主要是用来执行插件的回调方法
+    此装饰器是为了减少代码, 主要是用来执行插件的回调方法
     todo: deepcopy need ?
 
     Args:
@@ -311,8 +327,9 @@ def helper_call(func):
         self, event = args
         for cta in self.app._extensions.values():
             if self.app.config.get('INSTRUMENT_INDEPEND'):
-                if len(value.instrument_set) == 0:
-                    warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
+                if len(cta.instrument_set) == 0:
+                    warnings.warn(
+                        "你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0,请确保你的订阅变量是否为instrument_set,以及订阅具体代码")
                 if event.data.local_symbol in cta.instrument_set:
                     cta(deepcopy(event))
             else:
@@ -324,7 +341,7 @@ def helper_call(func):
 
 def async_value_call(func):
     """
-    异步的Call装饰器，在2.0的时候可能会被使用
+    异步的Call装饰器,在2.0的时候可能会被使用
 
     Args:
        func (FunctionType): 函数对象
@@ -337,7 +354,8 @@ def async_value_call(func):
         for value in self.app._extensions.values():
             if self.app.config['INSTRUMENT_INDEPEND']:
                 if len(value.instrument_set) == 0:
-                    warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
+                    warnings.warn(
+                        "你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0,请确保你的订阅变量是否为instrument_set,以及订阅具体代码")
                 if event.data.local_symbol in value.instrument_set:
                     await value(deepcopy(event))
             else:
@@ -351,7 +369,8 @@ def _async_raise(tid, exctype):
     tid = ctypes.c_long(tid)
     if not inspect.isclass(exctype):
         exctype = type(exctype)
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+        tid, ctypes.py_object(exctype))
     if res == 0:
         raise ValueError("invalid thread id")
     elif res != 1:
@@ -363,14 +382,14 @@ def _async_raise(tid, exctype):
 
 def end_thread(thread):
     """
-     强行杀掉线程， 不应该被用户使用
+     强行杀掉线程, 不应该被用户使用
     """
     _async_raise(thread.ident, SystemExit)
 
 
 def exec_intercept(self, func):
     """
-    此函数主要用于CtpbeeApi的Action结果拦截，保证用户简单调用，实现暗地结果处理, 用户不应该关注， 不做过多解释
+    此函数主要用于CtpbeeApi的Action结果拦截,保证用户简单调用,实现暗地结果处理, 用户不应该关注, 不做过多解释
     """
 
     @wraps(func)

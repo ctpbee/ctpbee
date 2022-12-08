@@ -215,11 +215,14 @@ class BeeTdApi(TdApi):
                         self.open_cost_dict[position.symbol]["long"] = 0
 
                     self.open_cost_dict[position.symbol]["long"] += data['OpenCost']
-                    position.open_price = self.open_cost_dict[position.symbol]["long"] / (position.volume * size)
+                    position.open_price = self.open_cost_dict[position.symbol]["long"] / (
+                        position.volume * size)
 
                     # 先算出当前的最新价格
-                    current_price = position.pnl / (size * position.volume) + position.price
-                    position.float_pnl = (current_price - position.open_price) * size * position.volume
+                    current_price = position.pnl / \
+                        (size * position.volume) + position.price
+                    position.float_pnl = (
+                        current_price - position.open_price) * size * position.volume
             else:
                 position.frozen += data["LongFrozen"]
 
@@ -228,9 +231,12 @@ class BeeTdApi(TdApi):
                         self.open_cost_dict[position.symbol]["short"] = 0
 
                     self.open_cost_dict[position.symbol]["short"] += data['OpenCost']
-                    position.open_price = self.open_cost_dict[position.symbol]["short"] / (position.volume * size)
-                    current_price = position.price - position.pnl / (size * position.volume)
-                    position.float_pnl = (position.open_price - current_price) * size * position.volume
+                    position.open_price = self.open_cost_dict[position.symbol]["short"] / (
+                        position.volume * size)
+                    current_price = position.price - \
+                        position.pnl / (size * position.volume)
+                    position.float_pnl = (
+                        position.open_price - current_price) * size * position.volume
 
         except KeyError:
             pass
@@ -248,7 +254,8 @@ class BeeTdApi(TdApi):
         account = AccountData(
             accountid=data["AccountID"],
             balance=data["Balance"],
-            frozen=data["FrozenMargin"] + data["FrozenCash"] + data["FrozenCommission"],
+            frozen=data["FrozenMargin"] +
+            data["FrozenCash"] + data["FrozenCommission"],
             gateway_name=self.gateway_name
         )
         account.available = data["Available"]
@@ -265,8 +272,10 @@ class BeeTdApi(TdApi):
         """
         product = PRODUCT_CTP2VT.get(data["ProductClass"], None)
         try:
-            end_delivery_date = datetime.strptime(data["EndDelivDate"], "%Y%m%d"),
-            start_delivery_date = datetime.strptime(data["StartDelivDate"], "%Y%m%d"),
+            end_delivery_date = datetime.strptime(
+                data["EndDelivDate"], "%Y%m%d"),
+            start_delivery_date = datetime.strptime(
+                data["StartDelivDate"], "%Y%m%d"),
             open_date = datetime.strptime(data['OpenDate'], "%Y%m%d"),
             is_trading = bool(data["IsTrading"]),
             create_date = datetime.strptime(data['CreateDate'], "%Y%m%d")
@@ -306,14 +315,17 @@ class BeeTdApi(TdApi):
                 import warnings
                 warnings.warn(f"未预料到的合约问题 错误信息: {e}")
                 return
-            self.symbol_exchange_mapping[data["InstrumentID"]] = EXCHANGE_CTP2VT[data["ExchangeID"]]
+            self.symbol_exchange_mapping[data["InstrumentID"]
+                                         ] = EXCHANGE_CTP2VT[data["ExchangeID"]]
 
             # For option only
             if contract.product == Product.OPTION:
                 contract.option_underlying = data["UnderlyingInstrID"],
-                contract.option_type = OPTIONTYPE_CTP2VT.get(data["OptionsType"], None),
+                contract.option_type = OPTIONTYPE_CTP2VT.get(
+                    data["OptionsType"], None),
                 contract.option_strike = data["StrikePrice"],
-                contract.option_expiry = datetime.strptime(data["ExpireDate"], "%Y%m%d"),
+                contract.option_expiry = datetime.strptime(
+                    data["ExpireDate"], "%Y%m%d"),
 
             self.on_event(type=EVENT_CONTRACT, data=contract)
 
@@ -353,7 +365,8 @@ class BeeTdApi(TdApi):
             ordertype = ORDERTYPE_CTP2VT[data["OrderPriceType"]]
         else:
             ordertype = "non_support"
-        is_local = True if int(self.frontid) == int(frontid) and int(self.sessionid) == int(sessionid) else False
+        is_local = True if int(self.frontid) == int(frontid) and int(
+            self.sessionid) == int(sessionid) else False
 
         if is_local:
             self.local_order_id.append(order_id)
@@ -415,11 +428,14 @@ class BeeTdApi(TdApi):
         self.appid = info.get("appid")
         self.product_info = info.get("product_info")
 
+        subscribe_info = info.get("subscribe_topic", (0, 0)) # 默认采用(0, 0)的方式进行订阅
+
         if not self.connect_status:
-            path = get_folder_path(self.gateway_name.lower() + f"/{self.userid}")
+            path = get_folder_path(
+                self.gateway_name.lower() + f"/{self.userid}")
             self.createFtdcTraderApi(str(path) + "\\Td")
-            self.subscribePrivateTopic(0)
-            self.subscribePublicTopic(0)
+            self.subscribePrivateTopic(subscribe_info[0])
+            self.subscribePublicTopic(subscribe_info[1])
             self.registerFront(info.get("td_address"))
             self.init()
         else:

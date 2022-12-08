@@ -9,7 +9,7 @@ from typing import Text
 from ctpbee import __version__
 from ctpbee.center import Center
 from ctpbee.config import Config
-from ctpbee.constant import Event, EVENT_TIMER
+from ctpbee.constant import Event
 from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
 from ctpbee.exceptions import ConfigError
@@ -22,7 +22,7 @@ from ctpbee.log import VLogger
 from ctpbee.looper.data import VessData
 from ctpbee.looper.report import render_result
 from ctpbee.record import Recorder
-from ctpbee.signals import AppSignal, common_signals
+from ctpbee.signals import AppSignal,common_signals
 
 
 class CtpBee(object):
@@ -33,23 +33,24 @@ class CtpBee(object):
     # 默认回测配置参数
     default_config = dict(LOG_OUTPUT=True,  # 是否开启输出模式
                           TD_FUNC=False,  # 是否开启交易功能
-                          INTERFACE="ctp",  # 接口参数，默认指定国内期货ctp
+                          INTERFACE="ctp",  # 接口参数,默认指定国内期货ctp
                           MD_FUNC=True,  # 是否开启行情功能
-                          XMIN=[],  # k线序列周期， 支持一小时以内的k线任意生成
+                          XMIN=[],  # k线序列周期, 支持一小时以内的k线任意生成
                           ALL_SUBSCRIBE=False,
-                          SHARE_MD=False,  # 是否多账户之间共享行情，---> 等待完成
+                          SHARE_MD=False,  # 是否多账户之间共享行情,---> 等待完成
                           SLIPPAGE_COVER=0,  # 平多头滑点设置
                           SLIPPAGE_SELL=0,  # 平空头滑点设置
                           SLIPPAGE_SHORT=0,  # 卖空滑点设置
                           SLIPPAGE_BUY=0,  # 买多滑点设置
                           SHARED_FUNC=False,  # 分时图数据 --> 等待优化
-                          REFRESH_INTERVAL=1.5,  # 定时刷新秒数， 需要在CtpBee实例化的时候将refresh设置为True才会生效
-                          INSTRUMENT_INDEPEND=False,  # 是否开启独立行情，策略对应相应的行情
-                          CLOSE_PATTERN="today",  # 面对支持平今的交易所，优先平今或者平昨 ---> today: 平今, yesterday: 平昨， 其他:d
-                          TODAY_EXCHANGE=[Exchange.SHFE.value, Exchange.INE.value],  # 需要支持平今的交易所代码列表
+                          REFRESH_INTERVAL=1.5,  # 定时刷新秒数, 需要在CtpBee实例化的时候将refresh设置为True才会生效
+                          INSTRUMENT_INDEPEND=False,  # 是否开启独立行情,策略对应相应的行情
+                          CLOSE_PATTERN="today",  # 面对支持平今的交易所,优先平今或者平昨 ---> today: 平今, yesterday: 平昨, 其他:d
+                          TODAY_EXCHANGE=[Exchange.SHFE.value,
+                                          Exchange.INE.value],  # 需要支持平今的交易所代码列表
                           AFTER_TIMEOUT=3,  # 设置after线程执行超时,
                           TIMER_INTERVAL=1,
-                          PATTERN="real"
+                          PATTERN="real",
                           )
 
     config_class = Config
@@ -69,8 +70,8 @@ class CtpBee(object):
                  instance_path=None):
         """
         name: 创建运行核心的名字
-        import_name: 导入包的名字， 用__name__即可'
-        action_class: 执行器 > 默认使用系统自带的Action, 或者由用户继承，然后传入类
+        import_name: 导入包的名字, 用__name__即可'
+        action_class: 执行器 > 默认使用系统自带的Action, 或者由用户继承,然后传入类
         engine_method: Actor模型采用的底层的引擎
         logger_class: logger类,可以自己定义
         refresh: 是否自己主动查询持仓 默认开启
@@ -92,11 +93,11 @@ class CtpBee(object):
         if engine_method == "thread":
             self.recorder = Recorder(self)
         else:
-            raise TypeError("引擎参数错误，只支持 thread 和 async，请检查代码")
+            raise TypeError("引擎参数错误,只支持 thread 和 async,请检查代码")
 
         """
         If no action is specified by default, use the default Action class
-        如果默认不指定action参数， 那么使用默认的Action类 
+        如果默认不指定action参数, 那么使用默认的Action类 
         """
         if action_class is None:
             self.action: Action = Action(self)
@@ -110,7 +111,7 @@ class CtpBee(object):
         """
         If engine_method is specified by default, use the default EventEngine and Recorder or use the engine
             and recorder basis on your choice
-        如果不指定engine_method参数，那么使用默认的事件引擎 或者根据你的参数使用不同的引擎和记录器
+        如果不指定engine_method参数,那么使用默认的事件引擎 或者根据你的参数使用不同的引擎和记录器
         """
 
         if instance_path is None:
@@ -174,9 +175,9 @@ class CtpBee(object):
           action_class (Action): 操作类
         """
         if isinstance(action_class, Action):
-            raise TypeError(f"更新action_class出现错误, 你传入的action_class类型为{type(action_class)}")
+            raise TypeError(
+                f"更新action_class出现错误, 你传入的action_class类型为{type(action_class)}")
         self.action = action_class(self)
-
 
     def make_config(self):
         """
@@ -213,7 +214,7 @@ class CtpBee(object):
     def _running(self, logout=True):
         """
         根据当前配置文件下的信息载入行情api和交易api
-        注意此函数同时会根据构造函数中的refresh参数决定开启定时线程， 向CtpBee里面提供定时查询账户持仓功能
+        注意此函数同时会根据构造函数中的refresh参数决定开启定时线程, 向CtpBee里面提供定时查询账户持仓功能
         """
 
         show_me = graphic_pattern(__version__, self.engine_method)
@@ -224,10 +225,12 @@ class CtpBee(object):
             if self.r is not None:
                 self.r_flag = False
                 sleep(self.config['REFRESH_INTERVAL'] + 1.5)
-                self.r = Thread(target=refresh_query, args=(self,), daemon=True)
+                self.r = Thread(target=refresh_query,
+                                args=(self,common_signals,), daemon=True)
                 self.r.start()
             else:
-                self.r = Thread(target=refresh_query, args=(self,), daemon=True)
+                self.r = Thread(target=refresh_query,
+                                args=(self, common_signals, ), daemon=True)
                 self.r.start()
             self.r_flag = True
 
@@ -265,15 +268,6 @@ class CtpBee(object):
           debug(bool): 是否开启调试模式 ----> 等待完成
         """
         if self.config.get("PATTERN") == "real":
-            def running_timer(common_signal):
-                while True:
-                    event = Event(type=EVENT_TIMER)
-                    common_signal.timer_signal.send(event)
-                    sleep(self.config['TIMER_INTERVAL'])
-
-            self.timer = Thread(target=running_timer, args=(common_signals,))
-            self.timer.start()
-
             self.config["LOG_OUTPUT"] = log_output
             self._running(logout=log_output)
         elif self.config.get("PATTERN") == "looper":
@@ -289,7 +283,7 @@ class CtpBee(object):
 
     def get_result(self, report: bool = False, **kwargs):
         """
-        计算回测结果，生成回测报告
+        计算回测结果,生成回测报告
 
         Args:
           report(bool): 是否生成报告
@@ -319,7 +313,8 @@ class CtpBee(object):
         """
         成交单数据
         """
-        trade_data = list(map(dumps, self.trader.traded_order_mapping.values()))
+        trade_data = list(
+            map(dumps, self.trader.traded_order_mapping.values()))
         position_data = self.trader.position_detail
         if report:
             path = render_result(self.trader.account.result, trade_data=trade_data, strategy=strategys,
@@ -364,7 +359,8 @@ class CtpBee(object):
                 else:
                     print("===> 发送初始化信号")
                     from ctpbee.constant import EVENT_INIT_FINISHED
-                    self.app_signal.init_signal.send(Event(type=EVENT_INIT_FINISHED, data=None))
+                    self.app_signal.init_signal.send(
+                        Event(type=EVENT_INIT_FINISHED, data=None))
                     flag = True
             except StopIteration:
                 self.logger.info("回测结束,正在生成结果")
@@ -418,7 +414,7 @@ class CtpBee(object):
            extension_name(Text): 策略名字
 
         Return:
-            CtpbeeApi/None: 存在就返回实体，不存在返回None
+            CtpbeeApi/None: 存在就返回实体,不存在返回None
 
         """
         if extension_name in self._extensions:

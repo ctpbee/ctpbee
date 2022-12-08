@@ -35,7 +35,7 @@ class Config(dict):
 
     def from_pyfile(self, filename, silent=False):
         """
-        编译py文件，读取其中配置
+        编译py文件,读取其中配置
 
         Args:
           filename(Text): py文件名

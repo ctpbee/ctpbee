@@ -265,7 +265,7 @@ class Recorder(object):
 
     def clear_all(self):
         """
-        为了避免数据越来越大，需要清空数据
+        为了避免数据越来越大,需要清空数据
         :return:
         """
 

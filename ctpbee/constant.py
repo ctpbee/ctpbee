@@ -693,7 +693,7 @@ class Event:
 
 
 class Msg:
-    ZH_NO_BEE_APP_ERROR = "没有载入CtpBee，请尝试通过init_app载入app"
+    ZH_NO_BEE_APP_ERROR = "没有载入CtpBee,请尝试通过init_app载入app"
     EN_NO_BEE_APP_ERROR = "not loading Ctpbee, please try to load app by init_app"
 
     def __init__(self, language: str = "zh"):
