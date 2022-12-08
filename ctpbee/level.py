@@ -39,24 +39,6 @@ class Action(object):
         warn(message)
         return None
 
-    def add_risk_check(self, func) -> None:
-        """
-        添加函数, 当调用此函数的时候进行风控前置和后置检查
-        todo: 使用装饰器
-
-        Args:
-          func (FuncType): 函数对象
-
-        Returns:
-          None
-        """
-        if self.app is None or self.app.risk_decorator is None:
-            raise AttributeError("app为None, 不可添加风控函数")
-        if inspect.ismethod(func) or inspect.isfunction(func):
-            setattr(self, func.__name__, self.app.risk_decorator(func))
-            return None
-        raise ValueError(f"请确保传入的func 类型为函数, 当前传入参数类型为{type(func)}")
-
     @property
     def center(self) -> Center:
         return self.app.center
@@ -95,13 +77,7 @@ class Action(object):
         for order in self.app.center.active_orders:
             self.cancel(order.order_id, order)
 
-    def close_all(self):
-        """
-        非常危险 暂未实现
-        """
-        raise ValueError("此API 暂时未被启用， 将在1.3.1启用")
-
-    def buy(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
+    def buy(self, price: float, volume: float, origin: BarData or TickData or TradeData or OrderData or PositionData,
             price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
         """
         多头开仓
@@ -109,7 +85,7 @@ class Action(object):
         Args:
           price (float): 价格
 
-          volume(float): 手数， 股票会自动*100
+          volume(float): 手数, 股票会自动*100
 
           origin(Any(BarData, TradeData, TickData, OrderData, PositionData)): 快速获取品种和交易所信息
 
@@ -122,12 +98,13 @@ class Action(object):
         if not isinstance(self.app.config['SLIPPAGE_BUY'], float) and not isinstance(
                 self.app.config['SLIPPAGE_BUY'], int):
             raise ConfigError(message="滑点配置应为浮点小数或者整数")
+
         price = price + self.app.config['SLIPPAGE_BUY']
         req = helper.generate_order_req_by_var(volume=volume, price=price, offset=Offset.OPEN, direction=Direction.LONG,
                                                type=price_type, exchange=origin.exchange, symbol=origin.symbol)
         return self.send_order(req)
 
-    def short(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
+    def short(self, price: float, volume: float, origin: BarData or TickData or TradeData or OrderData or PositionData,
               price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
         """
         空头开仓
@@ -135,7 +112,7 @@ class Action(object):
         Args:
           price (float): 价格
 
-          volume(float): 手数， 股票会自动*100
+          volume(float): 手数, 股票会自动*100
 
           origin(Any(BarData, TradeData, TickData, OrderData, PositionData)): 快速获取品种和交易所信息
 
@@ -154,15 +131,15 @@ class Action(object):
                                                type=price_type, exchange=origin.exchange, symbol=origin.symbol)
         return self.send_order(req)
 
-    def sell(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData] = None,
+    def sell(self, price: float, volume: float, origin: BarData or TickData or TradeData or OrderData = None,
              price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
         """
-        平空头, 注意返回是一个list， 因为单号会涉及到平昨平今组合平仓
+        平空头, 注意返回是一个list, 因为单号会涉及到平昨平今组合平仓
 
         Args:
           price (float): 价格
 
-          volume(float): 手数， 股票会自动*100
+          volume(float): 手数, 股票会自动*100
 
           origin(Any(BarData, TradeData, TickData, OrderData, PositionData)): 快速获取品种和交易所信息
 
@@ -181,15 +158,15 @@ class Action(object):
                     self.get_req(origin.local_symbol, Direction.SHORT, volume, self.app)]
         return [self.send_order(req) for req in req_list if req.volume != 0]
 
-    def cover(self, price: float, volume: float, origin: [BarData, TickData, TradeData, OrderData, PositionData],
+    def cover(self, price: float, volume: float, origin: BarData or TickData or TradeData or OrderData or PositionData,
               price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
         """
-        平多头, 注意返回是一个list， 因为单号会涉及到平昨平今组合平仓
+        平多头, 注意返回是一个list, 因为单号会涉及到平昨平今组合平仓
 
         Args:
           price (float): 价格
 
-          volume(float): 手数， 股票会自动*100
+          volume(float): 手数, 股票会自动*100
 
           origin(Any(BarData, TradeData, TickData, OrderData, PositionData)): 快速获取品种和交易所信息
 
@@ -208,7 +185,7 @@ class Action(object):
                     self.get_req(origin.local_symbol, Direction.LONG, volume, self.app)]
         return [self.send_order(req) for req in req_list if req.volume != 0]
 
-    def cancel(self, id: Text, origin: [BarData, TickData, TradeData, OrderData, PositionData] = None, **kwargs):
+    def cancel(self, id: Text, origin: BarData or TickData or TradeData or OrderData or PositionData = None, **kwargs):
         """
         撤单, 在不涉传递origin的情况下请使用local_symbol和exchange字段传递值
 
@@ -233,28 +210,27 @@ class Action(object):
             orderid = id.split(".")[1]
         else:
             orderid = id
-        if origin is None:
+        if origin is None and len(kwargs) != 0:
+            """ 传入origin """
             exchange = kwargs.get("exchange")
             if isinstance(exchange, Exchange):
                 exchange = exchange.value
             local_symbol = kwargs.get("local_symbol")
-        elif origin:
-            try:
-                exchange = origin.exchange.value
-            except AttributeError:
-                exchange = origin.exchange
+        elif origin is not None and len(kwargs) == 0:
+            """ 传入kwargs """
+            exchange = origin.exchange
+            if isinstance(exchange, Exchange):
+                exchange = exchange.value
             local_symbol = origin.local_symbol
-
-        if origin is None and len(kwargs) == 0:
+        else:
             """ 如果两个都不传"""
             order = self.app.recorder.get_order(id)
             if not order:
                 print("找不到订单啦... 撤不了哦")
                 return None
-            try:
-                exchange = order.exchange.value
-            except AttributeError:
-                exchange = order.exchange
+            exchange = order.exchange
+            if isinstance(exchange, Exchange):
+                exchange = exchange.value
             local_symbol = order.local_symbol
         req = helper.generate_cancel_req_by_str(order_id=orderid, exchange=exchange, symbol=local_symbol)
         return self.cancel_order(req)
@@ -343,7 +319,7 @@ class Action(object):
     @check(type="trader")
     def query_position(self):
         """
-        底层的查持仓请求， 注意只会发送查询请求，不会返回持仓数据
+        底层的查持仓请求, 注意只会发送查询请求,不会返回持仓数据
 
         Returns:
           int:  本地查询发送成功与否
@@ -353,7 +329,7 @@ class Action(object):
     @check(type="trader")
     def query_account(self):
         """
-        底层的查账户数据请求， 注意只会发送查询请求，不会返回账户数据
+        底层的查账户数据请求, 注意只会发送查询请求,不会返回账户数据
 
         Returns:
           int: 本地查询发送成功与否
@@ -390,16 +366,6 @@ class Action(object):
 
     def __repr__(self):
         return f"{self.__name__} "
-
-
-class ActionProxy:
-    def __init__(self, action, api):
-        self.action = action
-        self.api = api
-
-    def __getattr__(self, item):
-        callable_func = exec_intercept(self=self, func=getattr(self.action, item))
-        return callable_func
 
 
 class BeeApi(object):
@@ -460,12 +426,13 @@ class CtpbeeApi(BeeApi):
 
     def __call__(self, event: Event = None):
         # 特别处理两种情况
-        if not event and not self.frozen and self.app.config["PATTERN"] == "real":
-            self.map[EVENT_TIMER](self)
-            if self.__init_ready:
-                self._count += 1
-            if self._count == 10:
-                self.on_init(True)
+        if not event:
+            if not self.frozen and self.app.config["PATTERN"] == "real":
+                self.map[EVENT_TIMER](self)
+                if self.__init_ready:
+                    self._count += 1
+                if self._count == 10:
+                    self.on_init(True)
         else:
             if not self.frozen and (event.type == EVENT_TICK or event.type == EVENT_BAR) and len(
                     self.func) != 0:
@@ -490,7 +457,7 @@ class CtpbeeApi(BeeApi):
     @property
     def complete(self):
         """
-        由run_until_complete所包装的函数返回，结束追踪
+        由run_until_complete所包装的函数返回,结束追踪
 
         Return:
           str: "end"
@@ -499,7 +466,7 @@ class CtpbeeApi(BeeApi):
 
     def run_until_complete(self, target=None, *args, typed=EVENT_TICK):
         """
-        越过函数检查， 进行循环判断,  目前只支持单步队列
+        越过函数检查, 进行循环判断,  目前只支持单步队列
         
         Args:
           target:目标函数
@@ -543,7 +510,7 @@ class CtpbeeApi(BeeApi):
             self.path = get_ctpbee_path()
         init = kwargs.get("init_position", False)
         if init and not isinstance(init, bool):
-            raise TypeError(f"init参数应该设置为True或者False，而不是{type(init)}")
+            raise TypeError(f"init参数应该设置为True或者False,而不是{type(init)}")
 
         # 单号如
         self.order_id_mapping = {}
@@ -554,7 +521,7 @@ class CtpbeeApi(BeeApi):
 
     def _resolve_callback(self, item, result):
         """
-        处理回调函数，用户不关心此实现
+        处理回调函数,用户不关心此实现
 
         Args:
           item: 操作项
@@ -591,39 +558,43 @@ class CtpbeeApi(BeeApi):
     @property
     def action(self) -> Action:
         if self.app is None:
-            raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
-        return ActionProxy(self.app.action, self)
+            raise ValueError("没有载入CtpBee,请尝试通过init_app载入app")
+        return self.app.action
 
     @property
     def center(self) -> Center:
         if self.app is None:
-            raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
+            raise ValueError("没有载入CtpBee,请尝试通过init_app载入app")
         return self.app.center
 
     @property
     def logger(self):
         return self.app.logger
 
-    def warning(self, msg, **kwargs):
+    def warning(self, *msg, **kwargs):
+        msg = " ".join(msg)
         kwargs['owner'] = "API: " + self.extension_name
         self.logger.warning(msg, **kwargs)
 
-    def info(self, msg, **kwargs):
+    def info(self, *msg, **kwargs):
+        msg = " ".join(msg)
         kwargs['owner'] = "API: " + self.extension_name
         self.logger.info(msg, **kwargs)
 
-    def error(self, msg, **kwargs):
+    def error(self, *msg, **kwargs):
+        msg = " ".join(msg)
         kwargs['owner'] = "API: " + self.extension_name
         self.logger.error(msg, **kwargs)
 
-    def debug(self, msg, **kwargs):
+    def debug(self, *msg, **kwargs):
+        msg = " ".join(msg)
         kwargs['owner'] = "API: " + self.extension_name
         self.logger.debug(msg, **kwargs)
 
     @property
     def recorder(self):
         if self.app is None:
-            raise ValueError("没有载入CtpBee，请尝试通过init_app载入app")
+            raise ValueError("没有载入CtpBee,请尝试通过init_app载入app")
         return self.app.recorder
 
     def get_strategy(self, strategy_name: str):
@@ -759,10 +730,10 @@ class CtpbeeApi(BeeApi):
 
     def route(self, handler: str):
         """
-        装饰器， 指定路由， 为了方便用户不想写类接口体而存在
+        装饰器, 指定路由, 为了方便用户不想写类接口体而存在
 
         Args:
-          handler(str): 接口类型, 应该为EVENT_TICK此类常量或者"tick"， 参见constant.py下面的参数
+          handler(str): 接口类型, 应该为EVENT_TICK此类常量或者"tick", 参见constant.py下面的参数
 
         Examples:
           strategy = CtpbeeApi("hello_api")
@@ -772,7 +743,7 @@ class CtpbeeApi(BeeApi):
             print(tick)
         """
         if handler not in self.map:
-            raise TypeError(f"呀， ctpbee暂不支持此函数类型 {handler}, 当前仅支持 {self.map.keys()}")
+            raise TypeError(f"呀, ctpbee暂不支持此函数类型 {handler}, 当前仅支持 {self.map.keys()}")
 
         def converter(func):
             self.map[handler] = func

@@ -1,7 +1,7 @@
 # encoding: UTF-8
 from copy import deepcopy
 from datetime import datetime
-from typing import Iterable, Callable
+from typing import Iterable, Callable, Dict
 
 from ctpbee.constant import BarData, TickData, EVENT_BAR
 from ctpbee.constant import Event
@@ -13,7 +13,7 @@ class DataGenerator:
     def __init__(self, app):
         self.app = app
         self.XMIN = app.config.get("XMIN")
-        self.last_entity: {int: None} = {x: None for x in self.XMIN}
+        self.last_entity: Dict[int, None] = {x: None for x in self.XMIN}
 
         self.last_datetime = {x: None for x in self.XMIN}
 
@@ -40,14 +40,28 @@ class DataGenerator:
                 )
                 self.last_datetime[frq] = tick_data.datetime
             else:
-                if frq != 1 and tick_data.datetime.minute % frq == 0 and abs(
-                        (tick_data.datetime - self.last_datetime[frq]).seconds) >= 60:
+                last_datetime = self.last_datetime[frq]
+                if ((last_datetime.minute == tick_data.datetime.minute) and
+                        (last_datetime.hour == tick_data.datetime.hour)
+                    ) or tick_data.datetime.minute % frq != 0:
+                    self.last_entity[frq].high_price = max(
+                        self.last_entity[frq].high_price, tick_data.last_price)
+                    self.last_entity[frq].low_price = min(
+                        self.last_entity[frq].low_price, tick_data.last_price)
+                    self.last_entity[frq].close_price = tick_data.last_price
+                    self.last_entity[frq].volume += max(
+                        tick_data.volume - self.last_entity[frq].first_volume, 0)
+                    self.last_entity[frq].first_volume = tick_data.volume
+                else:
                     temp = deepcopy(last)
                     if self.check_tick(tick_data):
-                        temp.high_price = max(temp.high_price, tick_data.last_price)
-                        temp.low_price = min(temp.low_price, tick_data.last_price)
+                        temp.high_price = max(
+                            temp.high_price, tick_data.last_price)
+                        temp.low_price = min(
+                            temp.low_price, tick_data.last_price)
                         temp.close_price = tick_data.last_price
-                        temp.volume += max(tick_data.volume - temp.first_volume, 0)
+                        temp.volume += max(tick_data.volume -
+                                           temp.first_volume, 0)
                     self.last_entity[frq] = BarData(
                         datetime=tick_data.datetime,
                         high_price=tick_data.last_price,
@@ -60,41 +74,12 @@ class DataGenerator:
                         local_symbol=tick_data.local_symbol
                     )
                     self.last_datetime[frq] = tick_data.datetime
+                    # if abs((tick_data.datetime - last_datetime).seconds) < (frq == 1 and 10 or 60):
+                    #     # 时间太短，丢弃？
+                    #     continue
+                    temp.datetime = temp.datetime.replace(
+                        second=0, microsecond=0)
                     data.append(temp)
-                elif frq != 1:
-                    self.last_entity[frq].high_price = max(self.last_entity[frq].high_price, tick_data.last_price)
-                    self.last_entity[frq].low_price = min(self.last_entity[frq].low_price, tick_data.last_price)
-                    self.last_entity[frq].close_price = tick_data.last_price
-                    self.last_entity[frq].volume += max(tick_data.volume - self.last_entity[frq].first_volume, 0)
-                    self.last_entity[frq].first_volume = tick_data.volume
-                # 处理一分钟的k线
-                if frq == 1 and tick_data.datetime.second == 0 and \
-                        abs((tick_data.datetime - self.last_datetime[frq]).seconds) > 10:
-                    temp = deepcopy(last)
-                    if self.check_tick(tick_data):
-                        temp.high_price = max(temp.high_price, tick_data.last_price)
-                        temp.low_price = min(temp.low_price, tick_data.last_price)
-                        temp.close_price = tick_data.last_price
-                        temp.volume += max(tick_data.volume - temp.first_volume, 0)
-                    self.last_entity[frq] = BarData(
-                        datetime=tick_data.datetime,
-                        high_price=tick_data.last_price,
-                        low_price=tick_data.last_price,
-                        close_price=tick_data.last_price,
-                        open_price=tick_data.last_price,
-                        interval=frq,
-                        volume=tick_data.volume - temp.first_volume,
-                        first_volume=tick_data.volume,
-                        local_symbol=tick_data.local_symbol
-                    )
-                    self.last_datetime[frq] = tick_data.datetime
-                    data.append(temp)
-                elif frq == 1:
-                    self.last_entity[frq].high_price = max(self.last_entity[frq].high_price, tick_data.last_price)
-                    self.last_entity[frq].low_price = min(self.last_entity[frq].low_price, tick_data.last_price)
-                    self.last_entity[frq].close_price = tick_data.last_price
-                    self.last_entity[frq].volume += max(tick_data.volume - self.last_entity[frq].first_volume, 0)
-                    self.last_entity[frq].first_volume = tick_data.volume
         return data
 
     @staticmethod
@@ -121,8 +106,8 @@ class HighKlineSupporter:
             raise TypeError("callable should be a function")
         self.callback = callback
         self.code = code
-        self.last_entity: {int: None} = {x: None for x in interval}
-        self.lock_free: {int: bool} = {x: True for x in interval}
+        self.last_entity: Dict[int, None] = {x: None for x in interval}
+        self.lock_free: Dict[int, bool] = {x: True for x in interval}
         self.last_datetime = {x: None for x in interval}
         self._data = data
 
@@ -162,10 +147,13 @@ class HighKlineSupporter:
                     temp = deepcopy(last)
                     check, tim = self.check_tick(tick_data)
                     if check is True:
-                        temp.high_price = max(temp.high_price, tick_data.last_price)
-                        temp.low_price = min(temp.low_price, tick_data.last_price)
+                        temp.high_price = max(
+                            temp.high_price, tick_data.last_price)
+                        temp.low_price = min(
+                            temp.low_price, tick_data.last_price)
                         temp.close_price = tick_data.last_price
-                        temp.volume += max(tick_data.volume - temp.first_volume, 0)
+                        temp.volume += max(tick_data.volume -
+                                           temp.first_volume, 0)
                         self.last_entity[frq] = BarData(
                             datetime=tim,
                             high_price=tick_data.last_price,
@@ -195,10 +183,13 @@ class HighKlineSupporter:
                     data.append(temp)
 
                 elif frq != 1 and self.lock_free[frq] is True:
-                    self.last_entity[frq].high_price = max(self.last_entity[frq].high_price, tick_data.last_price)
-                    self.last_entity[frq].low_price = min(self.last_entity[frq].low_price, tick_data.last_price)
+                    self.last_entity[frq].high_price = max(
+                        self.last_entity[frq].high_price, tick_data.last_price)
+                    self.last_entity[frq].low_price = min(
+                        self.last_entity[frq].low_price, tick_data.last_price)
                     self.last_entity[frq].close_price = tick_data.last_price
-                    self.last_entity[frq].volume += max(tick_data.volume - self.last_entity[frq].first_volume, 0)
+                    self.last_entity[frq].volume += max(
+                        tick_data.volume - self.last_entity[frq].first_volume, 0)
                     self.last_entity[frq].first_volume = tick_data.volume
                 """
                 处理一分钟的k线数据
@@ -210,10 +201,13 @@ class HighKlineSupporter:
                     check, tim = self.check_tick(tick_data)
                     if check is True:
                         """ 特殊时间需要特殊有处理 """
-                        temp.high_price = max(temp.high_price, tick_data.last_price)
-                        temp.low_price = min(temp.low_price, tick_data.last_price)
+                        temp.high_price = max(
+                            temp.high_price, tick_data.last_price)
+                        temp.low_price = min(
+                            temp.low_price, tick_data.last_price)
                         temp.close_price = tick_data.last_price
-                        temp.volume += max(tick_data.volume - temp.first_volume, 0)
+                        temp.volume += max(tick_data.volume -
+                                           temp.first_volume, 0)
                         self.last_entity[frq] = BarData(
                             datetime=tim,
                             high_price=tick_data.last_price,
@@ -242,11 +236,14 @@ class HighKlineSupporter:
                         self.last_datetime[frq] = tick_data.datetime
                     data.append(temp)
                 elif frq == 1 and self.lock_free[frq]:
-                    self.last_entity[frq].high_price = max(self.last_entity[frq].high_price, tick_data.last_price)
-                    self.last_entity[frq].low_price = min(self.last_entity[frq].low_price, tick_data.last_price)
+                    self.last_entity[frq].high_price = max(
+                        self.last_entity[frq].high_price, tick_data.last_price)
+                    self.last_entity[frq].low_price = min(
+                        self.last_entity[frq].low_price, tick_data.last_price)
                     self.last_entity[frq].close_price = tick_data.last_price
                     """ 累积成交量 """
-                    self.last_entity[frq].volume += max(tick_data.volume - self.last_entity[frq].first_volume, 0)
+                    self.last_entity[frq].volume += max(
+                        tick_data.volume - self.last_entity[frq].first_volume, 0)
                     self.last_entity[frq].first_volume = tick_data.volume
 
         return data
@@ -262,7 +259,8 @@ class HighKlineSupporter:
         else:
             if self.night_allow:
                 """ 处理夜盘 """
-                hour, minute, second = [int(x) for x in self.h[0][-1].split(":")]
+                hour, minute, second = [int(x)
+                                        for x in self.h[0][-1].split(":")]
                 hour = hour if hour <= 24 else hour - 24
                 if T.datetime.hour == hour and T.datetime.minute == minute:  # make night kline true
                     return True, datetime.strptime(f"{get_day_from(date=str(T.datetime.date()), ne=1)} 09:00:00",

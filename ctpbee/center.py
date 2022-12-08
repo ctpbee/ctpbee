@@ -1,7 +1,7 @@
 """
 ctpbee里面的核心数据访问模块
 
-此模块描述了ctpbee里面默认的数据访问中心，同时它也可以被回测模块所调用
+此模块描述了ctpbee里面默认的数据访问中心,同时它也可以被回测模块所调用
 
 """
 from abc import ABC
@@ -73,7 +73,7 @@ class BasicCenterModel(ABC):
 
 class Center(BasicCenterModel, dict):
     """
-    本来作为集成类，并不附加多少额外功能，主要是将其他模块的函数功能统一集中过来，
+    本来作为集成类,并不附加多少额外功能,主要是将其他模块的函数功能统一集中过来,
     达到一种统一接口的方式
     整齐高于混乱
     """
@@ -91,7 +91,7 @@ class Center(BasicCenterModel, dict):
 
     def __delitem__(self, key):
         import warnings
-        warnings.warn("警告，操作危险！你现在不具备这种操作权限，请调用账户级别的API")
+        warnings.warn("警告,操作危险！你现在不具备这种操作权限,请调用账户级别的API")
         return
 
     def __str__(self):
@@ -144,15 +144,16 @@ class Center(BasicCenterModel, dict):
         """
         return self.app.recorder.position_manager.get_all_positions(obj=True)
 
-    def get_tick(self, local_symbol) -> TickData:
+    def get_tick(self, local_symbol) -> List[TickData] or None:
         """
-        获取指定合约最近的一条tick
+        获取指定合约的tick数列信息 
+        在合约不存在的情况返回为空
 
         Args:
           local_symbol(Text): 合约代码
         """
         try:
-            return self.app.recorder.get_tick(local_symbol)[-1]
+            return self.app.recorder.get_tick(local_symbol)
         except IndexError:
             return Missing.create_obj("get_tick")
 
