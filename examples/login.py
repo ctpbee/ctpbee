@@ -44,7 +44,7 @@ class Main(CtpbeeApi):
 
 
 if __name__ == '__main__':
-    app = CtpBee("market", __name__, refresh=True)
+    app = CtpBee("market", __name__, refresh=False)
     example = Main("DailyCTA")
     app.config.from_json("config.json")
     app.add_extension(example)
