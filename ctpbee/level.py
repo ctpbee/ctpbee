@@ -426,59 +426,24 @@ class CtpbeeApi(BeeApi):
 
     def __call__(self, event: Event = None):
         # 特别处理两种情况
+        if self.__frozen:
+            """ 冻结情况不处理信号 """
+            return None
         if not event:
-            if not self.frozen and self.app.config["PATTERN"] == "real":
+            if self.app.config["PATTERN"] == "real":
                 self.map[EVENT_TIMER](self)
-                if self.__init_ready:
+                if not self.__init_ready:
                     self._count += 1
                 if self._count == 10:
                     self.on_init(True)
+                    self.__init_ready = True
         else:
-            if not self.frozen and (event.type == EVENT_TICK or event.type == EVENT_BAR) and len(
-                    self.func) != 0:
-                args = list(self.func[0][2])
-                if event.type == self.func[0][1]:
-                    """ 如果数据类型"""
-                    args.insert(0, event.data)
-                    result = self.func[0][0](*args)
-                    if result == self.complete:
-                        self.func.clear()
-                return None
             if event.type == EVENT_INIT_FINISHED:
                 self.__init_ready = True
-                if self.app.config["PATTERN"] == "looper":
-                    self.on_init(True)
-                    pass
+                self.on_init(True)
             else:
                 func = self.map[event.type]
-                if not self.frozen:
-                    func(self, event.data)
-
-    @property
-    def complete(self):
-        """
-        由run_until_complete所包装的函数返回,结束追踪
-
-        Return:
-          str: "end"
-        """
-        return "end"
-
-    def run_until_complete(self, target=None, *args, typed=EVENT_TICK):
-        """
-        越过函数检查, 进行循环判断,  目前只支持单步队列
-        
-        Args:
-          target:目标函数
-          
-          args: 参数
-          
-          typed: 时间类型
-        """
-        self.func.clear()
-        if not isinstance(target, types.MethodType) and not isinstance(target, types.FunctionType):
-            raise TypeError("target参数类型应该为一个函数")
-        self.func.append((target, typed, *args))
+                func(self, event.data)
 
     def __init__(self, extension_name, app=None, **kwargs):
         """
@@ -495,13 +460,12 @@ class CtpbeeApi(BeeApi):
         self.instrument_set: List or Set = set()
         self.extension_name = extension_name
         self.app = app
-        self.func = []
         self._count = 0
         self.__init_ready = False
         if self.app is not None:
             self.init_app(self.app)
-        # 是否冻结
-        self.frozen = False
+        # 是否冻结该策略
+        self.__frozen = False
         if "cache_path" in kwargs:
             self.path = kwargs.get("cache_path")
             if not os.path.isdir(self.path):

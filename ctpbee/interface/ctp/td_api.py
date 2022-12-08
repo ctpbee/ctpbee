@@ -216,13 +216,13 @@ class BeeTdApi(TdApi):
 
                     self.open_cost_dict[position.symbol]["long"] += data['OpenCost']
                     position.open_price = self.open_cost_dict[position.symbol]["long"] / (
-                        position.volume * size)
+                            position.volume * size)
 
                     # 先算出当前的最新价格
                     current_price = position.pnl / \
-                        (size * position.volume) + position.price
+                                    (size * position.volume) + position.price
                     position.float_pnl = (
-                        current_price - position.open_price) * size * position.volume
+                                                 current_price - position.open_price) * size * position.volume
             else:
                 position.frozen += data["LongFrozen"]
 
@@ -232,11 +232,11 @@ class BeeTdApi(TdApi):
 
                     self.open_cost_dict[position.symbol]["short"] += data['OpenCost']
                     position.open_price = self.open_cost_dict[position.symbol]["short"] / (
-                        position.volume * size)
+                            position.volume * size)
                     current_price = position.price - \
-                        position.pnl / (size * position.volume)
+                                    position.pnl / (size * position.volume)
                     position.float_pnl = (
-                        position.open_price - current_price) * size * position.volume
+                                                 position.open_price - current_price) * size * position.volume
 
         except KeyError:
             pass
@@ -255,16 +255,16 @@ class BeeTdApi(TdApi):
             accountid=data["AccountID"],
             balance=data["Balance"],
             frozen=data["FrozenMargin"] +
-            data["FrozenCash"] + data["FrozenCommission"],
+                   data["FrozenCash"] + data["FrozenCommission"],
             gateway_name=self.gateway_name
         )
         account.available = data["Available"]
+        self.on_event(type=EVENT_ACCOUNT, data=account)
         if self.instrunment_init_flag and not self.init_status:
             self.reqid += 1
             self.init_status = True
             self.reqQryDepthMarketData({}, self.reqid)
             self.on_event(type=EVENT_INIT_FINISHED, data=True)
-        self.on_event(type=EVENT_ACCOUNT, data=account)
 
     def onRspQryInstrument(self, data: dict, error: dict, reqid: int, last: bool):
         """
@@ -316,7 +316,7 @@ class BeeTdApi(TdApi):
                 warnings.warn(f"未预料到的合约问题 错误信息: {e}")
                 return
             self.symbol_exchange_mapping[data["InstrumentID"]
-                                         ] = EXCHANGE_CTP2VT[data["ExchangeID"]]
+            ] = EXCHANGE_CTP2VT[data["ExchangeID"]]
 
             # For option only
             if contract.product == Product.OPTION:
@@ -428,7 +428,7 @@ class BeeTdApi(TdApi):
         self.appid = info.get("appid")
         self.product_info = info.get("product_info")
 
-        subscribe_info = info.get("subscribe_topic", (0, 0)) # 默认采用(0, 0)的方式进行订阅
+        subscribe_info = info.get("subscribe_topic", (0, 0))  # 默认采用(0, 0)的方式进行订阅
 
         if not self.connect_status:
             path = get_folder_path(

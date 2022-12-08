@@ -9,7 +9,7 @@ from typing import Text
 from ctpbee import __version__
 from ctpbee.center import Center
 from ctpbee.config import Config
-from ctpbee.constant import Event
+from ctpbee.constant import Event, EVENT_TIMER
 from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
 from ctpbee.exceptions import ConfigError
@@ -220,18 +220,10 @@ class CtpBee(object):
         if logout:
             print(show_me)
         self.init_interface()
-        if self.config["PATTERN"] == "real":
-            if self.refresh:
-                self.r = Thread(target=refresh_query,
-                                args=(self, common_signals,), daemon=False)
-                self.r.start()
-            else:
-                def func():
-                    while True:
-                        pass
-
-                self.r = Thread(target=func, daemon=False)
-                self.r.start()
+        if self.config["PATTERN"] == "real" and self.r is None:
+            self.r = Thread(target=refresh_query,
+                            args=(self, common_signals if self.refresh else None,), daemon=False)
+            self.r.start()
         else:
             pass
 
@@ -404,7 +396,7 @@ class CtpBee(object):
         extension = self._extensions.get(extension_name, None)
         if not extension:
             return False
-        extension.frozen = True
+        extension.__frozen = True
         return True
 
     def get_extension(self, extension_name) -> None or CtpbeeApi:
@@ -437,7 +429,7 @@ class CtpBee(object):
         extension = self._extensions.get(extension_name, None)
         if not extension:
             return False
-        extension.frozen = False
+        extension.__frozen = False
         return True
 
     def del_extension(self, extension_name: Text):

@@ -215,10 +215,10 @@ class MTdApi(MiniTdApi):
             gateway_name=self.gateway_name
         )
         account.available = data["Available"]
+        self.on_event(EVENT_ACCOUNT, account)
         if self.position_init_flag and self.instrunment_init_flag and not self.init_status:
             self.init_status = True
             self.on_event(type=EVENT_INIT_FINISHED, data=True)
-        self.on_event(EVENT_ACCOUNT, account)
 
     def onRspQryInstrument(self, data: dict, error: dict, reqid: int, last: bool):
         """
