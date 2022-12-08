@@ -10,14 +10,17 @@ class Main(CtpbeeApi):
         self.init = False
 
     def on_tick(self, tick: TickData) -> None:
-        """ """
-        model = self.center.get_position("rb2205.SHFE")
-        if model is not None:
-            print(model.long_float_pnl, model.short_float_pnl)
-        pass
+        # self.action.cancel_all()
+        if self.init and not self.ok:
+            print("买入")
+            self.action.buy_open(4000, 1, tick)
+            self.ok = True
 
     def on_trade(self, trade: TradeData) -> None:
         pass
+
+    def on_order(self, order: OrderData) -> None:
+        print(order)
 
     def on_position(self, position: PositionData) -> None:
         # print(position.local_symbol, position.direction, position.float_pnl)
@@ -28,14 +31,15 @@ class Main(CtpbeeApi):
 
     def on_realtime(self):
         pass
+
         # pos = self.center.get_position("rb2205.SHFE")
-        # print(pos)
+
+    # print(pos)
 
     def on_contract(self, contract: ContractData):
         # setup the code and subscribe market
         # also you can use app.subscribe()
-        pass
-        if contract.local_symbol == "rb2205.SHFE":
+        if contract.local_symbol == "rb2305.SHFE":
             self.action.subscribe(contract.local_symbol)
 
     def on_init(self, init: bool):
@@ -49,5 +53,6 @@ if __name__ == '__main__':
     app.config.from_json("config.json")
     app.add_extension(example)
     app.start(log_output=True)
+
     # while True:
     #     pass

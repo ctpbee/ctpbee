@@ -303,7 +303,7 @@ def refresh_query(app, signals):
                 app.trader.query_account()
                 p = now
                 count = 0
-        if (now - q).seconds >= app.config['TIMER_INTERVAL']:
+        if signals is not None and (now - q).seconds >= app.config['TIMER_INTERVAL']:
             event = Event(type=EVENT_TIMER)
             signals.timer_signal.send(event)
             q = now
@@ -315,8 +315,6 @@ def refresh_query(app, signals):
 def helper_call(func):
     """
     此装饰器是为了减少代码, 主要是用来执行插件的回调方法
-    todo: deepcopy need ?
-
     Args:
        func (FunctionType): 函数对象
     """
@@ -325,15 +323,16 @@ def helper_call(func):
     def wrapper(*args, **kwargs):
         d = func(*args, **kwargs)
         self, event = args
-        for cta in self.app._extensions.values():
+        for ext in self.app._extensions.values():
             if self.app.config.get('INSTRUMENT_INDEPEND'):
-                if len(cta.instrument_set) == 0:
+                if len(ext.instrument_set) == 0:
                     warnings.warn(
                         "你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0,请确保你的订阅变量是否为instrument_set,以及订阅具体代码")
-                if event.data.local_symbol in cta.instrument_set:
-                    cta(deepcopy(event))
+                if event.data.local_symbol in ext.instrument_set:
+                    ext(deepcopy(event))
             else:
-                cta(deepcopy(event))
+                from ctpbee.constant import EVENT_ORDER
+                ext(deepcopy(event))
         return d
 
     return wrapper
