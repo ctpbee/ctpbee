@@ -222,7 +222,7 @@ class CtpBee(object):
         self.init_interface()
         if self.config["PATTERN"] == "real" and self.r is None:
             self.r = Thread(target=refresh_query,
-                            args=(self, common_signals if self.refresh else None,), daemon=False)
+                            args=(self, common_signals, self.refresh,), daemon=False)
             self.r.start()
         else:
             pass

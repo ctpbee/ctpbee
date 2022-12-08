@@ -5,32 +5,29 @@ from ctpbee.constant import *
 class Main(CtpbeeApi):
     def __init__(self, name):
         super().__init__(name)
-        self.ok = False
-
         self.init = False
 
     def on_tick(self, tick: TickData) -> None:
         # self.action.cancel_all()
-        if self.init and not self.ok:
-            print("买入")
-            self.action.buy_open(4000, 1, tick)
-            self.ok = True
+        print("tick回报", tick)
 
     def on_trade(self, trade: TradeData) -> None:
-        pass
+        print("成交回报", trade)
+
+    def on_account(self, account: AccountData) -> None:
+        print("账户回报", account)
 
     def on_order(self, order: OrderData) -> None:
-        print(order)
+        print("订单回报: ", order)
 
     def on_position(self, position: PositionData) -> None:
-        # print(position.local_symbol, position.direction, position.float_pnl)
-        pass
+        print("持仓回报", position)
 
     def on_bar(self, bar: BarData) -> None:
-        pass
+        print("k线回报: ", order)
 
     def on_realtime(self):
-        pass
+        print("定时触发", datetime.now())
 
         # pos = self.center.get_position("rb2205.SHFE")
 
@@ -43,7 +40,7 @@ class Main(CtpbeeApi):
             self.action.subscribe(contract.local_symbol)
 
     def on_init(self, init: bool):
-        print("Init Successful")
+        print("账户初始化成功回报", init)
         self.init = True
 
 
