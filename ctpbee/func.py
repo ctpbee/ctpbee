@@ -189,13 +189,13 @@ def auth_time(data_time: time, type_="future"):
     if not isinstance(data_time, time):
         raise TypeError("参数类型错误, 期望为datetime.time}")
 
-    day_start = time(9, 0)  # 日盘启动和停止时间
+    day_start = time(8, 59)  # 日盘启动和停止时间
     if type_ == "stock":
         day_start = time(9, 30)
     day_first_end = time(11, 30)  # 日盘启动和停止时间
     dat_sec_start = time(13, 0)
     day_end = time(15, 0)
-    night_start = time(21, 0)
+    night_start = time(20, 59)
     night_end = time(2, 30)
     if day_first_end >= data_time >= day_start:
         return True
