@@ -201,7 +201,7 @@ def auth_time(data_time: time, type_="future"):
         return True
     if dat_sec_start <= data_time <= day_end:
         return True
-    if type == "future":
+    if type_ == "future":
         if data_time >= night_start:
             return True
         if data_time <= night_end:
