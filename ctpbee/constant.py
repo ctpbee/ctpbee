@@ -84,8 +84,8 @@ class Exchange(Enum):
     CZCE = "CZCE"
     DCE = "DCE"
     INE = "INE"
+    GFEX = "GFEX"
     CTP = "ctp"
-
 
 
 TODAY_EXCHANGE = [Exchange.INE, Exchange.SHFE]

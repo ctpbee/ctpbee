@@ -434,14 +434,14 @@ class CtpbeeApi(BeeApi):
                 self.map[EVENT_TIMER](self)
                 if not self.__init_ready:
                     self._count += 1
-
-                if self._count == 10 and not self.__init_ready:
-                    self.on_init(True)
-                    self.__init_ready = True
+                    if self._count == 10:
+                        self.on_init(True)
+                        self.__init_ready = True
         else:
-            if event.type == EVENT_INIT_FINISHED and not self.__init_ready:
-                self.__init_ready = True
-                self.on_init(True)
+            if event.type == EVENT_INIT_FINISHED:
+                if not self.__init_ready:
+                    self.__init_ready = True
+                    self.on_init(True)
             else:
                 func = self.map[event.type]
                 func(self, event.data)

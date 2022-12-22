@@ -40,7 +40,8 @@ EXCHANGE_MINI2VT = {
     "SHFE": Exchange.SHFE,
     "CZCE": Exchange.CZCE,
     "DCE": Exchange.DCE,
-    "INE": Exchange.INE
+    "INE": Exchange.INE,
+    "GFEX": Exchange.GFEX,
 }
 
 PRODUCT_MINI2VT = {
