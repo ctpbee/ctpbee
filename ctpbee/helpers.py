@@ -310,6 +310,7 @@ def refresh_query(app, signals, refresh):
             c = now
         if not app.r_flag:
             break
+        sleep(0.1)
 
 
 def helper_call(func):

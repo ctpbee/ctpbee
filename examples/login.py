@@ -31,15 +31,10 @@ class Main(CtpbeeApi):
     def on_realtime(self):
         print("定时触发", datetime.now())
 
-        # pos = self.center.get_position("rb2205.SHFE")
-
     # print(pos)
 
     def on_contract(self, contract: ContractData):
-        # setup the code and subscribe market
-        # also you can use app.subscribe()
-        if contract.local_symbol == "rb2305.SHFE":
-            self.action.subscribe(contract.local_symbol)
+        self.action.subscribe(contract.local_symbol)
 
     def on_init(self, init: bool):
         print("账户初始化成功回报", init)
