@@ -292,7 +292,7 @@ class Action(object):
             return cal_req(position, volume, app)
 
     # 默认四个提供API的封装, 买多卖空等快速函数应该基于send_order进行封装 / default to provide four function
-    @check(type="trader")
+    @check(type_="trader")
     def send_order(self, order: OrderRequest, **kwargs):
         """
         底层的发单请求
@@ -304,7 +304,7 @@ class Action(object):
         """
         return self.app.trader.send_order(order, **kwargs)
 
-    @check(type="trader")
+    @check(type_="trader")
     def cancel_order(self, cancel_req: CancelRequest, **kwargs):
         """
         底层的撤单请求
@@ -316,7 +316,7 @@ class Action(object):
         """
         return self.app.trader.cancel_order(cancel_req, **kwargs)
 
-    @check(type="trader")
+    @check(type_="trader")
     def query_position(self):
         """
         底层的查持仓请求, 注意只会发送查询请求,不会返回持仓数据
@@ -326,7 +326,7 @@ class Action(object):
         """
         return self.app.trader.query_position()
 
-    @check(type="trader")
+    @check(type_="trader")
     def query_account(self):
         """
         底层的查账户数据请求, 注意只会发送查询请求,不会返回账户数据
@@ -336,7 +336,7 @@ class Action(object):
         """
         return self.app.trader.query_account()
 
-    @check(type="market")
+    @check(type_="market")
     def subscribe(self, local_symbol: AnyStr):
         """
         订阅行情请求
@@ -350,7 +350,7 @@ class Action(object):
             local_symbol = local_symbol.split(".")[0]
         return self.app.market.subscribe(local_symbol)
 
-    @check(type="market")
+    @check(type_="market")
     def unsubscribe(self, local_symbol: AnyStr):
         """
         取消订阅请求
@@ -434,7 +434,7 @@ class CtpbeeApi(BeeApi):
                 self.map[EVENT_TIMER](self)
                 if not self.__init_ready:
                     self._count += 1
-                    if self._count == 10:
+                    if self._count == 15:
                         self.on_init(True)
                         self.__init_ready = True
         else:

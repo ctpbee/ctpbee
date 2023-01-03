@@ -6,11 +6,10 @@
 
 from ctpbee import CtpbeeApi, CtpBee
 from ctpbee.constant import ContractData, LogData, TickData, BarData, OrderData, \
-    TradeData, PositionData, AccountData, OrderType 
+    TradeData, PositionData, AccountData, OrderType
 from ctpbee import Action
 from ctpbee import RiskLevel
 from ctpbee.helpers import run_forever
-
 
 
 class ActionMe(Action):
@@ -26,24 +25,26 @@ class RiskMe(RiskLevel):
         return True, args, kwargs
 
     def after_sell(self, result):
-        #print(result)
-        return 
+        # print(result)
+        return
+
     def after_cover(self, result):
         print(result)
-        return 
+        return
 
     def realtime_check(self):
         """
         """
 
+
 class TL(CtpbeeApi):
     def __init__(self, name):
         super().__init__(name)
-        #self.instrument_set = limit_ctp_symbol
-        self.instrument_set =["rb2205.SHFE"] #need to fill in  
+        # self.instrument_set = limit_ctp_symbol
+        self.instrument_set = ["rb2205.SHFE"]  # need to fill in
         print(self.instrument_set)
         self.clock = 0
-        self.isok = True 
+        self.isok = True
 
     def on_contract(self, contract: ContractData):
         """ 处理推送的合约信息 """
@@ -56,74 +57,75 @@ class TL(CtpbeeApi):
 
     def on_tick(self, tick: TickData) -> None:
         """ 处理推送的tick """
-        
+
         ins = (''.join(list(filter(str.isalpha, tick.symbol)))).upper()
-        #check active_order
-        #if self.isok == False:
+        # check active_order
+        # if self.isok == False:
         #    return
 
-        #check position for free  
+        # check position for free
         positionInsArray = []
         position = self.center.positions
-        for i in  position:
+        for i in position:
             positionIns = (''.join(list(filter(str.isalpha, i.symbol)))).upper()
             positionInsArray.append(positionIns)
-            if ins == positionIns :
+            if ins == positionIns:
                 result = self.check_free(ins, tick.last_price, i.price, str(i.direction))
                 if result == "sell":
-                    self.action.sell(tick.limit_up, i.volume , tick) # to prevent extreme circumstances must be done
+                    self.action.sell(tick.limit_up, i.volume, tick)  # to prevent extreme circumstances must be done
                 elif result == "cover":
-                    self.action.cover(tick.limit_down, i.volume, tick) # to prevent extreme circumstances must be done 
+                    self.action.cover(tick.limit_down, i.volume, tick)  # to prevent extreme circumstances must be done
                 else:
                     pass
-                return 
-        
-        # only one  
-        #if(len (positionInsArray) > 0): 
+                return
+
+                # only one
+        # if(len (positionInsArray) > 0):
         #    return 
 
-        #check condition  do 
+        # check condition  do
         if (ins not in positionInsArray):
-            result = self.check_obey(ins,tick.last_price)
+            result = self.check_obey(ins, tick.last_price)
             if result == "buy":
                 maxh = self.get_max_h(tick, result, 0.5)
                 if maxh == 0:
-                    return  
+                    return
                 self.action.buy(tick.last_price, maxh, tick)
             elif result == "short":
                 maxh = self.get_max_h(tick, result, 0.5)
-                if maxh == 0: 
-                    return  
-                self.action.short(tick.last_price, maxh , tick)
+                if maxh == 0:
+                    return
+                self.action.short(tick.last_price, maxh, tick)
             else:
                 pass
-        pass 
+        pass
 
     def check_free(self, curPrice, costPrice, direct):
-        #the reality of evolution doesn't match expectations, free
-        #why?
-        #how?
-        #what? 
-        pass 
-    def check_obey(self,symbol,curPrice):
-        #go with the flow, in the past, in the present, in human nature
-        #why?
-        #how?
-        #what? 
-        pass 
+        # the reality of evolution doesn't match expectations, free
+        # why?
+        # how?
+        # what?
+        pass
+
+    def check_obey(self, symbol, curPrice):
+        # go with the flow, in the past, in the present, in human nature
+        # why?
+        # how?
+        # what?
+        pass
 
     def get_max_h(self, tick: TickData, direct, capital_ratio):
         constantS = self.center.get_contract(tick.local_symbol)
-        account = self.center.account 
-        if (account is  None)  or (constantS is None) :
+        account = self.center.account
+        if (account is None) or (constantS is None):
             return 0
-        margin_ratio = 0.0 
+        margin_ratio = 0.0
         if direct == "buy":
             margin_ratio = constantS.long_margin_ratio
-        else: 
+        else:
             margin_ratio = constantS.short_margin_ratio
-        maxh = (account.available * capital_ratio) // (tick.last_price * constantS.size  * margin_ratio)
-        return int(maxh) 
+        maxh = (account.available * capital_ratio) // (tick.last_price * constantS.size * margin_ratio)
+        return int(maxh)
 
     def on_bar(self, bar: BarData) -> None:
         """ 处理ctpbee生成的bar """
@@ -133,27 +135,28 @@ class TL(CtpbeeApi):
 
     def on_order(self, order: OrderData) -> None:
         """ 报单回报 """
-        self.isok = False 
+        self.isok = False
 
     def on_trade(self, trade: TradeData) -> None:
         """ 成交回报 """
-        self.isok = True 
-    
+        self.isok = True
+
     def on_position(self, position: PositionData) -> None:
         """ 处理持仓回报 """
 
     def on_account(self, account: AccountData) -> None:
         """ 处理账户信息 """
-        #print("on_account\n")
-        #print("account","\n")
+        # print("on_account\n")
+        # print("account","\n")
 
     def on_realtime(self):
-        #定时清理掉未成交的单
+        # 定时清理掉未成交的单
         self.clock += 1
-        if(self.clock >= 10 and len(self.center.active_orders)):
+        if (self.clock >= 10 and len(self.center.active_orders)):
             self.action.cancel_all()
             self.clock = 0
-        pass 
+        pass
+
 
 def obey():
     app = CtpBee("power", __name__, risk=RiskMe, action_class=ActionMe)
@@ -165,5 +168,3 @@ def obey():
 
 if __name__ == '__main__':
     obey()
-
-

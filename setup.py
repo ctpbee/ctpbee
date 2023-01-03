@@ -12,7 +12,7 @@ if sys.version_info < (3, 6):
     raise RuntimeError('当前ctpbee只支持python36以及更高版本/ ctpbee only support python36 and higher ')
 
 # libraries
-install_requires = ["pytz", "blinker", "requests", "simplejson", "lxml", "jinja2",
+install_requires = ["pytz", "blinker", "requests", "simplejson", "lxml", "jinja2", "redis",
                     'cologer>=2.0', "ctpbee_api>=0.21", "numpy", "pandas"]
 
 if sys.version_info.major == 3 and sys.version_info.minor == 6:
@@ -21,7 +21,6 @@ if sys.version_info.major == 3 and sys.version_info.minor == 6:
 runtime_library_dir = []
 try:
     import pypandoc
-
     long_description = pypandoc.convert_file('README.md', 'rst')
 except Exception:
     long_description = ""
