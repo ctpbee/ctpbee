@@ -29,12 +29,15 @@ class Interface:
         if interface == "ctp":
             from ctpbee.interface.ctp import BeeTdApi, BeeMdApi
             return BeeMdApi, BeeTdApi
-        if interface == "looper":
+        elif interface == "looper":
             from ctpbee.interface.looper import LooperMe, LooperYou
             return LooperMe, LooperYou
-        if interface == "ctp_mini":
+        elif interface == "ctp_mini":
             from ctpbee.interface.ctp_mini import MMdApi, MTdApi
             return MMdApi, MTdApi
+        elif interface == "local":
+            from ctpbee.interface.local import MdApi, TdApi
+            return MdApi, TdApi
         else:
             raise ValueError("错误参数")
 

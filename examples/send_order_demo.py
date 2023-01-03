@@ -41,8 +41,9 @@ class Demo(CtpbeeApi):
             self.isok = True
         orders = self.center.orders
         trades = self.recorder.get_all_trades()
+        position = self.recorder.get_all_positions()
         data = {"data": self.center.orders, "trade": trades}
-        print("===> ")
+        print("===> ", position)
         from ctpbee import dumps
         strr = dumps(data)
         with open("data.json", "w") as f:
@@ -77,5 +78,3 @@ def letsgo():
 
 if __name__ == '__main__':
     letsgo()
-
-

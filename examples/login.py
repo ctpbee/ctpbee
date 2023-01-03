@@ -1,3 +1,5 @@
+from time import sleep
+
 from ctpbee import CtpbeeApi, CtpBee
 from ctpbee.constant import *
 
@@ -24,7 +26,7 @@ class Main(CtpbeeApi):
         print("持仓回报", position)
 
     def on_bar(self, bar: BarData) -> None:
-        print("k线回报: ", order)
+        print("k线回报: ", bar)
 
     def on_realtime(self):
         print("定时触发", datetime.now())
@@ -41,6 +43,8 @@ class Main(CtpbeeApi):
 
     def on_init(self, init: bool):
         print("账户初始化成功回报", init)
+        pos = self.recorder.get_all_positions()
+        print(pos)
         self.init = True
 
 
@@ -50,6 +54,10 @@ if __name__ == '__main__':
     app.config.from_json("config.json")
     app.add_extension(example)
     app.start(log_output=True)
+    sleep(3)
+    app.action.query_account()
+    sleep(1)
+    app.action.query_position()
 
     # while True:
     #     pass

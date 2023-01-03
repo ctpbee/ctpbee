@@ -88,9 +88,9 @@ class BeeMdApi(MdApi):
         Callback of tick data update.
         """
         symbol = data["InstrumentID"]
-        exchange = symbol_exchange_map.get(symbol, "")
+        exchange = symbol_exchange_map.get(symbol, None)
         if not exchange:
-            exchange = Exchange.NONE
+            exchange = Exchange.CTP
         # 针对大商所进行处理 see https://github.com/ctpbee/ctpbee/issues/165
         if exchange == Exchange.DCE:
             datetimed = datetime.strptime(

@@ -124,7 +124,6 @@ class CtpBee(object):
         self.instance_path = instance_path
         self.config = self.make_config()
         self.init_finished = False
-        self.qifi = None
         # default monitor and flag
         self.p = None
         self.p_flag = True
@@ -167,7 +166,7 @@ class CtpBee(object):
         else:
             raise TypeError("此API仅仅接受回测模式, 请通过配置文件 PATTERN 修改运行模式")
 
-    def update_action_class(self, action_class):
+    def update_action_class(self, action_class: Action):
         """
         更新操作类,除了在CtpBee的构造函数中传入action外, 你还可以通过此接口更新Action类
 

@@ -82,9 +82,9 @@ class MMdApi(MiniMdApi):
         Callback of tick data update.
         """
         symbol = data["InstrumentID"]
-        exchange = symbol_exchange_map.get(symbol, "")
+        exchange = symbol_exchange_map.get(symbol, None)
         if not exchange:
-            exchange = Exchange.NONE
+            exchange = Exchange.CTP
 
         if exchange == Exchange.DCE:
             datetimed = datetime.strptime(

@@ -16,8 +16,8 @@ from threading import RLock
 from time import sleep
 from typing import AnyStr, IO
 
-from ctpbee.date import trade_dates
 from ctpbee.constant import Event, EVENT_TIMER
+from ctpbee.date import trade_dates
 
 _missing = object()
 
@@ -94,12 +94,12 @@ def _matching_loader_thinks_module_is_package(loader, mod_name):
         loader.__class__.__name__)
 
 
-def check(type: AnyStr):
+def check(type_: AnyStr):
     """
     检查接口是否存在
 
       Args:
-         type (AnyStr): 类型
+         type_ (AnyStr): 类型
 
       Returns:
          bool: 检查结果,返回True/False
@@ -108,10 +108,10 @@ def check(type: AnyStr):
     def middle(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if type == "market":
+            if type_ == "market":
                 if args[0].app.market is None:
                     raise ValueError("当前账户行情api未连接,请检查你的代码中是否使用了行情接口API")
-            elif type == "trader":
+            elif type_ == "trader":
                 if args[0].app.trader is None:
                     raise ValueError("当前账户交易api未连接,请检查你的代码中是否使用了交易接口API")
             else:
@@ -195,7 +195,7 @@ def dynamic_loading_api(f):
     return d.ext
 
 
-def auth_check_time(timed: datetime):
+def auth_time(timed: datetime):
     """
      检查时间是否合法
      todo: 添加市场以兼容股票或者其他的市场
@@ -214,7 +214,7 @@ def auth_check_time(timed: datetime):
     DAY_END = time(15, 5)
     NIGHT_START = time(20, 45)  # 夜盘启动和停止时间
     NIGHT_END = time(2, 35)
-    if data_time <= DAY_END and data_time >= DAY_START:
+    if DAY_END >= data_time >= DAY_START:
         return True
     if data_time >= NIGHT_START:
         return True
@@ -233,8 +233,6 @@ def run_forever(app):
     Returns:
        None
     """
-
-    running_me = False
     running_status = True
     while True:
         if not app.p_flag:
@@ -286,7 +284,8 @@ def refresh_query(app, signals, refresh):
 
     Args:
        app (CtpBee): App实例
-       signals(CommonSignals): 公共信号 
+       signals(CommonSignals): 公共信号
+       refresh(bool): 是否后台更新持仓和账户数据
     """
     p = datetime.now()
     q = datetime.now()
@@ -332,7 +331,6 @@ def helper_call(func):
                 if event.data.local_symbol in ext.instrument_set:
                     ext(deepcopy(event))
             else:
-                from ctpbee.constant import EVENT_ORDER
                 ext(deepcopy(event))
         return d
 

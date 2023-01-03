@@ -260,7 +260,7 @@ class BeeTdApi(TdApi):
         )
         account.available = data["Available"]
         self.on_event(type=EVENT_ACCOUNT, data=account)
-        if self.instrunment_init_flag and not self.init_status:
+        if self.instrunment_init_flag and self.position_init_flag and not self.init_status:
             self.reqid += 1
             self.init_status = True
             self.reqQryDepthMarketData({}, self.reqid)
