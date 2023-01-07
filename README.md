@@ -33,7 +33,7 @@ pip3 install ctpbee
 
 [文档地址](http://docs.ctpbee.com)
 
-[论坛地址](https://forum.ctpbee.com)
+[论坛地址](http://forum.ctpbee.com)
 
 ## 快速开始
 
