@@ -15,7 +15,7 @@ sudo ctpbee -auto generate
 
 ## 灵感起源
 
-使用来自于[vnpy](https://github.com/vnpy/vnpy)的交易接口, 重新提供上层封装API, 简化安装流程, 提供快速实现交易功能. 
+使用来自于[vnpy](https://github.com/vnpy/vnpy)的交易接口, 重新提供上层封装API, 简化安装流程, 提供快速实现交易功能.
 
 ## 快速安装
 
@@ -29,9 +29,11 @@ git clone https://github.com/ctpbee/ctpbee && cd ctpbee && python3 setup.py inst
 pip3 install ctpbee
 ```
 
-## 文档信息
+## 文档与交流
 
-点击阅读 [document address](http://docs.ctpbee.com)
+[文档地址](http://docs.ctpbee.com)
+
+[论坛地址](https://forum.ctpbee.com)
 
 ## 快速开始
 
@@ -121,15 +123,15 @@ Only Accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch,
 
 
 > 对于高频解决方案, 请 👉 [FlashFunk](https://github.com/HFQR/FlashFunk)
-> 注意: 本项目受限于协议问题无法开源数据底层.
 
 > 对于本地数据自动运维方案, 请👉 [Hive](https://github.com/ctpbee/hive)
 
 ## 免责声明
 
-本项目长期维护, 开源仅作爱好，本人不对代码产生的任何使用后果负责。功能尽可能会保持稳定, 但是为了你的实盘账户着想，请先用`simnow`账户测试完善再上实盘！
+本项目长期维护, 开源仅作爱好，本人不对代码产生的任何使用后果负责. 功能尽可能会保持稳定,
+但是为了你的实盘账户着想，请先用`simnow`账户测试完善再上实盘!
 
-如有问题, 请提issue, 会在1-2个工作日进行回复。
+如有问题, 请提issue, 会在1-2个工作日进行回复.
 
 ## License
 

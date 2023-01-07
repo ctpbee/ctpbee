@@ -8,6 +8,7 @@ class Main(CtpbeeApi):
     def __init__(self, name):
         super().__init__(name)
         self.init = False
+        self.con = None
 
     def on_tick(self, tick: TickData) -> None:
         # self.action.cancel_all()
@@ -29,12 +30,17 @@ class Main(CtpbeeApi):
         print("k线回报: ", bar)
 
     def on_realtime(self):
-        print("定时触发", datetime.now())
+        # print("定时触发", datetime.now())
+        pass
 
     # print(pos)
 
     def on_contract(self, contract: ContractData):
-        self.action.subscribe(contract.local_symbol)
+        # print(contract.symbol)
+
+        if contract.symbol == "rb2305":
+            self.con = contract
+            self.action.subscribe(contract.local_symbol)
 
     def on_init(self, init: bool):
         print("账户初始化成功回报", init)
@@ -49,10 +55,6 @@ if __name__ == '__main__':
     app.config.from_json("config.json")
     app.add_extension(example)
     app.start(log_output=True)
-    sleep(3)
-    app.action.query_account()
-    sleep(1)
-    app.action.query_position()
 
     # while True:
     #     pass
