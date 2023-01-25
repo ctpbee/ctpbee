@@ -1,6 +1,7 @@
 import inspect
 import os
 import types
+from functools import wraps
 from types import MethodType
 from typing import Set, List, AnyStr, Text
 from warnings import warn
@@ -401,7 +402,6 @@ class CtpbeeApi(BeeApi):
         map = {
             EVENT_TIMER: cls.on_realtime,
             EVENT_TICK: cls.on_tick,
-            EVENT_BAR: cls.on_bar,
             EVENT_ORDER: cls.on_order,
             EVENT_TRADE: cls.on_trade,
             EVENT_POSITION: cls.on_position,
@@ -412,7 +412,6 @@ class CtpbeeApi(BeeApi):
             EVENT_TIMER: EVENT_TIMER,
             EVENT_POSITION: EVENT_POSITION,
             EVENT_TRADE: EVENT_TRADE,
-            EVENT_BAR: EVENT_BAR,
             EVENT_TICK: EVENT_TICK,
             EVENT_ORDER: EVENT_ORDER,
             EVENT_SHARED: EVENT_SHARED,
@@ -574,6 +573,11 @@ class CtpbeeApi(BeeApi):
         """
         return self.app.get_extension(strategy_name)
 
+    def subscribe(self, name, func):
+        if name not in self.app.tools.keys():
+            raise ValueError(f"未找寻到此工具{name}")
+        self.app.tools[name].add_func(func)
+
     def on_order(self, order: OrderData) -> None:
         """
         报单回调触发
@@ -585,18 +589,6 @@ class CtpbeeApi(BeeApi):
             None
         """
         pass
-
-    def on_bar(self, bar: BarData) -> None:
-        """
-        k线数据回调触发, 此函数必定被用户重写
-
-        Args:
-          bar(BarData): K线数据
-
-        Return:
-            None
-        """
-        raise NotImplemented
 
     def on_tick(self, tick: TickData) -> None:
         """
@@ -727,3 +719,65 @@ class CtpbeeApi(BeeApi):
             return funcd
 
         return attribute
+
+
+class Tool:
+    """
+    工具类 接受数据进行数据更新动作，将数据进行更新 然后将返回的数据返回给回调接口
+
+    实现功能
+    1: 自定义只要执行某些函数即可
+    2: 执行完on_x之后依次执行订阅的函数结果
+    """
+
+    def __init__(self, name: str, app=None, ):
+        self._name = name
+        self._app = None
+
+        self._notice_list = []
+
+        self._linked = set()
+        if app is not None:
+            self.init_app(app)
+
+    def notice(self):
+
+        if "tick" in self._notice_list:
+            self.register(self.on_tick)
+        if "order" in self._notice_list:
+            self.register(self.on_order)
+        if "trade" in self._notice_list:
+            self.register(self.on_trade)
+
+    def register(self, func):
+        @wraps(func)
+        def append(*args, **kwargs):
+            ret = func(*args, **kwargs)
+            for link in self._linked:
+                link(ret)
+
+        return append
+
+    @property
+    def name(self):
+        return self._name
+
+    def add_func(self, func):
+        self._linked.add(func)
+
+    def init_app(self, app):
+        self._app = app
+
+    def subscribe(self, name, func):
+        if name not in self._app.tools.keys():
+            raise ValueError(f"未找寻到此工具{name}")
+        self._app.tools[name].add_func(func)
+
+    def on_tick(self, tick: TickData):
+        pass
+
+    def on_trade(self, trade: TradeData):
+        pass
+
+    def on_order(self, order: OrderData):
+        pass

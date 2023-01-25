@@ -8,7 +8,6 @@ from ctpbee import CtpbeeApi, CtpBee
 from ctpbee.constant import ContractData, LogData, TickData, BarData, OrderData, \
     TradeData, PositionData, AccountData, OrderType
 from ctpbee import Action
-from ctpbee import RiskLevel
 from ctpbee.helpers import run_forever
 
 
@@ -18,23 +17,6 @@ class ActionMe(Action):
         super().__init__(app)
         # 通过add_risk_check接口添加风控
         self.add_risk_check(self.sell)
-
-
-class RiskMe(RiskLevel):
-    def before_sell(self, *args, **kwargs):
-        return True, args, kwargs
-
-    def after_sell(self, result):
-        # print(result)
-        return
-
-    def after_cover(self, result):
-        print(result)
-        return
-
-    def realtime_check(self):
-        """
-        """
 
 
 class TL(CtpbeeApi):
@@ -159,7 +141,7 @@ class TL(CtpbeeApi):
 
 
 def obey():
-    app = CtpBee("power", __name__, risk=RiskMe, action_class=ActionMe)
+    app = CtpBee("power", __name__, action_class=ActionMe)
     tl = TL("tl")
     app.add_extension(tl)
     app.config.from_json("config.json")

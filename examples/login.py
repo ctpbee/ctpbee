@@ -2,6 +2,12 @@ from time import sleep
 
 from ctpbee import CtpbeeApi, CtpBee
 from ctpbee.constant import *
+from ctpbee import VLogger
+
+
+@VLogger()
+def process_log(data):
+    print(data)
 
 
 class Main(CtpbeeApi):

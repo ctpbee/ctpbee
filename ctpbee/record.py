@@ -1,10 +1,8 @@
 from collections import defaultdict
 from copy import deepcopy
-from datetime import datetime
 
 import ctpbee.signals as signal
 from ctpbee.constant import Event, TickData
-from ctpbee.data_handle import generator
 from ctpbee.data_handle.local_position import LocalPositionManager
 from ctpbee.helpers import helper_call
 
@@ -25,13 +23,15 @@ class Recorder(object):
         self.contracts = {}
         self.logs = {}
         self.errors = []
-        self.generators = {}
         self.active_orders = {}
         self.local_contract_price_mapping = {}
         self.app = app
         self.register_event()
         self.position_manager = LocalPositionManager(app=self.app)
         self.main_contract_mapping = defaultdict(list)
+
+        self.__common_sig_name = None
+        self.__app_sig_name = None
 
     @staticmethod
     def get_local_time():
@@ -46,19 +46,18 @@ class Recorder(object):
 
         def connect(data):
             name = data[0]
-            signal = data[1]
-            temp_sig = getattr(signal, f"{name}_signal")
+            sgl = data[1]
+            temp_sig = getattr(sgl, f"{name}_signal")
             temp_sig.connect(self.get_func(name=name), weak=False)
             return name
 
-        def generate_params(data, signal):
+        def generate_params(data, ctl):
             temp = []
             for x in data:
-                temp.append((x, signal))
+                temp.append((x, ctl))
             return temp
-
-        x = list(map(connect, generate_params(signal.common_signals.event, signal.common_signals)))
-        p = list(map(connect, generate_params(self.app.app_signal.event, self.app.app_signal)))
+        self.__common_sig_name = list(map(connect, generate_params(signal.common_signals.event, signal.common_signals)))
+        self.__app_sig_name = list(map(connect, generate_params(self.app.app_signal.event, self.app.app_signal)))
 
     def process_timer_event(self, event):
         for x in self.app._extensions.values():
@@ -92,33 +91,10 @@ class Recorder(object):
             self.app.logger.info(event.data)
 
     @helper_call
-    def process_bar_event(self, event: Event):
-        bar = event.data
-        local = self.bar.get(bar.local_symbol)
-        if local is None:
-            self.bar[bar.local_symbol] = {bar.interval: []}
-        else:
-            if self.bar[bar.local_symbol].get(bar.interval) is None:
-                self.bar[bar.local_symbol] = {bar.interval: []}
-        self.bar[bar.local_symbol][bar.interval].append(bar)
-
-    @helper_call
     def process_tick_event(self, event: Event):
         tick: TickData = event.data
         self.ticks[tick.local_symbol] = tick
         self.position_manager.update_tick(tick, tick.pre_settlement_price)
-        # 生成datetime对象
-        if not tick.datetime:
-            if '.' in tick.time:
-                tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y%m%d %H:%M:%S.%f')
-            else:
-                tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y%m%d %H:%M:%S')
-        bm = self.generators.get(tick.local_symbol, None)
-        if bm:
-            bm.update_tick(tick)
-        if not bm:
-            self.generators[tick.local_symbol] = generator(self.app)
-            self.generators[tick.local_symbol].update_tick(tick)
 
     @helper_call
     def process_order_event(self, event: Event):
@@ -161,12 +137,6 @@ class Recorder(object):
         self.contracts[contract.local_symbol] = contract
         for value in self.app._extensions.values():
             value(deepcopy(event))
-
-    def get_bar(self, local_symbol):
-        return self.bar.get(local_symbol, None)
-
-    def get_all_bar(self):
-        return self.bar
 
     def get_last_price(self, local_symbol) -> None or float:
         tick = self.ticks.get(local_symbol)
