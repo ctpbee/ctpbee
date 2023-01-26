@@ -470,22 +470,17 @@ class CtpBee(object):
 
     def with_tools(self, *args):
         for i in args:
-            if type(i) != Tool:
-                raise TypeError("please add tool with type Tool not {}".format(type(i)))
-            self.tools[i.name] = i
+            i.init_app(self)
         return self
 
     def with_extensions(self, *args):
         for i in args:
-            if type(i) != CtpbeeApi:
-                raise TypeError("please add tool with type Tool not {}".format(type(i)))
             i.init_app(self)
         return self
 
     def release(self):
         """
         释放账户,安全退出
-        todo: fix this API
         """
         try:
             if self.market is not None:
