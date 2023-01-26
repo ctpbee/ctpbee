@@ -56,6 +56,7 @@ class Recorder(object):
             for x in data:
                 temp.append((x, ctl))
             return temp
+
         self.__common_sig_name = list(map(connect, generate_params(signal.common_signals.event, signal.common_signals)))
         self.__app_sig_name = list(map(connect, generate_params(self.app.app_signal.event, self.app.app_signal)))
 
@@ -95,6 +96,8 @@ class Recorder(object):
         tick: TickData = event.data
         self.ticks[tick.local_symbol] = tick
         self.position_manager.update_tick(tick, tick.pre_settlement_price)
+        for tool in self.app.tools.values():
+            tool.on_tick(tick)
 
     @helper_call
     def process_order_event(self, event: Event):
@@ -109,12 +112,17 @@ class Recorder(object):
             self.active_orders.pop(order.local_order_id)
         self.position_manager.update_order(order)
 
+        for tool in self.app.tools.values():
+            tool.on_order(order)
+
     @helper_call
     def process_trade_event(self, event: Event):
         """"""
         trade = event.data
         self.trades[trade.local_trade_id] = trade
         self.position_manager.update_trade(trade)
+        for tool in self.app.tools.values():
+            tool.on_trade(trade)
 
     @helper_call
     def process_position_event(self, event: Event):
@@ -212,7 +220,7 @@ class Recorder(object):
         """ 返回主力合约列表 """
         result = []
         for _ in self.main_contract_mapping.values():
-            x = sorted(_, key=lambda x: x.open_interest, reverse=True)[0]
+            x = sorted(_, key=lambda _x: _x.open_interest, reverse=True)[0]
             result.append(x.local_symbol)
         return result
 
@@ -245,5 +253,4 @@ class Recorder(object):
         self.positions.clear()
         self.contracts.clear()
         self.errors.clear()
-        self.generators.clear()
         self.active_orders.clear()

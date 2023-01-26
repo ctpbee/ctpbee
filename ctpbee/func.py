@@ -19,7 +19,6 @@ from ctpbee.context import current_app
 from ctpbee.context import get_app
 from ctpbee.date import trade_dates
 from ctpbee.exceptions import TraderError, MarketError
-from ctpbee.signals import send_monitor, cancel_monitor
 
 
 def send_order(order_req: OrderRequest, app_name: str = "current_app"):
@@ -30,7 +29,6 @@ def send_order(order_req: OrderRequest, app_name: str = "current_app"):
         app = get_app(app_name)
     if not app.config.get("TD_FUNC"):
         raise TraderError(message="交易功能未开启", args=("交易功能未开启",))
-    send_monitor.send(order_req)
     return app.trader.send_order(order_req)
 
 
@@ -42,7 +40,6 @@ def cancel_order(cancel_req: CancelRequest, app_name: str = "current_app"):
         app = get_app(app_name)
     if not app.config.get("TD_FUNC"):
         raise TraderError(message="交易功能未开启", args=("交易功能未开启",))
-    cancel_monitor.send(cancel_req)
     app.trader.cancel_order(cancel_req)
 
 

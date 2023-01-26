@@ -61,6 +61,3 @@ if __name__ == '__main__':
     app.config.from_json("config.json")
     app.add_extension(example)
     app.start(log_output=True)
-
-    # while True:
-    #     pass

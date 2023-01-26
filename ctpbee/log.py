@@ -6,10 +6,12 @@ log格式
 时间 ---- 执行者 ---- 等级 ---- 信息
 
 """
-from cologer import loger,Fore,Back,Style
+from cologer import loger, Fore, Back, Style
 from datetime import datetime
 
+
 def get_time(): return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
 
 loger.set_format('{created} {name}     {levelname}  {owner}   {message}')
 
@@ -47,8 +49,8 @@ loger.debug.fields.message.set_fore(Fore.MAGENTA)
 VLogger = loger
 
 if __name__ == '__main__':
-    loger.warning("这里发生了警告", owner="somewheve")
-    loger.success("这里发生了成功", owner="somewheve")
-    loger.error("这里发生了错误", owner="somewheve")
-    loger.info("这里发生了信息输出", owner="somewheve")
-    loger.debug("这里发生了调试", owner="somewheve")
+    loger.warning("这里发生了警告", owner="ctpbee")
+    loger.success("这里发生了成功", owner="ctpbee")
+    loger.error("这里发生了错误", owner="ctpbee")
+    loger.info("这里发生了信息输出", owner="ctpbee")
+    loger.debug("这里发生了调试", owner="ctpbee")
