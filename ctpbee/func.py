@@ -361,3 +361,12 @@ def get_ctpbee_path():
     if not os.path.exists(ctpbee_path):
         os.mkdir(ctpbee_path)
     return ctpbee_path
+
+def tool_register(func):
+    def wrapper(self, *args, **kwargs):
+        ret = func(self, *args, **kwargs)
+        for take in self._linked:
+            take(ret)
+        return ret
+
+    return wrapper

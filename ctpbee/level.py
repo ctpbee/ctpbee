@@ -12,7 +12,7 @@ from ctpbee.constant import EVENT_INIT_FINISHED, EVENT_TICK, EVENT_BAR, EVENT_OR
     PositionData, AccountData, ContractData, Offset, Direction, OrderType, Exchange, OrderRequest, CancelRequest
 from ctpbee.constant import EVENT_TIMER, Event
 from ctpbee.exceptions import ConfigError
-from ctpbee.func import helper, get_ctpbee_path
+from ctpbee.func import helper, get_ctpbee_path, tool_register
 from ctpbee.helpers import check, exec_intercept
 from ctpbee.record import Recorder
 
@@ -576,7 +576,7 @@ class CtpbeeApi(BeeApi):
     def subscribe(self, name, func):
         if name not in self.app.tools.keys():
             raise ValueError(f"未找寻到此工具{name}")
-        self.app.tools[name].add_func(func)
+        self.app.tools[name].add_func(func=func)
 
     def on_order(self, order: OrderData) -> None:
         """
@@ -722,41 +722,14 @@ class CtpbeeApi(BeeApi):
 
 
 class Tool:
-    """
-    工具类 接受数据进行数据更新动作，将数据进行更新 然后将返回的数据返回给回调接口
+    __base_func__ = ["tick", "order", "trade"]
 
-    实现功能
-    1: 自定义只要执行某些函数即可
-    2: 执行完on_x之后依次执行订阅的函数结果
-    """
-
-    def __init__(self, name: str, app=None, ):
+    def __init__(self, name: str, function_list: list, app=None):
         self._name = name
         self._app = None
-
-        self._notice_list = []
-
         self._linked = set()
         if app is not None:
             self.init_app(app)
-
-    def notice(self):
-
-        if "tick" in self._notice_list:
-            self.register(self.on_tick)
-        if "order" in self._notice_list:
-            self.register(self.on_order)
-        if "trade" in self._notice_list:
-            self.register(self.on_trade)
-
-    def register(self, func):
-        @wraps(func)
-        def append(*args, **kwargs):
-            ret = func(*args, **kwargs)
-            for link in self._linked:
-                link(ret)
-
-        return append
 
     @property
     def name(self):
@@ -766,12 +739,14 @@ class Tool:
         self._linked.add(func)
 
     def init_app(self, app):
-        self._app = app
+        if app is not None:
+            self._app = app
+            self._app.tools[self.name] = self
 
     def subscribe(self, name, func):
         if name not in self._app.tools.keys():
-            raise ValueError(f"未找寻到此工具{name}")
-        self._app.tools[name].add_func(func)
+            raise ValueError(f"can't search Tool: {name}")
+        self._app.tools[name].add_func(func=func)
 
     def on_tick(self, tick: TickData):
         pass
