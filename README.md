@@ -28,6 +28,10 @@ git clone https://github.com/ctpbee/ctpbee && cd ctpbee && python3 setup.py inst
 # pip源安装
 pip3 install ctpbee
 ```
+### 支持系统
+- [x] Linux
+- [x] Windows
+- [x] MacOS
 
 ## 文档与交流
 

@@ -10,9 +10,5 @@
   },
   "INTERFACE": "ctp",
   "MD_FUNC": true,
-  "TD_FUNC": true,
-  "XMIN": [
-    1,
-    3
-  ]
+  "TD_FUNC": true
 }

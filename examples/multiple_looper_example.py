@@ -1,6 +1,6 @@
 from ctpbee.constant import Offset, TradeData, Direction
 
-from ctpbee.indicator.ta_lib import ArrayManager
+from ctpbee.indicator.indicator import ArrayManager
 
 
 class DoubleMaStrategy(LooperApi):

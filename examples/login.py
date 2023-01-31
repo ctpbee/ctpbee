@@ -2,6 +2,23 @@ from time import sleep
 
 from ctpbee import CtpbeeApi, CtpBee
 from ctpbee.constant import *
+from ctpbee import VLogger
+
+
+@VLogger()
+def process_log(**data):
+    print(data)
+
+
+from ctpbee import Tool
+from ctpbee.level import tool_register
+
+
+class FTool(Tool):
+
+    @tool_register
+    def on_tick(self, tick: TickData):
+        return tick.last_price
 
 
 class Main(CtpbeeApi):
@@ -11,7 +28,6 @@ class Main(CtpbeeApi):
         self.con = None
 
     def on_tick(self, tick: TickData) -> None:
-        # self.action.cancel_all()
         print("tick回报", tick)
 
     def on_trade(self, trade: TradeData) -> None:
@@ -29,32 +45,27 @@ class Main(CtpbeeApi):
     def on_bar(self, bar: BarData) -> None:
         print("k线回报: ", bar)
 
+    def on_next_tick(self, price):
+        print(price)
+
     def on_realtime(self):
-        # print("定时触发", datetime.now())
         pass
 
-    # print(pos)
-
     def on_contract(self, contract: ContractData):
-        # print(contract.symbol)
-
         if contract.symbol == "rb2305":
             self.con = contract
             self.action.subscribe(contract.local_symbol)
 
     def on_init(self, init: bool):
         print("账户初始化成功回报", init)
-        pos = self.recorder.get_all_positions()
-        print(pos)
         self.init = True
+        self.subscribe("hello", self.on_next_tick)
 
 
 if __name__ == '__main__':
-    app = CtpBee("market", __name__, refresh=False)
+    tol = FTool("hello", ["tick"])
+    app = CtpBee("market", __name__, refresh=True).with_tools(tol)
     example = Main("DailyCTA")
     app.config.from_json("config.json")
     app.add_extension(example)
     app.start(log_output=True)
-
-    # while True:
-    #     pass

@@ -8,7 +8,6 @@ from enum import Enum
 from logging import INFO
 from typing import Any
 
-from ctpbee.research.match import Order
 
 
 class Missing:
@@ -127,21 +126,6 @@ EVENT_LAST = "last"
 EVENT_INIT_FINISHED = "init"
 EVENT_WARNING = "warning"
 
-
-class MatchSupport:
-    """ 快速到处为匹配成交需要的格式 """
-
-    def _to_order(self):
-        if self.offset == Offset.OPEN:
-            offset = "open"
-        else:
-            offset = "close"
-        if self.direction == Direction.LONG:
-            direction = "long"
-        else:
-            direction = "short"
-        return Order(local_symbol=self.local_symbol, counted=self.volume, price=self.price, offset=offset,
-                     direction=direction, datetime=self.time)
 
 
 @dataclass(init=False, repr=False)
@@ -365,7 +349,7 @@ class BarData(Entity):
                 self.local_symbol = f"{self.symbol}.{self.exchange}"
 
 
-class OrderData(Entity, MatchSupport):
+class OrderData(Entity):
     """
     Order data contains information for tracking lastest status
     of a specific order.
@@ -412,7 +396,7 @@ class OrderData(Entity, MatchSupport):
         return req
 
 
-class TradeData(Entity, MatchSupport):
+class TradeData(Entity):
     """
     Trade data contains information of a fill of an order. One order
     can have several trade fills.

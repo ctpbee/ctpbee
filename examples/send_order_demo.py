@@ -18,36 +18,17 @@ class Demo(CtpbeeApi):
         if contract.local_symbol in self.instrument_set:
             self.app.subscribe(contract.local_symbol)
 
-    def on_log(self, log: LogData):
-        """ 处理日志信息 ,特殊需求才用到 """
-        pass
-
     def on_tick(self, tick: TickData) -> None:
         """ 处理推送的tick """
-        # print(self.center.positions)
-        # if not self.isok:
-        # print(tick.datetime, tick.symbol)
-        #     return
-        # print(self.center.get_position("rb2010.SHFE"))
-        # print(tick.datetime, tick.last_price)
+        if not self.isok:
+            return None
 
-    def on_bar(self, bar: BarData) -> None:
-        """ 处理ctpbee生成的bar """
-        print(bar.interval, bar.datetime, bar.close_price, bar.volume)
-        # self.action.cover(bar.close_price, 1, bar, price_type=OrderType.MARKET)
+        self.action.buy_open(tick.ask_price_1, 1, tick)
+        self.action.buy_close(tick.bid_price_1, 1, tick)
 
     def on_init(self, init):
         if init:
             self.isok = True
-        orders = self.center.orders
-        trades = self.recorder.get_all_trades()
-        position = self.recorder.get_all_positions()
-        data = {"data": self.center.orders, "trade": trades}
-        print("===> ", position)
-        from ctpbee import dumps
-        strr = dumps(data)
-        with open("data.json", "w") as f:
-            f.write(strr)
 
     def on_order(self, order: OrderData) -> None:
         """ 报单回报 """

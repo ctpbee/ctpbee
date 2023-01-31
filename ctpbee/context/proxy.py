@@ -91,7 +91,7 @@ def release_local(local: t.Union["Local", "LocalStack"]) -> None:
         False
 
     With this function one can release :class:`Local` objects as well
-    as :class:`LocalStack` objects.  However it is not possible to
+    as :class:`LocalStack` objects.  However, it is not possible to
     release data held by proxies that way, one always has to retain
     a reference to the underlying local object in order to be able
     to release it.

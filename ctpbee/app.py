@@ -17,7 +17,7 @@ from ctpbee.helpers import end_thread
 from ctpbee.helpers import find_package, refresh_query, graphic_pattern
 from ctpbee.interface import Interface
 from ctpbee.jsond import dumps
-from ctpbee.level import CtpbeeApi, Action
+from ctpbee.level import CtpbeeApi, Action, Tool
 from ctpbee.log import VLogger
 from ctpbee.looper.data import VessData
 from ctpbee.looper.report import render_result
@@ -35,7 +35,6 @@ class CtpBee(object):
                           TD_FUNC=False,  # 是否开启交易功能
                           INTERFACE="ctp",  # 接口参数,默认指定国内期货ctp
                           MD_FUNC=True,  # 是否开启行情功能
-                          XMIN=[],  # k线序列周期, 支持一小时以内的k线任意生成
                           ALL_SUBSCRIBE=False,
                           SHARE_MD=False,  # 是否多账户之间共享行情,---> 等待完成
                           SLIPPAGE_COVER=0,  # 平多头滑点设置
@@ -457,10 +456,31 @@ class CtpBee(object):
         self.market, self.trader = None, None
         self._running()
 
+    def add_tool(self, tool):
+        self.tools[tool.name] = tool
+
+    def get_tool(self, name):
+        return self.tools.get(name)
+
+    def delete_tool(self, name):
+        if name in self.tools.keys():
+            self.tools.pop(name)
+            return 1
+        return -1
+
+    def with_tools(self, *args):
+        for i in args:
+            i.init_app(self)
+        return self
+
+    def with_extensions(self, *args):
+        for i in args:
+            i.init_app(self)
+        return self
+
     def release(self):
         """
         释放账户,安全退出
-        todo: fix this API
         """
         try:
             if self.market is not None:
@@ -471,7 +491,5 @@ class CtpBee(object):
             if self.r is not None:
                 """ 强行终结掉线程 """
                 end_thread(self.r)
-            if self.timer is not None:
-                end_thread(self.timer)
         except AttributeError:
             pass

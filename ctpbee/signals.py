@@ -27,12 +27,10 @@ from blinker import signal, NamedSignal
 class CommonSignal:
     # 全局级别的signal
     def __init__(self):
-        self.event = ["timer", "tick", "bar"]
+        self.event = ["timer", "tick"]
         self.timer_signal = NamedSignal("timer")
         # tick
         self.tick_signal = NamedSignal("tick")
-        # bar
-        self.bar_signal = NamedSignal("bar")
 
 
 class AppSignal:
@@ -54,10 +52,5 @@ class AppSignal:
         self.error_signal = NamedSignal(f"{ids}+error")
         self.warning_signal = NamedSignal(f"{ids}+warning")
 
-
-# 发单监视器
-send_monitor = signal("send_order")
-# 撤单监视器
-cancel_monitor = signal("cancel_order")
 
 common_signals = CommonSignal()
