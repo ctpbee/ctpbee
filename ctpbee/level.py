@@ -700,7 +700,7 @@ class CtpbeeApi(BeeApi):
             print(tick)
         """
         if handler not in self.map:
-            raise TypeError(f"呀, ctpbee暂不支持此函数类型 {handler}, 当前仅支持 {self.map.keys()}")
+            raise TypeError(f"hey, ctpbee暂不支持此函数类型 {handler}, 当前仅支持 {self.map.keys()}")
 
         def converter(func):
             self.map[handler] = func

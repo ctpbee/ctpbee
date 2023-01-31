@@ -22,19 +22,12 @@ class Me(CtpbeeApi):
 
 @api.route(handler="tick")
 def handle_tick(self, tick):
-    """ """
-    # print("当前时间: ", str(datetime.now()))
-    # print("tick时间: ", str(tick.datetime))
+    print("当前时间: ", str(datetime.now(), str(tick.datetime)))
 
 
 @api.route(handler="contract")
 def handle_contract(self, contract):
     self.app.subscribe(contract.local_symbol)
-
-
-@api.route(handler="bar")
-def handle_bars(self, bar):
-    """ """
 
 
 if __name__ == '__main__':

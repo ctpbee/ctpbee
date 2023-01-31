@@ -4,9 +4,10 @@ from ctpbee import CtpbeeApi, CtpBee
 from ctpbee.constant import *
 from ctpbee import VLogger
 
-# @VLogger()
-# def process_log(**data):
-#     print(data)
+
+@VLogger()
+def process_log(**data):
+    print(data)
 
 
 from ctpbee import Tool
@@ -27,7 +28,6 @@ class Main(CtpbeeApi):
         self.con = None
 
     def on_tick(self, tick: TickData) -> None:
-        # self.action.cancel_all()
         print("tick回报", tick)
 
     def on_trade(self, trade: TradeData) -> None:
@@ -49,12 +49,9 @@ class Main(CtpbeeApi):
         print(price)
 
     def on_realtime(self):
-        # print("定时触发", datetime.now())
         pass
 
     def on_contract(self, contract: ContractData):
-        # print(contract.symbol)
-
         if contract.symbol == "rb2305":
             self.con = contract
             self.action.subscribe(contract.local_symbol)
@@ -67,7 +64,7 @@ class Main(CtpbeeApi):
 
 if __name__ == '__main__':
     tol = FTool("hello", ["tick"])
-    app = CtpBee("market", __name__, refresh=False).with_tools(tol)
+    app = CtpBee("market", __name__, refresh=True).with_tools(tol)
     example = Main("DailyCTA")
     app.config.from_json("config.json")
     app.add_extension(example)

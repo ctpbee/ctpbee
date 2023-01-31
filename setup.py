@@ -27,7 +27,7 @@ except Exception:
 
 pkgs = ['ctpbee', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.interface',
         'ctpbee.interface.ctp', "ctpbee.interface.looper", "ctpbee.interface.ctp_mini", 'ctpbee.jsond', "ctpbee.looper",
-        "ctpbee.indicator", "ctpbee.research"]
+        "ctpbee.indicator"]
 
 setup(
     name='ctpbee',
