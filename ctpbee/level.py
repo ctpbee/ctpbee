@@ -723,9 +723,9 @@ class CtpbeeApi(BeeApi):
 
 
 class Tool:
-    __base_func__ = ["tick", "order", "trade"]
+    __base_func__ = ["tick", "order", "trade", "account", "position"]
 
-    def __init__(self, name: str, function_list: list, app=None):
+    def __init__(self, name: str, app=None):
         self._name = name
         self._app = None
         self._linked: dict[ToolRegisterType:set] = dict(map(lambda r_type: (r_type, set()), ToolRegisterType))
@@ -756,6 +756,12 @@ class Tool:
         pass
 
     def on_order(self, order: OrderData):
+        pass
+
+    def on_position(self, position: PositionData):
+        pass
+
+    def on_account(self, account: AccountData):
         pass
 
     # todo: 不依赖ctp数据触发  由tool的定时器触发 生成任何形式的数据流推送

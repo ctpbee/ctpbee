@@ -313,7 +313,7 @@ def refresh_query(app, signals, refresh):
         sleep(0.1)
 
 
-def helper_call(func):
+def call(func):
     """
     此装饰器是为了减少代码, 主要是用来执行插件的回调方法
     Args:
@@ -330,15 +330,15 @@ def helper_call(func):
                     warnings.warn(
                         "你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0,请确保你的订阅变量是否为instrument_set,以及订阅具体代码")
                 if event.data.local_symbol in ext.instrument_set:
-                    ext(deepcopy(event))
+                    ext(event)
             else:
-                ext(deepcopy(event))
+                ext(event)
         return d
 
     return wrapper
 
 
-def async_value_call(func):
+def async_call(func):
     """
     异步的Call装饰器,在2.0的时候可能会被使用
 
@@ -356,9 +356,9 @@ def async_value_call(func):
                     warnings.warn(
                         "你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0,请确保你的订阅变量是否为instrument_set,以及订阅具体代码")
                 if event.data.local_symbol in value.instrument_set:
-                    await value(deepcopy(event))
+                    await value(event)
             else:
-                await value(deepcopy(event))
+                await value(event)
         return d
 
     return wrapper

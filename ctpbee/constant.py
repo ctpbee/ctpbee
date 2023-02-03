@@ -2,12 +2,26 @@
 """
 
 import os
+import inspect
 from dataclasses import dataclass, asdict
 from datetime import datetime, date
 from enum import Enum
 from logging import INFO
 from typing import Any
 
+
+def __set_attr__(self, key, value):
+    # todo: is there a faster to get the last caller function name?
+    father = inspect.getframeinfo(inspect.currentframe().f_back)[2]
+    if father.startswith("_"):
+        self.__dict__[key] = value
+    else:
+        raise AttributeError(f"Attr:{key} has been protected. do not change it in function: '{father}'")
+
+
+def frozen(cls):
+    cls.__setattr__ = __set_attr__
+    return cls
 
 
 class Missing:
@@ -136,8 +150,8 @@ EVENT_INIT_FINISHED = "init"
 EVENT_WARNING = "warning"
 
 
-
 @dataclass(init=False, repr=False)
+@frozen
 class Entity:
     """
     Any data object needs a gateway_name as source
@@ -149,7 +163,8 @@ class Entity:
 
     def __new__(cls, **kwargs):
         args = super().__new__(cls)
-        setattr(args, "__name__", cls.__name__)
+        # setattr(args, "__name__", cls.__name__)
+        args.__set_hole__("__name__", cls.__name__)
         return args
 
     def __init__(self, **mapping):
@@ -169,6 +184,9 @@ class Entity:
                 continue
             mat.append(f" {key}={getattr(self, key, None)}, ")
         return f"{self.__name__}({''.join(mat)})"
+
+    def __set_hole__(self, key, value):
+        setattr(self, key, value)
 
     @classmethod
     def _create_class(cls, kwargs: dict):
@@ -325,6 +343,7 @@ class TickData(Entity):
             setattr(self, "symbol", l.split(".")[0])
             setattr(self, "exchange", l.split(".")[1])
         else:
+
             self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
@@ -538,6 +557,8 @@ class ContractData(Entity):
     long_margin_ratio: float
     short_margin_ratio: float
     max_margin_side_algorithm: bool
+
+    gateway_name = ""
 
     def __post_init__(self):
         """"""

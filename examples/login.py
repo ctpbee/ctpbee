@@ -29,13 +29,18 @@ class FTool(Tool):
     def on_order(self, data):
         return "any data"
 
+
 class Main(CtpbeeApi):
     def __init__(self, name):
         super().__init__(name)
         self.init = False
-        self.con = None
 
     def on_tick(self, tick: TickData) -> None:
+        # if not self.init:
+        #     return
+        # else:
+        #     self.action.sell_open(tick.last_price, 1, tick)
+        #     self.init = False
         print("tick回报", tick)
 
     def on_trade(self, trade: TradeData) -> None:
@@ -48,16 +53,14 @@ class Main(CtpbeeApi):
         print("订单回报: ", order)
 
     def on_position(self, position: PositionData) -> None:
-        print("持仓回报", position)
-
-    def on_bar(self, bar: BarData) -> None:
-        print("k线回报: ", bar)
+        # print("持仓回报", position)
+        pass
 
     def on_next_tick(self, price):
         print(price)
 
-    def on_after_order(self, order):
-        print(order)
+    def on_after_order(self, order_id):
+        print("get order_id", order_id)
 
     def on_tool_data(self, data):
         print(data)
@@ -67,7 +70,6 @@ class Main(CtpbeeApi):
 
     def on_contract(self, contract: ContractData):
         if contract.symbol == "rb2305":
-            self.con = contract
             self.action.subscribe(contract.local_symbol)
 
     def on_init(self, init: bool):
@@ -80,8 +82,9 @@ class Main(CtpbeeApi):
         # tool的自定义数据流回调
         self.subscribe("hello", self.on_tool_data, ToolRegisterType.WHATEVER)
 
+
 if __name__ == '__main__':
-    tol = FTool("hello", ["tick", "order"])
+    tol = FTool("hello")
     app = CtpBee("market", __name__, refresh=True).with_tools(tol)
     example = Main("DailyCTA")
     app.config.from_json("config.json")

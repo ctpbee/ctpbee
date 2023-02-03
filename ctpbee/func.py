@@ -371,5 +371,7 @@ def tool_register(tool_type: ToolRegisterType):
             for take in self._linked[tool_type]:
                 take(ret)
             return ret
+
         return wrapper
+
     return decorator
