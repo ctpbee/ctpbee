@@ -108,6 +108,15 @@ class Interval(Enum):
     WEEKLY = "w"
 
 
+class ToolRegisterType(Enum):
+    TICK = 'tick'
+    ORDER = 'order'
+    TRADE = 'trade'
+    POSITION = 'position'
+    ACCOUNT = 'account'
+    WHATEVER = 'whatever'
+
+
 enums = [Interval, Exchange, OptionType, OrderType, Product, Status, Offset, Direction]
 
 ACTIVE_STATUSES = {Status.NOTTRADED, Status.PARTTRADED}
