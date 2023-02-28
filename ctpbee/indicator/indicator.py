@@ -350,4 +350,30 @@ def kd(data: np.array, period, period_df_ast=3):
     return k, perc
 
 
+def kdj(close, high, low, n=9, m1=3, m2=3):
+    """
+    :param close: ndarray, close price
+    :param high: ndarray, high price
+    :param low: ndarray, low price
+    :param n: int, the length of KDJ indicator
+    :param m1: int, the weight of K value
+    :param m2: int, the weight of D value
+    :return: tuple, (K, D, J)
+    """
+    RSV = (close - np.minimum(low, np.roll(close, n))) / (
+            np.maximum(high, np.roll(close, n)) - np.minimum(low, np.roll(close, n))) * 100
+    K = np.zeros_like(RSV)
+    K[:n] = 50
+    K = np.convolve(K, np.ones(m1) / m1, mode='same')[n - 1:]
+    K = np.convolve(K, np.ones(m2) / m2, mode='same')[m2 - 1:]
+    D = np.convolve(K, np.ones(m2) / m2, mode='same')
+    J = 3 * K - 2 * D
+    return K, D, J
 
+
+def bollinger_bands(close, window_size, num_of_std):
+    rolling_mean = np.mean(close[-window_size:])
+    rolling_std = np.std(close[-window_size:])
+    upper_band = rolling_mean + (rolling_std * num_of_std)
+    lower_band = rolling_mean - (rolling_std * num_of_std)
+    return upper_band, lower_band

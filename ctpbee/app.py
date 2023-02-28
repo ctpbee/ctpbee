@@ -489,7 +489,6 @@ class CtpBee(object):
                 self.trader.close()
             self.market, self.trader = None, None
             if self.r is not None:
-                """ 强行终结掉线程 """
                 end_thread(self.r)
         except AttributeError:
             pass

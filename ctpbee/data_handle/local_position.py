@@ -19,6 +19,7 @@ Notice : 神兽保佑 ，测试一次通过
 //          ┗━┻━┛   ┗━┻━┛
 //
 """
+import warnings
 from typing import Text
 
 """ 本地持仓对象 """
@@ -44,7 +45,7 @@ class LocalVariable:
 class PositionHolding:
     """ 单个合约的持仓 """
 
-    def __init__(self, local_symbol, app):
+    def __init__(self, local_symbol, contract=None):
         """"""
         self.local_symbol = local_symbol
         try:
@@ -53,19 +54,12 @@ class PositionHolding:
         except Exception:
             raise ValueError("invalid local_symbol")
         self.active_orders = {}
-        self.size = 1
         from ctpbee.looper.account import Account
-        if isinstance(app, Account):  # if app.balance
-            self.size = app.get_size_from_map(local_symbol)
+        if contract is None:
+            warnings.warn("no size passed please check your contract! contract will be fixed to 1")
+            self.size = 1
         else:
-            if app.recorder.get_contract(self.local_symbol) is not None:
-                self.size = app.recorder.get_contract(self.local_symbol).size
-            elif getattr(app.trader, "account", None) is not None:
-                self.size = app.trader.account.get_size_from_map(local_symbol=local_symbol)
-            else:
-                raise ValueError("获取合约信息失败, 持仓盈亏计算失败")
-        if self.size is None:
-            raise ValueError(f"当前仓位: {self.local_symbol} 合约乘数设置出现问题")
+            self.size = contract.size
         self.long_pos = 0
         self.long_yd = 0
         self.long_td = 0
@@ -425,12 +419,18 @@ class LocalPositionManager(dict):
         self.size_map = {}
 
     def update_tick(self, tick: TickData, pre_close):
+        """
+        更新tick信息更新本地持仓盈亏等数据
+        """
         """ 更新tick  """
         if tick.local_symbol not in self:
             return
         self.get(tick.local_symbol).update_tick(tick, pre_close)
 
     def update_bar(self, bar: BarData, pre_close):
+        """
+        根据k线信息更新本地持仓盈亏
+        """
         if bar.local_symbol not in self:
             return
         self.get(bar.local_symbol).update_bar(bar, pre_close)
@@ -456,7 +456,8 @@ class LocalPositionManager(dict):
 
         holding = self.get(req.local_symbol, None)
         if not holding:
-            self[req.local_symbol] = PositionHolding(req.local_symbol, self.app)
+            self[req.local_symbol] = PositionHolding(req.local_symbol,
+                                                     self.app.recorder.get_contract(req.local_symbol))
         self[req.local_symbol].update_order_request(req, local_orderid)
 
     def convert_order_request(self, req: OrderRequest, lock: bool):
@@ -466,7 +467,9 @@ class LocalPositionManager(dict):
 
         holding = self.get(req.local_symbol, None)
         if not holding:
-            self[req.local_symbol] = PositionHolding(req.local_symbol, self.app)
+            self[req.local_symbol] = PositionHolding(req.local_symbol,
+                                                     self.app.recorder.get_contract(req.local_symbol, None)
+                                                     )
         if lock:
             return self[req.local_symbol].convert_order_request_lock(req)
         elif req.exchange == Exchange.SHFE:
@@ -477,14 +480,16 @@ class LocalPositionManager(dict):
     def update_order(self, order):
         """ 更新order """
         if order.local_symbol not in self:
-            self[order.local_symbol] = PositionHolding(order.local_symbol, self.app)
+            self[order.local_symbol] = PositionHolding(order.local_symbol,
+                                                       self.app.recorder.get_contract(req.local_symbol, None))
         else:
             self.get(order.local_symbol).update_order(order)
 
     def update_trade(self, trade):
         """ 更新成交  """
         if trade.local_symbol not in self:
-            self[trade.local_symbol] = PositionHolding(trade.local_symbol, self.app)
+            self[trade.local_symbol] = PositionHolding(trade.local_symbol,
+                                                       self.app.recorder.get_contract(req.local_symbol, None))
             self[trade.local_symbol].update_trade(trade)
         else:
             self.get(trade.local_symbol).update_trade(trade)
@@ -492,7 +497,8 @@ class LocalPositionManager(dict):
     def update_position(self, position):
         """ 更新持仓 """
         if position.local_symbol not in self.keys():
-            self[position.local_symbol] = PositionHolding(position.local_symbol, self.app)
+            self[position.local_symbol] = PositionHolding(position.local_symbol,
+                                                          self.app.recorder.get_contract(req.local_symbol, None))
             self[position.local_symbol].update_position(position)
         else:
             self.get(position.local_symbol).update_position(position)
