@@ -35,6 +35,9 @@ class Interface:
         elif interface == "ctp_mini":
             from ctpbee.interface.ctp_mini import MMdApi, MTdApi
             return MMdApi, MTdApi
+        elif interface == "ctp_rohon":
+            from ctpbee.interface.ctp_rohon import RHMdApi, RHTdApi
+            return RHMdApi, RHTdApi
         elif interface == "local":
             from ctpbee.interface.local import MdApi, TdApi
             return MdApi, TdApi
