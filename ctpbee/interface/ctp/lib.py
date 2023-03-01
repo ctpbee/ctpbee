@@ -49,7 +49,8 @@ EXCHANGE_CTP2VT = {
     "CZCE": Exchange.CZCE,
     "DCE": Exchange.DCE,
     "INE": Exchange.INE,
-    "GFEX": Exchange.GFEX
+    "GFEX": Exchange.GFEX,
+    "TTS": Exchange.TTS
 }
 
 PRODUCT_CTP2VT = {
