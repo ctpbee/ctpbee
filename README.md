@@ -107,7 +107,7 @@ if __name__ == '__main__':
 - [x] k线生成
 - [x] 回测报告生成
 - [x] 自动运维
-- [x] ctp/ctp_mini支持
+- [x] ctp/ctp_mini/rohon支持
 
 更多相关信息, 请参阅[文档](http://docs.ctpbee.com)
 
