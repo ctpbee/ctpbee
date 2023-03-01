@@ -468,7 +468,7 @@ class LocalPositionManager(dict):
         holding = self.get(req.local_symbol, None)
         if not holding:
             self[req.local_symbol] = PositionHolding(req.local_symbol,
-                                                     self.app.recorder.get_contract(req.local_symbol, None)
+                                                     self.app.recorder.get_contract(req.local_symbol)
                                                      )
         if lock:
             return self[req.local_symbol].convert_order_request_lock(req)
@@ -481,7 +481,7 @@ class LocalPositionManager(dict):
         """ 更新order """
         if order.local_symbol not in self:
             self[order.local_symbol] = PositionHolding(order.local_symbol,
-                                                       self.app.recorder.get_contract(req.local_symbol, None))
+                                                       self.app.recorder.get_contract(req.local_symbol))
         else:
             self.get(order.local_symbol).update_order(order)
 
@@ -489,7 +489,7 @@ class LocalPositionManager(dict):
         """ 更新成交  """
         if trade.local_symbol not in self:
             self[trade.local_symbol] = PositionHolding(trade.local_symbol,
-                                                       self.app.recorder.get_contract(req.local_symbol, None))
+                                                       self.app.recorder.get_contract(trade.local_symbol))
             self[trade.local_symbol].update_trade(trade)
         else:
             self.get(trade.local_symbol).update_trade(trade)
@@ -498,7 +498,7 @@ class LocalPositionManager(dict):
         """ 更新持仓 """
         if position.local_symbol not in self.keys():
             self[position.local_symbol] = PositionHolding(position.local_symbol,
-                                                          self.app.recorder.get_contract(req.local_symbol, None))
+                                                          self.app.recorder.get_contract(position.local_symbol))
             self[position.local_symbol].update_position(position)
         else:
             self.get(position.local_symbol).update_position(position)
