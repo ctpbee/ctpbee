@@ -1,5 +1,3 @@
-from .generator import DataGenerator
-from .local_position import PositionHolding
+from .local_position import PositionHolding, LocalPositionManager
 
-generator = DataGenerator
 local_position = PositionHolding

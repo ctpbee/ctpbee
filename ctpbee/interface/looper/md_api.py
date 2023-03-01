@@ -2,10 +2,11 @@ from ctpbee import common_signals
 from ctpbee.constant import EVENT_TICK, Event
 
 
-class SimMarket:
+class LooperMe:
     def __init__(self, app_signal):
         self.app_signal = app_signal
         self.gateway_name = "SIM"
+        self.login_status = True
 
     @property
     def md_status(self):
@@ -24,3 +25,7 @@ class SimMarket:
 
     def connect(self, info):
         print("虚拟行情已经载入，请使用外部行情")
+
+    def unsubscribe(self, local_symbol):
+        import warnings
+        warnings.warn("正在回测接口中调用无效的取消订阅接口")

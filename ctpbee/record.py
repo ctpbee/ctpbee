@@ -1,14 +1,9 @@
-import warnings
 from collections import defaultdict
-from copy import deepcopy
-from datetime import datetime
-
-from ctpbee.data_handle import generator
-from ctpbee.data_handle.local_position import LocalPositionManager
-from ctpbee.constant import Event
-from ctpbee.helpers import helper_call
 
 import ctpbee.signals as signal
+from ctpbee.constant import Event, TickData
+from ctpbee.data_handle.local_position import LocalPositionManager
+from ctpbee.helpers import call
 
 
 class Recorder(object):
@@ -27,13 +22,15 @@ class Recorder(object):
         self.contracts = {}
         self.logs = {}
         self.errors = []
-        self.generators = {}
         self.active_orders = {}
         self.local_contract_price_mapping = {}
         self.app = app
         self.register_event()
         self.position_manager = LocalPositionManager(app=self.app)
         self.main_contract_mapping = defaultdict(list)
+
+        self.__common_sig_name = None
+        self.__app_sig_name = None
 
     @staticmethod
     def get_local_time():
@@ -48,19 +45,19 @@ class Recorder(object):
 
         def connect(data):
             name = data[0]
-            signal = data[1]
-            temp_sig = getattr(signal, f"{name}_signal")
+            sgl = data[1]
+            temp_sig = getattr(sgl, f"{name}_signal")
             temp_sig.connect(self.get_func(name=name), weak=False)
             return name
 
-        def generate_params(data, signal):
+        def generate_params(data, ctl):
             temp = []
             for x in data:
-                temp.append((x, signal))
+                temp.append((x, ctl))
             return temp
 
-        x = list(map(connect, generate_params(signal.common_signals.event, signal.common_signals)))
-        p = list(map(connect, generate_params(self.app.app_signal.event, self.app.app_signal)))
+        self.__common_sig_name = list(map(connect, generate_params(signal.common_signals.event, signal.common_signals)))
+        self.__app_sig_name = list(map(connect, generate_params(self.app.app_signal.event, self.app.app_signal)))
 
     def process_timer_event(self, event):
         for x in self.app._extensions.values():
@@ -70,15 +67,18 @@ class Recorder(object):
         """ 处理初始化完成事件 """
         if event.data:
             self.app.init_finished = True
-        for x in self.app._extensions.values():
-            x(deepcopy(event))
+        for value in self.app._extensions.values():
+            value(event)
+
+    def process_warning_event(self, event):
+        self.app.logger.warning(event.data)
 
     def process_last_event(self, event):
         """ 处理合约的最新行情数据 """
         data = event.data
         self.local_contract_price_mapping[data.local_symbol] = data.last_price
         # 过滤掉数字 取中文做key
-        key = "".join([x for x in data.symbol if not x.isdigit()])
+        key = "".join([x for x in data.local_symbol if not x.isdigit()])
         self.main_contract_mapping[key.upper()].append(data)
 
     def process_error_event(self, event: Event):
@@ -90,36 +90,15 @@ class Recorder(object):
         if self.app.config.get("LOG_OUTPUT"):
             self.app.logger.info(event.data)
 
-    @helper_call
-    def process_bar_event(self, event: Event):
-        bar = event.data
-        local = self.bar.get(bar.local_symbol)
-        if local is None:
-            self.bar[bar.local_symbol] = {bar.interval: []}
-        else:
-            if self.bar[bar.local_symbol].get(bar.interval) is None:
-                self.bar[bar.local_symbol] = {bar.interval: []}
-        self.bar[bar.local_symbol][bar.interval].append(bar)
-
-    @helper_call
+    @call
     def process_tick_event(self, event: Event):
-        tick = event.data
+        tick: TickData = event.data
         self.ticks[tick.local_symbol] = tick
-        self.position_manager.update_tick(tick)
-        # 生成datetime对象
-        if not tick.datetime:
-            if '.' in tick.time:
-                tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y%m%d %H:%M:%S.%f')
-            else:
-                tick.datetime = datetime.strptime(' '.join([tick.date, tick.time]), '%Y%m%d %H:%M:%S')
-        bm = self.generators.get(tick.local_symbol, None)
-        if bm:
-            bm.update_tick(tick)
-        if not bm:
-            self.generators[tick.local_symbol] = generator(self.app)
-            self.generators[tick.local_symbol].update_tick(tick)
+        self.position_manager.update_tick(tick, tick.pre_settlement_price)
+        for tool in self.app.tools.values():
+            tool.on_tick(tick)
 
-    @helper_call
+    @call
     def process_order_event(self, event: Event):
         """"""
         order = event.data
@@ -132,35 +111,24 @@ class Recorder(object):
             self.active_orders.pop(order.local_order_id)
         self.position_manager.update_order(order)
 
-    @helper_call
+        for tool in self.app.tools.values():
+            tool.on_order(order)
+
+    @call
     def process_trade_event(self, event: Event):
         """"""
         trade = event.data
         self.trades[trade.local_trade_id] = trade
         self.position_manager.update_trade(trade)
-        for value in self.app._extensions.values():
-            if self.app.config['INSTRUMENT_INDEPEND']:
-                if len(value.instrument_set) == 0:
-                    warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
-                if event.data.local_symbol in value.instrument_set:
-                    value(deepcopy(event))
-            else:
-                value(deepcopy(event))
+        for tool in self.app.tools.values():
+            tool.on_trade(trade)
 
-    @helper_call
+    @call
     def process_position_event(self, event: Event):
         """"""
         position = event.data
         self.positions[position.local_position_id] = position
         self.position_manager.update_position(position)
-        for value in self.app._extensions.values():
-            if self.app.config['INSTRUMENT_INDEPEND']:
-                if len(value.instrument_set) == 0:
-                    warnings.warn("你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0，请确保你的订阅变量是否为instrument_set，以及订阅具体代码")
-                if event.data.local_symbol in value.instrument_set:
-                    value(deepcopy(event))
-            else:
-                value(deepcopy(event))
 
     def process_account_event(self, event: Event):
         """"""
@@ -168,20 +136,18 @@ class Recorder(object):
         self.account = account
 
         for value in self.app._extensions.values():
-            value(deepcopy(event))
+            value(event)
 
     def process_contract_event(self, event: Event):
         """"""
         contract = event.data
         self.contracts[contract.local_symbol] = contract
         for value in self.app._extensions.values():
-            value(deepcopy(event))
+            value(event)
 
-    def get_bar(self, local_symbol):
-        return self.bar.get(local_symbol, None)
-
-    def get_all_bar(self):
-        return self.bar
+    def get_last_price(self, local_symbol) -> None or float:
+        tick = self.ticks.get(local_symbol)
+        return tick.last_price if tick is not None else None
 
     def get_tick(self, local_symbol):
         return self.ticks.get(local_symbol, None)
@@ -219,11 +185,11 @@ class Recorder(object):
         """
         return list(self.trades.values())
 
-    def get_all_positions(self):
+    def get_all_positions(self, obj=False):
         """
         Get all position data.
         """
-        return self.position_manager.get_all_positions()
+        return self.position_manager.get_all_positions(obj=obj)
 
     def get_errors(self):
         return self.errors
@@ -253,7 +219,7 @@ class Recorder(object):
         """ 返回主力合约列表 """
         result = []
         for _ in self.main_contract_mapping.values():
-            x = sorted(_, key=lambda x: x.open_interest, reverse=True)[0]
+            x = sorted(_, key=lambda _x: _x.open_interest, reverse=True)[0]
             result.append(x.local_symbol)
         return result
 
@@ -276,7 +242,7 @@ class Recorder(object):
 
     def clear_all(self):
         """
-        为了避免数据越来越大，需要清空数据
+        为了避免数据越来越大,需要清空数据
         :return:
         """
 
@@ -286,5 +252,4 @@ class Recorder(object):
         self.positions.clear()
         self.contracts.clear()
         self.errors.clear()
-        self.generators.clear()
         self.active_orders.clear()

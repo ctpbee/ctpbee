@@ -1,20 +1,17 @@
-import ctpbee.signals
 from blinker import NamedSignal
-from ctpbee.constant import *
-from ctpbee.interface.func import *
 
+import ctpbee.signals
 from .lib import *
+from ..func import get_folder_path
 
 
-class BeeMdApi(MdApi):
-    """"""
+class MMdApi(MiniMdApi):
 
     def __init__(self, app_signal):
         """Constructor"""
-        super(BeeMdApi, self).__init__()
+        super(MMdApi, self).__init__()
 
-        self.gateway_name = "ctp"
-
+        self.gateway_name = "ctp_mini"
         self.reqid = 0
         self.app_signal = app_signal
         self.connect_status = False
@@ -23,7 +20,7 @@ class BeeMdApi(MdApi):
 
         self.userid = ""
         self.password = ""
-        self.brokerid = 0
+        self.brokerid = ""
 
     @property
     def md_status(self):
@@ -43,17 +40,15 @@ class BeeMdApi(MdApi):
         """
         Callback when front server is connected.
         """
-        self.connect_status = True
-        self.on_event(type=EVENT_LOG, data="行情服务器连接成功")
+        self.on_event(EVENT_LOG, "行情服务器连接成功")
         self.login()
 
     def onFrontDisconnected(self, reason: int):
         """
         Callback when front server is disconnected.
         """
-        self.connect_status = False
         self.login_status = False
-        self.on_event(type=EVENT_LOG, data=f"行情连接断开，原因{reason}")
+        self.on_event(EVENT_LOG, f"行情服务器连接断开，原因{reason}")
 
     def onRspUserLogin(self, data: dict, error: dict, reqid: int, last: bool):
         """
@@ -61,27 +56,26 @@ class BeeMdApi(MdApi):
         """
         if not error["ErrorID"]:
             self.login_status = True
-            self.on_event(type=EVENT_LOG, data="行情服务器登录成功")
+            self.on_event(EVENT_LOG, "行情服务器登录成功")
 
             for symbol in self.subscribed:
                 self.subscribeMarketData(symbol)
+            self.on_event(EVENT_LOG, "行情服务重新订阅")
         else:
-            error["detail"] = "行情登录失败"
-            self.on_event(type=EVENT_ERROR, data=error)
+            self.on_event(EVENT_ERROR, f"行情服务器登录失败: {error}")
 
     def onRspError(self, error: dict, reqid: int, last: bool):
         """
         Callback when error occured.
         """
-        error['detail'] = "行情接口报错"
-        self.on_event(type=EVENT_ERROR, data=error)
+        self.on_event(EVENT_ERROR, f"行情接口报错 {error}")
 
     def onRspSubMarketData(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
         if not error or not error["ErrorID"]:
             return
-        error['detail'] = "行情订阅失败"
-        self.on_event(type=EVENT_ERROR, data=error)
+
+        self.on_event(EVENT_ERROR, f"行情订阅失败: {error}")
 
     def onRtnDepthMarketData(self, data: dict):
         """
@@ -91,7 +85,7 @@ class BeeMdApi(MdApi):
         exchange = symbol_exchange_map.get(symbol, None)
         if not exchange:
             exchange = Exchange.CTP
-        # 针对大商所进行处理 see https://github.com/ctpbee/ctpbee/issues/165
+
         if exchange == Exchange.DCE:
             datetimed = datetime.strptime(
                 str(date.today()) + " " + f"{data['UpdateTime']}.{int(data['UpdateMillisec'] / 100)}",
@@ -147,20 +141,23 @@ class BeeMdApi(MdApi):
         )
         self.on_event(type=EVENT_TICK, data=tick)
 
-    def connect(self, info: dict):
+    def connect(self, info):
         """
         Start connection to server.
         """
-        self.userid = info['userid']
-        self.password = info['password']
-        self.brokerid = info['brokerid']
-
+        address = info["md_address"]
+        self.userid = info["userid"]
+        self.password = info["password"]
+        self.brokerid = info["brokerid"]
         # If not connected, then start connection first.
         if not self.connect_status:
             path = get_folder_path(self.gateway_name.lower() + f"/{self.userid}")
             self.createFtdcMdApi(str(path) + "\\Md")
-            self.registerFront(info['md_address'])
+
+            self.registerFront(address)
             self.init()
+
+            self.connect_status = True
         # If already connected, then login immediately.
         elif not self.login_status:
             self.login()
@@ -186,14 +183,6 @@ class BeeMdApi(MdApi):
         if self.login_status and symbol not in self.subscribed:
             result = self.subscribeMarketData(symbol)
         self.subscribed.add(symbol)
-        return result
-
-    def unsubscribe(self, symbol):
-        result = None
-        if self.login_status and symbol in self.subscribed:
-            result = self.unSubscribeMarketData(symbol)
-        if symbol in self.subscribed:
-            self.subscribed.remove(symbol)
         return result
 
     def close(self):

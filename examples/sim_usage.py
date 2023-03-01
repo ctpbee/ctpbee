@@ -1,8 +1,6 @@
 """
  本地模拟示例
 """
-from datetime import datetime
-from time import sleep
 
 from ctpbee import CtpBee
 from ctpbee import CtpbeeApi
@@ -11,6 +9,7 @@ from ctpbee.constant import BarData, TickData
 api = CtpbeeApi("实盘")
 
 pre = CtpbeeApi("模拟")
+
 
 class Me(CtpbeeApi):
 
@@ -23,19 +22,12 @@ class Me(CtpbeeApi):
 
 @api.route(handler="tick")
 def handle_tick(self, tick):
-    """ """
-    # print("当前时间: ", str(datetime.now()))
-    # print("tick时间: ", str(tick.datetime))
+    print("当前时间: ", str(datetime.now(), str(tick.datetime)))
 
 
 @api.route(handler="contract")
 def handle_contract(self, contract):
     self.app.subscribe(contract.local_symbol)
-
-
-@api.route(handler="bar")
-def handle_bars(self, bar):
-    """ """
 
 
 if __name__ == '__main__':
@@ -63,8 +55,8 @@ if __name__ == '__main__':
     market_app = CtpBee("market", __name__)
     market_app.config.from_mapping({
         "CONNECT_INFO": {
-            "userid": "089131",
-            "password": "350888",
+            "userid": "170874",
+            "password": "he071201",
             "brokerid": "9999",
             "md_address": "tcp://218.202.237.33:10112",
             "td_address": "tcp://218.202.237.33:10102",

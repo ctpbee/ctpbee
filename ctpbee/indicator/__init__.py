@@ -1,7 +1,19 @@
-#
 """
-指标系统
-包含两个部分：
-    TA-lib库提供的指标
+
+提供指标纯向量化计算方法
+
+todo: 提供任意结构组合的向量化回测结果
 """
-from .ta_lib import ArrayManager
+import numpy as np
+
+
+def read_indicator_from_data():
+    raise NotImplemented
+
+
+class Indicator:
+    def __init__(self, n=10):
+        self._n = n
+
+    def flush(self):
+        raise NotImplemented

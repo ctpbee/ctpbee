@@ -1,12 +1,27 @@
 """
-Basic data structure used for general trading function in VN Trader.
 """
 
+import os
+import inspect
 from dataclasses import dataclass, asdict
 from datetime import datetime, date
 from enum import Enum
 from logging import INFO
 from typing import Any
+
+
+def __set_attr__(self, key, value):
+    # todo: is there a faster to get the last caller function name?
+    father = inspect.getframeinfo(inspect.currentframe().f_back)[2]
+    if father.startswith("_"):
+        self.__dict__[key] = value
+    else:
+        raise AttributeError(f"Attr:{key} has been protected. do not change it in function: '{father}'")
+
+
+def frozen(cls):
+    cls.__setattr__ = __set_attr__
+    return cls
 
 
 class Missing:
@@ -52,14 +67,6 @@ class Product(Enum):
     EQUITY = "股票"
     FUTURES = "期货"
     OPTION = "期权"
-    INDEX = "指数"
-    FOREX = "外汇"
-    SPOT = "现货"
-    ETF = "ETF"
-    BOND = "债券"
-    WARRANT = "权证"
-    SPREAD = "价差"
-    FUND = "基金"
 
 
 class OrderType(Enum):
@@ -85,31 +92,13 @@ class Exchange(Enum):
     """
     Exchange.
     """
-    # Chinese
     CFFEX = "CFFEX"
     SHFE = "SHFE"
     CZCE = "CZCE"
     DCE = "DCE"
     INE = "INE"
-    SSE = "SSE"
-    SZSE = "SZSE"
-    SGE = "SGE"
-
-    # Global
-    SMART = "SMART"
-    NYMEX = "NYMEX"
-    GLOBEX = "GLOBEX"
-    IDEALPRO = "IDEALPRO"
-    CME = "CME"
-    ICE = "ICE"
-    SEHK = "SEHK"
-    HKFE = "HKFE"
-
-    # CryptoCurrency
-    BITMEX = "BITMEX"
-    OKEX = "OKEX"
-    HUOBI = "HUOBI"
-    BITFINEX = "BITFINEX"
+    GFEX = "GFEX"
+    CTP = "ctp"
 
 
 TODAY_EXCHANGE = [Exchange.INE, Exchange.SHFE]
@@ -119,31 +108,8 @@ EXCHANGE_MAPPING = {
     "CZCE": Exchange.CZCE,
     "DCE": Exchange.DCE,
     "INE": Exchange.INE,
-    "SSE": Exchange.SSE,
-    "SZSE": Exchange.SZSE,
-    "SGE": Exchange.SGE,
-    "SMART": Exchange.SMART,
-    "NYMEX": Exchange.NYMEX,
-    "GLOBEX": Exchange.GLOBEX,
-    "IDEALPRO": Exchange.IDEALPRO,
-    "CME": Exchange.CME,
-    "ICE": Exchange.ICE,
-    "SEHK": Exchange.SEHK,
-    "HKFE": Exchange.HKFE,
-    "BITMEX": Exchange.BITMEX,
-    "OKEX": Exchange.OKEX,
-    "HUOBI": Exchange.HUOBI,
-    "BITFINEX": Exchange.BITFINEX
+    "CTP": Exchange.CTP
 }
-
-
-class Currency(Enum):
-    """
-    Currency.
-    """
-    USD = "USD"
-    HKD = "HKD"
-    CNY = "CNY"
 
 
 class Interval(Enum):
@@ -156,9 +122,18 @@ class Interval(Enum):
     WEEKLY = "w"
 
 
-enums = [Interval, Currency, Exchange, OptionType, OrderType, Product, Status, Offset, Direction]
+class ToolRegisterType(Enum):
+    TICK = 'tick'
+    ORDER = 'order'
+    TRADE = 'trade'
+    POSITION = 'position'
+    ACCOUNT = 'account'
+    WHATEVER = 'whatever'
 
-ACTIVE_STATUSES = set([Status.NOTTRADED, Status.PARTTRADED])
+
+enums = [Interval, Exchange, OptionType, OrderType, Product, Status, Offset, Direction]
+
+ACTIVE_STATUSES = {Status.NOTTRADED, Status.PARTTRADED}
 
 EVENT_LOG = "log"
 EVENT_CONTRACT = "contract"
@@ -172,10 +147,12 @@ EVENT_ACCOUNT = "account"
 EVENT_SHARED = "shared"
 EVENT_LAST = "last"
 EVENT_INIT_FINISHED = "init"
+EVENT_WARNING = "warning"
 
 
 @dataclass(init=False, repr=False)
-class BaseData:
+@frozen
+class Entity:
     """
     Any data object needs a gateway_name as source
     and should inherit base data.
@@ -186,7 +163,8 @@ class BaseData:
 
     def __new__(cls, **kwargs):
         args = super().__new__(cls)
-        setattr(args, "__name__", cls.__name__)
+        # setattr(args, "__name__", cls.__name__)
+        args.__set_hole__("__name__", cls.__name__)
         return args
 
     def __init__(self, **mapping):
@@ -196,7 +174,6 @@ class BaseData:
             self.__post_init__()
 
     def __init_subclass__(cls, **kwargs):
-        # ??? excuse me ....
         cls.__dict__['__annotations__']['gateway_name'] = str
         cls.__dict__['__annotations__']['local_symbol'] = str
 
@@ -207,6 +184,9 @@ class BaseData:
                 continue
             mat.append(f" {key}={getattr(self, key, None)}, ")
         return f"{self.__name__}({''.join(mat)})"
+
+    def __set_hole__(self, key, value):
+        setattr(self, key, value)
 
     @classmethod
     def _create_class(cls, kwargs: dict):
@@ -308,12 +288,9 @@ class BaseRequest:
         return asdict(self)
 
 
-class TickData(BaseData):
+class TickData(Entity):
     """
-    Tick data contains information about:
-        * last trade in market
-        * orderbook snapshot
-        * intraday market statistics.
+    Tick Attributes
     """
     symbol: str
     exchange: Any
@@ -361,10 +338,16 @@ class TickData(BaseData):
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        l = getattr(self, "local_symbol", None)
+        if l is not None:
+            setattr(self, "symbol", l.split(".")[0])
+            setattr(self, "exchange", l.split(".")[1])
+        else:
+
+            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
-class BarData(BaseData):
+class BarData(Entity):
     """
     Candlestick bar data of a certain trading period.
     """
@@ -388,10 +371,13 @@ class BarData(BaseData):
             setattr(self, "symbol", l.split(".")[0])
             setattr(self, "exchange", l.split(".")[1])
         else:
-            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+            try:
+                self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+            except AttributeError:
+                self.local_symbol = f"{self.symbol}.{self.exchange}"
 
 
-class OrderData(BaseData):
+class OrderData(Entity):
     """
     Order data contains information for tracking lastest status
     of a specific order.
@@ -409,6 +395,7 @@ class OrderData(BaseData):
     traded: float = 0
     status: Status = Status.SUBMITTING
     time: str = ""
+    is_local = True
 
     def __post_init__(self):
         """"""
@@ -437,7 +424,7 @@ class OrderData(BaseData):
         return req
 
 
-class TradeData(BaseData):
+class TradeData(Entity):
     """
     Trade data contains information of a fill of an order. One order
     can have several trade fills.
@@ -454,6 +441,8 @@ class TradeData(BaseData):
     price: float = 0
     volume: float = 0
     time: str = ""
+    order_time: str = ""
+    is_local = True
 
     def __post_init__(self):
         """"""
@@ -465,7 +454,7 @@ class TradeData(BaseData):
         self.local_trade_id = f"{self.gateway_name}.{self.tradeid}"
 
 
-class PositionData(BaseData):
+class PositionData(Entity):
     """
     Positon data is used for tracking each individual position holding.
     """
@@ -479,14 +468,19 @@ class PositionData(BaseData):
     price: float = 0
     pnl: float = 0
     yd_volume: float = 0
+    open_price: float = 0
+    float_pnl: float = 0
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        try:
+            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        except AttributeError:
+            self.local_symbol = f"{self.symbol}.{self.exchange}"
         self.local_position_id = f"{self.local_symbol}.{self.direction}"
 
 
-class AccountData(BaseData):
+class AccountData(Entity):
     """
     Account data contains information about balance, frozen and
     available.
@@ -503,7 +497,7 @@ class AccountData(BaseData):
         self.local_account_id = f"{self.gateway_name}.{self.accountid}"
 
 
-class LogData(BaseData):
+class LogData(Entity):
     """
     Log data is used for recording log messages on GUI or in log files.
     """
@@ -516,7 +510,7 @@ class LogData(BaseData):
         self.time = datetime.now()
 
 
-class LastData(BaseData):
+class LastData(Entity):
     symbol: str
     exchange: Exchange
     pre_open_interest: float
@@ -528,7 +522,7 @@ class LastData(BaseData):
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
-class ContractData(BaseData):
+class ContractData(Entity):
     """
     Contract data contains basic information about each contract traded.
     """
@@ -563,6 +557,8 @@ class ContractData(BaseData):
     long_margin_ratio: float
     short_margin_ratio: float
     max_margin_side_algorithm: bool
+
+    gateway_name = ""
 
     def __post_init__(self):
         """"""
@@ -635,7 +631,7 @@ class CancelRequest(BaseRequest):
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
-class SharedData(BaseData):
+class SharedData(Entity):
     local_symbol: str
     datetime: datetime
 
@@ -709,6 +705,20 @@ class Event:
     def __str__(self):
         return "Event(type={})".format(self.type)
 
+
+class Msg:
+    ZH_NO_BEE_APP_ERROR = "没有载入CtpBee,请尝试通过init_app载入app"
+    EN_NO_BEE_APP_ERROR = "not loading Ctpbee, please try to load app by init_app"
+
+    def __init__(self, language: str = "zh"):
+        """
+        相关文本字符串提醒 注意是一次性提取
+        """
+        # for i,v in self.__dict__:
+        #     if isinstance()
+
+
+msg = Msg(os.environ.get("MESSAGE_LANGUAGE", "zh"))
 
 data_class = [TickData, BarData, OrderData, TradeData, PositionData, AccountData, LogData, ContractData, SharedData]
 request_class = [SubscribeRequest, OrderRequest, CancelRequest, AccountRegisterRequest, AccountBanlanceRequest,

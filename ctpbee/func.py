@@ -3,10 +3,9 @@
 面向用户的函数 ,提供极其便捷的体验
 
 """
-import logging
 import os
 import platform
-from datetime import time, datetime, timedelta
+from datetime import time, datetime, timedelta, date
 from inspect import isfunction
 from multiprocessing import Process
 from time import sleep
@@ -18,8 +17,9 @@ from ctpbee.constant import \
      MarketDataRequest)
 from ctpbee.context import current_app
 from ctpbee.context import get_app
+from ctpbee.date import trade_dates
 from ctpbee.exceptions import TraderError, MarketError
-from ctpbee.signals import send_monitor, cancel_monitor
+from ctpbee.constant import ToolRegisterType
 
 
 def send_order(order_req: OrderRequest, app_name: str = "current_app"):
@@ -30,7 +30,6 @@ def send_order(order_req: OrderRequest, app_name: str = "current_app"):
         app = get_app(app_name)
     if not app.config.get("TD_FUNC"):
         raise TraderError(message="交易功能未开启", args=("交易功能未开启",))
-    send_monitor.send(order_req)
     return app.trader.send_order(order_req)
 
 
@@ -42,7 +41,6 @@ def cancel_order(cancel_req: CancelRequest, app_name: str = "current_app"):
         app = get_app(app_name)
     if not app.config.get("TD_FUNC"):
         raise TraderError(message="交易功能未开启", args=("交易功能未开启",))
-    cancel_monitor.send(cancel_req)
     app.trader.cancel_order(cancel_req)
 
 
@@ -71,8 +69,11 @@ def query_func(type: Text, app_name: str = "current_app") -> None:
         app.trader.query_account()
 
 
-class Helper():
-    """ 工具函数 帮助你快速构建查询请求 """
+class Helper(object):
+    """
+    工具函数 帮助你快速构建查询请求
+    提供快速生成对象的方法, 参见函数名。
+    """
     direction_map = {
         "LONG": Direction.LONG,
         "SHORT": Direction.SHORT,
@@ -83,9 +84,7 @@ class Helper():
         "CZCE": Exchange.CZCE,
         "CFFEX": Exchange.CFFEX,
         "DCE": Exchange.DCE,
-        "SSE": Exchange.SSE,
-        "SZSE": Exchange.SZSE,
-        "SGE": Exchange.SGE
+        "CTP": Exchange.CTP
     }
 
     offset_map = {
@@ -169,32 +168,37 @@ class Helper():
 
 helper = Helper()
 
+DAY_START = time(9, 0)  # 日盘启动和停止时间
+DAY_END = time(15, 5)
+NIGHT_START = time(21, 0)  # 夜盘启动和停止时间
+NIGHT_END = time(2, 35)
 
-def auth_time(data_time: time):
-    """
-    校验时间tick或者bar的时间合不合法
-    for example:
-        data_time = tick.datetime.time()
-    """
-    if not isinstance(data_time, time):
-        raise TypeError("参数类型错误, 期望为datetime.time}")
-    DAY_START = time(9, 0)  # 日盘启动和停止时间
-    DAY_END = time(15, 0)
-    NIGHT_START = time(21, 0)
-    NIGHT_END = time(2, 30)
-    if data_time <= DAY_END and data_time >= DAY_START:
-        return True
-    if data_time >= NIGHT_START:
-        return True
-    if data_time <= NIGHT_END:
-        return True
-    return False
+
+def get_current_trade_day(timing: datetime) -> None or date:
+    current_string = str(timing.date())
+
+    last_day = str((timing + timedelta(days=-1)).date())
+
+    if timing.time() <= DAY_END and current_string in trade_dates:
+        return current_string
+    if timing.time() > DAY_END and current_string in trade_dates:
+        index = trade_dates.index(current_string)
+        return trade_dates[index + 1]
+
+    if current_string not in trade_dates and last_day in trade_dates and timing.time() < NIGHT_END:
+        """ 如果是周六凌晨2：30以前, 当前不为交易日 且前一日为交易日 返回下一个交易日"""
+        index = trade_dates.index(last_day)
+        return trade_dates[index + 1]
+    return None
 
 
 class Hickey(object):
-    """ ctpbee进程调度 """
+    """
+    Hickey任务调度机制
+
+    主要为了完成自动拉起程序
+    """
     from datetime import time
-    logger = logging.getLogger("ctpbee")
     DAY_START = time(9, 0)  # 日盘启动和停止时间
     DAY_END = time(15, 5)
     NIGHT_START = time(21, 0)  # 夜盘启动和停止时间
@@ -215,10 +219,21 @@ class Hickey(object):
         }
 
     def auth_time(self, current: datetime):
-        if ((current.today().weekday() == 6) or
-                (current.today().weekday() == 5 and current.time() > self.NIGHT_END) or
-                (current.today().weekday() == 0 and current.time() < self.DAY_START)):
+        current_string = str(current.date())
+
+        last_day = str((current + timedelta(days=-1)).date())
+        """
+        如果前一天是交易日, 今天不是 那么交易到今晚晚上2点：30
+        
+        如果前一天不是交易日,今天是  那么早盘前 不启动 
+        
+        如果前一天不是交易日, 今天也不是交易日 那么不启动 
+        """
+        if (last_day in trade_dates and current_string not in trade_dates and current.time() > self.NIGHT_END) or \
+                (last_day not in trade_dates and current_string in trade_dates and current.time() < self.DAY_START) or \
+                (last_day not in trade_dates and current_string not in trade_dates):
             return False
+
         if self.DAY_END >= current.time() >= self.DAY_START:
             return True
         if current.time() >= self.NIGHT_START:
@@ -262,13 +277,13 @@ class Hickey(object):
         * interface: 接口名字
         * in_front: 相较于开盘提前多少秒进行运行登陆.单位: seconds
         """
-        print("""
-        Ctpbee 7*24 Manager started !
-        Warning: program will automatic start at trade time ....
-        Hope you will have a  good profit ^_^
-        """)
+        print(
+            "Hi, ctpbee 7*24 Manager has been started!\nWarning: program will automatic start at trade time,"
+            "we recommend you to use pickle to save and reload variables....\n"
+            "Hope you will have a  good profit ^_^")
         if not isfunction(app_func):
             raise TypeError(f"请检查你传入的app_func是否是创建app的函数,  而不是{type(app_func)}")
+
         for i, v in self.open_trading[interface].items():
             setattr(self, i, self.add_seconds(getattr(self, i), in_front))
         p = None
@@ -278,20 +293,20 @@ class Hickey(object):
             status = self.auth_time(current)
 
             if info:
-                print("ctpbee manager running ---> ^_^ ")
+                print(f"{current.strftime('%Y-%m-%d %H:%M:%S')} ctpbee manager running ---> ^_^ ")
 
             if p is None and status:
                 p = Process(target=self.run_all_app, args=(app_func,))
                 p.start()
-                print("program start successful")
+                print("===> program start successful")
             if not status and p is not None:
-                print("invalid time, 查杀子进程")
+                print("===> 非交易时间, 即将查杀子进程")
                 if platform.uname().system == "Windows":
                     os.popen('taskkill /F /pid ' + str(p.pid))
                 else:
                     import signal
                     os.kill(p.pid, signal.SIGKILL)
-                self.logger.info("关闭成功")
+
                 p = None
             sleep(30)
 
@@ -309,10 +324,10 @@ class Hickey(object):
         :return: None
         """
         if flag not in self.TIME_MAPPING.keys():
-            raise ValueError(f"注意你的flag是不被接受的，我们仅仅支持\n "
+            raise ValueError(f"注意你的flag是不被接受的,我们仅仅支持\n "
                              f"{str(list(self.TIME_MAPPING.keys()))}四种")
         if not isinstance(timed, time):
-            raise ValueError(f"timed错误的数据类型，期望 time, 当前{str(type(timed))}")
+            raise ValueError(f"timed错误的数据类型,期望 time, 当前{str(type(timed))}")
 
         setattr(self, self.TIME_MAPPING[flag], timed)
 
@@ -342,26 +357,21 @@ def get_ctpbee_path():
     elif system_ == "Darwin":
         home_path = os.environ['HOME']
     else:
-        raise Exception("bee does not know the system!")
+        raise Exception("ctpbee does not know the system!")
     ctpbee_path = os.path.join(home_path, ".ctpbee")
     if not os.path.exists(ctpbee_path):
         os.mkdir(ctpbee_path)
     return ctpbee_path
 
 
-def data_adapt(data: List[dict],
-               mapping={"open": "open_price", "close": "close_price", "code": "local_symbol", "vol": "volume",
-                        "high": "high_price", "low": "low_price"}):
-    """ 数据格式适应器
-    使得外部数据格式被转化为ctpbee可以接受的格式
-    data: 数据
-    mapping: { 外部key: ctpbee接受的key }
-    """
-    result = []
-    for x in data:
-        temp = {}
-        for key, value in x.items():
-            if key in mapping.keys():
-                temp[mapping[key]] = value
-        result.append(temp)
-    return result
+def tool_register(tool_type: ToolRegisterType):
+    def decorator(func):
+        def wrapper(self, *args, **kwargs):
+            ret = func(self, *args, **kwargs)
+            for take in self._linked[tool_type]:
+                take(ret)
+            return ret
+
+        return wrapper
+
+    return decorator
