@@ -28,8 +28,8 @@ if __name__ == '__main__':
     app = CtpBee("rohon_test", __name__, refresh=True)
     config = {
         "CONNECT_INFO": {
-            "userid": "yzy03",
-            "password": "bf654321",
+            "userid": "xzr11111",
+            "password": "1111111",
             "brokerid": "RohonReal",
             "md_address": "tcp://124.74.248.120:47215",
             "td_address": "tcp://47.111.85.73:11001",
