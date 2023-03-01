@@ -13,3 +13,4 @@ from ctpbee.helpers import dynamic_loading_api, auth_time
 from ctpbee.jsond import dumps, loads
 from ctpbee.level import CtpbeeApi, Action, Tool
 from ctpbee.log import VLogger
+from ctpbee.data_handle import LocalPositionManager

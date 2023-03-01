@@ -1,10 +1,9 @@
 from collections import defaultdict
-from copy import deepcopy
 
 import ctpbee.signals as signal
 from ctpbee.constant import Event, TickData
 from ctpbee.data_handle.local_position import LocalPositionManager
-from ctpbee.helpers import helper_call
+from ctpbee.helpers import call
 
 
 class Recorder(object):
@@ -69,7 +68,7 @@ class Recorder(object):
         if event.data:
             self.app.init_finished = True
         for value in self.app._extensions.values():
-            value(deepcopy(event))
+            value(event)
 
     def process_warning_event(self, event):
         self.app.logger.warning(event.data)
@@ -91,7 +90,7 @@ class Recorder(object):
         if self.app.config.get("LOG_OUTPUT"):
             self.app.logger.info(event.data)
 
-    @helper_call
+    @call
     def process_tick_event(self, event: Event):
         tick: TickData = event.data
         self.ticks[tick.local_symbol] = tick
@@ -99,7 +98,7 @@ class Recorder(object):
         for tool in self.app.tools.values():
             tool.on_tick(tick)
 
-    @helper_call
+    @call
     def process_order_event(self, event: Event):
         """"""
         order = event.data
@@ -115,7 +114,7 @@ class Recorder(object):
         for tool in self.app.tools.values():
             tool.on_order(order)
 
-    @helper_call
+    @call
     def process_trade_event(self, event: Event):
         """"""
         trade = event.data
@@ -124,7 +123,7 @@ class Recorder(object):
         for tool in self.app.tools.values():
             tool.on_trade(trade)
 
-    @helper_call
+    @call
     def process_position_event(self, event: Event):
         """"""
         position = event.data
@@ -137,14 +136,14 @@ class Recorder(object):
         self.account = account
 
         for value in self.app._extensions.values():
-            value(deepcopy(event))
+            value(event)
 
     def process_contract_event(self, event: Event):
         """"""
         contract = event.data
         self.contracts[contract.local_symbol] = contract
         for value in self.app._extensions.values():
-            value(deepcopy(event))
+            value(event)
 
     def get_last_price(self, local_symbol) -> None or float:
         tick = self.ticks.get(local_symbol)

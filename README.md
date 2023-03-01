@@ -1,7 +1,8 @@
 # ctpbee
 
-bee bee .... for developer's trading ~
+![avatar](source/img.png)
 
+bee bee .... for developer's trading ~
 > tiny but strong
 
 `ctpbee` provide a micro core of trading, you can make trade and backtest in it.
@@ -28,7 +29,9 @@ git clone https://github.com/ctpbee/ctpbee && cd ctpbee && python3 setup.py inst
 # pip源安装
 pip3 install ctpbee
 ```
+
 ### 支持系统
+
 - [x] Linux
 - [x] Windows
 - [x] MacOS

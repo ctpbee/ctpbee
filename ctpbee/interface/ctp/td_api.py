@@ -169,8 +169,6 @@ class BeeTdApi(TdApi):
         """"""
         if not data:
             return
-
-        # Get buffered position object
         key = f"{data['InstrumentID'], data['PosiDirection']}"
         position = self.positions.get(key, None)
         try:
@@ -185,10 +183,12 @@ class BeeTdApi(TdApi):
             # For SHFE position data update
             if position.exchange == Exchange.SHFE:
                 if data["YdPosition"] and not data["TodayPosition"]:
-                    position.yd_volume = data["Position"]
+                    # position.yd_volume = data["Position"]
+                    position.__set_hole__("yd_volume", data["Position"])
             # For other exchange position data update
             else:
-                position.yd_volume = data["Position"] - data["TodayPosition"]
+                # position.yd_volume = data["Position"] - data["TodayPosition"]
+                position.__set_hole__("yd_volume", data["Position"] - data["TodayPosition"])
 
             # Get contract size (spread contract has no size value)
             size = symbol_size_map.get(position.symbol, 0)
@@ -197,46 +197,56 @@ class BeeTdApi(TdApi):
             cost = position.price * position.volume * size
 
             # Update new position volume
-            position.volume += data["Position"]
-            position.pnl += data["PositionProfit"]
+            # position.volume += data["Position"]
+            position.__set_hole__("volume", position.volume + data["Position"])
+            # position.pnl += data["PositionProfit"]
+            position.__set_hole__("pnl", position.pnl + data["PositionProfit"])
 
             # Calculate average position price
             if position.volume and size:
                 cost += data["PositionCost"]
-                position.price = cost / (position.volume * size)
+                # position.price = cost / (position.volume * size)
+                position.__set_hole__("price", cost / (position.volume * size))
                 self.open_cost_dict[position.symbol]["size"] = size
 
             # Get frozen volume
             if position.direction == Direction.LONG:
-                position.frozen += data["ShortFrozen"]
+                # position.frozen += data["ShortFrozen"]
+                position.__set_hole__("frozen", position.frozen + data["ShortFrozen"])
 
                 if position.volume and size:
                     if not self.open_cost_dict[position.symbol].get("long"):
                         self.open_cost_dict[position.symbol]["long"] = 0
 
                     self.open_cost_dict[position.symbol]["long"] += data['OpenCost']
-                    position.open_price = self.open_cost_dict[position.symbol]["long"] / (
-                            position.volume * size)
-
+                    # position.open_price = self.open_cost_dict[position.symbol]["long"] / (
+                    #         position.volume * size)
+                    position.__set_hole__("open_price", self.open_cost_dict[position.symbol]["long"] / (
+                            position.volume * size))
                     # 先算出当前的最新价格
                     current_price = position.pnl / \
                                     (size * position.volume) + position.price
-                    position.float_pnl = (
-                                                 current_price - position.open_price) * size * position.volume
+
+                    # position.float_pnl = (current_price - position.open_price) * size * position.volume
+                    position.__set_hole__("float_pnl", (current_price - position.open_price) * size * position.volume)
+
             else:
-                position.frozen += data["LongFrozen"]
+                # position.frozen += data["LongFrozen"]
+                position.__set_hole__("frozen", position.frozen + data["LongFrozen"])
 
                 if position.volume and size:
                     if not self.open_cost_dict[position.symbol].get("short"):
                         self.open_cost_dict[position.symbol]["short"] = 0
 
                     self.open_cost_dict[position.symbol]["short"] += data['OpenCost']
-                    position.open_price = self.open_cost_dict[position.symbol]["short"] / (
-                            position.volume * size)
+                    # position.open_price = self.open_cost_dict[position.symbol]["short"] / (
+                    #         position.volume * size)
+                    position.__set_hole__("open_price", self.open_cost_dict[position.symbol]["short"] / (
+                            position.volume * size))
                     current_price = position.price - \
                                     position.pnl / (size * position.volume)
-                    position.float_pnl = (
-                                                 position.open_price - current_price) * size * position.volume
+                    # position.float_pnl = (position.open_price - current_price) * size * position.volume
+                    position.__set_hole__("float_pnl", (position.open_price - current_price) * size * position.volume)
 
         except KeyError:
             pass
@@ -256,9 +266,9 @@ class BeeTdApi(TdApi):
             balance=data["Balance"],
             frozen=data["FrozenMargin"] +
                    data["FrozenCash"] + data["FrozenCommission"],
-            gateway_name=self.gateway_name
+            gateway_name=self.gateway_name,
+            available=data["Available"]
         )
-        account.available = data["Available"]
         self.on_event(type=EVENT_ACCOUNT, data=account)
         if self.instrunment_init_flag and self.position_init_flag and not self.init_status:
             self.reqid += 1
@@ -288,6 +298,19 @@ class BeeTdApi(TdApi):
 
         if product:
             try:
+                # For option only
+                if product == Product.OPTION:
+                    option_underlying = data["UnderlyingInstrID"],
+                    option_type = OPTIONTYPE_CTP2VT.get(
+                        data["OptionsType"], None),
+                    option_strike = data["StrikePrice"],
+                    option_expiry = datetime.strptime(
+                        data["ExpireDate"], "%Y%m%d"),
+                else:
+                    option_strike: float = 0
+                    option_underlying: str = ""
+                    option_type: OptionType = None
+                    option_expiry: datetime = None
                 contract = ContractData(
                     symbol=data["InstrumentID"],
                     exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
@@ -309,7 +332,11 @@ class BeeTdApi(TdApi):
                     start_delivery_date=start_delivery_date,
                     open_date=open_date,
                     is_trading=is_trading,
-                    create_date=create_date
+                    create_date=create_date,
+                    option_strike=option_strike,
+                    option_underlying=option_underlying,
+                    option_type=option_type,
+                    option_expiry=option_expiry
                 )
             except KeyError as e:
                 import warnings
@@ -317,15 +344,6 @@ class BeeTdApi(TdApi):
                 return
             self.symbol_exchange_mapping[data["InstrumentID"]
             ] = EXCHANGE_CTP2VT[data["ExchangeID"]]
-
-            # For option only
-            if contract.product == Product.OPTION:
-                contract.option_underlying = data["UnderlyingInstrID"],
-                contract.option_type = OPTIONTYPE_CTP2VT.get(
-                    data["OptionsType"], None),
-                contract.option_strike = data["StrikePrice"],
-                contract.option_expiry = datetime.strptime(
-                    data["ExpireDate"], "%Y%m%d"),
 
             self.on_event(type=EVENT_CONTRACT, data=contract)
 

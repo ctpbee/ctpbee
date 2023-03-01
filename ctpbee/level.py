@@ -6,11 +6,12 @@ from types import MethodType
 from typing import Set, List, AnyStr, Text
 from warnings import warn
 
+import ctpbee.constant
 from ctpbee.center import Center
 from ctpbee.constant import EVENT_INIT_FINISHED, EVENT_TICK, EVENT_BAR, EVENT_ORDER, EVENT_SHARED, EVENT_TRADE, \
     EVENT_POSITION, EVENT_ACCOUNT, EVENT_CONTRACT, OrderData, BarData, TickData, TradeData, \
     PositionData, AccountData, ContractData, Offset, Direction, OrderType, Exchange, OrderRequest, CancelRequest
-from ctpbee.constant import EVENT_TIMER, Event
+from ctpbee.constant import EVENT_TIMER, Event, ToolRegisterType
 from ctpbee.exceptions import ConfigError
 from ctpbee.func import helper, get_ctpbee_path, tool_register
 from ctpbee.helpers import check, exec_intercept
@@ -573,10 +574,10 @@ class CtpbeeApi(BeeApi):
         """
         return self.app.get_extension(strategy_name)
 
-    def subscribe(self, name, func):
+    def subscribe(self, name, func, tool_register_type):
         if name not in self.app.tools.keys():
             raise ValueError(f"未找寻到此工具{name}")
-        self.app.tools[name].add_func(func=func)
+        self.app.tools[name].add_func(func=func, r_type=tool_register_type)
 
     def on_order(self, order: OrderData) -> None:
         """
@@ -722,12 +723,12 @@ class CtpbeeApi(BeeApi):
 
 
 class Tool:
-    __base_func__ = ["tick", "order", "trade"]
+    __base_func__ = ["tick", "order", "trade", "account", "position"]
 
-    def __init__(self, name: str, function_list: list, app=None):
+    def __init__(self, name: str, app=None):
         self._name = name
         self._app = None
-        self._linked = set()
+        self._linked: dict[ToolRegisterType:set] = dict(map(lambda r_type: (r_type, set()), ToolRegisterType))
         if app is not None:
             self.init_app(app)
 
@@ -735,18 +736,18 @@ class Tool:
     def name(self):
         return self._name
 
-    def add_func(self, func):
-        self._linked.add(func)
+    def add_func(self, func, r_type):
+        self._linked.get(r_type).add(func)
 
     def init_app(self, app):
         if app is not None:
             self._app = app
             self._app.tools[self.name] = self
 
-    def subscribe(self, name, func):
+    def subscribe(self, name, func, tool_register_type: ToolRegisterType):
         if name not in self._app.tools.keys():
             raise ValueError(f"can't search Tool: {name}")
-        self._app.tools[name].add_func(func=func)
+        self._app.tools[name].add_func(func=func, r_type=tool_register_type)
 
     def on_tick(self, tick: TickData):
         pass
@@ -755,4 +756,14 @@ class Tool:
         pass
 
     def on_order(self, order: OrderData):
+        pass
+
+    def on_position(self, position: PositionData):
+        pass
+
+    def on_account(self, account: AccountData):
+        pass
+
+    # todo: 不依赖ctp数据触发  由tool的定时器触发 生成任何形式的数据流推送
+    def on_whatever(self, data):
         pass
