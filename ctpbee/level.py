@@ -434,7 +434,7 @@ class CtpbeeApi(BeeApi):
                 self.map[EVENT_TIMER](self)
                 if not self.__init_ready:
                     self._count += 1
-                    if self._count == 15:
+                    if self._count == 30:
                         self.on_init(True)
                         self.__init_ready = True
         else:

@@ -288,21 +288,14 @@ def refresh_query(app, signals, refresh):
        refresh(bool): 是否后台更新持仓和账户数据
     """
     p = datetime.now()
-    q = datetime.now()
     c = datetime.now()
 
-    count = 0
     while True:
         now = datetime.now()
         if refresh and (now - p).seconds >= app.config['REFRESH_INTERVAL']:
-            if count == 0:
-                app.trader.query_position()
-                p = now
-                count = 1
-            elif count == 1:
-                app.trader.query_account()
-                p = now
-                count = 0
+            # just solve AccountData Update
+            app.trader.query_account()
+            p = now
 
         if signals is not None and (now - c).seconds >= app.config['TIMER_INTERVAL']:
             event = Event(type=EVENT_TIMER)

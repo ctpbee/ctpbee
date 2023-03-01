@@ -63,7 +63,7 @@ class BeeTdApi(TdApi):
         self.sysid_orderid_map = {}
         self.open_cost_dict = defaultdict(dict)
 
-        self.position_init_flag = False
+        self.account_init_flag = False
         self.instrunment_init_flag = False
         self.position_instrument_mapping = dict()
 
@@ -257,7 +257,10 @@ class BeeTdApi(TdApi):
                 self.position_instrument_mapping[position.local_symbol] = False
             self.positions.clear()
             self.open_cost_dict.clear()
-            self.position_init_flag = True
+            if not self.init_status and self.account_init_flag:
+                """如果未进行初始化 且账户查询已经完成 那么发送初始化信号"""
+                self.init_status = True
+                self.on_event(type=EVENT_INIT_FINISHED, data=True)
 
     def onRspQryTradingAccount(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
@@ -270,11 +273,15 @@ class BeeTdApi(TdApi):
             available=data["Available"]
         )
         self.on_event(type=EVENT_ACCOUNT, data=account)
-        if self.instrunment_init_flag and self.position_init_flag and not self.init_status:
+        if self.instrunment_init_flag and not self.account_init_flag:
+            """当前合约查询完毕 且账户未查询 那么请求查询深度行情和持仓数据"""
             self.reqid += 1
-            self.init_status = True
             self.reqQryDepthMarketData({}, self.reqid)
-            self.on_event(type=EVENT_INIT_FINISHED, data=True)
+            self.account_init_flag = True
+            # 防止流控造成查询失败
+            from time import sleep
+            sleep(1.5)
+            self.query_position()
 
     def onRspQryInstrument(self, data: dict, error: dict, reqid: int, last: bool):
         """
@@ -355,13 +362,13 @@ class BeeTdApi(TdApi):
             # 请求计算所有合约所用到的具体数据
             self.instrunment_init_flag = True
             self.on_event(EVENT_LOG, data="合约信息查询成功")
-
             for data in self.order_data:
                 self.onRtnOrder(data)
             self.order_data.clear()
             for data in self.trade_data:
                 self.onRtnTrade(data)
             self.trade_data.clear()
+            self.query_account()
 
     def onRtnOrder(self, data: dict):
         """
@@ -677,4 +684,4 @@ class BeeTdApi(TdApi):
         """"""
         if self.connect_status:
             print("release Trading API")
-            p = self.exit()
+            self.exit()
