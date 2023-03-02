@@ -434,7 +434,7 @@ class CtpbeeApi(BeeApi):
                 self.map[EVENT_TIMER](self)
                 if not self.__init_ready:
                     self._count += 1
-                    if self._count == 30:
+                    if self._count == self.app.config.get("WAIT_INIT", 60):
                         self.on_init(True)
                         self.__init_ready = True
         else:
