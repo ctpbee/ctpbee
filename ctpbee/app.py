@@ -27,10 +27,9 @@ from ctpbee.signals import AppSignal, common_signals
 
 class CtpBee(object):
     """
-    ctpbee 源于我对于做项目的痛点需求, 旨在开发出一套具有完整api的交易微框架
-    I hope it will help you !
+    ctpbee 旨在开发出一套具有完整api的交易微框架
     """
-    # 默认回测配置参数
+    # 默认配置参数
     default_config = dict(LOG_OUTPUT=True,  # 是否开启输出模式
                           TD_FUNC=False,  # 是否开启交易功能
                           INTERFACE="ctp",  # 接口参数,默认指定国内期货ctp
@@ -48,8 +47,9 @@ class CtpBee(object):
                           TODAY_EXCHANGE=[Exchange.SHFE.value,
                                           Exchange.INE.value],  # 需要支持平今的交易所代码列表
                           AFTER_TIMEOUT=3,  # 设置after线程执行超时,
-                          TIMER_INTERVAL=1,
-                          PATTERN="real",
+                          TIMER_INTERVAL=1,  # 定时器触发间隔
+                          PATTERN="real",  # 实盘交易模式
+                          WAIT_INIT=60,  # 强制init时间
                           )
 
     config_class = Config
@@ -73,7 +73,7 @@ class CtpBee(object):
         action_class: 执行器 > 默认使用系统自带的Action, 或者由用户继承,然后传入类
         engine_method: Actor模型采用的底层的引擎
         logger_class: logger类,可以自己定义
-        refresh: 是否自己主动查询持仓 默认开启
+        refresh: 是否自己主动查询账户 默认开启
         sim: 是否进行模拟
         """
         self.start_datetime = datetime.now()

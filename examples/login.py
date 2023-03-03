@@ -73,7 +73,7 @@ class Main(CtpbeeApi):
             self.action.subscribe(contract.local_symbol)
 
     def on_init(self, init: bool):
-        print("账户初始化成功回报", init)
+        self.info("账户初始化成功回报")
         self.init = True
         # tool的tick回调
         self.subscribe("hello", self.on_next_tick, ToolRegisterType.TICK)

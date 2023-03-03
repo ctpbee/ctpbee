@@ -99,6 +99,7 @@ class Exchange(Enum):
     INE = "INE"
     GFEX = "GFEX"
     CTP = "ctp"
+    TTS = "tts"
 
 
 TODAY_EXCHANGE = [Exchange.INE, Exchange.SHFE]
@@ -108,7 +109,8 @@ EXCHANGE_MAPPING = {
     "CZCE": Exchange.CZCE,
     "DCE": Exchange.DCE,
     "INE": Exchange.INE,
-    "CTP": Exchange.CTP
+    "CTP": Exchange.CTP,
+    "TTS": Exchange.TTS
 }
 
 
