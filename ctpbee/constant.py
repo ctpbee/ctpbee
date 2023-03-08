@@ -64,6 +64,7 @@ class Product(Enum):
     """
     Product class.
     """
+    SPREAD = "价差"
     EQUITY = "股票"
     FUTURES = "期货"
     OPTION = "期权"

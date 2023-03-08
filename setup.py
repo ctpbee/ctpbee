@@ -13,7 +13,7 @@ if sys.version_info < (3, 6):
 
 # libraries
 install_requires = ["pytz", "blinker", "requests", "simplejson", "lxml", "jinja2", "redis",
-                    'cologer>=2.0', "ctpbee_api>=0.34", "numpy", "pandas"]
+                    'cologer>=2.0', "ctpbee_api>=0.40", "numpy", "pandas"]
 
 if sys.version_info.major == 3 and sys.version_info.minor == 6:
     install_requires.append("dataclasses")
@@ -21,6 +21,7 @@ if sys.version_info.major == 3 and sys.version_info.minor == 6:
 runtime_library_dir = []
 try:
     import pypandoc
+
     long_description = pypandoc.convert_file('README.md', 'rst')
 except Exception:
     long_description = ""

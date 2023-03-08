@@ -236,7 +236,6 @@ class CtpBee(object):
             if self.config.get("MD_FUNC"):
                 self.market = MdApi(self.app_signal)
                 self.market.connect(info)
-
             if self.config.get("TD_FUNC"):
                 self.trader = TdApi(self.app_signal)
                 self.trader.connect(info)

@@ -26,6 +26,10 @@ class Interface:
 
     @classmethod
     def load_interface(cls, interface):
+
+        if interface == "local":
+            from ctpbee.interface.local import MdApi, TdApi
+            return MdApi, TdApi
         if interface == "ctp":
             from ctpbee.interface.ctp import BeeTdApi, BeeMdApi
             return BeeMdApi, BeeTdApi
@@ -35,12 +39,10 @@ class Interface:
         elif interface == "ctp_mini":
             from ctpbee.interface.ctp_mini import MMdApi, MTdApi
             return MMdApi, MTdApi
-        elif interface == "ctp_rohon":
+        elif interface == "rohon":
+            from ctpbee.interface.ctp import BeeTdApi, BeeMdApi
             from ctpbee.interface.ctp_rohon import RHMdApi, RHTdApi
             return RHMdApi, RHTdApi
-        elif interface == "local":
-            from ctpbee.interface.local import MdApi, TdApi
-            return MdApi, TdApi
         else:
             raise ValueError("错误参数")
 
