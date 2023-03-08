@@ -36,7 +36,7 @@ if __name__ == '__main__':
             "appid": "client_shentu_1.0",
             "auth_code": "w6a4n8mWgKa9E5NF"
         },
-        "INTERFACE": "ctp_rohon",
+        "INTERFACE": "rohon",
         "REFRESH_INTERVAL": 30,
         "MD_FUNC": True,
         "TD_FUNC": True
