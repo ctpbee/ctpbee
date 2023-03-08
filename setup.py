@@ -13,7 +13,7 @@ if sys.version_info < (3, 6):
 
 # libraries
 install_requires = ["pytz", "blinker", "requests", "simplejson", "lxml", "jinja2", "redis",
-                    'cologer>=2.0', "ctpbee_api>=0.21", "numpy", "pandas"]
+                    'cologer>=2.0', "ctpbee_api>=0.34", "numpy", "pandas"]
 
 if sys.version_info.major == 3 and sys.version_info.minor == 6:
     install_requires.append("dataclasses")
