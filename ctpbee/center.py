@@ -144,6 +144,13 @@ class Center(BasicCenterModel, dict):
         """
         return self.app.recorder.position_manager.get_all_positions(obj=True)
 
+    @property
+    def snapshot(self):
+        """
+        返回所有行情的切面快照
+        """
+        return self.app.recorder.ticks
+
     def get_tick(self, local_symbol) -> List[TickData] or None:
         """
         获取指定合约的tick数列信息 
