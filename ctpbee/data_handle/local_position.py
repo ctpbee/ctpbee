@@ -481,7 +481,7 @@ class LocalPositionManager(dict):
         """ 更新order """
         if order.local_symbol not in self:
             self[order.local_symbol] = PositionHolding(order.local_symbol,
-                                                       self.app.recorder.get_contract(req.local_symbol))
+                                                       self.app.recorder.get_contract(order.local_symbol))
         else:
             self.get(order.local_symbol).update_order(order)
 

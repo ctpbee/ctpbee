@@ -176,9 +176,9 @@ class Entity:
         if hasattr(self, "__post_init__"):
             self.__post_init__()
 
-    def __init_subclass__(cls, **kwargs):
-        cls.__dict__['__annotations__']['gateway_name'] = str
-        cls.__dict__['__annotations__']['local_symbol'] = str
+    # def __init_subclass__(cls, **kwargs):
+    #     cls.__dict__['__annotations__']['gateway_name'] = str
+    #     cls.__dict__['__annotations__']['local_symbol'] = str
 
     def __repr__(self):
         mat = []
