@@ -240,6 +240,13 @@ class Recorder(object):
             else:
                 return now
 
+    @property
+    def order_amount(self):
+        """
+        返回当日报单总数
+        """
+        return len(self.orders)
+
     def clear_all(self):
         """
         为了避免数据越来越大,需要清空数据
