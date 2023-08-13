@@ -1,6 +1,6 @@
 ## 对接open_ctp
 
-open_ctp兼容ctp交易接口， 但是底层dll不一样, 需要你手动进行dll替换
+`openctp`兼容`ctp`交易接口， 但是底层dll不一样, 需要你手动进行dll替换
 
 1. 下载open_ctp交易的dll或者so依赖文件,前往[此处](https://github.com/openctp/openctp)下载对应平台以及对应系统的下的交易依赖支持
 2. 找到你项目的路径 执行以下命令
@@ -32,5 +32,5 @@ Required-by: ctpbe
 # cd ctpbee_api/ctp
 ```
 
-然后将对应的dll或者so文件进行替换即可, 再次启动即可完成open_ctp的替换工作。
+然后将对应的dll或者so文件进行替换即可, 再次启动即可完成`openctp`的替换工作。
 
