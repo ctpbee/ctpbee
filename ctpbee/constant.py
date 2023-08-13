@@ -37,6 +37,11 @@ class Direction(Enum):
     NET = "净"
 
 
+class Mode(Enum):
+    API = 1
+    DISPATCHER = 2
+
+
 class Offset(Enum):
     """
     Offset of order/trade.

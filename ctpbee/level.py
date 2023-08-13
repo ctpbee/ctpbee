@@ -733,6 +733,10 @@ class Tool:
             self.init_app(app)
 
     @property
+    def app(self):
+        return self._app
+
+    @property
     def name(self):
         return self._name
 

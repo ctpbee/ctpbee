@@ -14,3 +14,4 @@ from ctpbee.jsond import dumps, loads
 from ctpbee.level import CtpbeeApi, Action, Tool
 from ctpbee.log import VLogger
 from ctpbee.data_handle import LocalPositionManager
+from ctpbee.constant import Mode
