@@ -9,7 +9,7 @@ from typing import Text
 from ctpbee import __version__
 from ctpbee.center import Center
 from ctpbee.config import Config
-from ctpbee.constant import Event, EVENT_TIMER
+from ctpbee.constant import Event
 from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
 from ctpbee.exceptions import ConfigError
@@ -17,7 +17,7 @@ from ctpbee.helpers import end_thread
 from ctpbee.helpers import find_package, refresh_query, graphic_pattern
 from ctpbee.interface import Interface
 from ctpbee.jsond import dumps
-from ctpbee.level import CtpbeeApi, Action, Tool
+from ctpbee.level import CtpbeeApi, Action
 from ctpbee.log import VLogger
 from ctpbee.looper.data import VessData
 from ctpbee.looper.report import render_result
@@ -74,7 +74,6 @@ class CtpBee(object):
         engine_method: Actor模型采用的底层的引擎
         logger_class: logger类,可以自己定义
         refresh: 是否自己主动查询账户 默认开启
-        sim: 是否进行模拟
         """
         self.start_datetime = datetime.now()
         self.basic_info = None

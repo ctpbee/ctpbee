@@ -112,6 +112,7 @@ if __name__ == '__main__':
     - `ctp`
     - `ctp_mini`
     - `rohon`
+    - `open_ctp`
 
 更多相关信息, 请参阅[文档](http://docs.ctpbee.com)
 
@@ -132,7 +133,7 @@ Only Accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch,
 
 > 对于本地数据自动运维方案, 请👉 [Hive](https://github.com/ctpbee/hive)
 
-## 免责声明
+## 模拟测试 && 免责声明
 
 本项目长期维护, 开源仅作爱好，本人不对代码产生的任何使用后果负责. 功能尽可能会保持稳定,
 但是为了你的实盘账户着想，请先用[simnow](https://www.simnow.com.cn/product.action)
@@ -141,8 +142,9 @@ Only Accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch,
 
 > 关于如何对接open_ctp,请参阅此教程[click here](source/open_ctp.md)
 
+## 遇到问题
 
-如有问题, 请提issue, 会在1-2个工作日进行回复.
+请提交issue或者于issue搜索关键字, 或者查阅[此处](http://docs.ctpbee.com/error.html)
 
 ## License
 

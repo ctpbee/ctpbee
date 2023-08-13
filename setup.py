@@ -2,6 +2,8 @@ import io
 import re
 import sys
 
+from pathlib import Path
+
 from setuptools import setup
 
 with io.open('ctpbee/__init__.py', 'rt', encoding='utf8') as f:
@@ -20,9 +22,7 @@ if sys.version_info.major == 3 and sys.version_info.minor == 6:
 
 runtime_library_dir = []
 try:
-    import pypandoc
-
-    long_description = pypandoc.convert_file('README.md', 'rst')
+    long_description = Path("README.md").read_text(encoding="utf-8"),
 except Exception:
     long_description = ""
 
