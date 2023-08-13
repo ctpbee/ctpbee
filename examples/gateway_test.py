@@ -4,11 +4,11 @@ from ctpbee import CtpbeeApi, CtpBee
 from ctpbee.constant import *
 from ctpbee import VLogger
 
+
 class RohanCallback(CtpbeeApi):
     def __init__(self, name):
         super().__init__(name)
         self.init = False
-
 
     def on_trade(self, trade: TradeData) -> None:
         print("成交回报", trade)
