@@ -108,10 +108,10 @@ if __name__ == '__main__':
 - [x] k线生成
 - [x] 回测报告生成
 - [x] 自动运维
-- [x] 多交易接口支持 
-  - `ctp`
-  - `ctp_mini`
-  - `rohon`
+- [x] 多交易接口支持
+    - `ctp`
+    - `ctp_mini`
+    - `rohon`
 
 更多相关信息, 请参阅[文档](http://docs.ctpbee.com)
 
@@ -130,14 +130,17 @@ if __name__ == '__main__':
 Only Accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch, please remember that !
 
 
-> 对于高频解决方案, 请 👉 [FlashFunk](https://github.com/HFQR/FlashFunk)
-
 > 对于本地数据自动运维方案, 请👉 [Hive](https://github.com/ctpbee/hive)
 
 ## 免责声明
 
 本项目长期维护, 开源仅作爱好，本人不对代码产生的任何使用后果负责. 功能尽可能会保持稳定,
-但是为了你的实盘账户着想，请先用`simnow`账户测试完善再上实盘!
+但是为了你的实盘账户着想，请先用[simnow](https://www.simnow.com.cn/product.action)
+或者[open_ctp](https://github.com/openctp/openctp)账户测试完善再上实盘!
+
+
+> 关于如何对接open_ctp,请参阅此教程[click here](source/open_ctp.md)
+
 
 如有问题, 请提issue, 会在1-2个工作日进行回复.
 
