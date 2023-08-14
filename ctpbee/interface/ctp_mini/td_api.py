@@ -265,7 +265,8 @@ class MTdApi(MiniTdApi):
                 option_strike=option_strike,
                 option_underlying=option_underlying,
                 option_type=option_type,
-                option_expiry=option_expiry
+                option_expiry=option_expiry,
+                if_last=last
             )
 
             self.on_event(EVENT_CONTRACT, contract)

@@ -8,7 +8,6 @@ import json
 from threading import Thread
 
 from ctpbee.constant import TickData, OrderData, OrderRequest, CancelRequest, ContractData
-
 from ctpbee.level import CtpbeeApi
 from ctpbee.jsond import dumps, loads
 
@@ -21,18 +20,27 @@ class UDDR:
     上行消息 订单数据
     """
 
-    def __init__(self, msg):
-        self.index = 0
+    def __init__(self, msg, index=0, parse: bool = True):
+        self.index = index
         self.obj = None
-        try:
-            self.__parse__(msg)
-        except Exception:
-            pass
+        if parse:
+            try:
+                self.__parse__(msg)
+            except Exception as e:
+                print(e)
+        else:
+            self.obj = msg
+
+    def encode(self):
+        return json.dumps(dict(
+            data=dumps(self.obj),
+            index=self.index
+        ))
 
     def __parse__(self, msg):
         msg = ld(msg)
         self.index = msg["index"]
-        self.obj = loads(msg["order_req"])
+        self.obj = loads(msg["data"])
 
 
 class DDDR:
@@ -40,9 +48,17 @@ class DDDR:
     下行消息
     """
 
-    def __init__(self, obj, index=None):
-        self.order = dumps(obj)
-        self.index = index
+    def __init__(self, obj, index=None, parse=False):
+        if not parse:
+            self.order = dumps(obj)
+            self.index = index
+        else:
+            try:
+                self.order = loads(obj["data"])
+                self.index = obj["index"]
+            except:
+                self.order = None
+                self.index = 0
 
     def encode(self) -> str:
         """
@@ -76,9 +92,10 @@ class Dispatcher(CtpbeeApi):
         pub = self.rd_client.pubsub()
         pub.subscribe(self.order_up_kernel)
         for item in pub.listen():
-            uddr = UDDR(item)
+            uddr = UDDR(item["data"])
             if uddr.obj is None:
                 pass
+
             elif type(uddr.obj) == OrderRequest:
                 order_id = self.action.send_order(order=uddr.obj)
                 self.order_key_map[order_id] = uddr.index
@@ -90,7 +107,7 @@ class Dispatcher(CtpbeeApi):
                 pass
 
     def on_order(self, order: OrderData) -> None:
-        index = self.order_key_map.get(order, 0)
+        index = self.order_key_map.get(order.order_id, 0)
         order_message = DDDR(obj=order, index=index)
         self.rd_client.publish(self.order_down_kernel, order_message.encode())
 
@@ -100,6 +117,7 @@ class Dispatcher(CtpbeeApi):
         self.rd_client.publish(self.tick_kernel, tick_message.encode())
 
     def on_contract(self, contract: ContractData) -> None:
+        print(contract)
         if not self.init:
             for i in self.app.config.get("SUBSCRIBE_CONTRACT", []):
                 self.action.subscribe(i)

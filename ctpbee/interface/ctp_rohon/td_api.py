@@ -336,7 +336,8 @@ class RHTdApi(RohonTdApi):
                     option_strike=option_strike,
                     option_underlying=option_underlying,
                     option_type=option_type,
-                    option_expiry=option_expiry
+                    option_expiry=option_expiry,
+                    if_last=last
                 )
             except KeyError as e:
                 import warnings

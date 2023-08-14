@@ -11,6 +11,7 @@ class Main(CtpbeeApi):
         self.init = False
 
     def on_tick(self, tick: TickData) -> None:
+        self.action.buy_open(tick.bid_price_1, 1, tick, price_type=OrderType.FOK)
         print("tick回报", tick)
 
     def on_trade(self, trade: TradeData) -> None:

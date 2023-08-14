@@ -56,8 +56,8 @@ class PositionHolding:
         self.active_orders = {}
         from ctpbee.looper.account import Account
         if contract is None:
-            warnings.warn("no size passed please check your contract! contract will be fixed to 1")
-            self.size = 1
+            warnings.warn("no size passed please check your contract! contract will be fixed to 10")
+            self.size = 10
         else:
             self.size = contract.size
         self.long_pos = 0

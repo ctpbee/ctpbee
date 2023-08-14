@@ -11,6 +11,8 @@ from ctpbee.constant import EVENT_TICK, Event, EVENT_LOG
 
 class MdApi:
     def __init__(self, app_signal):
+        self.order_down_kernel = None
+        self.order_up_kernel = None
         self.app_signal = app_signal
         self.rd = None
         self.subscribe_items = []
@@ -22,6 +24,8 @@ class MdApi:
         info["decode_responses"] = True
         self.tick_kernel = info.pop("tick_kernel", "ctpbee_tick_kernel")
         self.index = info.pop("index", 0)
+        self.order_up_kernel = info.pop("order_up_kernel", "ctpbee_order_up_kernel")
+        self.order_down_kernel = info.pop("order_down_kernel", "ctpbee_order_down_kernel")
         self.rd = Redis(**info)
         self.info = info
         self.on_event(EVENT_LOG, "行情连接成功")

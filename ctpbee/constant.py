@@ -565,6 +565,7 @@ class ContractData(Entity):
     long_margin_ratio: float
     short_margin_ratio: float
     max_margin_side_algorithm: bool
+    if_last: bool = False
 
     gateway_name = ""
 
