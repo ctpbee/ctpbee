@@ -7,12 +7,13 @@
 import json
 from threading import Thread
 
-from ctpbee.constant import TickData, OrderData, OrderRequest, CancelRequest, ContractData
+from ctpbee.constant import TickData, OrderData, OrderRequest, CancelRequest, ContractData, QueryContract
 from ctpbee.level import CtpbeeApi
-from ctpbee.jsond import dumps, loads
 
 from redis import Redis
 from json import loads as ld
+
+from ctpbee.jsond import dumps, loads
 
 
 class UDDR:
@@ -27,7 +28,7 @@ class UDDR:
             try:
                 self.__parse__(msg)
             except Exception as e:
-                print(e)
+                pass
         else:
             self.obj = msg
 
@@ -54,8 +55,9 @@ class DDDR:
             self.index = index
         else:
             try:
-                self.order = loads(obj["data"])
-                self.index = obj["index"]
+                data = loads(obj)
+                self.order = data["data"]
+                self.index = data["index"]
             except:
                 self.order = None
                 self.index = 0
@@ -92,19 +94,21 @@ class Dispatcher(CtpbeeApi):
         pub = self.rd_client.pubsub()
         pub.subscribe(self.order_up_kernel)
         for item in pub.listen():
-            uddr = UDDR(item["data"])
+            uddr = UDDR(item["data"], parse=True)
             if uddr.obj is None:
-                pass
-
+                continue
             elif type(uddr.obj) == OrderRequest:
                 order_id = self.action.send_order(order=uddr.obj)
                 self.order_key_map[order_id] = uddr.index
-
             elif type(uddr.obj) == CancelRequest:
                 self.action.cancel_order(uddr.obj)
                 self.order_key_map[uddr.obj.order_id] = uddr.index
+            elif type(uddr.obj) == QueryContract:
+                for i in self.app.recorder.get_all_contracts():
+                    dr = DDDR(obj=i, index=uddr.obj.index, parse=False)
+                    self.rd_client.publish(self.order_down_kernel, dr.encode())
             else:
-                pass
+                continue
 
     def on_order(self, order: OrderData) -> None:
         index = self.order_key_map.get(order.order_id, 0)
@@ -112,12 +116,10 @@ class Dispatcher(CtpbeeApi):
         self.rd_client.publish(self.order_down_kernel, order_message.encode())
 
     def on_tick(self, tick: TickData) -> None:
-        print(tick)
         tick_message = DDDR(obj=tick, index=None)
         self.rd_client.publish(self.tick_kernel, tick_message.encode())
 
     def on_contract(self, contract: ContractData) -> None:
-        print(contract)
         if not self.init:
             for i in self.app.config.get("SUBSCRIBE_CONTRACT", []):
                 self.action.subscribe(i)

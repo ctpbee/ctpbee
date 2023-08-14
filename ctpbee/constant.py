@@ -574,6 +574,15 @@ class ContractData(Entity):
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
 
 
+@dataclass
+class QueryContract(BaseRequest):
+    index: int = 0
+    name: str = "ctpbee"
+
+    def __post_init__(self):
+        pass
+
+
 class SubscribeRequest(BaseRequest):
     """
     Request sending to specific gateway for subscribing tick data update.
@@ -729,6 +738,7 @@ class Msg:
 
 msg = Msg(os.environ.get("MESSAGE_LANGUAGE", "zh"))
 
-data_class = [TickData, BarData, OrderData, TradeData, PositionData, AccountData, LogData, ContractData, SharedData]
-request_class = [SubscribeRequest, OrderRequest, CancelRequest, AccountRegisterRequest, AccountBanlanceRequest,
+data_class = [TickData, ContractData, BarData, OrderData, TradeData, PositionData, AccountData, LogData, SharedData]
+request_class = [SubscribeRequest, OrderRequest, QueryContract, CancelRequest, AccountRegisterRequest,
+                 AccountBanlanceRequest,
                  TransferRequest, TransferSerialRequest]

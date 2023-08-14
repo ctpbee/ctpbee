@@ -1,9 +1,11 @@
+import json
 from threading import Thread
+from time import sleep
 
 from redis.client import Redis
 
 from ctpbee.constant import Event, EVENT_LOG, OrderRequest, CancelRequest, OrderData, EVENT_ORDER, TradeData, \
-    EVENT_TRADE, ContractData, EVENT_CONTRACT
+    EVENT_TRADE, ContractData, EVENT_CONTRACT, QueryContract, EVENT_INIT_FINISHED
 from ctpbee.stream import UDDR, DDDR
 
 
@@ -33,25 +35,38 @@ class TdApi:
         thread = Thread(target=self.listen)
         thread.start()
         self.on_event(EVENT_LOG, "交易连接成功")
+        self.query_contract()
+
+    def query_contract(self):
+        query = QueryContract(index=self.index)
+        udr = UDDR(msg=query, index=self.index, parse=False)
+        self.rd.publish(self.order_up_kernel, udr.encode())
 
     def listen(self):
+        from ctpbee import loads
         pub = self.rd.pubsub()
         pub.subscribe(self.order_down_kernel)
         for item in pub.listen():
-            tick_data = item["data"]
-            if type(tick_data) == int:
+            down_data = item["data"]
+            if type(down_data) == int:
                 continue
-            order = DDDR(obj=tick_data, parse=True)
-            if order.index != self.index:
+            down_data = json.loads(down_data)
+            index = down_data["index"]
+            order = loads(down_data["data"])
+            if index != self.index:
                 continue
-            if order.order is None:
+            if order is None:
                 continue
-            elif type(order.order) == OrderData:
-                self.on_event(EVENT_ORDER, data=order.order)
-            elif type(order.order) == TradeData:
-                self.on_event(EVENT_TRADE, data=order.order)
-            elif type(order.order) == ContractData:
-                self.on_event(EVENT_CONTRACT, order.order)
+            elif type(order) == OrderData:
+                self.on_event(EVENT_ORDER, data=order)
+            elif type(order) == TradeData:
+                self.on_event(EVENT_TRADE, data=order)
+            elif type(order) == dict and "size" in order.keys():
+                contract = ContractData(**order)
+                self.on_event(EVENT_CONTRACT, contract)
+                if order["if_last"]:
+                    self.on_event(EVENT_LOG, "合约初始化成功")
+                    self.on_event(EVENT_INIT_FINISHED, data=None)
 
     def send_order(self, order: OrderRequest):
         order_msg = UDDR(msg=order, index=self.index, parse=False)

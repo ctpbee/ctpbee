@@ -11,7 +11,7 @@ class Main(CtpbeeApi):
         self.init = False
 
     def on_tick(self, tick: TickData) -> None:
-        self.action.buy_open(tick.bid_price_1, 1, tick, price_type=OrderType.FOK)
+        # self.action.buy_open(tick.bid_price_1, 1, tick, price_type=OrderType.FOK)
         print("tick回报", tick)
 
     def on_trade(self, trade: TradeData) -> None:
@@ -24,7 +24,7 @@ class Main(CtpbeeApi):
         print("订单回报: ", order)
 
     def on_contract(self, contract: ContractData):
-        pass
+        print("contract回报: ", contract)
 
     def on_init(self, init: bool):
         self.info("账户初始化成功回报")
