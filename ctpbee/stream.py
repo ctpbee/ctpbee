@@ -7,13 +7,10 @@
 import json
 from threading import Thread
 
-from ctpbee.constant import TickData, OrderData, OrderRequest, CancelRequest, ContractData, QueryContract
+from ctpbee.constant import TickData, OrderData, OrderRequest, CancelRequest, ContractData, QueryContract, TradeData
 from ctpbee.level import CtpbeeApi
 
 from redis import Redis
-from json import loads as ld
-
-from ctpbee.jsond import dumps, loads
 
 
 class UDDR:
@@ -33,13 +30,17 @@ class UDDR:
             self.obj = msg
 
     def encode(self):
+        from ctpbee import dumps
         return json.dumps(dict(
             data=dumps(self.obj),
             index=self.index
-        ))
+        ),
+            ensure_ascii=False)
 
     def __parse__(self, msg):
-        msg = ld(msg)
+
+        msg = json.loads(msg)
+        from ctpbee import loads
         self.index = msg["index"]
         self.obj = loads(msg["data"])
 
@@ -50,25 +51,38 @@ class DDDR:
     """
 
     def __init__(self, obj, index=None, parse=False):
+        self.index = None
+        self.order = None
         if not parse:
-            self.order = dumps(obj)
+            self.order = obj
             self.index = index
         else:
-            try:
-                data = loads(obj)
-                self.order = data["data"]
-                self.index = data["index"]
-            except:
-                self.order = None
-                self.index = 0
+            self.__parse__(obj)
+
+    def __parse__(self, obj):
+        """
+        fixme: why not loads do not work
+        """
+        from ctpbee import loads
+        locken = loads(obj)
+        self.index = locken["index"]
+        msg = loads(locken["data"])
+        if "order_id" in msg.keys() and "tradeid" in msg.keys():
+            self.order = TradeData(**msg)
+        elif "order_id" in msg.keys() and "tradeid" not in msg.keys():
+            self.order = OrderData(**msg)
+        elif "pricetick" in msg.keys() and "size" in msg.keys():
+            self.order = ContractData(**msg)
+        else:
+            self.order = None
 
     def encode(self) -> str:
-        """
-        """
+        from ctpbee import dumps
         return json.dumps(dict(
-            data=self.order,
-            index=self.index
-        ))
+            data=dumps(self.order),
+            index=self.index,
+        ),
+            ensure_ascii=False)
 
 
 class Dispatcher(CtpbeeApi):
@@ -81,7 +95,7 @@ class Dispatcher(CtpbeeApi):
         self.order_up_kernel = self.app.config.get("ORDER_UP_KERNEL", "ctpbee_order_up_kernel")
         self.tick_kernel = self.app.config.get("TICK_KERNEL", "ctpbee_tick_kernel")
         self.order_down_kernel = self.app.config.get("ORDER_DOWN_KERNEL", "ctpbee_order_down_kernel")
-        self.rd_client = Redis(host=tcp_addr, port=tcp_port, db=db, decode_responses=True)
+        self.rd_client = Redis(host=tcp_addr, port=tcp_port, db=db, decode_responses=True, encoding="utf8")
         self.order_key_map = dict()
         threader = Thread(target=self.listen, daemon=True)
         threader.start()

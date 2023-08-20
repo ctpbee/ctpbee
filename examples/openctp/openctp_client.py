@@ -9,9 +9,14 @@ class Main(CtpbeeApi):
     def __init__(self, name):
         super().__init__(name)
         self.init = False
+        self.count = 0
 
     def on_tick(self, tick: TickData) -> None:
-        # self.action.buy_open(tick.bid_price_1, 1, tick, price_type=OrderType.FOK)
+        if self.count % 2 == 0:
+            self.action.buy_open(tick.ask_price_5, 1, tick, price_type=OrderType.FOK)
+        elif self.count % 2 != 0:
+            self.action.buy_close(tick.bid_price_5, 1, tick, price_type=OrderType.FOK)
+        self.count += 1
         print("tick回报", tick)
 
     def on_trade(self, trade: TradeData) -> None:

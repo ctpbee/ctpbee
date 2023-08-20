@@ -26,6 +26,7 @@ class TdApi:
 
     def connect(self, info: dict):
         info["decode_responses"] = True
+        info["encoding"] = "utf8"
         self.tick_kernel = info.pop("tick_kernel", "TICK_KERNEL")
         self.order_up_kernel = info.pop("order_up_kernel", "ctpbee_order_up_kernel")
         self.order_down_kernel = info.pop("order_down_kernel", "ctpbee_order_down_kernel")
@@ -43,28 +44,24 @@ class TdApi:
         self.rd.publish(self.order_up_kernel, udr.encode())
 
     def listen(self):
-        from ctpbee import loads
         pub = self.rd.pubsub()
         pub.subscribe(self.order_down_kernel)
         for item in pub.listen():
-            down_data = item["data"]
-            if type(down_data) == int:
+            string = item["data"]
+            if type(string) == int:
                 continue
-            down_data = json.loads(down_data)
-            index = down_data["index"]
-            order = loads(down_data["data"])
-            if index != self.index:
+            odr = DDDR(string, index=None, parse=True)
+            if odr.index != self.index:
                 continue
-            if order is None:
+            if odr.order is None:
                 continue
-            elif type(order) == OrderData:
-                self.on_event(EVENT_ORDER, data=order)
-            elif type(order) == TradeData:
-                self.on_event(EVENT_TRADE, data=order)
-            elif type(order) == dict and "size" in order.keys():
-                contract = ContractData(**order)
-                self.on_event(EVENT_CONTRACT, contract)
-                if order["if_last"]:
+            elif type(odr.order) == OrderData:
+                self.on_event(EVENT_ORDER, data=odr.order)
+            elif type(odr.order) == TradeData:
+                self.on_event(EVENT_TRADE, data=odr.order)
+            elif type(odr.order) == ContractData:
+                self.on_event(EVENT_CONTRACT, odr.order)
+                if odr.order.if_last:
                     self.on_event(EVENT_LOG, "合约初始化成功")
                     self.on_event(EVENT_INIT_FINISHED, data=None)
 

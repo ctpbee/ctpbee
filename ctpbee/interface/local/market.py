@@ -22,6 +22,7 @@ class MdApi:
 
     def connect(self, info: dict):
         info["decode_responses"] = True
+        info["encoding"] = "utf8"
         self.tick_kernel = info.pop("tick_kernel", "ctpbee_tick_kernel")
         self.index = info.pop("index", 0)
         self.order_up_kernel = info.pop("order_up_kernel", "ctpbee_order_up_kernel")

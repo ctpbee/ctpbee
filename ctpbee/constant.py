@@ -738,7 +738,18 @@ class Msg:
 
 msg = Msg(os.environ.get("MESSAGE_LANGUAGE", "zh"))
 
-data_class = [TickData, ContractData, BarData, OrderData, TradeData, PositionData, AccountData, LogData, SharedData]
-request_class = [SubscribeRequest, OrderRequest, QueryContract, CancelRequest, AccountRegisterRequest,
+data_class = [TickData,
+              ContractData,
+              BarData,
+              OrderData,
+              TradeData,
+              PositionData,
+              AccountData,
+              LogData,
+              SharedData]
+request_class = [SubscribeRequest, OrderRequest,
+                 QueryContract, CancelRequest,
+                 AccountRegisterRequest,
                  AccountBanlanceRequest,
-                 TransferRequest, TransferSerialRequest]
+                 TransferRequest,
+                 TransferSerialRequest]
