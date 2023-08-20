@@ -137,10 +137,26 @@ Only Accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch,
 
 本项目长期维护, 开源仅作爱好，本人不对代码产生的任何使用后果负责. 功能尽可能会保持稳定,
 但是为了你的实盘账户着想，请先用[simnow](https://www.simnow.com.cn/product.action)
-或者[open_ctp](https://github.com/openctp/openctp)账户测试完善再上实盘!
+或者[openctp](https://github.com/openctp/openctp)账户测试完善再上实盘!
 
+> 关于如何对接`openctp`,请参阅此教程[click here](source/openctp.md)
 
-> 关于如何对接open_ctp,请参阅此教程[click here](source/open_ctp.md)
+## 进阶:行情分发与子策略实现
+
+`ctpbee`策略内实现多策略较为复杂,且碰到计算密集型速度会大幅度下降。推荐使用`ctpbee`的多策略模式.
+
+server端:
+
+```python
+from ctpbee import CtpBee, Mode
+
+app = CtpBee("openctp", __name__, refresh=True, work_mode=Mode.DISPATCHER)
+```
+
+client端:
+通过配置interface为`local`, CONNECT_INFO里面的内容也要相应更改.
+
+DEMO: 推荐参阅[openctp分发实现](examples/openctp)
 
 ## 遇到问题
 

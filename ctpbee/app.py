@@ -9,7 +9,7 @@ from typing import Text
 from ctpbee import __version__
 from ctpbee.center import Center
 from ctpbee.config import Config
-from ctpbee.constant import Event
+from ctpbee.constant import Event, Mode
 from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
 from ctpbee.exceptions import ConfigError
@@ -23,6 +23,7 @@ from ctpbee.looper.data import VessData
 from ctpbee.looper.report import render_result
 from ctpbee.record import Recorder
 from ctpbee.signals import AppSignal, common_signals
+from ctpbee.stream import Dispatcher
 
 
 class CtpBee(object):
@@ -66,6 +67,7 @@ class CtpBee(object):
                  action_class: Action or None = None,
                  engine_method: str = "thread",
                  refresh: bool = True,
+                 work_mode: Mode = Mode.API,
                  instance_path=None):
         """
         name: 创建运行核心的名字
@@ -73,6 +75,7 @@ class CtpBee(object):
         action_class: 执行器 > 默认使用系统自带的Action, 或者由用户继承,然后传入类
         engine_method: Actor模型采用的底层的引擎
         logger_class: logger类,可以自己定义
+        work_mode: 判断工作模式 默认为API, 可以填为`dispatcher`
         refresh: 是否自己主动查询账户 默认开启
         """
         self.start_datetime = datetime.now()
@@ -143,6 +146,8 @@ class CtpBee(object):
         _app_context_ctx.push(self.name, self)
 
         self.data = []
+
+        self.work_mode = work_mode
 
     def add_data(self, *data):
         """
@@ -247,7 +252,7 @@ class CtpBee(object):
             self.market = Market(self.app_signal)
             self._init_interface = True
 
-    def start(self, log_output=True, debug=False):
+    def start(self, log_output=False, debug=False):
         """
         开启处理整个事件处理循环
 
@@ -257,7 +262,10 @@ class CtpBee(object):
           debug(bool): 是否开启调试模式 ----> 等待完成
         """
         if self.config.get("PATTERN") == "real":
-            self.config["LOG_OUTPUT"] = log_output
+            if self.work_mode == Mode.DISPATCHER:
+                dispatcher = Dispatcher(name="ctpbee_dispatcher", app=self)
+                self.add_extension(dispatcher)
+            log_output = self.config.get("LOG_OUTPUT", False) | log_output
             self._running(logout=log_output)
         elif self.config.get("PATTERN") == "looper":
             self.config["INTERFACE"] = "looper"

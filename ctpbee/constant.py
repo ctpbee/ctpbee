@@ -37,6 +37,11 @@ class Direction(Enum):
     NET = "净"
 
 
+class Mode(Enum):
+    API = 1
+    DISPATCHER = 2
+
+
 class Offset(Enum):
     """
     Offset of order/trade.
@@ -560,12 +565,22 @@ class ContractData(Entity):
     long_margin_ratio: float
     short_margin_ratio: float
     max_margin_side_algorithm: bool
+    if_last: bool = False
 
     gateway_name = ""
 
     def __post_init__(self):
         """"""
         self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+
+
+@dataclass
+class QueryContract(BaseRequest):
+    index: int = 0
+    name: str = "ctpbee"
+
+    def __post_init__(self):
+        pass
 
 
 class SubscribeRequest(BaseRequest):
@@ -723,6 +738,18 @@ class Msg:
 
 msg = Msg(os.environ.get("MESSAGE_LANGUAGE", "zh"))
 
-data_class = [TickData, BarData, OrderData, TradeData, PositionData, AccountData, LogData, ContractData, SharedData]
-request_class = [SubscribeRequest, OrderRequest, CancelRequest, AccountRegisterRequest, AccountBanlanceRequest,
-                 TransferRequest, TransferSerialRequest]
+data_class = [TickData,
+              ContractData,
+              BarData,
+              OrderData,
+              TradeData,
+              PositionData,
+              AccountData,
+              LogData,
+              SharedData]
+request_class = [SubscribeRequest, OrderRequest,
+                 QueryContract, CancelRequest,
+                 AccountRegisterRequest,
+                 AccountBanlanceRequest,
+                 TransferRequest,
+                 TransferSerialRequest]

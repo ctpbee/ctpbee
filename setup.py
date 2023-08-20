@@ -39,6 +39,7 @@ setup(
     author_email='somewheve@gmail.com',
     url='https://github.com/ctpbee/ctpbee',
     license="MIT",
+    long_description_content_type="text/markdown",
     packages=pkgs,
     install_requires=install_requires,
     platforms=["Windows", "Linux", "Mac OS-X"],
