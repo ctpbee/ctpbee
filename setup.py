@@ -22,7 +22,7 @@ if sys.version_info.major == 3 and sys.version_info.minor == 6:
 
 runtime_library_dir = []
 try:
-    long_description = Path("README.md").read_text(encoding="utf-8"),
+    long_description = Path("README.md").read_text(encoding="utf-8")
 except Exception:
     long_description = ""
 
