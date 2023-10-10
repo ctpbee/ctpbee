@@ -377,3 +377,9 @@ def bollinger_bands(close, window_size, num_of_std):
     upper_band = rolling_mean + (rolling_std * num_of_std)
     lower_band = rolling_mean - (rolling_std * num_of_std)
     return upper_band, lower_band
+
+
+def sma(data, window):
+    weights = np.repeat(1.0, window) / window
+    sma = np.convolve(data, weights, 'valid')
+    return sma

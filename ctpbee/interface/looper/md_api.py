@@ -1,4 +1,4 @@
-from ctpbee import common_signals
+from ctpbee.signals import common_signals
 from ctpbee.constant import EVENT_TICK, Event
 
 

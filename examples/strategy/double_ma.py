@@ -1,6 +1,7 @@
 from ctpbee.constant import TickData, BarData
 
 from ctpbee import CtpbeeApi
+from ctpbee.indicator.indicator import sma
 
 
 class DoubleMa(CtpbeeApi):
@@ -16,13 +17,13 @@ class DoubleMa(CtpbeeApi):
         pass
 
     def on_bar(self, bar: BarData):
-        if len(self.length) <= self.length:
+        if len(self.close) <= self.length:
             return
         close_array = self.close[-self.length:]
-        fast_ma = s.sma(close_array, self.fast_period)
-        slow_ma = self.indicator.sma(close_array, self.slow_period)
-
+        fast_ma = sma(close_array, self.fast_period)
+        slow_ma = sma(close_array, self.slow_period)
         if fast_ma[-1] > slow_ma[-1] and fast_ma[-2] <= slow_ma[-2]:
             self.action.buy(bar.close_price, 1, bar)
         elif fast_ma[-1] < slow_ma[-1] and fast_ma[-2] >= slow_ma[-2]:
             self.action.short(bar.close_price, 1, bar)
+

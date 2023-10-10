@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 import ctpbee.signals as signal
-from ctpbee.constant import Event, TickData
+from ctpbee.constant import Event, TickData, BarData
 from ctpbee.data_handle.local_position import LocalPositionManager
 from ctpbee.helpers import call
 
@@ -97,6 +97,13 @@ class Recorder(object):
         self.position_manager.update_tick(tick, tick.pre_settlement_price)
         for tool in self.app.tools.values():
             tool.on_tick(tick)
+
+    @call
+    def process_bar_event(self, event: Event):
+        bar: BarData = event.data
+        self.bar[bar.local_symbol] = bar
+        for tool in self.app.tools.values():
+            tool.on_bar(bar)
 
     @call
     def process_order_event(self, event: Event):

@@ -439,7 +439,7 @@ class LocalPositionManager(dict):
         """
         Check if the contract needs offset convert.
         """
-        contract = self.app.recorder.get_contract(local_symbol)
+        contract = self.get_contract(local_symbol)
 
         # Only contracts with long-short position mode requires convert
         if not contract:
@@ -457,7 +457,7 @@ class LocalPositionManager(dict):
         holding = self.get(req.local_symbol, None)
         if not holding:
             self[req.local_symbol] = PositionHolding(req.local_symbol,
-                                                     self.app.recorder.get_contract(req.local_symbol))
+                                                     self.get_contract(req.local_symbol))
         self[req.local_symbol].update_order_request(req, local_orderid)
 
     def convert_order_request(self, req: OrderRequest, lock: bool):
@@ -468,7 +468,7 @@ class LocalPositionManager(dict):
         holding = self.get(req.local_symbol, None)
         if not holding:
             self[req.local_symbol] = PositionHolding(req.local_symbol,
-                                                     self.app.recorder.get_contract(req.local_symbol)
+                                                     self.get_contract(req.local_symbol)
                                                      )
         if lock:
             return self[req.local_symbol].convert_order_request_lock(req)
@@ -480,16 +480,24 @@ class LocalPositionManager(dict):
     def update_order(self, order):
         """ 更新order """
         if order.local_symbol not in self:
+
             self[order.local_symbol] = PositionHolding(order.local_symbol,
-                                                       self.app.recorder.get_contract(order.local_symbol))
+                                                       self.get_contract(order.local_symbol))
         else:
             self.get(order.local_symbol).update_order(order)
+
+    def get_contract(self, local_symbol):
+        from ctpbee.app import CtpBee
+        if type(self.app) == CtpBee:
+            return self.app.recorder.get_contract(local_symbol)
+        else:
+            return self.app.get_contract(local_symbol)
 
     def update_trade(self, trade):
         """ 更新成交  """
         if trade.local_symbol not in self:
             self[trade.local_symbol] = PositionHolding(trade.local_symbol,
-                                                       self.app.recorder.get_contract(trade.local_symbol))
+                                                       self.get_contract(trade.local_symbol))
             self[trade.local_symbol].update_trade(trade)
         else:
             self.get(trade.local_symbol).update_trade(trade)
@@ -498,7 +506,7 @@ class LocalPositionManager(dict):
         """ 更新持仓 """
         if position.local_symbol not in self.keys():
             self[position.local_symbol] = PositionHolding(position.local_symbol,
-                                                          self.app.recorder.get_contract(position.local_symbol))
+                                                          self.get_contract(position.local_symbol))
             self[position.local_symbol].update_position(position)
         else:
             self.get(position.local_symbol).update_position(position)

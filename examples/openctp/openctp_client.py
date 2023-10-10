@@ -14,7 +14,7 @@ class Main(CtpbeeApi):
     def on_tick(self, tick: TickData) -> None:
         if self.count % 2 == 0:
             self.action.buy_open(tick.ask_price_5, 1, tick, price_type=OrderType.FOK)
-        elif self.count % 2 != 0:
+        elif self.count % 5 != 0:
             self.action.buy_close(tick.bid_price_5, 1, tick, price_type=OrderType.FOK)
         self.count += 1
         print("tick回报", tick)

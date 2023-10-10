@@ -9,7 +9,7 @@ from typing import Text
 from ctpbee import __version__
 from ctpbee.center import Center
 from ctpbee.config import Config
-from ctpbee.constant import Event, Mode
+from ctpbee.constant import Event, Mode, ContractData
 from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
 from ctpbee.exceptions import ConfigError
@@ -149,6 +149,8 @@ class CtpBee(object):
 
         self.work_mode = work_mode
 
+        self._temp_contracts = []
+
     def add_data(self, *data):
         """
         在回测模式下添加历史数据到系统中去
@@ -252,6 +254,12 @@ class CtpBee(object):
             self.market = Market(self.app_signal)
             self._init_interface = True
 
+    def add_local_contract(self, contract: ContractData):
+        """
+        给本地合约添加合约以及给account对象添加合约
+        """
+        self._temp_contracts.append(contract)
+
     def start(self, log_output=False, debug=False):
         """
         开启处理整个事件处理循环
@@ -346,7 +354,9 @@ class CtpBee(object):
             self.trader.account.basic_info = self.basic_info
         """ trader初始化参数"""
         self.trader.init_params(params=self.config)
-
+        for contract in self._temp_contracts:
+            self.trader.account.add_contract(contract)
+            self.recorder.contracts[contract.local_symbol] = contract
         flag = False
         while True:
             try:
