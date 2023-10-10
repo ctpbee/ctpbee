@@ -11,6 +11,8 @@ from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime
 
+from ctpbee.record import Recorder
+
 try:
     from statistics import geometric_mean
 except ImportError:
@@ -93,6 +95,8 @@ class Account:
         self.short_balance = 0
         self.frozen_premium = 0
         self.count = 0
+        self.contracts = {}
+
         """ 
         fee应该是一个 {
             ag2012.SHFE: 200.1
@@ -124,6 +128,12 @@ class Account:
     @property
     def frozen_margin(self):
         return sum(list(self.long_frozen_margin.values())) + sum(list(self.short_frozen_margin.values()))
+
+    def add_contract(self, contract):
+        self.contracts[contract.local_symbol] = contract
+
+    def get_contract(self, local_symbol):
+        return self.contracts.get(local_symbol)
 
     @property
     def to_object(self) -> AccountData:
@@ -226,10 +236,10 @@ class Account:
         else:
             if close_today:
                 return self.commission_ratio.get(order.local_symbol)[
-                           "close_today"] * order.volume * order.price * self.get_size_from_map(order.local_symbol)
+                    "close_today"] * order.volume * order.price * self.get_size_from_map(order.local_symbol)
             else:
                 return self.commission_ratio.get(order.local_symbol)[
-                           "close"] * order.volume * order.price * self.get_size_from_map(order.local_symbol)
+                    "close"] * order.volume * order.price * self.get_size_from_map(order.local_symbol)
 
     def get_size_from_map(self, local_symbol):
         """ 获取合约乘数 """
@@ -549,11 +559,14 @@ class Account:
         result['total_pnl / 总盈亏'] = round(df["net_pnl"].sum(), 2)
         result['daily_pnl / 平均日盈亏'] = round(result['total_pnl / 总盈亏'] / result['total_days / 交易天数'], 2)
         result['total_commission / 总手续费'] = round(df["commission"].sum(), 2)
-        result['daily_commission / 日均手续费'] = round(result['total_commission / 总手续费'] / result['total_days / 交易天数'], 2)
+        result['daily_commission / 日均手续费'] = round(
+            result['total_commission / 总手续费'] / result['total_days / 交易天数'], 2)
         result['total_turnover / 开仓总资金'] = round(df["turnover"].sum(), 2)
-        result['daily_turnover / 每日平均开仓资金'] = round(result['total_turnover / 开仓总资金'] / result['total_days / 交易天数'], 2)
+        result['daily_turnover / 每日平均开仓资金'] = round(
+            result['total_turnover / 开仓总资金'] / result['total_days / 交易天数'], 2)
         result['total_count / 总成交次数'] = df["count"].sum()
-        result['daily_count / 日均成交次数'] = round(result['total_count / 总成交次数'] / result['total_days / 交易天数'], 2)
+        result['daily_count / 日均成交次数'] = round(
+            result['total_count / 总成交次数'] / result['total_days / 交易天数'], 2)
         result['total_return / 总收益率'] = str(
             round((result['end_balance / 结束资金'] / self.initial_capital - 1) * 100, 2)) + "%"
         # 2021-04-29   somewheve

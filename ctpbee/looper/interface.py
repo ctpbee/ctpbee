@@ -153,7 +153,7 @@ class LocalLooper:
             order_data = self._generate_order_data_from_req(data)
             result, reason = self.account.is_traded(order=order_data)
             if result:
-                order_data.status = Status.NOTTRADED
+                order_data.__set_hole__("status", Status.NOTTRADED)
                 self.pending[order_data.order_id] = deepcopy(order_data)
                 self.on_event(EVENT_ORDER, order_data)
                 self.account.update_account_from_order(order_data)
@@ -175,7 +175,7 @@ class LocalLooper:
             -3: 未成交
             -4: 资金不足
             p : 成交回报
-            todo: 处理冻结 ??
+
         """
         ARC = []
         for active_order in self.pending.values():
@@ -192,10 +192,13 @@ class LocalLooper:
                 # 同时这里需要处理是否要进行
                 trade = self._generate_trade_data_from_order(active_order)
                 """ 这里按照市价进行匹配成交 """
-                try:
-                    trade.price = self.data_entity.last_price
-                except:
-                    trade.price = self.data_entity.close_price
+
+                price = self.data_entity.last_price
+                if price is None:
+                    price = self.data_entity.close_price
+                if price is None:
+                    raise ValueError(f"错误的数据:{self.data_entity} 请检查数据格式", )
+                trade.__set_hole__("price", price)
                 self.on_event(EVENT_LOG,
                               f"--> {trade.local_symbol} 成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
                               f" 成交方向: {str(trade.direction.value)}，行为: {str(trade.offset.value)}")
@@ -242,7 +245,7 @@ class LocalLooper:
                         price = self.data_entity.close_price
                 if can_trade:
                     trade = self._generate_trade_data_from_order(order_data=active_order)
-                    trade.price = price
+                    trade.__set_hole__("price", price)
                     """ 这里按照市价进行匹配成交 """
                     self.on_event(EVENT_LOG,
                                   f"--> {trade.local_symbol} 成交时间: {str(trade.time)}, 成交价格{str(trade.price)}, 成交笔数: {str(trade.volume)},"
@@ -290,7 +293,7 @@ class LocalLooper:
                 raise TypeError("未支持的成交机制")
         for key in ARC:
             active_order = self.pending[key]
-            active_order.status = Status.ALLTRADED
+            active_order.__set_hole__("status", Status.ALLTRADED)
             self.on_event(EVENT_ORDER, data=active_order)
             self.on_event(EVENT_TRADE, data=self.traded_order_mapping[key])
             self.pending.pop(key)
@@ -360,7 +363,7 @@ class LocalLooper:
         if self.pre_close_price.get(self.data_entity.local_symbol) is None:
             self.pre_close_price[
                 self.data_entity.local_symbol] = self.data_entity.last_price if entity.type == "tick" else self.data_entity.close_price
-        self.datetime = entity.datetime
+
         self.match_deal()
 
         if entity.type == "tick":
@@ -390,6 +393,7 @@ class LocalLooper:
                 self.date = entity.datetime.date()
         # 穿过接口日期检查
         self.account.via_aisle()
+        self.datetime = entity.datetime
 
     def get_entity_from_alpha(self, alpha):
         return self.change_month_record.get(alpha)

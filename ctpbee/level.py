@@ -408,11 +408,13 @@ class CtpbeeApi(BeeApi):
             EVENT_POSITION: cls.on_position,
             EVENT_ACCOUNT: cls.on_account,
             EVENT_CONTRACT: cls.on_contract,
+            EVENT_BAR: cls.on_bar,
         }
         parmeter = {
             EVENT_TIMER: EVENT_TIMER,
             EVENT_POSITION: EVENT_POSITION,
             EVENT_TRADE: EVENT_TRADE,
+            EVENT_BAR: EVENT_BAR,
             EVENT_TICK: EVENT_TICK,
             EVENT_ORDER: EVENT_ORDER,
             EVENT_SHARED: EVENT_SHARED,
@@ -585,6 +587,18 @@ class CtpbeeApi(BeeApi):
 
         Args:
           order(OrderData): 报单数据
+
+        Return:
+            None
+        """
+        pass
+
+    def on_bar(self, bar: BarData) -> None:
+        """
+        报单回调触发
+
+        Args:
+          bar(BarData): 报单数据
 
         Return:
             None
