@@ -4,7 +4,7 @@ import pandas as pd
 
 data = pd.read_csv("kline.csv")
 data = data.drop("Unnamed: 0", axis=1)
-data = list(reversed(data.to_dict("index").values()))
+data = [list(reversed(data.to_dict("index").values()))]
 
 
 class DoubleMaStrategy(CtpbeeApi):
@@ -72,6 +72,6 @@ if __name__ == '__main__':
                                         size=10, pricetick=1))
     strategy = DoubleMaStrategy("ma")
     app.add_extension(strategy)
-    app.add_data(*[data])
+    app.add_data(*data)
     app.start()
     result = app.get_result(report=True, auto_open=True)
