@@ -153,10 +153,10 @@ from ctpbee import CtpBee, Mode
 app = CtpBee("openctp", __name__, refresh=True, work_mode=Mode.DISPATCHER)
 ```
 
-client端:
+`client`端:
 通过配置interface为`local`, CONNECT_INFO里面的内容也要相应更改.
 
-DEMO: 推荐参阅[openctp分发实现](examples/openctp)
+`DEMO`: 推荐参阅[openctp分发实现](examples/openctp)
 
 ## 遇到问题
 
