@@ -35,7 +35,6 @@ setup(
     version=version,
     description="Easy ctp trade and market support",
     author='somewheve',
-    long_description=long_description,
     author_email='somewheve@gmail.com',
     url='https://github.com/ctpbee/ctpbee',
     license="MIT",
