@@ -1,7 +1,7 @@
 """
     for the future of  life
 """
-__version__ = '1.5.9'
+__version__ = '1.6.2'
 
 # Here are pre import
 from ctpbee.app import CtpBee

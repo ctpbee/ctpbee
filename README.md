@@ -122,8 +122,7 @@ if __name__ == '__main__':
 
 ## 回测截图
 
-支持多周期多合约回测
-
+支持多周期多合约回测, 回测参考`example/backtest`示例
 ![avatar](source/回测.png)
 
 ## PR支持

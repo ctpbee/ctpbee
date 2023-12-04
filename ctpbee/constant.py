@@ -661,7 +661,6 @@ class SharedData(Entity):
 
 # type check
 # https://www.jianshu.com/p/36bfc4a927a4
-
 # 查询银行账号
 class AccountRegisterRequest(BaseRequest):
     bank_id: str = ""
