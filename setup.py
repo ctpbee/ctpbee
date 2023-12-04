@@ -20,12 +20,6 @@ install_requires = ["pytz", "blinker", "requests", "simplejson", "lxml", "jinja2
 if sys.version_info.major == 3 and sys.version_info.minor == 6:
     install_requires.append("dataclasses")
 
-runtime_library_dir = []
-try:
-    long_description = Path("README.md").read_text(encoding="utf-8"),
-except Exception:
-    long_description = ""
-
 pkgs = ['ctpbee', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.interface',
         'ctpbee.interface.ctp', "ctpbee.interface.looper", "ctpbee.interface.ctp_mini", 'ctpbee.jsond', "ctpbee.looper",
         "ctpbee.indicator"]
