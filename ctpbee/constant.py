@@ -116,7 +116,8 @@ EXCHANGE_MAPPING = {
     "DCE": Exchange.DCE,
     "INE": Exchange.INE,
     "CTP": Exchange.CTP,
-    "TTS": Exchange.TTS
+    "TTS": Exchange.TTS,
+    "GFEX": Exchange.GFEX
 }
 
 
