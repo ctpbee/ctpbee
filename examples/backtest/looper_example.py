@@ -36,7 +36,6 @@ class DoubleMaStrategy(CtpbeeApi):
         self.count += 1
         if self.count % 5 == 0:
             self.action.buy_open(bar.close_price, 1, bar)
-        # print(bar.close_price, self.center.get_position("rb2010.CTP"))
 
     def on_tick(self, tick):
         pass

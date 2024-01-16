@@ -36,11 +36,6 @@ class Main(CtpbeeApi):
         self.init = False
 
     def on_tick(self, tick: TickData) -> None:
-        # if not self.init:
-        #     return
-        # else:
-        #     self.action.sell_open(tick.last_price, 1, tick)
-        #     self.init = False
         print("tick回报", tick)
 
     def on_trade(self, trade: TradeData) -> None:
