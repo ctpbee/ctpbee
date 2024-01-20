@@ -21,7 +21,8 @@ if sys.version_info.major == 3 and sys.version_info.minor == 6:
     install_requires.append("dataclasses")
 
 pkgs = ['ctpbee', 'ctpbee.context', 'ctpbee.exceptions', 'ctpbee.data_handle', 'ctpbee.interface',
-        'ctpbee.interface.ctp', "ctpbee.interface.looper", "ctpbee.interface.ctp_mini", 'ctpbee.jsond', "ctpbee.looper",
+        'ctpbee.interface.ctp', "ctpbee.interface.local", "ctpbee.interface.looper", "ctpbee.interface.ctp_mini",
+        'ctpbee.jsond', "ctpbee.looper",
         "ctpbee.indicator"]
 
 setup(

@@ -200,9 +200,9 @@ class Hickey(object):
     """
     from datetime import time
     DAY_START = time(9, 0)  # 日盘启动和停止时间
-    DAY_END = time(15, 5)
+    DAY_END = time(15, 0)
     NIGHT_START = time(21, 0)  # 夜盘启动和停止时间
-    NIGHT_END = time(2, 35)
+    NIGHT_END = time(2, 30)
 
     TIME_MAPPING = {
         "dy_st": "DAY_START",
@@ -373,5 +373,4 @@ def tool_register(tool_type: ToolRegisterType):
             return ret
 
         return wrapper
-
     return decorator
