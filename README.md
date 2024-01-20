@@ -1,5 +1,5 @@
 # ctpbee
-
+![avatar](source/ctpbee.png)
 bee bee .... for developer's trading ~
 > tiny but strong
 
