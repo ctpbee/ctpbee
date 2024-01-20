@@ -1,5 +1,12 @@
 # ctpbee
+
 ![avatar](source/ctpbee.png)
+[![PyPI Latest Release](https://img.shields.io/pypi/v/ctpbee.svg)](https://pypi.org/project/ctpbee/)
+[![Build Status](https://app.travis-ci.com/ctpbee/ctpbee.svg?branch=master)](https://app.travis-ci.com/ctpbee/ctpbee)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/ctpbee.svg?label=PyPI%20downloads)](
+https://pypi.org/project/ctpbee/)
+[![License - MIT](https://img.shields.io/pypi/l/ctpbee.svg)](https://github.com/ctpbee/ctpbee/blob/master/LICENSE)
+
 bee bee .... for developer's trading ~
 > tiny but strong
 
