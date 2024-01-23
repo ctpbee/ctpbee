@@ -241,38 +241,39 @@ class MTdApi(MiniTdApi):
         Callback of instrument query.
         """
         product = PRODUCT_MINI2VT.get(data.get("ProductClass", None), None)
-        if product:
-            # For option only
-            if product == Product.OPTION:
-                option_underlying = data["UnderlyingInstrID"]
-                option_type = OPTIONTYPE_MINI2VT.get(data["OptionsType"], None)
-                option_strike = data["StrikePrice"]
-                option_expiry = datetime.strptime(data["ExpireDate"], "%Y%m%d")
-            else:
-                option_strike: float = 0
-                option_underlying: str = ""
-                option_type: OptionType = None
-                option_expiry: datetime = None
+        # For option only
+        # 此处去掉 if product 原因是：if product 过滤掉了交易所标准套利合约
+        # 如果 ProductClass 的字段，在 PRODUCT_CTP2VT 中没有定义，那么该合约是交易所标准套利合约，如：SP eb2402&eb2403
+        if product == Product.OPTION:
+            option_underlying = data["UnderlyingInstrID"]
+            option_type = OPTIONTYPE_MINI2VT.get(data["OptionsType"], None)
+            option_strike = data["StrikePrice"]
+            option_expiry = datetime.strptime(data["ExpireDate"], "%Y%m%d")
+        else:
+            option_strike: float = 0
+            option_underlying: str = ""
+            option_type: OptionType = None
+            option_expiry: datetime = None
 
-            contract = ContractData(
-                symbol=data["InstrumentID"],
-                exchange=EXCHANGE_MINI2VT[data["ExchangeID"]],
-                name=data["InstrumentName"],
-                product=product,
-                size=data["VolumeMultiple"],
-                pricetick=data["PriceTick"],
-                gateway_name=self.gateway_name,
-                option_strike=option_strike,
-                option_underlying=option_underlying,
-                option_type=option_type,
-                option_expiry=option_expiry,
-                if_last=last
-            )
+        contract = ContractData(
+            symbol=data["InstrumentID"],
+            exchange=EXCHANGE_MINI2VT[data["ExchangeID"]],
+            name=data["InstrumentName"],
+            product=product,
+            size=data["VolumeMultiple"],
+            pricetick=data["PriceTick"],
+            gateway_name=self.gateway_name,
+            option_strike=option_strike,
+            option_underlying=option_underlying,
+            option_type=option_type,
+            option_expiry=option_expiry,
+            if_last=last
+        )
 
-            self.on_event(EVENT_CONTRACT, contract)
-            symbol_exchange_map[contract.symbol] = contract.exchange
-            symbol_name_map[contract.symbol] = contract.name
-            symbol_size_map[contract.symbol] = contract.size
+        self.on_event(EVENT_CONTRACT, contract)
+        symbol_exchange_map[contract.symbol] = contract.exchange
+        symbol_name_map[contract.symbol] = contract.name
+        symbol_size_map[contract.symbol] = contract.size
 
         if last:
             self.instrunment_init_flag = True
