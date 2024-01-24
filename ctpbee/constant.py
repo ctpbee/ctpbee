@@ -172,7 +172,6 @@ class Entity:
 
     def __new__(cls, **kwargs):
         args = super().__new__(cls)
-        # setattr(args, "__name__", cls.__name__)
         args.__set_hole__("__name__", cls.__name__)
         return args
 
@@ -301,9 +300,9 @@ class TickData(Entity):
     """
     Tick Attributes
     """
+    datetime: datetime
     symbol: str
     exchange: Any
-    datetime: datetime
     name: str = ""
     volume: float = 0
     last_price: float = 0

@@ -127,23 +127,18 @@ if __name__ == '__main__':
 
 ![avatar](source/运行.png)
 
+## K线使用
+
+请参阅[此项目](https://github.com/ctpbee/ckline)以部署ctpbee_kline触发on_bar函数,目前仅支持1min k线生成
+
 ## 回测截图
 
 支持多周期多合约回测, 回测参考`example/backtest`示例
 ![avatar](source/回测.png)
 
-## PR支持
+## 模拟交易测试
 
-Only Accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch, please remember that !
-
-
-> 对于本地数据自动运维方案, 请👉 [Hive](https://github.com/ctpbee/hive)
-
-## 模拟测试 && 免责声明
-
-本项目长期维护, 开源仅作爱好，本人不对代码产生的任何使用后果负责. 功能尽可能会保持稳定,
-但是为了你的实盘账户着想，请先用[simnow](https://www.simnow.com.cn/product.action)
-或者[openctp](https://github.com/openctp/openctp)账户测试完善再上实盘!
+本项目推荐使用[openctp](https://github.com/openctp/openctp) 或者[simnow](https://www.simnow.com.cn/)做模拟交易测试
 
 > 关于如何对接`openctp`,请参阅此教程[click here](source/openctp.md)
 
@@ -160,13 +155,36 @@ app = CtpBee("openctp", __name__, refresh=True, work_mode=Mode.DISPATCHER)
 ```
 
 `client`端:
-通过配置interface为`local`, CONNECT_INFO里面的内容也要相应更改.
+通过配置`interface`为`local`, `CONNECT_INFO`里面的内容也要相应更改.
 
 `DEMO`: 推荐参阅[openctp分发实现](examples/openctp)
 
-## 遇到问题
+## 遇到问题?
 
-请提交issue或者于issue搜索关键字, 或者查阅[此处](http://docs.ctpbee.com/error.html)
+请提交`issue`或者于`issue`搜索关键字, 或者查阅[此处](http://docs.ctpbee.com/error.html)
+
+## PR支持
+
+Only Accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch, please remember that !
+
+## 历史数据支持
+
+> 对于本地数据自动运维方案, 请👉 [Hive](https://github.com/ctpbee/hive)
+> 本项目不提供直接的历史数据访问服务.
+
+## 插件支持
+
+`ctpbee`提供了一个`ToolRegister`机制以支持访问数据触发机制, 可以实现交易各类插件.
+
+欢迎各位大佬参与开发进来. 实现相关生态功能.
+如果有相关疑惑, 可以发送邮件到`somewheve@gmail.com`寻求技术支持.
+下面是提供的插件列表
+
+- [ctpbee_kline](https://github.com/ctpbee/ckline) k线支持插件
+
+## 免责声明
+
+本项目长期维护, 开源仅作爱好, 本人不对代码产生的任何使用后果负责. 功能尽可能会保持稳定.
 
 ## License
 
