@@ -303,61 +303,62 @@ class BeeTdApi(TdApi):
             is_trading = None
             create_date = None
 
-        if product:
-            try:
-                # For option only
-                if product == Product.OPTION:
-                    option_underlying = data["UnderlyingInstrID"],
-                    option_type = OPTIONTYPE_CTP2VT.get(
-                        data["OptionsType"], None),
-                    option_strike = data["StrikePrice"],
-                    option_expiry = datetime.strptime(
-                        data["ExpireDate"], "%Y%m%d"),
-                else:
-                    option_strike: float = 0
-                    option_underlying: str = ""
-                    option_type: OptionType = None
-                    option_expiry: datetime = None
-                contract = ContractData(
-                    symbol=data["InstrumentID"],
-                    exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
-                    name=data["InstrumentName"],
-                    product=product,
-                    max_market_order_volume=data['MaxMarketOrderVolume'],
-                    min_market_order_volume=data['MinMarketOrderVolume'],
-                    max_limit_order_volume=data['MaxLimitOrderVolume'],
-                    min_limit_order_volume=data['MaxLimitOrderVolume'],
-                    size=data["VolumeMultiple"],
-                    pricetick=data["PriceTick"],
-                    delivery_month=data['DeliveryMonth'],
-                    delivery_year=data['DeliveryYear'],
-                    long_margin_ratio=data['LongMarginRatio'],
-                    short_margin_ratio=data['ShortMarginRatio'],
-                    combination_type=data['CombinationType'],
-                    gateway_name=self.gateway_name,
-                    end_delivery_date=end_delivery_date,
-                    start_delivery_date=start_delivery_date,
-                    open_date=open_date,
-                    is_trading=is_trading,
-                    create_date=create_date,
-                    option_strike=option_strike,
-                    option_underlying=option_underlying,
-                    option_type=option_type,
-                    option_expiry=option_expiry,
-                    if_last=last
-                )
-            except KeyError as e:
-                import warnings
-                warnings.warn(f"未预料到的合约问题 错误信息: {e}")
-                return
-            self.symbol_exchange_mapping[data["InstrumentID"]
-            ] = EXCHANGE_CTP2VT[data["ExchangeID"]]
+        # 此处去掉 if product 原因是：if product 过滤掉了交易所标准套利合约
+        # 如果 ProductClass 的字段，在 PRODUCT_CTP2VT 中没有定义，那么该合约是交易所标准套利合约，如：SP eb2402&eb2403
+        try:
+            # For option only
+            if product == Product.OPTION:
+                option_underlying = data["UnderlyingInstrID"],
+                option_type = OPTIONTYPE_CTP2VT.get(
+                    data["OptionsType"], None),
+                option_strike = data["StrikePrice"],
+                option_expiry = datetime.strptime(
+                    data["ExpireDate"], "%Y%m%d"),
+            else:
+                option_strike: float = 0
+                option_underlying: str = ""
+                option_type: OptionType = None
+                option_expiry: datetime = None
+            contract = ContractData(
+                symbol=data["InstrumentID"],
+                exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
+                name=data["InstrumentName"],
+                product=product,
+                max_market_order_volume=data['MaxMarketOrderVolume'],
+                min_market_order_volume=data['MinMarketOrderVolume'],
+                max_limit_order_volume=data['MaxLimitOrderVolume'],
+                min_limit_order_volume=data['MaxLimitOrderVolume'],
+                size=data["VolumeMultiple"],
+                pricetick=data["PriceTick"],
+                delivery_month=data['DeliveryMonth'],
+                delivery_year=data['DeliveryYear'],
+                long_margin_ratio=data['LongMarginRatio'],
+                short_margin_ratio=data['ShortMarginRatio'],
+                combination_type=data['CombinationType'],
+                gateway_name=self.gateway_name,
+                end_delivery_date=end_delivery_date,
+                start_delivery_date=start_delivery_date,
+                open_date=open_date,
+                is_trading=is_trading,
+                create_date=create_date,
+                option_strike=option_strike,
+                option_underlying=option_underlying,
+                option_type=option_type,
+                option_expiry=option_expiry,
+                if_last=last
+            )
+        except KeyError as e:
+            import warnings
+            warnings.warn(f"未预料到的合约问题 错误信息: {e}")
+            return
+        self.symbol_exchange_mapping[data["InstrumentID"]
+        ] = EXCHANGE_CTP2VT[data["ExchangeID"]]
 
-            self.on_event(type=EVENT_CONTRACT, data=contract)
+        self.on_event(type=EVENT_CONTRACT, data=contract)
 
-            symbol_exchange_map[contract.symbol] = contract.exchange
-            symbol_name_map[contract.symbol] = contract.name
-            symbol_size_map[contract.symbol] = contract.size
+        symbol_exchange_map[contract.symbol] = contract.exchange
+        symbol_name_map[contract.symbol] = contract.name
+        symbol_size_map[contract.symbol] = contract.size
 
         if last:
             # 请求计算所有合约所用到的具体数据
