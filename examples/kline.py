@@ -5,8 +5,6 @@
 
 from ctpbee import CtpbeeApi, CtpBee
 from ctpbee.constant import *
-from ctpbee import VLogger
-
 from ctpbee_kline import Kline
 
 

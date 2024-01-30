@@ -138,6 +138,7 @@ class ToolRegisterType(Enum):
     POSITION = 'position'
     ACCOUNT = 'account'
     WHATEVER = 'whatever'
+    BAR = "bar"
 
 
 enums = [Interval, Exchange, OptionType, OrderType, Product, Status, Offset, Direction]
