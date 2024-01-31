@@ -47,7 +47,8 @@ EXCHANGE_MINI2VT = {
 PRODUCT_MINI2VT = {
     THOST_FTDC_PC_Futures: Product.FUTURES,
     THOST_FTDC_PC_Options: Product.OPTION,
-    THOST_FTDC_PC_Combination: Product.SPREAD
+    THOST_FTDC_PC_Combination: Product.SPREAD,
+    THOST_FTDC_PC_SpotOption: Product.OPTION,
 }
 
 OPTIONTYPE_MINI2VT = {
