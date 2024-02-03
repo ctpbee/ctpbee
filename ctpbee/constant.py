@@ -1,8 +1,8 @@
 """
 """
 
-import os
 import inspect
+import os
 from dataclasses import dataclass, asdict
 from datetime import datetime, date
 from enum import Enum
@@ -499,10 +499,10 @@ class AccountData(Entity):
 
     balance: float = 0
     frozen: float = 0
+    available: float = 0
 
     def __post_init__(self):
         """"""
-        self.available = self.balance - self.frozen
         self.local_account_id = f"{self.gateway_name}.{self.accountid}"
 
 
