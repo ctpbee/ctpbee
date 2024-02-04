@@ -1,31 +1,37 @@
-import argparse
+import click
 import os
-import sys
-
-parser = argparse.ArgumentParser(description="bee bee bee~")
-
-parser.add_argument("-auto", '--generate', help="对于linux自动生成中文环境")
 
 
-def update_locale():
-    with open("/etc/locale.gen", "a+") as f:
-        code_lines = [
-            "zh_CN.GB18030 GB18030",
-            "en_US.UTF-8 UTF-8",
-            "zh_CN.UTF-8 UTF-8"
-        ]
-        for x in code_lines:
-            f.write(x + "\n")
-    os.system("locale-gen")
+@click.group()
+def cli():
+    pass
 
 
-def execute():
-    if len(sys.argv) <= 1:
-        print('[*]Tip: ctpbee -h view help')
-        sys.exit(0)
-    args = parser.parse_args()
+def exec_command(password, command):
+    if password is None:
+        pass
+    else:
+        command = 'echo %s|sudo -S %s' % (password, command)
+    click.echo(f"exec: {command}")
+    os.system(command)
 
-    auto = args.generate
-    if auto == "generate":
-        update_locale()
-        return
+
+def append_text_to_locale(password, text):
+    if password is not None:
+        command = f'echo {password} | sudo -S echo  {text} | sudo tee -a /etc/locale.gen'
+    else:
+        command = f'echo {text} | tee -a /etc/locale.gen'
+    click.echo(f"exec: {command}")
+    os.system(command)
+
+
+@click.command()
+@click.option("--password", default=None, help="当前用户密码, 用以执行更新locale.gen文件")
+def init_locale(password):
+    append_text_to_locale(password=password, text="zh_CN.GB18030 GB18030")
+    append_text_to_locale(password=password, text="en_US.UTF-8 UTF-8")
+    append_text_to_locale(password=password, text="zh_CN.UTF-8 UTF-8")
+    exec_command(password=password, command="locale-gen")
+
+
+cli.add_command(init_locale)
