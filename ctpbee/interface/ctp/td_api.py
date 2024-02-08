@@ -167,6 +167,7 @@ class BeeTdApi(TdApi):
 
     def onRspQryInvestorPosition(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
+
         if not data:
             return
         key = f"{data['InstrumentID'], data['PosiDirection']}"
@@ -249,7 +250,7 @@ class BeeTdApi(TdApi):
                     position.__set_hole__("float_pnl", (position.open_price - current_price) * size * position.volume)
 
         except KeyError:
-            pass
+            print(data)
 
         if last:
             for position in self.positions.values():

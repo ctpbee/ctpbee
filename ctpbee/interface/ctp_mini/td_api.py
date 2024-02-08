@@ -228,9 +228,10 @@ class MTdApi(MiniTdApi):
             accountid=data["AccountID"],
             balance=data["Balance"],
             frozen=data["FrozenMargin"] + data["FrozenCash"] + data["FrozenCommission"],
-            gateway_name=self.gateway_name
+            gateway_name=self.gateway_name,
+            available = data["Available"]
         )
-        account.available = data["Available"]
+
         self.on_event(EVENT_ACCOUNT, account)
         if self.position_init_flag and self.instrunment_init_flag and not self.init_status:
             self.init_status = True

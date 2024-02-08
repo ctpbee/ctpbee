@@ -44,6 +44,6 @@ setup(
     package_data={'ctpbee': ['api/ctp/*', "*.html"]},
     ext_modules=[],
     entry_points={
-        'console_scripts': ['ctpbee = ctpbee.cmdline:execute']
+        'console_scripts': ['bee = ctpbee.cmdline:cli']
     }
 )

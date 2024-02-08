@@ -16,7 +16,11 @@ bee bee .... for developer's trading ~
 
 ```bash
 #  linux用户快速生成中文支持/ windows用户无须设置 
-sudo ctpbee -auto generate
+## for root 
+bee init-locale 
+## for user, xxx为你的用户密码, 注意你当前用户需要拥有sudo权限 
+bee init-locale --password xxxxx 
+
 ```
 
 ## 灵感起源
@@ -25,8 +29,14 @@ sudo ctpbee -auto generate
 
 ## 快速安装
 
+> `mac`用户注意， `ctpbee_api`目前仅仅提供源码安装方式，
+> 需要你预先安装ctpbee_api, [安装参见](https://github.com/ctpbee/ctpbee_api)
+
 ```bash
+
+
 # python version: 3.6+
+
 
 # 源码安装 
 git clone https://github.com/ctpbee/ctpbee && cd ctpbee && python3 setup.py install  
@@ -115,6 +125,7 @@ if __name__ == '__main__':
 - [x] k线生成
 - [x] 回测报告生成
 - [x] 自动运维
+- [x] 插件系统的支持
 - [x] 多交易接口支持
     - `ctp`
     - `ctp_mini`
@@ -127,10 +138,6 @@ if __name__ == '__main__':
 
 ![avatar](source/运行.png)
 
-## K线使用
-
-请参阅[此项目](https://github.com/ctpbee/ckline)以部署ctpbee_kline触发on_bar函数,目前仅支持1min k线生成
-
 ## 回测截图
 
 支持多周期多合约回测, 回测参考`example/backtest`示例
@@ -142,30 +149,12 @@ if __name__ == '__main__':
 
 > 关于如何对接`openctp`,请参阅此教程[click here](source/openctp.md)
 
-## 进阶:行情分发与子策略实现
-
-`ctpbee`策略内实现多策略较为复杂,且碰到计算密集型速度会大幅度下降。推荐使用`ctpbee`的多策略模式.
-
-server端:
-
-```python
-from ctpbee import CtpBee, Mode
-
-app = CtpBee("openctp", __name__, refresh=True, work_mode=Mode.DISPATCHER)
-```
-
-`client`端:
-通过配置`interface`为`local`, `CONNECT_INFO`里面的内容也要相应更改.
 
 `DEMO`: 推荐参阅[openctp分发实现](examples/openctp)
 
 ## 遇到问题?
 
 请提交`issue`或者于`issue`搜索关键字, 或者查阅[此处](http://docs.ctpbee.com/error.html)
-
-## PR支持
-
-Only Accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch, please remember that !
 
 ## 历史数据支持
 
@@ -181,6 +170,8 @@ Only Accept [PR](https://github.com/ctpbee/ctpbee/compare) code to `dev` branch,
 下面是提供的插件列表
 
 - [ctpbee_kline](https://github.com/ctpbee/ckline) k线支持插件
+- [ctpbee_webline](https://github.com/ctpbee/webline) 使用flask编写后端, 通过`with_tools`接口接入策略, `vue3+tauri`
+  编写桌面应用, 敬请期待
 
 ## 免责声明
 
