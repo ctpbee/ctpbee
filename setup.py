@@ -14,7 +14,7 @@ if sys.version_info < (3, 6):
     raise RuntimeError('当前ctpbee只支持python36以及更高版本/ ctpbee only support python36 and higher ')
 
 # libraries
-install_requires = ["pytz", "blinker", "requests", "simplejson", "lxml", "jinja2", "redis",
+install_requires = ["pytz", "blinker", "requests", "simplejson", "lxml", "jinja2", "redis", "click",
                     'cologer>=2.0', "ctpbee_api>=0.40", "numpy", "pandas"]
 
 if sys.version_info.major == 3 and sys.version_info.minor == 6:
