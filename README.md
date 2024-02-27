@@ -29,8 +29,14 @@ bee init-locale --password xxxxx
 
 ## 快速安装
 
+> `mac`用户注意， `ctpbee_api`目前仅仅提供源码安装方式，
+> 需要你预先安装ctpbee_api, [安装参见](https://github.com/ctpbee/ctpbee_api)
+
 ```bash
+
+
 # python version: 3.6+
+
 
 # 源码安装 
 git clone https://github.com/ctpbee/ctpbee && cd ctpbee && python3 setup.py install  
@@ -119,6 +125,7 @@ if __name__ == '__main__':
 - [x] k线生成
 - [x] 回测报告生成
 - [x] 自动运维
+- [x] 插件系统的支持
 - [x] 多交易接口支持
     - `ctp`
     - `ctp_mini`
