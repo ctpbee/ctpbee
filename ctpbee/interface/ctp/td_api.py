@@ -24,24 +24,18 @@ from collections import defaultdict
 from ctpbee.constant import *
 from ctpbee.interface.ctp.lib import *
 from ctpbee.interface.func import *
+from time import sleep
 
 
-class BeeTdApi(TdApi):
+class BeeTdApi(TdApi, LoginRequired):
     """"""
 
     def __init__(self, app_signal):
-        """Constructor"""
+        LoginRequired.__init__(self)
         super(BeeTdApi, self).__init__()
         self.app_signal = app_signal
         self.gateway_name = "ctp"
-
         self.reqid = 0
-
-        self.connect_status = False
-        self.login_status = False
-        self.auth_staus = False
-        self.login_failed = False
-
         self.userid = ""
         self.password = ""
         self.brokerid = 0
@@ -62,9 +56,6 @@ class BeeTdApi(TdApi):
         self.symbol_exchange_mapping = {}
         self.sysid_orderid_map = {}
         self.open_cost_dict = defaultdict(dict)
-
-        self.account_init_flag = False
-        self.instrunment_init_flag = False
         self.position_instrument_mapping = dict()
 
         self.init_status = False
@@ -73,7 +64,7 @@ class BeeTdApi(TdApi):
 
     @property
     def td_status(self):
-        return self.login_status
+        return self.login_required
 
     def on_event(self, type, data):
         event = Event(type=type, data=data)
@@ -92,14 +83,14 @@ class BeeTdApi(TdApi):
 
     def onFrontDisconnected(self, reason: int):
         """"""
-        self.connect_status = False
-        self.login_status = False
+        self.connect_required = False
+        self.login_required = False
         self.on_event(type=EVENT_LOG, data=f"交易连接断开，原因{reason}")
 
     def onRspAuthenticate(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
         if not error['ErrorID']:
-            self.authStatus = True
+            self.connect_required = True
             self.on_event(type=EVENT_LOG, data="交易服务器验证成功")
             self.login()
         else:
@@ -111,7 +102,7 @@ class BeeTdApi(TdApi):
         if not error["ErrorID"]:
             self.frontid = data["FrontID"]
             self.sessionid = data["SessionID"]
-            self.login_status = True
+            self.login_required = True
             self.on_event(type=EVENT_LOG, data="交易登录成功")
 
             # Confirm settlement
@@ -123,7 +114,6 @@ class BeeTdApi(TdApi):
 
             self.reqSettlementInfoConfirm(req, self.reqid)
         else:
-            self.login_failed = True
             error['detail'] = "交易登录失败"
             self.on_event(type=EVENT_ERROR, data=error)
 
@@ -166,9 +156,12 @@ class BeeTdApi(TdApi):
         self.reqQryInstrument({}, self.reqid)
 
     def onRspQryInvestorPosition(self, data: dict, error: dict, reqid: int, last: bool):
-        """"""
-
+        """
+        仓位回调逻辑
+        """
         if not data:
+            if last:
+                self.position_required = True
             return
         key = f"{data['InstrumentID'], data['PosiDirection']}"
         position = self.positions.get(key, None)
@@ -258,10 +251,7 @@ class BeeTdApi(TdApi):
                 self.position_instrument_mapping[position.local_symbol] = False
             self.positions.clear()
             self.open_cost_dict.clear()
-            if not self.init_status and self.account_init_flag:
-                """如果未进行初始化 且账户查询已经完成 那么发送初始化信号"""
-                self.init_status = True
-                self.on_event(type=EVENT_INIT_FINISHED, data=True)
+            self.position_required = True
 
     def onRspQryTradingAccount(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
@@ -274,14 +264,11 @@ class BeeTdApi(TdApi):
             available=data["Available"]
         )
         self.on_event(type=EVENT_ACCOUNT, data=account)
-        if self.instrunment_init_flag and not self.account_init_flag:
+        if not self.account_required:
             """当前合约查询完毕 且账户未查询 那么请求查询深度行情和持仓数据"""
             self.reqid += 1
-            self.reqQryDepthMarketData({}, self.reqid)
-            self.account_init_flag = True
-            # 防止流控造成查询失败
-            from time import sleep
-            sleep(1.5)
+            self.account_required = True
+            sleep(1)
             self.query_position()
 
     def onRspQryInstrument(self, data: dict, error: dict, reqid: int, last: bool):
@@ -362,15 +349,15 @@ class BeeTdApi(TdApi):
         symbol_size_map[contract.symbol] = contract.size
 
         if last:
-            # 请求计算所有合约所用到的具体数据
-            self.instrunment_init_flag = True
             self.on_event(EVENT_LOG, data="合约信息查询成功")
+            self.contract_required = True
             for data in self.order_data:
                 self.onRtnOrder(data)
             self.order_data.clear()
             for data in self.trade_data:
                 self.onRtnTrade(data)
             self.trade_data.clear()
+
             self.query_account()
 
     def onRtnOrder(self, data: dict):
@@ -485,83 +472,10 @@ class BeeTdApi(TdApi):
         self.reqid += 1
         self.reqAuthenticate(req, self.reqid)
 
-    def onRspQryTransferBank(self, data, error, reqid, last: bool):
-        print("transfer callback: ", data)
-
-    def onRspQryTransferSerial(self, data, error, reqid, last):
-        # 查询流水回调
-        print("serial: ", data, "error", error)
-
-    def onRspQryAccountregister(self, data, error, reqid, last):
-        print("query account register callback: data", data, "error")
-
-    def query_transfer_serial(self, req: TransferSerialRequest):
-        """ 查询转账流水 """
-        self.reqid += 1
-        reqd = {
-            "BankID": req.bank_id,
-            "CurrencyID": req.currency_id
-        }
-        self.ReqQryTransferSerial(reqd, self.reqid)
-
-    def query_bank_account_money(self, req: AccountBanlanceRequest):
-        """ 查询银行余额 """
-        self.reqid += 1
-        reqd = {
-            "BankID": req.bank_id,
-            # "BankBranchID": req.bank_branch_id,
-            "BrokerID": self.brokerid,
-            # "BrokerBranchID": req.broker_branch_id,
-            "BankAccount": req.bank_account,
-            "BankPassWord": req.bank_password,
-            "AccountID": self.userid,
-            "Password": self.password,
-            "CurrencyID": req.currency_id,
-            "SecuPwdFlag": THOST_FTDC_BPWDF_BlankCheck
-        }
-        self.reqQueryBankAccountMoneyByFuture(reqd, self.reqid)
-
-    def query_account_register(self, req: AccountRegisterRequest):
-        """ 查询银行账户 """
-        self.reqid += 1
-        reqd = \
-            {
-                "BrokerID": self.brokerid,
-                "AccountID": self.userid,
-                "BankID": req.bank_id,
-                # "BankBranchID": req.bank_branch_id,
-                "CurrencyID": req.currency_id
-            }
-        self.reqQryAccountregister(reqd, self.reqid)
-
-    def transfer(self, req: TransferRequest, type):
-        """ 银行和证券互转 """
-        self.reqid += 1
-        reqd = {
-            "BankID": req.bank_id,
-            # "BankBranchID": req.bank_branch_id,
-            "BrokerID": self.brokerid,
-            # "BrokerBranchID": req.broker_branch_id,
-            "BankAccount": req.bank_account,
-            "BankPassWord": req.band_password,
-            "AccountID": self.userid,
-            "Password": self.password,
-            "CurrencyID": req.currency_id,
-            "TradeAmount": req.trade_account,
-            "SecuPwdFlag": THOST_FTDC_BPWDF_BlankCheck,
-        }
-        if type == "to_bank":
-            self.reqFromBankToFutureByFuture(reqd, self.reqid)
-        if type == "to_trade":
-            self.ReqFromFutureToBankByFuture(reqd, self.reqid)
-
     def login(self):
         """
         Login into server.
         """
-        if self.login_failed:
-            return
-
         req = {
             "UserID": self.userid,
             "Password": self.password,
@@ -570,7 +484,6 @@ class BeeTdApi(TdApi):
         }
         if self.product_info:
             req["UserProductInfo"] = self.product_info
-
         self.reqid += 1
         self.reqUserLogin(req, self.reqid)
 
@@ -589,11 +502,6 @@ class BeeTdApi(TdApi):
         )
         self.on_event(type=EVENT_LAST, data=market)
         self.position_instrument_mapping[market.symbol] = True
-        if last:
-            # 回调初始化完成
-            if False not in self.position_instrument_mapping.values():
-                self.init_status = True
-                self.on_event(type=EVENT_INIT_FINISHED, data=True)
 
     def request_market_data(self, req: object):
         """ 请求市场数据 """
@@ -662,6 +570,26 @@ class BeeTdApi(TdApi):
         self.reqid += 1
         return self.reqOrderAction(ctp_req, self.reqid)
 
+    def connect(self, info: dict):
+        self.userid = info.get("userid")
+        self.password = info.get("password")
+        self.brokerid = info.get("brokerid")
+        self.auth_code = info.get("auth_code")
+        self.appid = info.get("appid")
+        self.product_info = info.get("product_info")
+        subscribe_info = info.get("subscribe_topic", (0, 0))  # 默认采用(0, 0)的方式进行订阅
+
+        if not self.connect_required:
+            path = get_folder_path(
+                self.gateway_name.lower() + f"/{self.userid}")
+            self.createFtdcTraderApi(str(path) + "\\Td")
+            self.subscribePrivateTopic(subscribe_info[0])
+            self.subscribePublicTopic(subscribe_info[1])
+            self.registerFront(info.get("td_address"))
+            self.init()
+        else:
+            self.authenticate()
+
     def query_account(self):
         """
         Query account balance data.
@@ -685,6 +613,5 @@ class BeeTdApi(TdApi):
 
     def close(self):
         """"""
-        if self.connect_status:
-            print("release Trading API")
+        if self.connect_required:
             self.exit()
