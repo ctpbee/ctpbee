@@ -42,7 +42,7 @@ class CtpBee(object):
                           SLIPPAGE_SHORT=0,  # 卖空滑点设置
                           SLIPPAGE_BUY=0,  # 买多滑点设置
                           SHARED_FUNC=False,  # 分时图数据 --> 等待优化
-                          REFRESH_INTERVAL=1.5,  # 定时刷新秒数, 需要在CtpBee实例化的时候将refresh设置为True才会生效
+                          REFRESH_INTERVAL=3,  # 定时刷新秒数, 需要在CtpBee实例化的时候将refresh设置为True才会生效
                           INSTRUMENT_INDEPEND=False,  # 是否开启独立行情,策略对应相应的行情
                           CLOSE_PATTERN="today",  # 面对支持平今的交易所,优先平今或者平昨 ---> today: 平今, yesterday: 平昨, 其他:d
                           TODAY_EXCHANGE=[Exchange.SHFE.value,
@@ -230,6 +230,7 @@ class CtpBee(object):
             self.r.start()
         else:
             pass
+
 
     def init_interface(self):
         if self.config.get("PATTERN", "real") == "real" and not self._init_interface:

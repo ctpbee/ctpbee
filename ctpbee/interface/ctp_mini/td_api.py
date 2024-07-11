@@ -1,24 +1,19 @@
 from .lib import *
-from ..func import get_folder_path
+from ..func import get_folder_path, LoginRequired
 
 
-class MTdApi(MiniTdApi):
+class MTdApi(MiniTdApi, LoginRequired):
     """"""
 
     def __init__(self, app_signal):
         """Constructor"""
+        LoginRequired.__init__(self)
         super(MTdApi, self).__init__()
         self.gateway_name = "ctp_mini"
 
         self.reqid = 0
         self.order_ref = 0
         self.app_signal = app_signal
-
-        self.connect_status = False
-        self.login_status = False
-        self.auth_staus = False
-        self.login_failed = False
-
         self.userid = ""
         self.password = ""
         self.brokerid = ""
@@ -35,14 +30,11 @@ class MTdApi(MiniTdApi):
         self.sysid_orderid_map = {}
         self.local_order_id = []
 
-        self.position_init_flag = False
-        self.instrunment_init_flag = False
-        self.init_status = False
         self.position_instrument_mapping = dict()
 
     @property
     def td_status(self):
-        return self.login_status
+        return self.login_required
 
     def on_event(self, type, data):
         event = Event(type=type, data=data)
@@ -60,13 +52,13 @@ class MTdApi(MiniTdApi):
 
     def onFrontDisconnected(self, reason: int):
         """"""
-        self.login_status = False
+        self.connect_required = False
         self.on_event(EVENT_LOG, f"交易服务器连接断开，原因{reason}")
 
     def onRspAuthenticate(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
         if not error['ErrorID']:
-            self.auth_staus = True
+            self.connect_required = True
             self.on_event(EVENT_LOG, "交易服务器授权验证成功")
             self.login()
         else:
@@ -77,15 +69,13 @@ class MTdApi(MiniTdApi):
         if not error["ErrorID"]:
             self.frontid = data["FrontID"]
             self.sessionid = data["SessionID"]
-            self.login_status = True
+            self.login_required = True
             self.on_event(EVENT_LOG, "交易服务器登录成功")
 
             # Get instrument data directly without confirm settlement
             self.reqid += 1
             self.reqQryInstrument({}, self.reqid)
         else:
-            self.login_failed = True
-
             self.on_event(EVENT_ERROR, f"交易服务器登录失败: {error}")
 
     def onRspOrderInsert(self, data: dict, error: dict, reqid: int, last: bool):
@@ -128,6 +118,8 @@ class MTdApi(MiniTdApi):
     def onRspQryInvestorPosition(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
         if not data:
+            if last:
+                self.position_required = True
             return
         key = f"{data['InstrumentID'], data['PosiDirection']}"
         position = self.positions.get(key, None)
@@ -217,7 +209,7 @@ class MTdApi(MiniTdApi):
                 self.position_instrument_mapping[position.local_symbol] = False
             self.positions.clear()
             self.open_cost_dict.clear()
-            self.position_init_flag = True
+            self.position_required = True
 
     def onRspQryTradingAccount(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
@@ -229,13 +221,15 @@ class MTdApi(MiniTdApi):
             balance=data["Balance"],
             frozen=data["FrozenMargin"] + data["FrozenCash"] + data["FrozenCommission"],
             gateway_name=self.gateway_name,
-            available = data["Available"]
+            available=data["Available"]
         )
 
         self.on_event(EVENT_ACCOUNT, account)
-        if self.position_init_flag and self.instrunment_init_flag and not self.init_status:
-            self.init_status = True
-            self.on_event(type=EVENT_INIT_FINISHED, data=True)
+        if not self.account_required:
+            self.account_required = True
+            from time import sleep
+            sleep(1)
+            self.query_position()
 
     def onRspQryInstrument(self, data: dict, error: dict, reqid: int, last: bool):
         """
@@ -277,9 +271,8 @@ class MTdApi(MiniTdApi):
         symbol_size_map[contract.symbol] = contract.size
 
         if last:
-            self.instrunment_init_flag = True
             self.on_event(EVENT_LOG, "合约信息查询成功")
-
+            self.contract_required = True
             for data in self.order_data:
                 self.onRtnOrder(data)
             self.order_data.clear()
@@ -287,6 +280,7 @@ class MTdApi(MiniTdApi):
             for data in self.trade_data:
                 self.onRtnTrade(data)
             self.trade_data.clear()
+            self.query_account()
 
     def onRtnOrder(self, data: dict):
         """
@@ -375,7 +369,7 @@ class MTdApi(MiniTdApi):
         if not address.startswith("tcp://"):
             address = "tcp://" + address
 
-        if not self.connect_status:
+        if not self.connect_required:
             path = get_folder_path(self.gateway_name.lower() + f"/{self.userid}")
             self.createFtdcTraderApi(str(path) + "\\Td")
 
@@ -383,7 +377,6 @@ class MTdApi(MiniTdApi):
             self.subscribePublicTopic(0)
             self.registerFront(address)
             self.init()
-            self.connect_status = True
         else:
             self.authenticate()
 
@@ -408,8 +401,6 @@ class MTdApi(MiniTdApi):
         """
         Login onto server.
         """
-        if self.login_failed:
-            return
 
         req = {
             "UserID": self.userid,

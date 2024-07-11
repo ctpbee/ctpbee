@@ -8,7 +8,6 @@ import sys
 import time
 import types
 import warnings
-from copy import deepcopy
 from datetime import datetime, time
 from functools import wraps
 from io import TextIOWrapper
@@ -16,7 +15,7 @@ from threading import RLock
 from time import sleep
 from typing import AnyStr, IO
 
-from ctpbee.constant import Event, EVENT_TIMER
+from ctpbee.constant import Event, EVENT_TIMER, EVENT_INIT_FINISHED, EVENT_LOG
 from ctpbee.date import trade_dates
 
 _missing = object()
@@ -244,7 +243,7 @@ def run_forever(app):
             running_me = False
         else:
             running_me = True
-        if auth_check_time(current_time):
+        if auth_time(current_time):
             pass
         else:
             running_me = False
@@ -293,10 +292,12 @@ def refresh_query(app, signals, refresh):
     while True:
         now = datetime.now()
         if refresh and (now - p).seconds >= app.config['REFRESH_INTERVAL']:
-            # just solve AccountData Update
             app.trader.query_account()
             p = now
-
+            if app.trader.ready and not app.trader.init_local:
+                app.trader.on_event(type=EVENT_INIT_FINISHED, data={})
+                app.trader.on_event(type=EVENT_LOG, data="交易接口初始化完成")
+                app.trader.init_local = True
         if signals is not None and (now - c).seconds >= app.config['TIMER_INTERVAL']:
             event = Event(type=EVENT_TIMER)
             signals.timer_signal.send(event)

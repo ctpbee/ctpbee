@@ -27,6 +27,22 @@ def get_folder_path(folder_name: str):
     TRADER_DIR, TEMP_DIR = _get_trader_dir(".ctpbee")
     folder_path = TEMP_DIR.joinpath(folder_name)
     if not folder_path.exists():
-        print(folder_path)
         os.makedirs(folder_path)
     return folder_path
+
+
+class LoginRequired:
+    def __init__(self):
+        self.connect_required = False
+        self.login_required = False
+        self.position_required = False
+        self.account_required = False
+        self.contract_required = False
+        self.init_local = False
+
+    @property
+    def ready(self):
+        return self.connect_required and self.login_required and self.position_required and self.account_required and self.contract_required
+
+    def connect(self):
+        raise NotImplemented
