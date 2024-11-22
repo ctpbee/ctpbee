@@ -57,9 +57,6 @@ class CtpBee(object):
     import_name = None
 
     # 交易api与行情api / trade api and market api
-    market = None
-    trader = None
-    tools = {}
 
     def __init__(self,
                  name: Text,
@@ -78,6 +75,8 @@ class CtpBee(object):
         work_mode: 判断工作模式 默认为API, 可以填为`dispatcher`
         refresh: 是否自己主动查询账户 默认开启
         """
+        self.market = None
+        self.trader = None
         self.start_datetime = datetime.now()
         self.basic_info = None
         self._extensions = {}
@@ -88,7 +87,7 @@ class CtpBee(object):
         self.active = False
         self.logger = VLogger
         self.logger.set_field_default(name=self.name, owner=self.name)
-
+        self.tools = {}
         self.app_signal = AppSignal(self.name)
 
         if engine_method == "thread":
@@ -230,7 +229,6 @@ class CtpBee(object):
             self.r.start()
         else:
             pass
-
 
     def init_interface(self):
         if self.config.get("PATTERN", "real") == "real" and not self._init_interface:
