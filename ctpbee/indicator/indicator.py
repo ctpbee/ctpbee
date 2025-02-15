@@ -23,7 +23,7 @@ def std(data):
 def ma(data, n):
     """移动平均线"""
     mv = np.convolve(data, np.ones(n) / n, mode='valid')
-    return np.concatenate(([np.NaN for k in range(n - 1)], mv))
+    return np.concatenate(([np.nan for k in range(n - 1)], mv))
 
 
 def ewma(data, period, row_size=None, dtype=None, order='C', out=None):
@@ -105,7 +105,8 @@ def ewma(data, period, row_size=None, dtype=None, order='C', out=None):
     offsets[0] = first_offset
     # iteratively calculate offset for each row
     for i in range(1, out_main_view.shape[0]):
-        offsets[i] = offsets[i - 1] * last_scaling_factor + out_main_view[i - 1, -1]
+        offsets[i] = offsets[i - 1] * \
+            last_scaling_factor + out_main_view[i - 1, -1]
 
     # add the offsets to the result
     out_main_view += offsets[:, np.newaxis] * scaling_factors[np.newaxis, :]
@@ -299,7 +300,8 @@ def wma(values, window):
     weights /= (window * (window + 1) / 2)
     weighted_moving_averages = np.empty(window - 1)
     weighted_moving_averages[:] = np.NAN
-    weighted_moving_averages = np.append(weighted_moving_averages, np.convolve(values, weights, 'valid'))
+    weighted_moving_averages = np.append(
+        weighted_moving_averages, np.convolve(values, weights, 'valid'))
     return weighted_moving_averages
 
 
@@ -361,7 +363,7 @@ def kdj(close, high, low, n=9, m1=3, m2=3):
     :return: tuple, (K, D, J)
     """
     RSV = (close - np.minimum(low, np.roll(close, n))) / (
-            np.maximum(high, np.roll(close, n)) - np.minimum(low, np.roll(close, n))) * 100
+        np.maximum(high, np.roll(close, n)) - np.minimum(low, np.roll(close, n))) * 100
     K = np.zeros_like(RSV)
     K[:n] = 50
     K = np.convolve(K, np.ones(m1) / m1, mode='same')[n - 1:]
