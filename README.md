@@ -176,7 +176,7 @@ if __name__ == '__main__':
 ## 免责声明
 
 本项目维护时间不定期, 开源仅作爱好, 请谨慎使用. 本人不对代码产生的任何使用后果负责.
-推荐使用`vnpy | wondertrader`
+推荐使用`vnpy | wondertrader | tqsdk`
 
 ## License
 
