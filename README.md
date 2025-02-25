@@ -55,8 +55,6 @@ pip3 install ctpbee
 
 [文档地址](http://docs.ctpbee.com)
 
-[论坛地址](http://forum.ctpbee.com)
-
 ## 快速开始
 
 ```python
@@ -147,7 +145,7 @@ if __name__ == '__main__':
 
 本项目推荐使用[openctp](https://github.com/openctp/openctp) 或者[simnow](https://www.simnow.com.cn/)做模拟交易测试
 
-> 关于如何对接`openctp`,请参阅此教程[click here](source/openctp.md)
+> 关于如何对接`openctp`, 请参阅此教程[click here](http://docs.ctpbee.com/error.html)
 
 
 `DEMO`: 推荐参阅[openctp分发实现](examples/openctp)
@@ -176,7 +174,7 @@ if __name__ == '__main__':
 ## 免责声明
 
 本项目维护时间不定期, 开源仅作爱好, 请谨慎使用. 本人不对代码产生的任何使用后果负责.
-推荐使用`vnpy | wondertrader | tqsdk`
+推荐使用当前主流的 `quantaxis | vnpy | wondertrader | tqsdk`
 
 ## License
 

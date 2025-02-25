@@ -40,7 +40,6 @@ class Main(CtpbeeApi):
     def on_init(self, init: bool):
         self.init = True
 
-
 if __name__ == '__main__':
     app = CtpBee("market", __name__, refresh=True)
     example = Main("rb2410")
