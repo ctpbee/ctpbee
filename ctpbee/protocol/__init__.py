@@ -1,11 +1,4 @@
-"""
-ctpbee目前采用qifi协议 使得成为QUANTAXIS交易底层成为可能, 同时使得ctpbee用户能同时使用来自QA的界面端
-"""
-
-
 class Protocol:
-    def __init__(self):
-        pass
 
     def update_account(self, account):
         raise NotImplementedError

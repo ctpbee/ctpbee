@@ -168,7 +168,7 @@ if __name__ == '__main__':
 下面是提供的插件列表
 
 - [ctpbee_kline](https://github.com/ctpbee/ckline) k线支持插件
-- [ctpbee_webline](https://github.com/ctpbee/webline) 使用flask编写后端, 通过`with_tools`接口接入策略, `vue3+tauri`
+- [ctpbee_webline](https://github.com/ctpbee/webline) 使用`flask`编写后端, 通过`with_tools`接口接入策略, `vue3+tauri`
   编写桌面应用, 敬请期待
 
 ## 免责声明
