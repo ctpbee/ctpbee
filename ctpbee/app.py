@@ -177,7 +177,7 @@ class CtpBee(object):
         Args:
           action_class (Action): 操作类
         """
-        if isinstance(action_class, Action):
+        if not issubclass(action_class, Action):
             raise TypeError(
                 f"更新action_class出现错误, 你传入的action_class类型为{type(action_class)}")
         self.action = action_class(self)

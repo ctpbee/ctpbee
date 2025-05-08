@@ -30,20 +30,25 @@ class Main(CtpbeeApi):
         print(order)
 
     def on_position(self, position: PositionData) -> None:
-        pos = self.center.get_position(f"{self.code}.SHFE")
-        print(pos.long_volume, pos.short_volume)
+        # pos = self.center.get_position(f"{self.code}.SHFE")
+        # print(pos.long_volume, pos.short_volume)
+        pass
 
     def on_contract(self, contract: ContractData):
         if contract.symbol == self.code:
             self.action.subscribe(contract.local_symbol)
 
+    def on_realtime(self):
+        print("timer get")
+
     def on_init(self, init: bool):
         self.init = True
+        self.info("init success")
 
 
 if __name__ == '__main__':
     app = CtpBee("market", __name__, refresh=True)
-    example = Main("rb2410")
+    example = Main("rb2510")
     app.config.from_json("config.json")
     app.add_extension(example)
     app.start(log_output=True)

@@ -59,9 +59,9 @@ class Recorder(object):
         self.__common_sig_name = list(map(connect, generate_params(signal.common_signals.event, signal.common_signals)))
         self.__app_sig_name = list(map(connect, generate_params(self.app.app_signal.event, self.app.app_signal)))
 
-    def process_timer_event(self, event):
+    def process_timer_event(self, _event):
         for x in self.app._extensions.values():
-            x()
+            x.on_realtime()
 
     def process_init_event(self, event):
         """ 处理初始化完成事件 """
