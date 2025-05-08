@@ -55,8 +55,6 @@ pip3 install ctpbee
 
 [文档地址](http://docs.ctpbee.com)
 
-[论坛地址](http://forum.ctpbee.com)
-
 ## 快速开始
 
 ```python
@@ -87,6 +85,9 @@ class CTA(CtpbeeApi):
         # 获取合约的仓位
         position = self.center.get_position(tick.local_symbol)
         print(position)
+
+    def on_realtime(self):
+        pass
 
     def on_contract(self, contract: ContractData) -> None:
         if contract.local_symbol == "rb2205.SHFE":
@@ -170,13 +171,16 @@ if __name__ == '__main__':
 下面是提供的插件列表
 
 - [ctpbee_kline](https://github.com/ctpbee/ckline) k线支持插件
-- [ctpbee_webline](https://github.com/ctpbee/webline) 使用flask编写后端, 通过`with_tools`接口接入策略, `vue3+tauri`
-  编写桌面应用, 敬请期待
 
 ## 免责声明
 
 本项目维护时间不定期, 开源仅作爱好, 请谨慎使用. 本人不对代码产生的任何使用后果负责.
-推荐使用`vnpy | wondertrader | tqsdk`
+为了功能完整性考虑 推荐以下框架
+
+- [quantaxis](https://github.com/QUANTAXIS/qautlra-rs/) `使用rust构建的交易系统`
+- [vnpy](https://github.com/vnpy/vnpy)    `python里面最出名的量化交易框架 具备各种完善功能`
+- [wondertrader](https://github.com/wondertrader/wondertrader) `使用c++构建的量化交易系统 同时具备python使用前端`
+- [tqsdk](https://github.com/shinnytech/tqsdk-python) `信易科技出品 由异步作为运行时构建的量化交易框架`
 
 ## License
 
