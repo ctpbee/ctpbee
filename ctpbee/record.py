@@ -73,13 +73,9 @@ class Recorder(object):
     def process_warning_event(self, event):
         self.app.logger.warning(event.data)
 
+    # process_last_event 方法已被整合到 process_tick_event 中，避免重复处理
     def process_last_event(self, event):
-        """ 处理合约的最新行情数据 """
-        data = event.data
-        self.local_contract_price_mapping[data.local_symbol] = data.last_price
-        # 过滤掉数字 取中文做key
-        key = "".join([x for x in data.local_symbol if not x.isdigit()])
-        self.main_contract_mapping[key.upper()].append(data)
+        pass
 
     def process_error_event(self, event: Event):
         self.errors.append({"time": self.get_local_time(), "data": event.data})
@@ -93,10 +89,26 @@ class Recorder(object):
     @call
     def process_tick_event(self, event: Event):
         tick: TickData = event.data
-        self.ticks[tick.local_symbol] = tick
+        local_symbol = tick.local_symbol
+        
+        # 更新行情数据
+        self.ticks[local_symbol] = tick
+        
+        # 更新合约最新价格映射
+        self.local_contract_price_mapping[local_symbol] = tick.last_price
+        
+        # 过滤掉数字，取中文做key
+        key = "".join([x for x in local_symbol if not x.isdigit()]).upper()
+        self.main_contract_mapping[key].append(tick)
+        
+        # 更新持仓信息
         self.position_manager.update_tick(tick, tick.pre_settlement_price)
-        for tool in self.app.tools.values():
-            tool.on_tick(tick)
+        
+        # 调用工具的回调方法
+        tools = self.app.tools.values()
+        if tools:
+            for tool in tools:
+                tool.on_tick(tick)
 
     @call
     def process_bar_event(self, event: Event):

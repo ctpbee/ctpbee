@@ -107,6 +107,8 @@ class Center(BasicCenterModel, dict):
         """
         返回最新的一个orderid
         """
+        if not self.orders:
+            return None
         return self.orders[-1].order_id
 
     @property
@@ -114,6 +116,8 @@ class Center(BasicCenterModel, dict):
         """
         返回最新的一个报单
         """
+        if not self.orders:
+            return None
         return self.orders[-1]
 
     @property
@@ -206,4 +210,34 @@ class Center(BasicCenterModel, dict):
         if position_short is None and position_long is None:
             return None
         else:
+            # 如果其中一个方向持仓为None，创建一个空的PositionData对象
+            from ctpbee.constant import PositionData
+            if position_long is None:
+                # 获取合约信息
+                contract = self.get_contract(local_symbol)
+                position_long = PositionData(
+                    symbol=contract.symbol if contract else local_symbol.split(".")[0],
+                    volume=0,
+                    exchange=contract.exchange if contract else local_symbol.split(".")[1],
+                    direction=Direction.LONG,
+                    pnl=0,
+                    price=0,
+                    frozen=0,
+                    open_price=0,
+                    yd_volume=0,
+                )
+            if position_short is None:
+                # 获取合约信息
+                contract = self.get_contract(local_symbol)
+                position_short = PositionData(
+                    symbol=contract.symbol if contract else local_symbol.split(".")[0],
+                    volume=0,
+                    exchange=contract.exchange if contract else local_symbol.split(".")[1],
+                    direction=Direction.SHORT,
+                    pnl=0,
+                    price=0,
+                    frozen=0,
+                    open_price=0,
+                    yd_volume=0,
+                )
             return PositionModel(position_long, position_short)

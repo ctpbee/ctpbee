@@ -1,5 +1,6 @@
 # coding:utf-8
 import os
+import signal
 from datetime import datetime
 from inspect import ismethod
 from threading import Thread
@@ -80,7 +81,7 @@ class CtpBee(object):
         self.start_datetime = datetime.now()
         self.basic_info = None
         self._extensions = {}
-        self.name = name if name else 'ctpbee'
+        self.name = name
         self.import_name = import_name
         self.engine_method = engine_method
         self.refresh = refresh
@@ -89,12 +90,10 @@ class CtpBee(object):
         self.logger.set_field_default(name=self.name, owner=self.name)
         self.tools = {}
         self.app_signal = AppSignal(self.name)
-
         if engine_method == "thread":
             self.recorder = Recorder(self)
         else:
             raise TypeError("引擎参数错误,只支持 thread 和 async,请检查代码")
-
         """
         If no action is specified by default, use the default Action class
         如果默认不指定action参数, 那么使用默认的Action类 
@@ -259,6 +258,19 @@ class CtpBee(object):
         """
         self._temp_contracts.append(contract)
 
+    def _signal_handler(self, signum, frame):
+        """
+        信号处理函数，用于捕获Ctrl+C信号，实现优雅退出
+        
+        Args:
+            signum: 信号编号
+            frame: 当前堆栈帧
+        """
+        self.logger.info("捕获到退出信号，正在优雅退出...")
+        self.release()
+        self.logger.info("已成功退出")
+        exit(0)
+    
     def start(self, log_output=False, debug=False):
         """
         开启处理整个事件处理循环
@@ -268,6 +280,9 @@ class CtpBee(object):
 
           debug(bool): 是否开启调试模式 ----> 等待完成
         """
+        # 注册信号处理函数，捕获Ctrl+C信号
+        signal.signal(signal.SIGINT, self._signal_handler)
+        
         if self.config.get("PATTERN") == "real":
             if self.work_mode == Mode.DISPATCHER:
                 dispatcher = Dispatcher(name="ctpbee_dispatcher", app=self)
@@ -504,6 +519,10 @@ class CtpBee(object):
                 self.trader.close()
             self.market, self.trader = None, None
             if self.r is not None:
-                end_thread(self.r)
+                # 安全终止线程：设置退出标志，让线程自己退出
+                self.r_flag = False
+                # 等待线程退出，最多等待1秒
+                self.r.join(timeout=1.0)
+                self.r = None
         except AttributeError:
             pass

@@ -206,6 +206,11 @@ def auth_time(timed: datetime):
          bool: 验证结果
     """
 
+    # 首先检查日期是否为交易日
+    date_str = timed.strftime('%Y-%m-%d')
+    if date_str not in trade_dates:
+        return False
+    
     data_time = timed.time()
     if not isinstance(data_time, time):
         raise TypeError("参数类型错误, 期望为datatime.time}")
@@ -288,23 +293,35 @@ def refresh_query(app, signals, refresh):
     """
     p = datetime.now()
     c = datetime.now()
+    
+    # 计算睡眠时间，避免频繁检查
+    sleep_interval = min(app.config.get('REFRESH_INTERVAL', 3), app.config.get('TIMER_INTERVAL', 1)) / 2
+    if sleep_interval < 0.1:
+        sleep_interval = 0.1
 
     while True:
         now = datetime.now()
-        if refresh and (now - p).seconds >= app.config['REFRESH_INTERVAL']:
+        interval_passed_query = (now - p).seconds >= app.config['REFRESH_INTERVAL']
+        interval_passed_timer = (now - c).seconds >= app.config['TIMER_INTERVAL']
+        
+        if refresh and interval_passed_query:
             app.trader.query_account()
             p = now
             if app.trader.ready and not app.trader.init_local:
                 app.trader.on_event(type=EVENT_INIT_FINISHED, data={})
                 app.trader.on_event(type=EVENT_LOG, data="交易接口初始化完成")
                 app.trader.init_local = True
-        if signals is not None and (now - c).seconds >= app.config['TIMER_INTERVAL']:
+        
+        if signals is not None and interval_passed_timer:
             event = Event(type=EVENT_TIMER)
             signals.timer_signal.send(event)
             c = now
+        
         if not app.r_flag:
             break
-        sleep(0.1)
+        
+        # 根据需要调整睡眠时间，减少CPU占用
+        sleep(sleep_interval)
 
 
 def call(func):
@@ -318,14 +335,38 @@ def call(func):
     def wrapper(*args, **kwargs):
         d = func(*args, **kwargs)
         self, event = args
-        for ext in self.app._extensions.values():
-            if self.app.config.get('INSTRUMENT_INDEPEND'):
-                if len(ext.instrument_set) == 0:
-                    warnings.warn(
-                        "你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0,请确保你的订阅变量是否为instrument_set,以及订阅具体代码")
-                if event.data.local_symbol in ext.instrument_set:
-                    ext(event)
-            else:
+        app = self.app
+        extensions = app._extensions.values()
+        
+        # 快速路径：没有插件时直接返回
+        if not extensions:
+            return d
+            
+        instrument_independ = app.config.get('INSTRUMENT_INDEPEND', False)
+        
+        if instrument_independ:
+            # 只处理特定合约的插件
+            local_symbol = getattr(event.data, 'local_symbol', None)
+            if local_symbol:
+                # 预先获取instrument_set不为空的插件，减少警告次数
+                valid_extensions = []
+                for ext in extensions:
+                    if hasattr(ext, 'instrument_set') and len(ext.instrument_set) > 0:
+                        valid_extensions.append(ext)
+                    else:
+                        # 只在第一次警告
+                        if not getattr(ext, '_warned_empty_instrument', False):
+                            warnings.warn(
+                                "你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0,请确保你的订阅变量是否为instrument_set,以及订阅具体代码")
+                            ext._warned_empty_instrument = True
+                
+                # 只处理相关合约的插件
+                for ext in valid_extensions:
+                    if local_symbol in ext.instrument_set:
+                        ext(event)
+        else:
+            # 处理所有插件
+            for ext in extensions:
                 ext(event)
         return d
 

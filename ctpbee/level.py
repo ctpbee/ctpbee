@@ -27,13 +27,6 @@ class Action(object):
     def __new__(cls, *args, **kwargs):
         instance = object.__new__(cls)
         setattr(instance, "__name__", cls.__name__)
-
-        cls.buy_open = cls.buy  # 买开
-        cls.buy_close = cls.cover  # 买平
-
-        cls.sell_open = cls.short  # 卖开
-        cls.sell_close = cls.sell  # 卖平
-
         return instance
 
     def __getattr__(self, item) -> None:
@@ -368,6 +361,12 @@ class Action(object):
 
     def __repr__(self):
         return f"{self.__name__} "
+
+    # 类方法别名定义
+    buy_open = buy  # 买开
+    buy_close = cover  # 买平
+    sell_open = short  # 卖开
+    sell_close = sell  # 卖平
 
 
 class BeeApi(object):
