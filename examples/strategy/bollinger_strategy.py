@@ -15,6 +15,7 @@ class BollingerStrategy(CtpbeeApi):
         self.instrument_set = set([code])
         self.length = self.window_size
         self.close = []
+        self.name = name 
         self.pos = 0
         self.logger.info(f"布林带策略初始化 - 合约: {code}, 窗口大小: {self.window_size}, 标准差倍数: {self.num_of_std}", owner=self.name)
 

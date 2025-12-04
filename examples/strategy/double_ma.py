@@ -15,6 +15,7 @@ class DoubleMa(CtpbeeApi):
         self.length = self.slow_period
         self.close = []
         self.pos = 0
+        self.name = name 
         self.logger.info(f"双均线策略初始化 - 合约: {code}, 快速周期: {self.fast_period}, 慢速周期: {self.slow_period}", owner=self.name)
 
     def on_tick(self, tick: TickData) -> None:

@@ -17,6 +17,7 @@ class MACDStrategy(CtpbeeApi):
         self.length = self.slow_period + self.signal_period
         self.close = []
         self.pos = 0
+        self.name = name 
         self.logger.info(f"MACD策略初始化 - 合约: {code}, 快速周期: {self.fast_period}, 慢速周期: {self.slow_period}, 信号周期: {self.signal_period}", owner=self.name)
 
     def on_tick(self, tick: TickData) -> None:

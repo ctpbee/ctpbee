@@ -23,12 +23,16 @@ class ATRStrategy(CtpbeeApi):
         self.entry_price = 0
         self.stop_loss = 0
         self.take_profit = 0
+        self.init = False 
+        self.name = name 
         self.logger.info(f"ATR策略初始化 - 合约: {code}, ATR周期: {self.atr_period}, SMA周期: {self.sma_period}, 止损倍数: {self.stop_loss_multiplier}, 止盈倍数: {self.take_profit_multiplier}", owner=self.name)
 
     def on_tick(self, tick: TickData) -> None:
         pass
 
     def on_bar(self, bar: BarData):
+        if bar is None or not self.init:
+            return
         self.logger.debug(f"收到K线数据 - {bar.local_symbol} {bar.datetime.strftime('%Y-%m-%d %H:%M:%S')} 最高价: {bar.high_price}, 最低价: {bar.low_price}, 收盘价: {bar.close_price}", owner=self.name)
         
         self.close.append(bar.close_price)

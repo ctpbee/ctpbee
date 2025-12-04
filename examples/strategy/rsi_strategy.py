@@ -17,6 +17,8 @@ class RSIStrategy(CtpbeeApi):
         self.length = self.rsi_period
         self.close = []
         self.pos = 0
+        self.name = name
+        self.init = False  
         self.logger.info(f"RSI策略初始化 - 合约: {code}, 周期: {self.rsi_period}, 超买阈值: {self.over_bought}, 超卖阈值: {self.over_sold}", owner=self.name)
 
     def on_tick(self, tick: TickData) -> None:
