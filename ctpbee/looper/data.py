@@ -4,15 +4,27 @@
 todo: 优化数据访问速度
 --------- >
 """
+
 from datetime import datetime
 from itertools import chain
 from typing import Iterable, Tuple, Sized, Generator
 
 
 class Bumblebee(dict):
-    """  """
-    __slots__ = ['last_price', 'datetime', 'open_price', "high_price", "low_price", "close_price", "volume", "type",
-                 "ask_price_1", "bid_price_1"]
+    """ """
+
+    __slots__ = [
+        "last_price",
+        "datetime",
+        "open_price",
+        "high_price",
+        "low_price",
+        "close_price",
+        "volume",
+        "type",
+        "ask_price_1",
+        "bid_price_1",
+    ]
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
@@ -22,9 +34,9 @@ class Bumblebee(dict):
 
     def __init__(self, **kwargs):
         if "last_price" in kwargs:
-            self['type'] = "tick"
+            self["type"] = "tick"
         else:
-            self['type'] = "bar"
+            self["type"] = "bar"
         super().__init__(**kwargs)
         # 需要在此处自动转换datetime数据类型
         self.datetime = Bumblebee.covert_datetime(self.datetime)
@@ -38,7 +50,7 @@ class Bumblebee(dict):
         if isinstance(datetime_data, datetime):
             return datetime_data
         if isinstance(datetime_data, str):
-            """ 支持.f 或者非.f的构建 """
+            """支持.f 或者非.f的构建"""
             try:
                 return datetime.strptime(datetime_data, "%Y-%m-%d %H:%M:%S")
             except Exception:
@@ -88,7 +100,9 @@ class VessData:
         self.data_type = Bumblebee(**data[0][0]).type
         try:
             for i in data:
-                self.inner_data[i[0]["local_symbol"]] = chain(map(lambda x: Bumblebee(**x), i))
+                self.inner_data[i[0]["local_symbol"]] = chain(
+                    map(lambda x: Bumblebee(**x), i)
+                )
             self.init_flag = True
         except Exception:
             raise ValueError("数据格式不合法")
@@ -100,7 +114,7 @@ class VessData:
 
     @property
     def last_bar(self):
-        """ 时间缓冲器
+        """时间缓冲器
         实现同步回放多个数据源， 实现过程为
         先找到实现数据时间探针
         每次pop第一个时间轴最小的data_entity。
@@ -108,11 +122,12 @@ class VessData:
         ax = min([x.datetime for x in self.the_buffer.values()])
         for key, value in self.the_buffer.items():
             if ax == value.datetime:
-                """ 如果找到了值相等  那么更新里面的值 """
+                """如果找到了值相等  那么更新里面的值"""
                 nx = value
                 self.the_buffer[key] = next(self.inner_data[key])
                 try:
                     from data_api import Tick, Kline
+
                     if isinstance(nx, Tick) or isinstance(nx, Kline):
                         return nx.to_bumblebee()
                     else:
@@ -135,10 +150,10 @@ class VessData:
 
     @property
     def type(self):
-        """ 数据类型 """
+        """数据类型"""
         return self.data_type
 
     @property
     def product(self):
-        """ 产品类型 """
+        """产品类型"""
         return self.product_type

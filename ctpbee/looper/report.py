@@ -2,6 +2,7 @@
 此模块是用来帮助ctpbee的回测来生成指定的策略报告，UI本身采用
 
 """
+
 import os
 import webbrowser
 
@@ -11,16 +12,27 @@ from ctpbee.func import get_ctpbee_path
 from ctpbee.func import join_path
 
 env = Environment(
-    loader=PackageLoader('ctpbee', 'looper/templates'),
-    autoescape=select_autoescape(['html', 'xml'])
+    loader=PackageLoader("ctpbee", "looper/templates"),
+    autoescape=select_autoescape(["html", "xml"]),
 )
 
 main_template = env.get_template("looper.html")
 trade_template = env.get_template("trade_record.html")
 
 
-def render_result(result, kline=None, trades=None, datetimed=None, trade_data=None, strategy=[], position_data=None,
-                  account_data=None, net_pnl=None, cost_time=None, **kwargs):
+def render_result(
+    result,
+    kline=None,
+    trades=None,
+    datetimed=None,
+    trade_data=None,
+    strategy=[],
+    position_data=None,
+    account_data=None,
+    net_pnl=None,
+    cost_time=None,
+    **kwargs
+):
     """
     渲染结果并写入到本地html文件， 并返回html文件地址
     """
@@ -30,12 +42,19 @@ def render_result(result, kline=None, trades=None, datetimed=None, trade_data=No
     filename = "{}_{}".format("_".join(strategy), time)
     abs_path = os.path.join(path, filename)
     datetimed = str(datetimed.strftime("%Y-%m-%d_%H_%M_%S"))
-    code_string = main_template.render(result=result, strategy=strategy,
-                                       account_data=account_data,
-                                       net_pnl=net_pnl, cost_time=cost_time,
-                                       datetime=datetimed, file_name=filename,
-                                       abs_path=abs_path)
-    trade_code_string = trade_template.render(trade_data=trade_data, position_data=position_data)
+    code_string = main_template.render(
+        result=result,
+        strategy=strategy,
+        account_data=account_data,
+        net_pnl=net_pnl,
+        cost_time=cost_time,
+        datetime=datetimed,
+        file_name=filename,
+        abs_path=abs_path,
+    )
+    trade_code_string = trade_template.render(
+        trade_data=trade_data, position_data=position_data
+    )
 
     """ 回测主文件存放地址"""
     file_path = kwargs.get("file_path", None)

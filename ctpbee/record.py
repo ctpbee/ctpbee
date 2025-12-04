@@ -35,13 +35,14 @@ class Recorder(object):
     @staticmethod
     def get_local_time():
         from datetime import datetime
-        return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     def get_func(self, name):
         return getattr(self, f"process_{name}_event")
 
     def register_event(self):
-        """ bind process function """
+        """bind process function"""
 
         def connect(data):
             name = data[0]
@@ -56,15 +57,24 @@ class Recorder(object):
                 temp.append((x, ctl))
             return temp
 
-        self.__common_sig_name = list(map(connect, generate_params(signal.common_signals.event, signal.common_signals)))
-        self.__app_sig_name = list(map(connect, generate_params(self.app.app_signal.event, self.app.app_signal)))
+        self.__common_sig_name = list(
+            map(
+                connect,
+                generate_params(signal.common_signals.event, signal.common_signals),
+            )
+        )
+        self.__app_sig_name = list(
+            map(
+                connect, generate_params(self.app.app_signal.event, self.app.app_signal)
+            )
+        )
 
     def process_timer_event(self, _event):
         for x in self.app._extensions.values():
             x.on_realtime()
 
     def process_init_event(self, event):
-        """ 处理初始化完成事件 """
+        """处理初始化完成事件"""
         if event.data:
             self.app.init_finished = True
         for value in self.app._extensions.values():
@@ -90,20 +100,20 @@ class Recorder(object):
     def process_tick_event(self, event: Event):
         tick: TickData = event.data
         local_symbol = tick.local_symbol
-        
+
         # 更新行情数据
         self.ticks[local_symbol] = tick
-        
+
         # 更新合约最新价格映射
         self.local_contract_price_mapping[local_symbol] = tick.last_price
-        
+
         # 过滤掉数字，取中文做key
         key = "".join([x for x in local_symbol if not x.isdigit()]).upper()
         self.main_contract_mapping[key].append(tick)
-        
+
         # 更新持仓信息
         self.position_manager.update_tick(tick, tick.pre_settlement_price)
-        
+
         # 调用工具的回调方法
         tools = self.app.tools.values()
         if tools:
@@ -235,7 +245,7 @@ class Recorder(object):
 
     @property
     def main_contract_list(self):
-        """ 返回主力合约列表 """
+        """返回主力合约列表"""
         result = []
         for _ in self.main_contract_mapping.values():
             x = sorted(_, key=lambda _x: _x.open_interest, reverse=True)[0]
@@ -243,11 +253,11 @@ class Recorder(object):
         return result
 
     def get_contract_last_price(self, local_symbol):
-        """ 获取合约的最新价格 """
+        """获取合约的最新价格"""
         return self.local_contract_price_mapping.get(local_symbol)
 
     def get_main_contract_by_code(self, code: str):
-        """ 根据code取相应的主力合约 """
+        """根据code取相应的主力合约"""
         d = self.main_contract_mapping.get(code.upper(), None)
         if not d:
             return None

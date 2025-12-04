@@ -4,10 +4,19 @@
 
 
 """
+
 import json
 from threading import Thread
 
-from ctpbee.constant import TickData, OrderData, OrderRequest, CancelRequest, ContractData, QueryContract, TradeData
+from ctpbee.constant import (
+    TickData,
+    OrderData,
+    OrderRequest,
+    CancelRequest,
+    ContractData,
+    QueryContract,
+    TradeData,
+)
 from ctpbee.level import CtpbeeApi
 
 from redis import Redis
@@ -31,16 +40,16 @@ class UDDR:
 
     def encode(self):
         from ctpbee import dumps
-        return json.dumps(dict(
-            data=dumps(self.obj),
-            index=self.index
-        ),
-            ensure_ascii=False)
+
+        return json.dumps(
+            dict(data=dumps(self.obj), index=self.index), ensure_ascii=False
+        )
 
     def __parse__(self, msg):
 
         msg = json.loads(msg)
         from ctpbee import loads
+
         self.index = msg["index"]
         self.obj = loads(msg["data"])
 
@@ -64,6 +73,7 @@ class DDDR:
         fixme: why not loads do not work
         """
         from ctpbee import loads
+
         locken = loads(obj)
         self.index = locken["index"]
         msg = loads(locken["data"])
@@ -78,11 +88,14 @@ class DDDR:
 
     def encode(self) -> str:
         from ctpbee import dumps
-        return json.dumps(dict(
-            data=dumps(self.order),
-            index=self.index,
-        ),
-            ensure_ascii=False)
+
+        return json.dumps(
+            dict(
+                data=dumps(self.order),
+                index=self.index,
+            ),
+            ensure_ascii=False,
+        )
 
 
 class Dispatcher(CtpbeeApi):
@@ -92,10 +105,16 @@ class Dispatcher(CtpbeeApi):
         tcp_addr = self.app.config.get("RD_CLIENT_ADDR", "127.0.0.1")
         tcp_port = self.app.config.get("RD_CLIENT_PORT", 6379)
         db = self.app.config.get("RD_CLIENT_DB", 0)
-        self.order_up_kernel = self.app.config.get("ORDER_UP_KERNEL", "ctpbee_order_up_kernel")
+        self.order_up_kernel = self.app.config.get(
+            "ORDER_UP_KERNEL", "ctpbee_order_up_kernel"
+        )
         self.tick_kernel = self.app.config.get("TICK_KERNEL", "ctpbee_tick_kernel")
-        self.order_down_kernel = self.app.config.get("ORDER_DOWN_KERNEL", "ctpbee_order_down_kernel")
-        self.rd_client = Redis(host=tcp_addr, port=tcp_port, db=db, decode_responses=True, encoding="utf8")
+        self.order_down_kernel = self.app.config.get(
+            "ORDER_DOWN_KERNEL", "ctpbee_order_down_kernel"
+        )
+        self.rd_client = Redis(
+            host=tcp_addr, port=tcp_port, db=db, decode_responses=True, encoding="utf8"
+        )
         self.order_key_map = dict()
         threader = Thread(target=self.listen, daemon=True)
         threader.start()

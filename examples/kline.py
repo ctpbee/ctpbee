@@ -38,7 +38,7 @@ class Main(CtpbeeApi):
         self.init = True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     kline = Kline()
     app = CtpBee("market", __name__, refresh=True).with_tools(kline)
     example = Main("DailyCTA")

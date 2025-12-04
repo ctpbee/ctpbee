@@ -24,6 +24,7 @@ def rolling(data, window):
 
 # ------------------------------ 基础指标 ------------------------------
 
+
 def std(data):
     """计算方差
 
@@ -47,7 +48,7 @@ def sma(data, window):
         SMA数组
     """
     weights = np.repeat(1.0, window) / window
-    sma = np.convolve(data, weights, 'valid')
+    sma = np.convolve(data, weights, "valid")
     return np.concatenate(([np.nan] * (window - 1), sma))
 
 
@@ -61,7 +62,7 @@ def ma(data, n):
     Returns:
         MA数组
     """
-    mv = np.convolve(data, np.ones(n) / n, mode='valid')
+    mv = np.convolve(data, np.ones(n) / n, mode="valid")
     return np.concatenate(([np.nan for k in range(n - 1)], mv))
 
 
@@ -76,11 +77,13 @@ def wma(values, window):
         WMA数组
     """
     weights = np.arange(window, 0, -1.0)
-    weights /= (window * (window + 1) / 2)
+    weights /= window * (window + 1) / 2
     weighted_moving_averages = np.full(window - 1, np.nan)
     weighted_moving_averages = np.append(
-        weighted_moving_averages, np.convolve(values, weights, 'valid'))
+        weighted_moving_averages, np.convolve(values, weights, "valid")
+    )
     return weighted_moving_averages
+
 
 # ------------------------------ EWMA相关函数 ------------------------------
 
@@ -95,12 +98,12 @@ def get_max_row_size(alpha, dtype=float):
     Returns:
         最大行大小
     """
-    assert 0. <= alpha < 1.
-    
+    assert 0.0 <= alpha < 1.0
+
     # 处理alpha=0.0的情况，避免除以0
     if alpha == 0.0:
         return 1
-    
+
     epsilon = np.finfo(dtype).tiny
     try:
         return int(np.log(epsilon) / np.log(1 - alpha)) + 1
@@ -109,7 +112,7 @@ def get_max_row_size(alpha, dtype=float):
         return 1000
 
 
-def ewma_vectorized(data, alpha, offset=None, dtype=None, order='C', out=None):
+def ewma_vectorized(data, alpha, offset=None, dtype=None, order="C", out=None):
     """向量化计算指数移动平均线
 
     Args:
@@ -150,10 +153,12 @@ def ewma_vectorized(data, alpha, offset=None, dtype=None, order='C', out=None):
 
     alpha = np.asarray(alpha).astype(dtype)
 
-    scaling_factors = np.power(1. - alpha, np.arange(data.size + 1, dtype=dtype),
-                               dtype=dtype)
-    np.multiply(data, (alpha * scaling_factors[-2]) / scaling_factors[:-1],
-                dtype=dtype, out=out)
+    scaling_factors = np.power(
+        1.0 - alpha, np.arange(data.size + 1, dtype=dtype), dtype=dtype
+    )
+    np.multiply(
+        data, (alpha * scaling_factors[-2]) / scaling_factors[:-1], dtype=dtype, out=out
+    )
     np.cumsum(out, dtype=dtype, out=out)
     out /= scaling_factors[-2::-1]
 
@@ -164,8 +169,9 @@ def ewma_vectorized(data, alpha, offset=None, dtype=None, order='C', out=None):
     return out
 
 
-def ewma_vectorized_2d(data, alpha, axis=None, offset=None,
-                       dtype=None, order='C', out=None):
+def ewma_vectorized_2d(
+    data, alpha, axis=None, offset=None, dtype=None, order="C", out=None
+):
     """二维向量化计算指数移动平均线
 
     Args:
@@ -204,8 +210,7 @@ def ewma_vectorized_2d(data, alpha, axis=None, offset=None,
     if axis is None or data.ndim < 2:
         if isinstance(offset, np.ndarray):
             offset = offset[0]
-        return ewma_vectorized(data, alpha, offset, dtype=dtype, order=order,
-                               out=out)
+        return ewma_vectorized(data, alpha, offset, dtype=dtype, order=order, out=out)
 
     assert -data.ndim <= axis < data.ndim
 
@@ -226,15 +231,18 @@ def ewma_vectorized_2d(data, alpha, axis=None, offset=None,
 
     row_size = data.shape[1]
     row_n = data.shape[0]
-    scaling_factors = np.power(1. - alpha, np.arange(row_size + 1, dtype=dtype),
-                               dtype=dtype)
+    scaling_factors = np.power(
+        1.0 - alpha, np.arange(row_size + 1, dtype=dtype), dtype=dtype
+    )
 
     np.multiply(
         data,
-        np.multiply(alpha * scaling_factors[-2], np.ones((row_n, 1), dtype=dtype),
-                    dtype=dtype)
+        np.multiply(
+            alpha * scaling_factors[-2], np.ones((row_n, 1), dtype=dtype), dtype=dtype
+        )
         / scaling_factors[np.newaxis, :-1],
-        dtype=dtype, out=out_view
+        dtype=dtype,
+        out=out_view,
     )
     np.cumsum(out_view, axis=1, dtype=dtype, out=out_view)
     out_view /= scaling_factors[np.newaxis, -2::-1]
@@ -246,7 +254,7 @@ def ewma_vectorized_2d(data, alpha, axis=None, offset=None,
     return out
 
 
-def ewma(data, period, row_size=None, dtype=None, order='C', out=None):
+def ewma(data, period, row_size=None, dtype=None, order="C", out=None):
     """指数加权移动平均线 (Exponential Weighted Moving Average)
 
     Args:
@@ -262,7 +270,7 @@ def ewma(data, period, row_size=None, dtype=None, order='C', out=None):
     """
     data = np.asarray(data)
     alpha = 1.0 - 2.0 / (1.0 + period)
-    
+
     # 当alpha=0.0时，EWMA等于原始数据，直接返回
     if alpha == 0.0:
         if out is None:
@@ -307,8 +315,15 @@ def ewma(data, period, row_size=None, dtype=None, order='C', out=None):
         out_main_view = out
         data_main_view = data
 
-    ewma_vectorized_2d(data_main_view, alpha, axis=1, offset=0, dtype=dtype,
-                       order='C', out=out_main_view)
+    ewma_vectorized_2d(
+        data_main_view,
+        alpha,
+        axis=1,
+        offset=0,
+        dtype=dtype,
+        order="C",
+        out=out_main_view,
+    )
 
     scaling_factors = (1 - alpha) ** np.arange(1, row_size + 1)
     last_scaling_factor = scaling_factors[-1]
@@ -316,15 +331,21 @@ def ewma(data, period, row_size=None, dtype=None, order='C', out=None):
     offsets = np.empty(out_main_view.shape[0], dtype=dtype)
     offsets[0] = first_offset
     for i in range(1, out_main_view.shape[0]):
-        offsets[i] = offsets[i - 1] * \
-            last_scaling_factor + out_main_view[i - 1, -1]
+        offsets[i] = offsets[i - 1] * last_scaling_factor + out_main_view[i - 1, -1]
 
     out_main_view += offsets[:, np.newaxis] * scaling_factors[np.newaxis, :]
 
     if trailing_n > 0:
-        ewma_vectorized(data[-trailing_n:], alpha, offset=out_main_view[-1, -1],
-                        dtype=dtype, order='C', out=out[-trailing_n:])
+        ewma_vectorized(
+            data[-trailing_n:],
+            alpha,
+            offset=out_main_view[-1, -1],
+            dtype=dtype,
+            order="C",
+            out=out[-trailing_n:],
+        )
     return out
+
 
 # ------------------------------ 技术指标 ------------------------------
 
@@ -360,8 +381,8 @@ def rsi(data, period=14):
     down = np.where(diff < 0, abs(diff), 0)
 
     # 使用EWMA计算平均涨跌
-    avg_up = ewma(up, period)[period - 1:]
-    avg_down = ewma(down, period)[period - 1:]
+    avg_up = ewma(up, period)[period - 1 :]
+    avg_down = ewma(down, period)[period - 1 :]
 
     # 处理除零情况
     avg_down[avg_down == 0] = 0.0001
@@ -411,8 +432,8 @@ def kdj(close, high, low, n=9, m1=3, m2=3):
     # 计算RSV
     RSV = np.zeros_like(close)
     for i in range(n, len(close)):
-        low_n = np.min(low[i - n:i])
-        high_n = np.max(high[i - n:i])
+        low_n = np.min(low[i - n : i])
+        high_n = np.max(high[i - n : i])
         if high_n != low_n:
             RSV[i] = (close[i] - low_n) / (high_n - low_n) * 100
         else:
@@ -453,8 +474,8 @@ def stochastic(close, high, low, k_period=14, d_period=3):
 
     K = np.zeros_like(close)
     for i in range(k_period, len(close)):
-        low_k = np.min(low[i - k_period:i])
-        high_k = np.max(high[i - k_period:i])
+        low_k = np.min(low[i - k_period : i])
+        high_k = np.max(high[i - k_period : i])
         if high_k != low_k:
             K[i] = (close[i] - low_k) / (high_k - low_k) * 100
         else:
@@ -482,7 +503,7 @@ def bollinger_bands(close, window_size=20, num_of_std=2):
     lower_band = np.zeros(n) * np.nan
 
     for i in range(window_size - 1, n):
-        window = close[i - window_size + 1:i + 1]
+        window = close[i - window_size + 1 : i + 1]
         middle_band[i] = np.mean(window)
         std_dev = np.std(window)
         upper_band[i] = middle_band[i] + (std_dev * num_of_std)
@@ -582,8 +603,8 @@ def williams_r(close, high, low, period=14):
     wr = np.zeros_like(close) * np.nan
 
     for i in range(period, len(close)):
-        high_n = np.max(high[i - period:i])
-        low_n = np.min(low[i - period:i])
+        high_n = np.max(high[i - period : i])
+        low_n = np.min(low[i - period : i])
         if high_n != low_n:
             wr[i] = (high_n - close[i]) / (high_n - low_n) * -100
         else:
@@ -670,8 +691,9 @@ def cci(close, high, low, period=20):
 
     for i in range(period, n):
         # 计算典型价格
-        typical_price = (high[i - period:i] +
-                         low[i - period:i] + close[i - period:i]) / 3
+        typical_price = (
+            high[i - period : i] + low[i - period : i] + close[i - period : i]
+        ) / 3
 
         # 计算简单移动平均
         sma_tp = np.mean(typical_price)
@@ -707,12 +729,28 @@ def rvi(close, high, low, period=10):
     diff_low = np.diff(low)
 
     # 计算分子和分母
-    numerator = (diff_close[-period:] + 2 * diff_close[-period - 1:-1] +
-                 2 * diff_close[-period - 2:-2] + diff_close[-period - 3:-3]) / 6
-    denominator = (diff_high[-period:] + 2 * diff_high[-period - 1:-1] +
-                   2 * diff_high[-period - 2:-2] + diff_high[-period - 3:-3]) / 6
-    denominator = denominator - (diff_low[-period:] + 2 * diff_low[-period - 1:-1] +
-                                 2 * diff_low[-period - 2:-2] + diff_low[-period - 3:-3]) / 6
+    numerator = (
+        diff_close[-period:]
+        + 2 * diff_close[-period - 1 : -1]
+        + 2 * diff_close[-period - 2 : -2]
+        + diff_close[-period - 3 : -3]
+    ) / 6
+    denominator = (
+        diff_high[-period:]
+        + 2 * diff_high[-period - 1 : -1]
+        + 2 * diff_high[-period - 2 : -2]
+        + diff_high[-period - 3 : -3]
+    ) / 6
+    denominator = (
+        denominator
+        - (
+            diff_low[-period:]
+            + 2 * diff_low[-period - 1 : -1]
+            + 2 * diff_low[-period - 2 : -2]
+            + diff_low[-period - 3 : -3]
+        )
+        / 6
+    )
 
     # 处理除零情况
     denominator[denominator == 0] = 0.0001
@@ -753,7 +791,7 @@ def mass_index(high, low, period1=9, period2=25):
 
     # 计算Mass Index
     for i in range(period2, n):
-        mass[i] = np.sum(ema_ratio[i - period2:i])
+        mass[i] = np.sum(ema_ratio[i - period2 : i])
 
     return mass
 
@@ -834,12 +872,12 @@ def vortex_indicator(high, low, close, period=14):
 
     # 计算+VI和-VI
     for i in range(period, n):
-        sum_tr = np.sum(tr[i - period:i])
+        sum_tr = np.sum(tr[i - period : i])
         if sum_tr == 0:
             plus_vi[i] = 0
             minus_vi[i] = 0
         else:
-            plus_vi[i] = np.sum(plus_vm[i - period:i]) / sum_tr
-            minus_vi[i] = np.sum(minus_vm[i - period:i]) / sum_tr
+            plus_vi[i] = np.sum(plus_vm[i - period : i]) / sum_tr
+            minus_vi[i] = np.sum(minus_vm[i - period : i]) / sum_tr
 
     return plus_vi, minus_vi

@@ -37,16 +37,11 @@ class Main(CtpbeeApi):
         self.action.subscribe("rb2310")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = CtpBee("openctp", __name__, refresh=True)
     example = Main("DailyCTA")
     config = {
-        "CONNECT_INFO": {
-            "host": "127.0.0.1",
-            "index": 0,
-            "port": 6379,
-            "db": 0
-        },
+        "CONNECT_INFO": {"host": "127.0.0.1", "index": 0, "port": 6379, "db": 0},
         "INTERFACE": "local",
         "MD_FUNC": True,
         "TD_FUNC": True,

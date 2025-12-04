@@ -42,7 +42,13 @@ class LoginRequired:
 
     @property
     def ready(self):
-        return self.connect_required and self.login_required and self.position_required and self.account_required and self.contract_required
+        return (
+            self.connect_required
+            and self.login_required
+            and self.position_required
+            and self.account_required
+            and self.contract_required
+        )
 
     def connect(self):
         raise NotImplemented

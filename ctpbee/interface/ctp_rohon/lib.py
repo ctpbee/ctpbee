@@ -7,7 +7,7 @@ from ctpbee.constant import (
     OrderType,
     Product,
     Status,
-    OptionType
+    OptionType,
 )
 
 STATUS_CTP2VT = {
@@ -17,12 +17,12 @@ STATUS_CTP2VT = {
     THOST_FTDC_OST_NoTradeQueueing: Status.NOTTRADED,
     THOST_FTDC_OST_PartTradedQueueing: Status.PARTTRADED,
     THOST_FTDC_OST_AllTraded: Status.ALLTRADED,
-    THOST_FTDC_OST_Canceled: Status.CANCELLED
+    THOST_FTDC_OST_Canceled: Status.CANCELLED,
 }
 
 DIRECTION_VT2CTP = {
     Direction.LONG: THOST_FTDC_D_Buy,
-    Direction.SHORT: THOST_FTDC_D_Sell
+    Direction.SHORT: THOST_FTDC_D_Sell,
 }
 
 DIRECTION_CTP2VT = {v: k for k, v in DIRECTION_VT2CTP.items()}
@@ -49,7 +49,7 @@ EXCHANGE_CTP2VT = {
     "CZCE": Exchange.CZCE,
     "DCE": Exchange.DCE,
     "INE": Exchange.INE,
-    "GFEX": Exchange.GFEX
+    "GFEX": Exchange.GFEX,
 }
 
 PRODUCT_CTP2VT = {
@@ -61,7 +61,7 @@ PRODUCT_CTP2VT = {
 
 OPTIONTYPE_CTP2VT = {
     THOST_FTDC_CP_CallOptions: OptionType.CALL,
-    THOST_FTDC_CP_PutOptions: OptionType.PUT
+    THOST_FTDC_CP_PutOptions: OptionType.PUT,
 }
 
 symbol_exchange_map = {}

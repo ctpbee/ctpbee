@@ -5,9 +5,9 @@ from .bollinger_strategy import BollingerStrategy
 from .atr_strategy import ATRStrategy
 
 __all__ = [
-    'DoubleMa',
-    'RSIStrategy',
-    'MACDStrategy',
-    'BollingerStrategy',
-    'ATRStrategy'
+    "DoubleMa",
+    "RSIStrategy",
+    "MACDStrategy",
+    "BollingerStrategy",
+    "ATRStrategy",
 ]

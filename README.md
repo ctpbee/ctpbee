@@ -145,11 +145,11 @@ if __name__ == '__main__':
 ![avatar](source/回测.png)
 
 ## 简单策略开发示例
-- [atr](example/strategy/atr_strategy.py)
-- [bollinger](example/strategy/bollinger_strategy.py)
-- [double_ma](example/strategy/double_ma.py)
-- [macd](example/strategy/macd_strategy.py)
-- [rsi](example/strategy/rsi_strategy.py)
+- [atr](examples/strategy/atr_strategy.py)
+- [bollinger](examples/strategy/bollinger_strategy.py)
+- [double_ma](examples/strategy/double_ma.py)
+- [macd](examples/strategy/macd_strategy.py)
+- [rsi](examples/strategy/rsi_strategy.py)
 
 ## 模拟交易测试
 

@@ -1,11 +1,12 @@
 # coding:utf-8
 import os
-import signal
+import sys
 from datetime import datetime
 from inspect import ismethod
 from threading import Thread
 from time import sleep
 from typing import Text
+
 
 from ctpbee import __version__
 from ctpbee.center import Center
@@ -14,7 +15,6 @@ from ctpbee.constant import Event, Mode, ContractData
 from ctpbee.constant import Exchange
 from ctpbee.context import _app_context_ctx
 from ctpbee.exceptions import ConfigError
-from ctpbee.helpers import end_thread
 from ctpbee.helpers import find_package, refresh_query, graphic_pattern
 from ctpbee.interface import Interface
 from ctpbee.jsond import dumps
@@ -31,42 +31,48 @@ class CtpBee(object):
     """
     ctpbee 旨在开发出一套具有完整api的交易微框架
     """
+
     # 默认配置参数
-    default_config = dict(LOG_OUTPUT=True,  # 是否开启输出模式
-                          TD_FUNC=False,  # 是否开启交易功能
-                          INTERFACE="ctp",  # 接口参数,默认指定国内期货ctp
-                          MD_FUNC=True,  # 是否开启行情功能
-                          ALL_SUBSCRIBE=False,
-                          SHARE_MD=False,  # 是否多账户之间共享行情,---> 等待完成
-                          SLIPPAGE_COVER=0,  # 平多头滑点设置
-                          SLIPPAGE_SELL=0,  # 平空头滑点设置
-                          SLIPPAGE_SHORT=0,  # 卖空滑点设置
-                          SLIPPAGE_BUY=0,  # 买多滑点设置
-                          SHARED_FUNC=False,  # 分时图数据 --> 等待优化
-                          REFRESH_INTERVAL=3,  # 定时刷新秒数, 需要在CtpBee实例化的时候将refresh设置为True才会生效
-                          INSTRUMENT_INDEPEND=False,  # 是否开启独立行情,策略对应相应的行情
-                          CLOSE_PATTERN="today",  # 面对支持平今的交易所,优先平今或者平昨 ---> today: 平今, yesterday: 平昨, 其他:d
-                          TODAY_EXCHANGE=[Exchange.SHFE.value,
-                                          Exchange.INE.value],  # 需要支持平今的交易所代码列表
-                          AFTER_TIMEOUT=3,  # 设置after线程执行超时,
-                          TIMER_INTERVAL=1,  # 定时器触发间隔
-                          PATTERN="real",  # 实盘交易模式
-                          WAIT_INIT=60,  # 强制init时间
-                          )
+    default_config = dict(
+        LOG_OUTPUT=True,  # 是否开启输出模式
+        TD_FUNC=False,  # 是否开启交易功能
+        INTERFACE="ctp",  # 接口参数,默认指定国内期货ctp
+        MD_FUNC=True,  # 是否开启行情功能
+        ALL_SUBSCRIBE=False,
+        SHARE_MD=False,  # 是否多账户之间共享行情,---> 等待完成
+        SLIPPAGE_COVER=0,  # 平多头滑点设置
+        SLIPPAGE_SELL=0,  # 平空头滑点设置
+        SLIPPAGE_SHORT=0,  # 卖空滑点设置
+        SLIPPAGE_BUY=0,  # 买多滑点设置
+        SHARED_FUNC=False,  # 分时图数据 --> 等待优化
+        REFRESH_INTERVAL=3,  # 定时刷新秒数, 需要在CtpBee实例化的时候将refresh设置为True才会生效
+        INSTRUMENT_INDEPEND=False,  # 是否开启独立行情,策略对应相应的行情
+        CLOSE_PATTERN="today",  # 面对支持平今的交易所,优先平今或者平昨 ---> today: 平今, yesterday: 平昨, 其他:d
+        TODAY_EXCHANGE=[
+            Exchange.SHFE.value,
+            Exchange.INE.value,
+        ],  # 需要支持平今的交易所代码列表
+        AFTER_TIMEOUT=3,  # 设置after线程执行超时,
+        TIMER_INTERVAL=1,  # 定时器触发间隔
+        PATTERN="real",  # 实盘交易模式
+        WAIT_INIT=60,  # 强制init时间
+    )
 
     config_class = Config
     import_name = None
 
     # 交易api与行情api / trade api and market api
 
-    def __init__(self,
-                 name: Text,
-                 import_name,
-                 action_class: Action or None = None,
-                 engine_method: str = "thread",
-                 refresh: bool = True,
-                 work_mode: Mode = Mode.API,
-                 instance_path=None):
+    def __init__(
+        self,
+        name: Text,
+        import_name,
+        action_class: Action or None = None,
+        engine_method: str = "thread",
+        refresh: bool = True,
+        work_mode: Mode = Mode.API,
+        instance_path=None,
+    ):
         """
         name: 创建运行核心的名字
         import_name: 导入包的名字, 用__name__即可'
@@ -117,8 +123,8 @@ class CtpBee(object):
             instance_path = self.auto_find_instance_path()
         elif not os.path.isabs(instance_path):
             raise ValueError(
-                'If an instance path is provided it must be absolute.'
-                ' A relative path was given instead.'
+                "If an instance path is provided it must be absolute."
+                " A relative path was given instead."
             )
         self.instance_path = instance_path
         self.config = self.make_config()
@@ -167,7 +173,9 @@ class CtpBee(object):
         if self.config.get("PATTERN") == "looper":
             self.data = data
         else:
-            raise TypeError("此API仅仅接受回测模式, 请通过配置文件 PATTERN 修改运行模式")
+            raise TypeError(
+                "此API仅仅接受回测模式, 请通过配置文件 PATTERN 修改运行模式"
+            )
 
     def update_action_class(self, action_class: Action):
         """
@@ -178,7 +186,8 @@ class CtpBee(object):
         """
         if not issubclass(action_class, Action):
             raise TypeError(
-                f"更新action_class出现错误, 你传入的action_class类型为{type(action_class)}")
+                f"更新action_class出现错误, 你传入的action_class类型为{type(action_class)}"
+            )
         self.action = action_class(self)
 
     def make_config(self):
@@ -195,7 +204,7 @@ class CtpBee(object):
         prefix, package_path = find_package(self.import_name)
         if prefix is None:
             return os.path.join(package_path)
-        return os.path.join(prefix, 'var', self.name + '-instance')
+        return os.path.join(prefix, "var", self.name + "-instance")
 
     @property
     def td_login_status(self):
@@ -223,8 +232,15 @@ class CtpBee(object):
             print(show_me)
         self.init_interface()
         if self.config["PATTERN"] == "real" and self.r is None:
-            self.r = Thread(target=refresh_query,
-                            args=(self, common_signals, self.refresh,), daemon=False)
+            self.r = Thread(
+                target=refresh_query,
+                args=(
+                    self,
+                    common_signals,
+                    self.refresh,
+                ),
+                daemon=False,
+            )
             self.r.start()
         else:
             pass
@@ -235,7 +251,9 @@ class CtpBee(object):
             if "CONNECT_INFO" in self.config.keys():
                 info = self.config.get("CONNECT_INFO")
             else:
-                raise ConfigError(message="没有相应的登录信息", args=("没有发现登录信息",))
+                raise ConfigError(
+                    message="没有相应的登录信息", args=("没有发现登录信息",)
+                )
             MdApi, TdApi = Interface.get_interface(self)
             if self.config.get("MD_FUNC"):
                 self.market = MdApi(self.app_signal)
@@ -244,7 +262,9 @@ class CtpBee(object):
                 self.trader = TdApi(self.app_signal)
                 self.trader.connect(info)
             self._init_interface = True
-        elif self.config.get("PATTERN", "real") == "looper" and not self._init_interface:
+        elif (
+            self.config.get("PATTERN", "real") == "looper" and not self._init_interface
+        ):
 
             self.config["INTERFACE"] = "looper"
             Market, Trader = Interface.get_interface(app=self)
@@ -258,19 +278,23 @@ class CtpBee(object):
         """
         self._temp_contracts.append(contract)
 
-    def _signal_handler(self, signum, frame):
+    def _signal_handler(signum, frame):
         """
         信号处理函数，用于捕获Ctrl+C信号，实现优雅退出
-        
+
         Args:
             signum: 信号编号
             frame: 当前堆栈帧
         """
+        self.r_flag = False
         self.logger.info("捕获到退出信号，正在优雅退出...")
+        from time import sleep
+
+        sleep(1)
         self.release()
         self.logger.info("已成功退出")
-        exit(0)
-    
+        sys.exit(0)
+
     def start(self, log_output=False, debug=False):
         """
         开启处理整个事件处理循环
@@ -280,9 +304,9 @@ class CtpBee(object):
 
           debug(bool): 是否开启调试模式 ----> 等待完成
         """
-        # 注册信号处理函数，捕获Ctrl+C信号
+        import signal
+
         signal.signal(signal.SIGINT, self._signal_handler)
-        
         if self.config.get("PATTERN") == "real":
             if self.work_mode == Mode.DISPATCHER:
                 dispatcher = Dispatcher(name="ctpbee_dispatcher", app=self)
@@ -321,9 +345,11 @@ class CtpBee(object):
         """
         耗费时间
         """
-        cost_time = f"{str(end_time.hour - self.start_datetime.hour)}" \
-                    f"h {str(end_time.minute - self.start_datetime.minute)}m " \
-                    f"{str(end_time.second - self.start_datetime.second)}s"
+        cost_time = (
+            f"{str(end_time.hour - self.start_datetime.hour)}"
+            f"h {str(end_time.minute - self.start_datetime.minute)}m "
+            f"{str(end_time.second - self.start_datetime.second)}s"
+        )
         """
         每日盈利
         """
@@ -332,17 +358,25 @@ class CtpBee(object):
         """
         成交单数据
         """
-        trade_data = list(
-            map(dumps, self.trader.traded_order_mapping.values()))
+        trade_data = list(map(dumps, self.trader.traded_order_mapping.values()))
         position_data = self.trader.position_detail
         if report:
-            path = render_result(self.trader.account.result, trade_data=trade_data, strategy=strategys,
-                                 net_pnl=net_pnl,
-                                 account_data=account_data, datetimed=end_time, position_data=position_data,
-                                 cost_time=cost_time, **kwargs)
+            path = render_result(
+                self.trader.account.result,
+                trade_data=trade_data,
+                strategy=strategys,
+                net_pnl=net_pnl,
+                account_data=account_data,
+                datetimed=end_time,
+                position_data=position_data,
+                cost_time=cost_time,
+                **kwargs,
+            )
             print(f"请复制下面的路径到浏览器打开----> \n {path}")
 
-        return self.trader.account.result, list(self.trader.traded_order_mapping.values())
+        return self.trader.account.result, list(
+            self.trader.traded_order_mapping.values()
+        )
 
     def add_basic_info(self, info):
         """
@@ -380,8 +414,10 @@ class CtpBee(object):
                 else:
                     print("===> 发送初始化信号")
                     from ctpbee.constant import EVENT_INIT_FINISHED
+
                     self.app_signal.init_signal.send(
-                        Event(type=EVENT_INIT_FINISHED, data=None))
+                        Event(type=EVENT_INIT_FINISHED, data=None)
+                    )
                     flag = True
             except StopIteration:
                 self.logger.info("回测结束,正在生成结果")
