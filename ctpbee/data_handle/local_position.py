@@ -39,21 +39,8 @@ from ctpbee.constant import (
 )
 
 
-class LocalVariable:
-    def __init__(self, data):
-
-        if data.get("long") is not None:
-            self.long = float(data.get("long"))
-        else:
-            self.long = 0
-        if data.get("short") is not None:
-            self.short = float(data.get("short"))
-        else:
-            self.short = 0
-
-
-class PositionHolding:
-    """单个合约的持仓"""
+class PositionModel:
+    """单个合约的持仓模型"""
 
     def __init__(self, local_symbol, contract=None):
         """初始化持仓对象"""
@@ -63,10 +50,8 @@ class PositionHolding:
             self.symbol = local_symbol.split(".")[0]
         except Exception:
             raise ValueError("invalid local_symbol")
-
         # 使用字典存储活跃订单，减少属性数量
         self.active_orders = {}
-
         # 合约大小
         if contract is None:
             warnings.warn(
@@ -84,7 +69,7 @@ class PositionHolding:
             "price": 0,  # 持仓均价
             "open_price": 0,  # 开仓均价
             "pnl": 0,  # 盈亏
-            "stare_pnl": 0,  # 盯市盈亏
+            "float_pnl": 0,  # 浮动盈亏
             "frozen": 0,  # 冻结数量
             "yd_frozen": 0,  # 昨仓冻结
             "td_frozen": 0,  # 今仓冻结
@@ -97,7 +82,7 @@ class PositionHolding:
             "price": 0,  # 持仓均价
             "open_price": 0,  # 开仓均价
             "pnl": 0,  # 盈亏
-            "stare_pnl": 0,  # 盯市盈亏
+            "float_pnl": 0,  # 浮动盈亏
             "frozen": 0,  # 冻结数量
             "yd_frozen": 0,  # 昨仓冻结
             "td_frozen": 0,  # 今仓冻结
@@ -156,19 +141,63 @@ class PositionHolding:
             self._update_cache()
         return self._cached_short_available
 
+    @property
+    def long_open_price(self):
+        return self.long["open_price"]
+
+    @property
+    def long_hold_price(self):
+        return self.long["price"]
+
+    @property
+    def short_open_price(self):
+        return self.short["open_price"]
+
+    @property
+    def short_hold_price(self):
+        return self.short["price"]
+
+    def __repr__(self) -> str:
+        return str(self.to_dict())
+
+    def __str__(self) -> str:
+        return str(self.to_dict())
+
+    def to_dict(self) -> dict:
+        return {
+            "symbol": self.symbol,
+            "exchange": self.exchange,
+            "long_pos": self.long_pos,
+            "long_pos_frozen": self.long_pos_frozen,
+            "long_td": self.long_td,
+            "long_yd": self.long_yd,
+            "long_available": self.long_available,
+            "long_open_price": self.long_open_price,
+            "long_hold_price": self.long_hold_price,
+            "long_pnl": self.long["pnl"],
+            "short_pos": self.short_pos,
+            "short_pos_frozen": self.short_pos_frozen,
+            "short_td": self.short_td,
+            "short_yd": self.short_yd,
+            "short_available": self.short_available,
+            "short_open_price": self.short_open_price,
+            "short_hold_price": self.short_hold_price,
+            "short_pnl": self.short["pnl"],
+        }
+
     def _update_cache(self):
         """更新缓存"""
         self._cached_long_available = self.long["pos"] - self.long["frozen"]
         self._cached_short_available = self.short["pos"] - self.short["frozen"]
         self._cache_valid = True
 
-    def calculate_position(self):
+    def _calculate_position(self):
         """计算总持仓"""
         self.long["pos"] = self.long["td"] + self.long["yd"]
         self.short["pos"] = self.short["td"] + self.short["yd"]
         self._cache_valid = False
 
-    def calculate_frozen(self):
+    def _calculate_frozen(self):
         """计算冻结数量"""
         # 重置冻结数量
         self.long["frozen"] = 0
@@ -217,7 +246,7 @@ class PositionHolding:
         self.short["frozen"] = self.short["td_frozen"] + self.short["yd_frozen"]
         self._cache_valid = False
 
-    def calculate_pnl(self):
+    def _calculate_pnl(self):
         """计算浮动盈亏"""
         # 多头盈亏
         if self.long["pos"] > 0:
@@ -235,29 +264,29 @@ class PositionHolding:
         else:
             self.short["pnl"] = 0
 
-    def calculate_stare_pnl(self):
-        """计算盯市盈亏"""
-        # 多头盯市盈亏
+    def _calculate_float_pnl(self):
+        """计算浮动盈亏"""
+        # 多头浮动盈亏
         if self.long["pos"] > 0:
-            self.long["stare_pnl"] = (
+            self.long["float_pnl"] = (
                 self.long["pos"]
                 * (self.last_price - self.long["open_price"])
                 * self.size
             )
         else:
-            self.long["stare_pnl"] = 0
+            self.long["float_pnl"] = 0
 
-        # 空头盯市盈亏
+        # 空头浮动盈亏
         if self.short["pos"] > 0:
-            self.short["stare_pnl"] = (
+            self.short["float_pnl"] = (
                 self.short["pos"]
                 * (self.short["open_price"] - self.last_price)
                 * self.size
             )
         else:
-            self.short["stare_pnl"] = 0
+            self.short["float_pnl"] = 0
 
-    def calculate_price(self, trade):
+    def _calculate_price(self, trade):
         """计算持仓均价"""
         if trade.offset != Offset.OPEN:
             return
@@ -282,7 +311,7 @@ class PositionHolding:
             pos["price"] = 0
             pos["open_price"] = 0
 
-    def update_trade(self, trade):
+    def _update_trade(self, trade):
         """成交更新"""
         # 处理多头交易
         if trade.direction == Direction.LONG:
@@ -332,14 +361,14 @@ class PositionHolding:
                         self.long["td"] = 0
 
         # 计算总持仓
-        self.calculate_position()
+        self._calculate_position()
         # 更新持仓均价
-        self.calculate_price(trade)
+        self._calculate_price(trade)
         # 更新盈亏
-        self.calculate_pnl()
-        self.calculate_stare_pnl()
+        self._calculate_pnl()
+        self._calculate_float_pnl()
 
-    def update_position(self, position: PositionData):
+    def _update_position(self, position: PositionData):
         """持仓更新"""
         if position.direction == Direction.LONG:
             pos = self.long
@@ -360,7 +389,7 @@ class PositionHolding:
 
         self._cache_valid = False
 
-    def update_order(self, order: OrderData):
+    def _update_order(self, order: OrderData):
         """订单更新"""
         if order._is_active():
             self.active_orders[order.local_order_id] = order
@@ -368,33 +397,33 @@ class PositionHolding:
             self.active_orders.pop(order.local_order_id, None)
 
         # 重新计算冻结数量
-        self.calculate_frozen()
+        self._calculate_frozen()
 
-    def update_order_request(self, req: OrderRequest, local_order_id: str):
+    def _update_order_request(self, req: OrderRequest, local_order_id: str):
         """订单请求更新"""
         gateway_name, orderid = local_order_id.split(".")
         order = req._create_order_data(orderid, gateway_name)
-        self.update_order(order)
+        self._update_order(order)
 
-    def update_tick(self, tick, pre_settlement_price):
+    def _update_tick(self, tick, pre_settlement_price):
         """行情更新"""
         self.last_price = tick.last_price
         self.pre_settlement_price = pre_settlement_price
 
         # 更新盈亏
-        self.calculate_pnl()
-        self.calculate_stare_pnl()
+        self._calculate_pnl()
+        self._calculate_float_pnl()
 
-    def update_bar(self, bar, pre_close):
+    def _update_bar(self, bar, pre_close):
         """K线更新"""
         self.last_price = bar.close_price
         self.pre_settlement_price = pre_close
 
         # 更新盈亏
-        self.calculate_pnl()
-        self.calculate_stare_pnl()
+        self._calculate_pnl()
+        self._calculate_float_pnl()
 
-    def convert_order_request_shfe(self, req: OrderRequest):
+    def _convert_order_request_shfe(self, req: OrderRequest):
         """上期所订单转换"""
         if req.offset == Offset.OPEN:
             return [req]
@@ -427,7 +456,7 @@ class PositionHolding:
 
             return req_list
 
-    def convert_order_request_lock(self, req: OrderRequest):
+    def _convert_order_request_lock(self, req: OrderRequest):
         """锁仓订单转换"""
         if req.direction == Direction.LONG:
             td_volume = self.short["td"]
@@ -462,38 +491,43 @@ class PositionHolding:
 
             return req_list
 
-    def get_position_by_direction(self, direction):
+    def _get_position_by_direction(self, direction):
         """根据方向获取持仓数据"""
         if direction == Direction.LONG:
-            return PositionData(
-                symbol=self.symbol,
-                volume=self.long["pos"],
-                exchange=EXCHANGE_MAPPING[self.exchange],
-                direction=direction,
-                pnl=self.long["pnl"],
-                price=self.long["price"],
-                frozen=self.long["frozen"],
-                open_price=self.long["open_price"],
-                yd_volume=self.long["yd"],
-                float_pnl=self.long["stare_pnl"],
-            )
+            return self._to_position_data(self.long, direction)
         elif direction == Direction.SHORT:
-            return PositionData(
-                symbol=self.symbol,
-                volume=self.short["pos"],
-                exchange=EXCHANGE_MAPPING[self.exchange],
-                direction=direction,
-                pnl=self.short["pnl"],
-                price=self.short["price"],
-                frozen=self.short["frozen"],
-                open_price=self.short["open_price"],
-                yd_volume=self.short["yd"],
-                float_pnl=self.short["stare_pnl"],
-            )
+            return self._to_position_data(self.short, direction)
         return None
 
-    def __repr__(self):
-        return f"Pos<local_symbol:{self.local_symbol} long_direction: {self.long['pos']}---{self.long['price']} pnl: {self.long['pnl']}    short_direction: {self.short['pos']}---{self.short['price']} pnl:{self.short['pnl']}>"
+    def _to_position_data(self, pos_dict, direction):
+        """将持仓字典快速转换为PositionData对象"""
+        return PositionData(
+            symbol=self.symbol,
+            volume=pos_dict["pos"],
+            exchange=EXCHANGE_MAPPING[self.exchange],
+            direction=direction,
+            pnl=pos_dict["pnl"],
+            price=pos_dict["price"],
+            frozen=pos_dict["frozen"],
+            open_price=pos_dict["open_price"],
+            yd_volume=pos_dict["yd"],
+            float_pnl=pos_dict["float_pnl"],
+        )
+
+    def to_position_data(self, direction=None):
+        """
+        快速将持仓转换为PositionData对象
+        如果未指定direction，则返回包含多空方向的持仓列表
+        """
+        if direction is None:
+            result = []
+            if self.long["pos"] > 0:
+                result.append(self._to_position_data(self.long, Direction.LONG))
+            if self.short["pos"] > 0:
+                result.append(self._to_position_data(self.short, Direction.SHORT))
+            return result
+        else:
+            return self._get_position_by_direction(direction)
 
 
 class LocalPositionManager(dict):
@@ -511,7 +545,7 @@ class LocalPositionManager(dict):
         """ 更新tick  """
         holding = self.get(tick.local_symbol)
         if holding:
-            holding.update_tick(tick, pre_close)
+            holding._update_tick(tick, pre_close)
 
     def update_bar(self, bar: BarData, pre_close):
         """
@@ -519,7 +553,7 @@ class LocalPositionManager(dict):
         """
         holding = self.get(bar.local_symbol)
         if holding:
-            holding.update_bar(bar, pre_close)
+            holding._update_bar(bar, pre_close)
 
     def is_convert_required(self, local_symbol: str):
         """
@@ -530,7 +564,7 @@ class LocalPositionManager(dict):
         # Only contracts with long-short position mode requires convert
         if not contract:
             return False
-        return not contract.net_position
+        return not getattr(contract, 'net_position', True)
 
     def update_order_request(self, req: OrderRequest, local_orderid: str):
         """"""
@@ -539,11 +573,11 @@ class LocalPositionManager(dict):
 
         holding = self.get(req.local_symbol)
         if not holding:
-            self[req.local_symbol] = PositionHolding(
+            self[req.local_symbol] = PositionModel(
                 req.local_symbol, self.get_contract(req.local_symbol)
             )
             holding = self[req.local_symbol]
-        holding.update_order_request(req, local_orderid)
+        holding._update_order_request(req, local_orderid)
 
     def convert_order_request(self, req: OrderRequest, lock: bool):
         """"""
@@ -552,79 +586,53 @@ class LocalPositionManager(dict):
 
         holding = self.get(req.local_symbol)
         if not holding:
-            self[req.local_symbol] = PositionHolding(
+            self[req.local_symbol] = PositionModel(
                 req.local_symbol, self.get_contract(req.local_symbol)
             )
             holding = self[req.local_symbol]
 
         if lock:
-            return holding.convert_order_request_lock(req)
+            return holding._convert_order_request_lock(req)
         elif req.exchange == Exchange.SHFE:
-            return holding.convert_order_request_shfe(req)
+            return holding._convert_order_request_shfe(req)
         else:
             return [req]
-
-    def update_order(self, order):
-        """更新order"""
-        local_symbol = order.local_symbol
-        holding = self.get(local_symbol)
-        if not holding:
-            self[local_symbol] = PositionHolding(
-                local_symbol, self.get_contract(local_symbol)
-            )
-            holding = self[local_symbol]
-        holding.update_order(order)
 
     def get_contract(self, local_symbol):
         """获取合约信息"""
         from ctpbee.app import CtpBee
 
-        if isinstance(self.app, CtpBee):
+        if self.app is None:
+            return None
+        elif isinstance(self.app, CtpBee):
             return self.app.recorder.get_contract(local_symbol)
         else:
             return self.app.get_contract(local_symbol)
 
+    def update_order(self, order):
+        """更新order"""
+        local_symbol = order.local_symbol
+        self.setdefault(
+            local_symbol, PositionModel(local_symbol, self.get_contract(local_symbol))
+        )._update_order(order)
+
     def update_trade(self, trade):
         """更新成交"""
         local_symbol = trade.local_symbol
-        holding = self.get(local_symbol)
-        if not holding:
-            self[local_symbol] = PositionHolding(
-                local_symbol, self.get_contract(local_symbol)
-            )
-            holding = self[local_symbol]
-        holding.update_trade(trade)
+        self.setdefault(
+            local_symbol, PositionModel(local_symbol, self.get_contract(local_symbol))
+        )._update_trade(trade)
 
     def update_position(self, position):
         """更新持仓"""
         local_symbol = position.local_symbol
-        holding = self.get(local_symbol)
-        if not holding:
-            self[local_symbol] = PositionHolding(
-                local_symbol, self.get_contract(local_symbol)
-            )
-            holding = self[local_symbol]
-        holding.update_position(position)
-
-    def get_position(self, local_symbol):
-        """根据local_symbol 获取持仓信息"""
-        return self.get(local_symbol)
+        self.setdefault(
+            local_symbol, PositionModel(local_symbol, self.get_contract(local_symbol))
+        )._update_position(position)
 
     def update_size_map(self, params):
         """更新size_map"""
         self.size_map = params.get("size_map")
-
-    def get_position_by_ld(
-        self, local_symbol: Text, direction: Direction
-    ) -> PositionData:
-        """
-        ld means local_symbol and direction
-        ld意味着local_symbol和direction
-        """
-        holding = self.get(local_symbol)
-        if not holding:
-            return None
-        return holding.get_position_by_direction(direction)
 
     def covert_to_yesterday_holding(self, **kwargs):
         """将今日持仓转换为昨日持仓"""
@@ -639,7 +647,7 @@ class LocalPositionManager(dict):
                 holding.short["td"] = 0
 
             # 重新计算总持仓
-            holding.calculate_position()
+            holding._calculate_position()
 
         # 更新价格和盈亏
         for key, value in kwargs.items():
@@ -665,7 +673,7 @@ class LocalPositionManager(dict):
         """清空冻结数量"""
         for holding in self.values():
             holding.active_orders.clear()
-            holding.calculate_frozen()
+            holding._calculate_frozen()
 
     def get_all_position_objects(self):
         """返回PositionData格式的持仓数据"""
@@ -673,88 +681,31 @@ class LocalPositionManager(dict):
         for holding in self.values():
             if not holding.local_symbol:
                 continue
-
-            if holding.long["pos"] > 0:
-                pos_list.append(
-                    PositionData(
-                        symbol=holding.symbol,
-                        exchange=holding.exchange,
-                        direction=Direction.LONG,
-                        volume=holding.long["pos"],
-                        frozen=holding.long["frozen"],
-                        price=holding.long["price"],
-                        pnl=holding.long["pnl"],
-                        yd_volume=holding.long["yd"],
-                        float_pnl=holding.long["stare_pnl"],
-                        open_price=holding.long["open_price"],
-                    )
-                )
-
-            if holding.short["pos"] > 0:
-                pos_list.append(
-                    PositionData(
-                        symbol=holding.symbol,
-                        exchange=holding.exchange,
-                        direction=Direction.SHORT,
-                        volume=holding.short["pos"],
-                        frozen=holding.short["frozen"],
-                        price=holding.short["price"],
-                        pnl=holding.short["pnl"],
-                        yd_volume=holding.short["yd"],
-                        float_pnl=holding.short["stare_pnl"],
-                        open_price=holding.short["open_price"],
-                    )
-                )
+            # 使用to_position_data方法快速转换
+            pos_list.extend(holding.to_position_data())
         return pos_list
 
-    def get_all_positions(self, obj=False):
+    def get_position_by_ld(
+        self, local_symbol: str, direction: Direction
+    ) -> PositionData:
+        """
+        ld means local_symbol and direction
+        ld意味着local_symbol和direction
+        """
+        holding: PositionModel = self.get(local_symbol)
+        if not holding:
+            return None
+        return holding._get_position_by_direction(direction)
+
+    def get_position(self, local_symbol):
+        """根据local_symbol 获取持仓信息"""
+        # holding = self.get(tick.local_symbol)
+        model = self.get(local_symbol, None)
+        return model
+
+    def get_all_positions(self):
         """返回所有的持仓信息"""
-        if obj:
-            return self.get_all_position_objects()
-
-        position_list = []
-        for holding in self.values():
-            if not holding.local_symbol:
-                continue
-
-            if holding.long["pos"] > 0:
-                pos_date = 2 if holding.long["pos"] == holding.long["yd"] else 1
-                position_list.append(
-                    {
-                        "exchange": holding.exchange,
-                        "direction": "long",
-                        "position_profit": holding.long["pnl"],
-                        "symbol": holding.local_symbol,
-                        "local_symbol": holding.local_symbol,
-                        "price": holding.long["price"],
-                        "volume": holding.long["pos"],
-                        "yd_volume": holding.long["yd"],
-                        "frozen": holding.long["frozen"],
-                        "available": holding.long_available,
-                        "float_pnl": holding.long["stare_pnl"],
-                        "position_date": pos_date,
-                    }
-                )
-
-            if holding.short["pos"] > 0:
-                pos_date = 2 if holding.short["pos"] == holding.short["yd"] else 1
-                position_list.append(
-                    {
-                        "exchange": holding.exchange,
-                        "direction": "short",
-                        "position_profit": holding.short["pnl"],
-                        "symbol": holding.local_symbol,
-                        "local_symbol": holding.local_symbol,
-                        "price": holding.short["price"],
-                        "volume": holding.short["pos"],
-                        "yd_volume": holding.short["yd"],
-                        "frozen": holding.short["frozen"],
-                        "available": holding.short_available,
-                        "float_pnl": holding.short["stare_pnl"],
-                        "position_date": pos_date,
-                    }
-                )
-        return position_list
+        return [holding for holding in self.values() if holding.local_symbol]
 
     @property
     def length(self):

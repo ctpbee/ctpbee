@@ -1,3 +1,3 @@
-from .local_position import PositionHolding, LocalPositionManager
+from .local_position import PositionModel, LocalPositionManager
 
-local_position = PositionHolding
+local_position = PositionModel

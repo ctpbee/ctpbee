@@ -156,7 +156,7 @@ class Center(BasicCenterModel, dict):
         """
         返回所有的仓位信息
         """
-        return self.app.recorder.position_manager.get_all_positions(obj=True)
+        return self.app.recorder.position_manager.get_all_positions()
 
     @property
     def snapshot(self):
@@ -212,51 +212,7 @@ class Center(BasicCenterModel, dict):
 
         Examples:
           ag_model = self.get_position("ag1912.SHFE")
-          打印长头持仓数目
+          打印持仓信息
           print(ag_model.long_volume)
         """
-        position_long = self.app.recorder.position_manager.get_position_by_ld(
-            local_symbol, Direction.LONG
-        )
-        position_short = self.app.recorder.position_manager.get_position_by_ld(
-            local_symbol, Direction.SHORT
-        )
-        if position_short is None and position_long is None:
-            return None
-        else:
-            # 如果其中一个方向持仓为None，创建一个空的PositionData对象
-            from ctpbee.constant import PositionData
-
-            if position_long is None:
-                # 获取合约信息
-                contract = self.get_contract(local_symbol)
-                position_long = PositionData(
-                    symbol=contract.symbol if contract else local_symbol.split(".")[0],
-                    volume=0,
-                    exchange=(
-                        contract.exchange if contract else local_symbol.split(".")[1]
-                    ),
-                    direction=Direction.LONG,
-                    pnl=0,
-                    price=0,
-                    frozen=0,
-                    open_price=0,
-                    yd_volume=0,
-                )
-            if position_short is None:
-                # 获取合约信息
-                contract = self.get_contract(local_symbol)
-                position_short = PositionData(
-                    symbol=contract.symbol if contract else local_symbol.split(".")[0],
-                    volume=0,
-                    exchange=(
-                        contract.exchange if contract else local_symbol.split(".")[1]
-                    ),
-                    direction=Direction.SHORT,
-                    pnl=0,
-                    price=0,
-                    frozen=0,
-                    open_price=0,
-                    yd_volume=0,
-                )
-            return PositionModel(position_long, position_short)
+        return self.app.recorder.position_manager.get_position(local_symbol)

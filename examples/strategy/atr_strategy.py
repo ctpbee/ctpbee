@@ -7,8 +7,8 @@ from ctpbee.log import VLogger
 class ATRStrategy(CtpbeeApi):
     """基于平均真实波动幅度(ATR)的策略，结合均线和ATR止损"""
 
-    atr_period = 14
-    sma_period = 20
+    atr_period = 2
+    sma_period = 5
     stop_loss_multiplier = 2  # 止损倍数
     take_profit_multiplier = 3  # 止盈倍数
     logger = VLogger
@@ -32,6 +32,9 @@ class ATRStrategy(CtpbeeApi):
             f"ATR策略初始化 - 合约: {code}, ATR周期: {self.atr_period}, SMA周期: {self.sma_period}, 止损倍数: {self.stop_loss_multiplier}, 止盈倍数: {self.take_profit_multiplier}",
             owner=self.name,
         )
+
+    def code(self):
+        return list(self.instrument_set)[0]
 
     def on_tick(self, tick: TickData) -> None:
         pass
