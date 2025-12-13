@@ -153,6 +153,7 @@ class BeeTdApi(TdApi, LoginRequired):
         """
         self.on_event(type=EVENT_LOG, data="结算信息确认成功")
         self.reqid += 1
+        # 需要实现按需订阅 按照瓶中 
         self.reqQryInstrument({}, self.reqid)
 
     def onRspQryInvestorPosition(self, data: dict, error: dict, reqid: int, last: bool):

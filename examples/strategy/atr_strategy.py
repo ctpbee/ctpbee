@@ -7,8 +7,8 @@ from ctpbee.log import VLogger
 class ATRStrategy(CtpbeeApi):
     """基于平均真实波动幅度(ATR)的策略，结合均线和ATR止损"""
 
-    atr_period = 2
-    sma_period = 5
+    atr_period = 14
+    sma_period = 20
     stop_loss_multiplier = 2  # 止损倍数
     take_profit_multiplier = 3  # 止盈倍数
     logger = VLogger

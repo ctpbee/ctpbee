@@ -564,7 +564,7 @@ class LocalPositionManager(dict):
         # Only contracts with long-short position mode requires convert
         if not contract:
             return False
-        return not getattr(contract, 'net_position', True)
+        return not getattr(contract, "net_position", True)
 
     def update_order_request(self, req: OrderRequest, local_orderid: str):
         """"""

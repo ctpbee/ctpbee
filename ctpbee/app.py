@@ -278,7 +278,7 @@ class CtpBee(object):
         """
         self._temp_contracts.append(contract)
 
-    def _signal_handler(signum, frame):
+    def _signal_handler(self, signum, frame):
         """
         信号处理函数，用于捕获Ctrl+C信号，实现优雅退出
 
@@ -287,10 +287,9 @@ class CtpBee(object):
             frame: 当前堆栈帧
         """
         self.r_flag = False
-        self.logger.info("捕获到退出信号，正在优雅退出...")
+        self.logger.info("捕获到退出信号，正在优雅退出... 5s内退出")
         from time import sleep
-
-        sleep(1)
+        sleep(5)
         self.release()
         self.logger.info("已成功退出")
         sys.exit(0)

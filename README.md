@@ -144,7 +144,7 @@ if __name__ == '__main__':
 支持多周期多合约回测, 回测参考`example/backtest`示例
 ![avatar](source/回测.png)
 
-## 简单策略开发示例
+## 简单策略示例
 - [atr](examples/strategy/atr_strategy.py)
 - [bollinger](examples/strategy/bollinger_strategy.py)
 - [double_ma](examples/strategy/double_ma.py)

@@ -46,6 +46,13 @@ if __name__ == "__main__":
     cta = CTA("rb2605", "rb2605")
     # app.config.from_json("config.json")
     # 使用simnow 24小时
-    app.config.from_json("config_24.json")
+    app.config.from_json("config.json")
     app.add_extension(cta)
     app.start(log_output=True)
+    try:
+        while True:
+            pass
+    except KeyboardInterrupt:
+        print("\n策略已停止")
+        app.release()
+

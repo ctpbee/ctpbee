@@ -12,7 +12,7 @@ with io.open("ctpbee/__init__.py", "rt", encoding="utf8") as f:
 
 if sys.version_info < (3, 6):
     raise RuntimeError(
-        "当前ctpbee只支持python36以及更高版本/ ctpbee only support python36 and higher "
+        "当前ctpbee只支持python36以及更高版本/ ctpbee only support python36 or higher "
     )
 
 # libraries
