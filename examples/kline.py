@@ -46,8 +46,8 @@ if __name__ == "__main__":
     app.add_extension(example)
     app.start(log_output=True)
     try:
-            while True:
-                pass
+        while True:
+            pass
     except KeyboardInterrupt:
         print("\n策略已停止")
         app.release()

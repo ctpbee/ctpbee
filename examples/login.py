@@ -37,13 +37,14 @@ class CTA(ATRStrategy):
         self.info("init success")
 
     def on_realtime(self):
-        print(self.center.get_position("rb2605.SHFE"))
+        if self.init:
+            print(self.center.active_orders)
 
 
 if __name__ == "__main__":
     kline = Kline()
     app = CtpBee("market", __name__, refresh=True).with_tools(kline)
-    cta = CTA("rb2605", "rb2605")
+    cta = CTA("ag2602", "ag2602")
     # app.config.from_json("config.json")
     # 使用simnow 24小时
     app.config.from_json("config.json")
@@ -55,4 +56,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n策略已停止")
         app.release()
-

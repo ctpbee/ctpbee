@@ -8,7 +8,17 @@ from setuptools import setup
 
 with io.open("ctpbee/__init__.py", "rt", encoding="utf8") as f:
     context = f.read()
-    version = re.search(r"__version__ = \'(.*?)\'", context).group(1)
+    patterns = [
+        r'__version__\s*=\s*["\']([^"\']+)["\']',  # 标准格式
+        r'__version__\s*:\s*["\']([^"\']+)["\']',  # 可能使用冒号
+        r'version\s*=\s*["\']([^"\']+)["\']',  # 可能没有下划线
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, context)
+        if match:
+            version = match.group(1)
+            break
 
 if sys.version_info < (3, 6):
     raise RuntimeError(

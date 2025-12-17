@@ -90,6 +90,9 @@ class CtpBee(object):
         self.name = name
         self.import_name = import_name
         self.engine_method = engine_method
+
+        if not refresh:
+            raise ValueError("ctpbee 1.7+ only support refresh=True")
         self.refresh = refresh
         self.active = False
         self.logger = VLogger
@@ -287,9 +290,11 @@ class CtpBee(object):
             frame: 当前堆栈帧
         """
         self.r_flag = False
-        self.logger.info("捕获到退出信号，正在优雅退出... 5s内退出")
         from time import sleep
-        sleep(5)
+
+        for i in range(5):
+            self.logger.info(f"捕获到退出信号，正在优雅退出... {5-i}s内退出")
+            sleep(1)
         self.release()
         self.logger.info("已成功退出")
         sys.exit(0)

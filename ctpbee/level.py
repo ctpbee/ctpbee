@@ -767,7 +767,7 @@ class CtpbeeApi(BeeApi):
         """
         pass
 
-    def on_init(self, init: bool) -> None:
+    def on_init(self, init: bool = True) -> None:
         """
         账户初始化
 

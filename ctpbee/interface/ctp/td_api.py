@@ -25,7 +25,6 @@ from collections import defaultdict
 from ctpbee.constant import *
 from ctpbee.interface.ctp.lib import *
 from ctpbee.interface.func import *
-from time import sleep
 
 
 class BeeTdApi(TdApi, LoginRequired):
@@ -62,6 +61,7 @@ class BeeTdApi(TdApi, LoginRequired):
         self.init_status = False
         self.contact_data = {}
         self.local_order_id = []
+        self.subscribe_type = "future"
 
     @property
     def td_status(self):
@@ -153,7 +153,7 @@ class BeeTdApi(TdApi, LoginRequired):
         """
         self.on_event(type=EVENT_LOG, data="结算信息确认成功")
         self.reqid += 1
-        # 需要实现按需订阅 按照瓶中 
+        # 需要实现按需订阅 按照瓶中
         self.reqQryInstrument({}, self.reqid)
 
     def onRspQryInvestorPosition(self, data: dict, error: dict, reqid: int, last: bool):
@@ -266,6 +266,8 @@ class BeeTdApi(TdApi, LoginRequired):
             for position in self.positions.values():
                 self.on_event(type=EVENT_POSITION, data=position)
                 self.position_instrument_mapping[position.local_symbol] = False
+            if not self.position_required:
+                self.on_event(type=EVENT_LOG, data="持仓初始化成功")
             self.positions.clear()
             self.open_cost_dict.clear()
             self.position_required = True
@@ -282,9 +284,9 @@ class BeeTdApi(TdApi, LoginRequired):
         self.on_event(type=EVENT_ACCOUNT, data=account)
         if not self.account_required:
             """当前合约查询完毕 且账户未查询 那么请求查询深度行情和持仓数据"""
+            self.on_event(type=EVENT_LOG, data="账户查询成功")
             self.reqid += 1
             self.account_required = True
-            sleep(1)
             self.query_position()
 
     def onRspQryInstrument(self, data: dict, error: dict, reqid: int, last: bool):
@@ -356,14 +358,21 @@ class BeeTdApi(TdApi, LoginRequired):
             data["ExchangeID"]
         ]
 
-        self.on_event(type=EVENT_CONTRACT, data=contract)
-
         symbol_exchange_map[contract.symbol] = contract.exchange
         symbol_name_map[contract.symbol] = contract.name
         symbol_size_map[contract.symbol] = contract.size
 
-        if last:
-            self.on_event(EVENT_LOG, data="合约信息查询成功")
+        if self.subscribe_type == "future" and contract.product == Product.FUTURES:
+            self.on_event(type=EVENT_CONTRACT, data=contract)
+
+        elif self.subscribe_type != "future":
+            self.on_event(type=EVENT_CONTRACT, data=contract)
+        if (
+            self.subscribe_type == "future"
+            and contract.product != Product.FUTURES
+            and not self.contract_required
+        ):
+            self.on_event(EVENT_LOG, data="期货合约信息查询成功")
             self.contract_required = True
             for data in self.order_data:
                 self.onRtnOrder(data)
@@ -371,8 +380,18 @@ class BeeTdApi(TdApi, LoginRequired):
             for data in self.trade_data:
                 self.onRtnTrade(data)
             self.trade_data.clear()
-
             self.query_account()
+        else:
+            if last and not self.contract_required:
+                self.on_event(EVENT_LOG, data="所有合约信息查询成功")
+                self.contract_required = True
+                for data in self.order_data:
+                    self.onRtnOrder(data)
+                self.order_data.clear()
+                for data in self.trade_data:
+                    self.onRtnTrade(data)
+                self.trade_data.clear()
+                self.query_account()
 
     def onRtnOrder(self, data: dict):
         """
@@ -460,7 +479,7 @@ class BeeTdApi(TdApi, LoginRequired):
         self.auth_code = info.get("auth_code")
         self.appid = info.get("appid")
         self.product_info = info.get("product_info")
-
+        self.subscribe_type = info.get("contract_type", "future")
         subscribe_info = info.get(
             "subscribe_topic", (0, 0)
         )  # 默认采用(0, 0)的方式进行订阅

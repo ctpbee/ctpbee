@@ -20,12 +20,6 @@ Notice : 神兽保佑 ，测试一次通过
 //
 """
 
-import warnings
-from typing import Text
-
-""" 本地持仓对象 """
-from copy import copy
-
 from ctpbee.constant import (
     PositionData,
     Offset,
@@ -37,6 +31,11 @@ from ctpbee.constant import (
     EXCHANGE_MAPPING,
     BarData,
 )
+from copy import copy
+import warnings
+from typing import Text
+
+""" 本地持仓对象 """
 
 
 class PositionModel:
@@ -174,7 +173,8 @@ class PositionModel:
             "long_available": self.long_available,
             "long_open_price": self.long_open_price,
             "long_hold_price": self.long_hold_price,
-            "long_pnl": self.long["pnl"],
+            "long_pnl": self.long_pnl,
+            "long_float_pnl": self.long_float_pnl,
             "short_pos": self.short_pos,
             "short_pos_frozen": self.short_pos_frozen,
             "short_td": self.short_td,
@@ -182,7 +182,8 @@ class PositionModel:
             "short_available": self.short_available,
             "short_open_price": self.short_open_price,
             "short_hold_price": self.short_hold_price,
-            "short_pnl": self.short["pnl"],
+            "short_pnl": self.short_pnl,
+            "short_float_pnl": self.short_float_pnl,
         }
 
     def _update_cache(self):
@@ -192,9 +193,19 @@ class PositionModel:
         self._cache_valid = True
 
     def _calculate_position(self):
-        """计算总持仓"""
+        """计算总持仓，并在持仓量为0时重置均价"""
         self.long["pos"] = self.long["td"] + self.long["yd"]
         self.short["pos"] = self.short["td"] + self.short["yd"]
+
+        # 当持仓量为0时，重置均价
+        if self.long["pos"] == 0:
+            self.long["price"] = 0
+            self.long["open_price"] = 0
+
+        if self.short["pos"] == 0:
+            self.short["price"] = 0
+            self.short["open_price"] = 0
+
         self._cache_valid = False
 
     def _calculate_frozen(self):
@@ -246,70 +257,43 @@ class PositionModel:
         self.short["frozen"] = self.short["td_frozen"] + self.short["yd_frozen"]
         self._cache_valid = False
 
-    def _calculate_pnl(self):
-        """计算浮动盈亏"""
-        # 多头盈亏
-        if self.long["pos"] > 0:
-            self.long["pnl"] = round(
-                self.long["pos"] * (self.last_price - self.long["price"]) * self.size
-            )
-        else:
-            self.long["pnl"] = 0
+    @property
+    def long_pnl(self) -> float:
+        return (
+            round(self.long["pos"] * (self.last_price - self.long["price"]) * self.size)
+            if self.long["pos"] > 0
+            else 0
+        )
 
-        # 空头盈亏
-        if self.short["pos"] > 0:
-            self.short["pnl"] = round(
+    @property
+    def short_pnl(self) -> float:
+        return (
+            round(
                 self.short["pos"] * (self.short["price"] - self.last_price) * self.size
             )
-        else:
-            self.short["pnl"] = 0
+            if self.short["pos"] > 0
+            else 0
+        )
 
-    def _calculate_float_pnl(self):
-        """计算浮动盈亏"""
-        # 多头浮动盈亏
-        if self.long["pos"] > 0:
-            self.long["float_pnl"] = (
-                self.long["pos"]
-                * (self.last_price - self.long["open_price"])
-                * self.size
-            )
-        else:
-            self.long["float_pnl"] = 0
+    @property
+    def long_float_pnl(self) -> float:
+        return (
+            (self.long["pos"] * (self.last_price - self.long["open_price"]) * self.size)
+            if self.long["pos"] > 0
+            else 0
+        )
 
-        # 空头浮动盈亏
-        if self.short["pos"] > 0:
-            self.short["float_pnl"] = (
+    @property
+    def short_float_pnl(self):
+        return (
+            (
                 self.short["pos"]
                 * (self.short["open_price"] - self.last_price)
                 * self.size
             )
-        else:
-            self.short["float_pnl"] = 0
-
-    def _calculate_price(self, trade):
-        """计算持仓均价"""
-        if trade.offset != Offset.OPEN:
-            return
-
-        if trade.direction == Direction.LONG:
-            pos = self.long
-            current_pos = self.long["pos"]
-        else:
-            pos = self.short
-            current_pos = self.short["pos"]
-
-        # 计算新的持仓均价和开仓均价
-        new_pos = current_pos + trade.volume
-        if new_pos > 0:
-            pos["price"] = (
-                pos["price"] * current_pos + trade.volume * trade.price
-            ) / new_pos
-            pos["open_price"] = (
-                pos["open_price"] * current_pos + trade.volume * trade.price
-            ) / new_pos
-        else:
-            pos["price"] = 0
-            pos["open_price"] = 0
+            if self.short["pos"] > 0
+            else 0
+        )
 
     def _update_trade(self, trade):
         """成交更新"""
@@ -317,76 +301,92 @@ class PositionModel:
         if trade.direction == Direction.LONG:
             if trade.offset == Offset.OPEN:
                 # 多头开仓
+                cost = (
+                    self.long["price"] * self.long["pos"] + trade.volume * trade.price
+                )
+                open_cost = (
+                    self.long["open_price"] * self.long["pos"]
+                    + trade.volume * trade.price
+                )
+                new_pos = self.long["pos"] + trade.volume
+                if new_pos:
+                    self.long["price"] = cost / new_pos
+                    self.long["open_price"] = open_cost / new_pos
                 self.long["td"] += trade.volume
-            elif trade.offset == Offset.CLOSETODAY:
-                # 平今空头
-                self.short["td"] -= trade.volume
-            elif trade.offset == Offset.CLOSEYESTERDAY:
-                # 平昨空头
-                self.short["yd"] -= trade.volume
-            elif trade.offset == Offset.CLOSE:
-                # 平仓
-                if self.exchange == Exchange.SHFE:
-                    # 上期所平昨
-                    self.short["yd"] -= trade.volume
-                else:
-                    # 其他交易所优先平今
+            else:
+                if trade.offset == Offset.CLOSETODAY:
+                    # 平今空头
                     self.short["td"] -= trade.volume
-                    if self.short["td"] < 0:
-                        excess = self.short["td"]
-                        self.short["yd"] += excess
-                        self.short["td"] = 0
+                elif trade.offset == Offset.CLOSEYESTERDAY:
+                    # 平昨空头
+                    self.short["yd"] -= trade.volume
+                elif trade.offset == Offset.CLOSE:
+                    # 平仓
+                    if self.exchange == Exchange.SHFE:
+                        # 上期所平昨
+                        self.short["yd"] -= trade.volume
+                    else:
+                        # 其他交易所优先平今
+                        self.short["td"] -= trade.volume
+                        if self.short["td"] < 0:
+                            excess = self.short["td"]
+                            self.short["yd"] += excess
+                            self.short["td"] = 0
         # 处理空头交易
         else:
             if trade.offset == Offset.OPEN:
                 # 空头开仓
+                cost = (
+                    self.short["price"] * self.short["pos"] + trade.volume * trade.price
+                )
+                open_cost = (
+                    self.short["open_price"] * self.short["pos"]
+                    + trade.volume * trade.price
+                )
+                new_pos = self.short["pos"] + trade.volume
+                if new_pos:
+                    self.short["price"] = cost / new_pos
+                    self.short["open_price"] = open_cost / new_pos
                 self.short["td"] += trade.volume
-            elif trade.offset == Offset.CLOSETODAY:
-                # 平今多头
-                self.long["td"] -= trade.volume
-            elif trade.offset == Offset.CLOSEYESTERDAY:
-                # 平昨多头
-                self.long["yd"] -= trade.volume
-            elif trade.offset == Offset.CLOSE:
-                # 平仓
-                if self.exchange == Exchange.SHFE:
-                    # 上期所平昨
-                    self.long["yd"] -= trade.volume
-                else:
-                    # 其他交易所优先平今
+            else:
+                if trade.offset == Offset.CLOSETODAY:
+                    # 平今多头
                     self.long["td"] -= trade.volume
-                    if self.long["td"] < 0:
-                        excess = self.long["td"]
-                        self.long["yd"] += excess
-                        self.long["td"] = 0
+                elif trade.offset == Offset.CLOSEYESTERDAY:
+                    # 平昨多头
+                    self.long["yd"] -= trade.volume
+                elif trade.offset == Offset.CLOSE:
+                    # 平仓
+                    if self.exchange == Exchange.SHFE:
+                        # 上期所平昨
+                        self.long["yd"] -= trade.volume
+                    else:
+                        # 其他交易所优先平今
+                        self.long["td"] -= trade.volume
+                        if self.long["td"] < 0:
+                            excess = self.long["td"]
+                            self.long["yd"] += excess
+                            self.long["td"] = 0
 
         # 计算总持仓
         self._calculate_position()
-        # 更新持仓均价
-        self._calculate_price(trade)
-        # 更新盈亏
-        self._calculate_pnl()
-        self._calculate_float_pnl()
 
     def _update_position(self, position: PositionData):
         """持仓更新"""
         if position.direction == Direction.LONG:
-            pos = self.long
-            pos["pos"] = position.volume
-            pos["yd"] = position.yd_volume
-            pos["td"] = pos["pos"] - pos["yd"]
-            pos["pnl"] = position.pnl
-            pos["price"] = position.price
-            pos["open_price"] = position.open_price
+            self.long["pos"] = position.volume
+            self.long["yd"] = position.yd_volume
+            self.long["td"] = self.long["pos"] - self.long["yd"]
+            self.long["pnl"] = position.pnl
+            self.long["price"] = position.price
+            self.long["open_price"] = position.open_price
         elif position.direction == Direction.SHORT:
-            pos = self.short
-            pos["pos"] = position.volume
-            pos["yd"] = position.yd_volume
-            pos["td"] = pos["pos"] - pos["yd"]
-            pos["pnl"] = position.pnl
-            pos["price"] = position.price
-            pos["open_price"] = position.open_price
-
+            self.short["pos"] = position.volume
+            self.short["yd"] = position.yd_volume
+            self.short["td"] = self.short["pos"] - self.short["yd"]
+            self.short["pnl"] = position.pnl
+            self.short["price"] = position.price
+            self.short["open_price"] = position.open_price
         self._cache_valid = False
 
     def _update_order(self, order: OrderData):
@@ -409,10 +409,6 @@ class PositionModel:
         """行情更新"""
         self.last_price = tick.last_price
         self.pre_settlement_price = pre_settlement_price
-
-        # 更新盈亏
-        self._calculate_pnl()
-        self._calculate_float_pnl()
 
     def _update_bar(self, bar, pre_close):
         """K线更新"""
