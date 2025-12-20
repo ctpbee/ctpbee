@@ -88,15 +88,20 @@ class MMdApi(MiniMdApi):
 
         if exchange == Exchange.DCE:
             datetimed = datetime.strptime(
-                str(date.today()) + " " + f"{data['UpdateTime']}.{int(data['UpdateMillisec'] / 100)}",
-                "%Y-%m-%d %H:%M:%S.%f")
+                str(date.today())
+                + " "
+                + f"{data['UpdateTime']}.{int(data['UpdateMillisec'] / 100)}",
+                "%Y-%m-%d %H:%M:%S.%f",
+            )
         else:
             # 正常情况下tick的处理
             timestamp = f"{data['ActionDay']} {data['UpdateTime']}.{int(data['UpdateMillisec'] / 100)}"
             try:
                 datetimed = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S.%f")
             except ValueError as e:
-                datetimed = datetime.strptime(str(date.today()) + " " + timestamp, "%Y-%m-%d %H:%M:%S.%f")
+                datetimed = datetime.strptime(
+                    str(date.today()) + " " + timestamp, "%Y-%m-%d %H:%M:%S.%f"
+                )
 
         tick = TickData(
             symbol=symbol,
@@ -107,12 +112,12 @@ class MMdApi(MiniMdApi):
             last_price=data["LastPrice"],
             limit_up=data["UpperLimitPrice"],
             limit_down=data["LowerLimitPrice"],
-            open_interest=data['OpenInterest'],
+            open_interest=data["OpenInterest"],
             open_price=data["OpenPrice"],
             high_price=data["HighestPrice"],
             low_price=data["LowestPrice"],
             pre_close=data["PreClosePrice"],
-            turnover=data['Turnover'],
+            turnover=data["Turnover"],
             bid_price_1=data.get("BidPrice1", 0),
             bid_price_2=data.get("BidPrice2", 0),
             bid_price_3=data.get("BidPrice3", 0),
@@ -133,11 +138,11 @@ class MMdApi(MiniMdApi):
             ask_volume_3=data.get("AskVolume3", 0),
             ask_volume_4=data.get("AskVolume4", 0),
             ask_volume_5=data.get("AskVolume5", 0),
-            average_price=data['AveragePrice'],
-            pre_settlement_price=data['PreSettlementPrice'],
-            settlement_price=data['SettlementPrice'],
-            pre_open_interest=data['PreOpenInterest'],
-            gateway_name=self.gateway_name
+            average_price=data["AveragePrice"],
+            pre_settlement_price=data["PreSettlementPrice"],
+            settlement_price=data["SettlementPrice"],
+            pre_open_interest=data["PreOpenInterest"],
+            gateway_name=self.gateway_name,
         )
         self.on_event(type=EVENT_TICK, data=tick)
 
@@ -169,7 +174,7 @@ class MMdApi(MiniMdApi):
         req = {
             "UserID": self.userid,
             "Password": self.password,
-            "BrokerID": self.brokerid
+            "BrokerID": self.brokerid,
         }
 
         self.reqid += 1

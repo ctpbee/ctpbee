@@ -10,12 +10,12 @@ STATUS_MINI2VT = {
     THOST_FTDC_OST_NoTradeQueueing: Status.NOTTRADED,
     THOST_FTDC_OST_PartTradedQueueing: Status.PARTTRADED,
     THOST_FTDC_OST_AllTraded: Status.ALLTRADED,
-    THOST_FTDC_OST_Canceled: Status.CANCELLED
+    THOST_FTDC_OST_Canceled: Status.CANCELLED,
 }
 
 DIRECTION_VT2MINI = {
     Direction.LONG: THOST_FTDC_D_Buy,
-    Direction.SHORT: THOST_FTDC_D_Sell
+    Direction.SHORT: THOST_FTDC_D_Sell,
 }
 DIRECTION_MINI2VT = {v: k for k, v in DIRECTION_VT2MINI.items()}
 DIRECTION_MINI2VT[THOST_FTDC_PD_Long] = Direction.LONG
@@ -23,7 +23,7 @@ DIRECTION_MINI2VT[THOST_FTDC_PD_Short] = Direction.SHORT
 
 ORDERTYPE_VT2MINI = {
     OrderType.LIMIT: THOST_FTDC_OPT_LimitPrice,
-    OrderType.MARKET: THOST_FTDC_OPT_AnyPrice
+    OrderType.MARKET: THOST_FTDC_OPT_AnyPrice,
 }
 ORDERTYPE_MINI2VT = {v: k for k, v in ORDERTYPE_VT2MINI.items()}
 
@@ -53,7 +53,7 @@ PRODUCT_MINI2VT = {
 
 OPTIONTYPE_MINI2VT = {
     THOST_FTDC_CP_CallOptions: OptionType.CALL,
-    THOST_FTDC_CP_PutOptions: OptionType.PUT
+    THOST_FTDC_CP_PutOptions: OptionType.PUT,
 }
 
 CHINA_TZ = pytz.timezone("Asia/Shanghai")

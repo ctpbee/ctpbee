@@ -1,5 +1,4 @@
-"""
-"""
+""" """
 
 import inspect
 import os
@@ -16,7 +15,9 @@ def __set_attr__(self, key, value):
     if father.startswith("_"):
         self.__dict__[key] = value
     else:
-        raise AttributeError(f"Attr:{key} has been protected. do not change it in function: '{father}'")
+        raise AttributeError(
+            f"Attr:{key} has been protected. do not change it in function: '{father}'"
+        )
 
 
 def frozen(cls):
@@ -32,6 +33,7 @@ class Direction(Enum):
     """
     Direction of order/trade/position.
     """
+
     LONG = "多"
     SHORT = "空"
     NET = "净"
@@ -46,6 +48,7 @@ class Offset(Enum):
     """
     Offset of order/trade.
     """
+
     NONE = ""
     OPEN = "开"
     CLOSE = "平"
@@ -57,6 +60,7 @@ class Status(Enum):
     """
     Order status.
     """
+
     SUBMITTING = "提交中"
     NOTTRADED = "未成交"
     PARTTRADED = "部分成交"
@@ -69,6 +73,7 @@ class Product(Enum):
     """
     Product class.
     """
+
     SPREAD = "价差"
     EQUITY = "股票"
     FUTURES = "期货"
@@ -79,6 +84,7 @@ class OrderType(Enum):
     """
     Order type.
     """
+
     LIMIT = "限价"
     MARKET = "市价"
     STOP = "STOP"
@@ -90,6 +96,7 @@ class OptionType(Enum):
     """
     Option type.
     """
+
     CALL = "看涨期权"
     PUT = "看跌期权"
 
@@ -98,6 +105,7 @@ class Exchange(Enum):
     """
     Exchange.
     """
+
     CFFEX = "CFFEX"
     SHFE = "SHFE"
     CZCE = "CZCE"
@@ -117,7 +125,7 @@ EXCHANGE_MAPPING = {
     "INE": Exchange.INE,
     "CTP": Exchange.CTP,
     "TTS": Exchange.TTS,
-    "GFEX": Exchange.GFEX
+    "GFEX": Exchange.GFEX,
 }
 
 
@@ -125,6 +133,7 @@ class Interval(Enum):
     """
     Interval of bar data.
     """
+
     MINUTE = "1m"
     HOUR = "1h"
     DAILY = "d"
@@ -132,12 +141,12 @@ class Interval(Enum):
 
 
 class ToolRegisterType(Enum):
-    TICK = 'tick'
-    ORDER = 'order'
-    TRADE = 'trade'
-    POSITION = 'position'
-    ACCOUNT = 'account'
-    WHATEVER = 'whatever'
+    TICK = "tick"
+    ORDER = "order"
+    TRADE = "trade"
+    POSITION = "position"
+    ACCOUNT = "account"
+    WHATEVER = "whatever"
     BAR = "bar"
 
 
@@ -183,8 +192,8 @@ class Entity:
             self.__post_init__()
 
     def __init_subclass__(cls, **kwargs):
-        cls.__dict__['__annotations__']['gateway_name'] = str
-        cls.__dict__['__annotations__']['local_symbol'] = str
+        cls.__dict__["__annotations__"]["gateway_name"] = str
+        cls.__dict__["__annotations__"]["local_symbol"] = str
 
     def __repr__(self):
         mat = []
@@ -199,7 +208,7 @@ class Entity:
 
     @classmethod
     def _create_class(cls, kwargs: dict):
-        """ 根据字典值创建类实例 """
+        """根据字典值创建类实例"""
         args = super().__new__(cls)
         args.__init__(**kwargs)
         setattr(args, "__name__", cls.__name__)
@@ -210,7 +219,7 @@ class Entity:
             setattr(self, key, value)
 
     def _to_dict(self) -> dict:
-        """ 转换enum为value的字典 """
+        """转换enum为value的字典"""
         temp = {}
         for x in dir(self):
             if x.startswith("_") or x.startswith("create"):
@@ -224,6 +233,7 @@ class Entity:
     def _to_df(self):
         try:
             from pandas import DataFrame
+
             temp = {}
             for x in dir(self):
                 if x.startswith("_") or x.startswith("create"):
@@ -232,13 +242,18 @@ class Entity:
                     temp[x] = getattr(self, x).value
                     continue
                 temp[x] = getattr(self, x)
-            return DataFrame([temp], columns=list(temp.keys()).remove("datetime")).set_index(['datetime']) if temp.get(
-                "datetime", None) is not None else DataFrame([temp], columns=list(temp.keys()))
+            return (
+                DataFrame(
+                    [temp], columns=list(temp.keys()).remove("datetime")
+                ).set_index(["datetime"])
+                if temp.get("datetime", None) is not None
+                else DataFrame([temp], columns=list(temp.keys()))
+            )
         except ImportError:
             raise ImportError("请使用pip install pandas 以获取此特性")
 
     def _asdict(self):
-        """ 转换为字典 里面会有enum """
+        """转换为字典 里面会有enum"""
         return asdict(self)
 
 
@@ -270,7 +285,7 @@ class BaseRequest:
 
     @classmethod
     def _create_class(cls, kwargs: dict):
-        """ 根据字典值创建类 """
+        """根据字典值创建类"""
         args = super().__new__(cls)
         args.__init__(**kwargs)
         setattr(args, "__name__", cls.__name__)
@@ -281,7 +296,7 @@ class BaseRequest:
             setattr(self, key, value)
 
     def _to_dict(self) -> dict:
-        """ 转换enum为value的字典 """
+        """转换enum为value的字典"""
         temp = {}
         for x in dir(self):
             if x.startswith("_") or x.startswith("create"):
@@ -293,7 +308,7 @@ class BaseRequest:
         return temp
 
     def _asdict(self):
-        """ 转换为字典 里面会有enum """
+        """转换为字典 里面会有enum"""
         return asdict(self)
 
 
@@ -301,6 +316,7 @@ class TickData(Entity):
     """
     Tick Attributes
     """
+
     datetime: datetime
     symbol: str
     exchange: Any
@@ -360,6 +376,7 @@ class BarData(Entity):
     """
     Candlestick bar data of a certain trading period.
     """
+
     symbol: str
     exchange: Exchange
     datetime: datetime
@@ -391,6 +408,7 @@ class OrderData(Entity):
     Order data contains information for tracking lastest status
     of a specific order.
     """
+
     local_order_id: str = ""
     symbol: str
     exchange: Exchange
@@ -438,6 +456,7 @@ class TradeData(Entity):
     Trade data contains information of a fill of an order. One order
     can have several trade fills.
     """
+
     local_order_id: str = ""
     local_trade_id: str = ""
     symbol: str
@@ -467,6 +486,7 @@ class PositionData(Entity):
     """
     Positon data is used for tracking each individual position holding.
     """
+
     local_position_id: str = ""
     symbol: str
     exchange: Exchange
@@ -494,6 +514,7 @@ class AccountData(Entity):
     Account data contains information about balance, frozen and
     available.
     """
+
     local_account_id: str = ""
     accountid: str
 
@@ -510,6 +531,7 @@ class LogData(Entity):
     """
     Log data is used for recording log messages on GUI or in log files.
     """
+
     time: datetime = None
     msg: str
     level: int = INFO
@@ -588,6 +610,7 @@ class SubscribeRequest(BaseRequest):
     """
     Request sending to specific gateway for subscribing tick data update.
     """
+
     local_symbol: str = ""
     symbol: str
     exchange: Exchange
@@ -601,6 +624,7 @@ class OrderRequest(BaseRequest):
     """
     Request sending to specific gateway for creating a new order.
     """
+
     local_symbol: str = ""
     symbol: str
     exchange: Exchange
@@ -631,7 +655,7 @@ class OrderRequest(BaseRequest):
             price=self.price,
             volume=self.volume,
             gateway_name=gateway_name,
-            time=time
+            time=time,
         )
         return order
 
@@ -640,6 +664,7 @@ class CancelRequest(BaseRequest):
     """
     Request sending to specific gateway for canceling an existing order.
     """
+
     local_symbol: str = ""
     order_id: str
     symbol: str
@@ -694,13 +719,15 @@ class TransferRequest(BaseRequest):
 
 
 class TransferSerialRequest(BaseRequest):
-    """ 查询转账流水 """
+    """查询转账流水"""
+
     bank_id: str
     currency_id: str = "CNY"
 
 
 class MarketDataRequest(BaseRequest):
-    """ 请求市场数据 """
+    """请求市场数据"""
+
     symbol: str
     exchange: Exchange
 
@@ -738,18 +765,24 @@ class Msg:
 
 msg = Msg(os.environ.get("MESSAGE_LANGUAGE", "zh"))
 
-data_class = [TickData,
-              ContractData,
-              BarData,
-              OrderData,
-              TradeData,
-              PositionData,
-              AccountData,
-              LogData,
-              SharedData]
-request_class = [SubscribeRequest, OrderRequest,
-                 QueryContract, CancelRequest,
-                 AccountRegisterRequest,
-                 AccountBanlanceRequest,
-                 TransferRequest,
-                 TransferSerialRequest]
+data_class = [
+    TickData,
+    ContractData,
+    BarData,
+    OrderData,
+    TradeData,
+    PositionData,
+    AccountData,
+    LogData,
+    SharedData,
+]
+request_class = [
+    SubscribeRequest,
+    OrderRequest,
+    QueryContract,
+    CancelRequest,
+    AccountRegisterRequest,
+    AccountBanlanceRequest,
+    TransferRequest,
+    TransferSerialRequest,
+]

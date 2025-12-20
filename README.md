@@ -144,6 +144,13 @@ if __name__ == '__main__':
 支持多周期多合约回测, 回测参考`example/backtest`示例
 ![avatar](source/回测.png)
 
+## 简单策略示例
+- [atr](examples/strategy/atr_strategy.py)
+- [bollinger](examples/strategy/bollinger_strategy.py)
+- [double_ma](examples/strategy/double_ma.py)
+- [macd](examples/strategy/macd_strategy.py)
+- [rsi](examples/strategy/rsi_strategy.py)
+
 ## 模拟交易测试
 
 本项目推荐使用[openctp](https://github.com/openctp/openctp) 或者[simnow](https://www.simnow.com.cn/)做模拟交易测试

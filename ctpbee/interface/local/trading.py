@@ -4,8 +4,20 @@ from time import sleep
 
 from redis.client import Redis
 
-from ctpbee.constant import Event, EVENT_LOG, OrderRequest, CancelRequest, OrderData, EVENT_ORDER, TradeData, \
-    EVENT_TRADE, ContractData, EVENT_CONTRACT, QueryContract, EVENT_INIT_FINISHED
+from ctpbee.constant import (
+    Event,
+    EVENT_LOG,
+    OrderRequest,
+    CancelRequest,
+    OrderData,
+    EVENT_ORDER,
+    TradeData,
+    EVENT_TRADE,
+    ContractData,
+    EVENT_CONTRACT,
+    QueryContract,
+    EVENT_INIT_FINISHED,
+)
 from ctpbee.stream import UDDR, DDDR
 
 
@@ -29,7 +41,9 @@ class TdApi:
         info["encoding"] = "utf8"
         self.tick_kernel = info.pop("tick_kernel", "TICK_KERNEL")
         self.order_up_kernel = info.pop("order_up_kernel", "ctpbee_order_up_kernel")
-        self.order_down_kernel = info.pop("order_down_kernel", "ctpbee_order_down_kernel")
+        self.order_down_kernel = info.pop(
+            "order_down_kernel", "ctpbee_order_down_kernel"
+        )
         self.index = info.pop("index", 0)
         self.rd = Redis(**info)
         self.info = info

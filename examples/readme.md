@@ -17,6 +17,6 @@
 
 - `backtest`提供了一个非常简单的策略实现回测
 - `openctp` 使用`openctp`实现了一个简单的子账户分发设置
-- `strategy` 简单策略示例, 内容暂无
+- `strategy` 简单策略示例 Ai生成
 
 > 最后祝大家早点实现个人理想 QAQ

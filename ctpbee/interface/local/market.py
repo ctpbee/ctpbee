@@ -26,7 +26,9 @@ class MdApi:
         self.tick_kernel = info.pop("tick_kernel", "ctpbee_tick_kernel")
         self.index = info.pop("index", 0)
         self.order_up_kernel = info.pop("order_up_kernel", "ctpbee_order_up_kernel")
-        self.order_down_kernel = info.pop("order_down_kernel", "ctpbee_order_down_kernel")
+        self.order_down_kernel = info.pop(
+            "order_down_kernel", "ctpbee_order_down_kernel"
+        )
         self.rd = Redis(**info)
         self.info = info
         self.on_event(EVENT_LOG, "行情连接成功")
@@ -37,6 +39,7 @@ class MdApi:
         pub = self.rd.pubsub()
         pub.subscribe(self.tick_kernel)
         from ctpbee import loads
+
         for item in pub.listen():
             tick_data = item["data"]
             if type(tick_data) == int:

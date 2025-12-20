@@ -57,7 +57,7 @@ class MTdApi(MiniTdApi, LoginRequired):
 
     def onRspAuthenticate(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
-        if not error['ErrorID']:
+        if not error["ErrorID"]:
             self.connect_required = True
             self.on_event(EVENT_LOG, "交易服务器授权验证成功")
             self.login()
@@ -95,10 +95,10 @@ class MTdApi(MiniTdApi, LoginRequired):
             price=data["LimitPrice"],
             volume=data["VolumeTotalOriginal"],
             status=Status.REJECTED,
-            gateway_name=self.gateway_name
+            gateway_name=self.gateway_name,
         )
         self.on_event(EVENT_ORDER, order)
-        error['detail'] = "交易委托失败"
+        error["detail"] = "交易委托失败"
         self.on_event(EVENT_ERROR, error)
 
     def onRspOrderAction(self, data: dict, error: dict, reqid: int, last: bool):
@@ -109,7 +109,9 @@ class MTdApi(MiniTdApi, LoginRequired):
         """"""
         pass
 
-    def onRspSettlementInfoConfirm(self, data: dict, error: dict, reqid: int, last: bool):
+    def onRspSettlementInfoConfirm(
+        self, data: dict, error: dict, reqid: int, last: bool
+    ):
         """
         Callback of settlment info confimation.
         """
@@ -129,7 +131,7 @@ class MTdApi(MiniTdApi, LoginRequired):
                     symbol=data["InstrumentID"],
                     exchange=symbol_exchange_map[data["InstrumentID"]],
                     direction=DIRECTION_MINI2VT[data["PosiDirection"]],
-                    gateway_name=self.gateway_name
+                    gateway_name=self.gateway_name,
                 )
                 self.positions[key] = position
             # For SHFE position data update
@@ -140,7 +142,9 @@ class MTdApi(MiniTdApi, LoginRequired):
             # For other exchange position data update
             else:
                 # position.yd_volume = data["Position"] - data["TodayPosition"]
-                position.__set_hole__("yd_volume", data["Position"] - data["TodayPosition"])
+                position.__set_hole__(
+                    "yd_volume", data["Position"] - data["TodayPosition"]
+                )
 
             # Get contract size (spread contract has no size value)
             size = symbol_size_map.get(position.symbol, 0)
@@ -170,17 +174,24 @@ class MTdApi(MiniTdApi, LoginRequired):
                     if not self.open_cost_dict[position.symbol].get("long"):
                         self.open_cost_dict[position.symbol]["long"] = 0
 
-                    self.open_cost_dict[position.symbol]["long"] += data['OpenCost']
+                    self.open_cost_dict[position.symbol]["long"] += data["OpenCost"]
                     # position.open_price = self.open_cost_dict[position.symbol]["long"] / (
                     #         position.volume * size)
-                    position.__set_hole__("open_price", self.open_cost_dict[position.symbol]["long"] / (
-                            position.volume * size))
+                    position.__set_hole__(
+                        "open_price",
+                        self.open_cost_dict[position.symbol]["long"]
+                        / (position.volume * size),
+                    )
                     # 先算出当前的最新价格
-                    current_price = position.pnl / \
-                                    (size * position.volume) + position.price
+                    current_price = (
+                        position.pnl / (size * position.volume) + position.price
+                    )
 
                     # position.float_pnl = (current_price - position.open_price) * size * position.volume
-                    position.__set_hole__("float_pnl", (current_price - position.open_price) * size * position.volume)
+                    position.__set_hole__(
+                        "float_pnl",
+                        (current_price - position.open_price) * size * position.volume,
+                    )
 
             else:
                 # position.frozen += data["LongFrozen"]
@@ -190,15 +201,22 @@ class MTdApi(MiniTdApi, LoginRequired):
                     if not self.open_cost_dict[position.symbol].get("short"):
                         self.open_cost_dict[position.symbol]["short"] = 0
 
-                    self.open_cost_dict[position.symbol]["short"] += data['OpenCost']
+                    self.open_cost_dict[position.symbol]["short"] += data["OpenCost"]
                     # position.open_price = self.open_cost_dict[position.symbol]["short"] / (
                     #         position.volume * size)
-                    position.__set_hole__("open_price", self.open_cost_dict[position.symbol]["short"] / (
-                            position.volume * size))
-                    current_price = position.price - \
-                                    position.pnl / (size * position.volume)
+                    position.__set_hole__(
+                        "open_price",
+                        self.open_cost_dict[position.symbol]["short"]
+                        / (position.volume * size),
+                    )
+                    current_price = position.price - position.pnl / (
+                        size * position.volume
+                    )
                     # position.float_pnl = (position.open_price - current_price) * size * position.volume
-                    position.__set_hole__("float_pnl", (position.open_price - current_price) * size * position.volume)
+                    position.__set_hole__(
+                        "float_pnl",
+                        (position.open_price - current_price) * size * position.volume,
+                    )
 
         except KeyError:
             pass
@@ -221,13 +239,14 @@ class MTdApi(MiniTdApi, LoginRequired):
             balance=data["Balance"],
             frozen=data["FrozenMargin"] + data["FrozenCash"] + data["FrozenCommission"],
             gateway_name=self.gateway_name,
-            available=data["Available"]
+            available=data["Available"],
         )
 
         self.on_event(EVENT_ACCOUNT, account)
         if not self.account_required:
             self.account_required = True
             from time import sleep
+
             sleep(1)
             self.query_position()
 
@@ -262,7 +281,7 @@ class MTdApi(MiniTdApi, LoginRequired):
             option_underlying=option_underlying,
             option_type=option_type,
             option_expiry=option_expiry,
-            if_last=last
+            if_last=last,
         )
 
         self.on_event(EVENT_CONTRACT, contract)
@@ -296,7 +315,12 @@ class MTdApi(MiniTdApi, LoginRequired):
         sessionid = data["SessionID"]
         order_ref = data["OrderRef"]
         order_id = f"{frontid}_{sessionid}_{order_ref}"
-        is_local = True if int(self.frontid) == int(frontid) and int(self.sessionid) == int(sessionid) else False
+        is_local = (
+            True
+            if int(self.frontid) == int(frontid)
+            and int(self.sessionid) == int(sessionid)
+            else False
+        )
         timestamp = f"{data['InsertDate']} {data['InsertTime']}"
         # dt = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S")
         # dt = CHINA_TZ.localize(dt)
@@ -316,7 +340,7 @@ class MTdApi(MiniTdApi, LoginRequired):
             traded=data["VolumeTraded"],
             status=STATUS_MINI2VT[data["OrderStatus"]],
             datetime=dt,
-            gateway_name=self.gateway_name
+            gateway_name=self.gateway_name,
         )
         self.on_event(EVENT_ORDER, order)
         self.sysid_orderid_map[data["OrderSysID"]] = order_id
@@ -348,14 +372,11 @@ class MTdApi(MiniTdApi, LoginRequired):
             price=data["Price"],
             volume=data["Volume"],
             datetime=dt,
-            gateway_name=self.gateway_name
+            gateway_name=self.gateway_name,
         )
         self.on_event(EVENT_TRADE, trade)
 
-    def connect(
-            self,
-            info: dict
-    ):
+    def connect(self, info: dict):
         """
         Start connection to server.
         """
@@ -388,7 +409,7 @@ class MTdApi(MiniTdApi, LoginRequired):
             "UserID": self.userid,
             "BrokerID": self.brokerid,
             "AuthCode": self.auth_code,
-            "AppID": self.appid
+            "AppID": self.appid,
         }
 
         if self.product_info:
@@ -406,7 +427,7 @@ class MTdApi(MiniTdApi, LoginRequired):
             "UserID": self.userid,
             "Password": self.password,
             "BrokerID": self.brokerid,
-            "AppID": self.appid
+            "AppID": self.appid,
         }
 
         if self.product_info:
@@ -439,7 +460,7 @@ class MTdApi(MiniTdApi, LoginRequired):
             "IsAutoSuspend": 0,
             "TimeCondition": THOST_FTDC_TC_GFD,
             "VolumeCondition": THOST_FTDC_VC_AV,
-            "MinVolume": 1
+            "MinVolume": 1,
         }
 
         if req.type == OrderType.FAK:
@@ -473,7 +494,7 @@ class MTdApi(MiniTdApi, LoginRequired):
             "SessionID": int(sessionid),
             "ActionFlag": THOST_FTDC_AF_Delete,
             "BrokerID": self.brokerid,
-            "InvestorID": self.userid
+            "InvestorID": self.userid,
         }
 
         self.reqid += 1
@@ -493,10 +514,7 @@ class MTdApi(MiniTdApi, LoginRequired):
         if not symbol_exchange_map:
             return
 
-        req = {
-            "BrokerID": self.brokerid,
-            "InvestorID": self.userid
-        }
+        req = {"BrokerID": self.brokerid, "InvestorID": self.userid}
 
         self.reqid += 1
         self.reqQryInvestorPosition(req, self.reqid)

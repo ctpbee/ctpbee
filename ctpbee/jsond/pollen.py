@@ -37,6 +37,7 @@ class ProxyPollen(Mether):
     |Datetime           | str(Datetime) | Datetime           |
     +-------------------+---------------+--------------------+
     """
+
     """
         str_can_to:用于筛选str转python类型时的tag类,存在str_tags
         default_tags:所有tag实例
@@ -46,7 +47,7 @@ class ProxyPollen(Mether):
         data_base_class:     BaseData
         request_base_class:  BaseRequest
     """
-    str_can_to = ['enum', 'datetime']
+    str_can_to = ["enum", "datetime"]
     default_tags = dict()
 
     str_tags = dict()
@@ -67,7 +68,7 @@ class ProxyPollen(Mether):
         for cls in data:
             cls_name = cls.__name__
             attribute = set()
-            for c in cls.__dict__['__annotations__']:
+            for c in cls.__dict__["__annotations__"]:
                 if c.startswith("__") or c.startswith("create"):
                     continue
                 attribute.add(c)
@@ -80,7 +81,8 @@ class ProxyPollen(Mether):
         :param tags:
         :return:
         """
-        if not isinstance(tags, list): raise TypeError("[^^]tags must list")
+        if not isinstance(tags, list):
+            raise TypeError("[^^]tags must list")
         for t in tags:
             self.default_tags[t.tag] = t(self)
             if t.tag in self.str_can_to:
@@ -93,7 +95,8 @@ class ProxyPollen(Mether):
         :param enums:
         :return:
         """
-        if not isinstance(enums, list): raise TypeError("[^^]enums must list")
+        if not isinstance(enums, list):
+            raise TypeError("[^^]enums must list")
         for e in enums:
             for _, v in e.__members__.items():
                 self.enum_store[v.value] = v
@@ -105,7 +108,8 @@ class ProxyPollen(Mether):
         :param data_class:
         :return:
         """
-        if not isinstance(data_class, list): raise TypeError("[^^]data_class must list")
+        if not isinstance(data_class, list):
+            raise TypeError("[^^]data_class must list")
         self.data_base_class = data_class[0].__bases__
 
     @classmethod
@@ -115,7 +119,8 @@ class ProxyPollen(Mether):
         :param request_class:
         :return:
         """
-        if not isinstance(request_class, list): raise TypeError("[^^]request_class must list")
+        if not isinstance(request_class, list):
+            raise TypeError("[^^]request_class must list")
         self.request_base_class = request_class[0].__bases__
 
     @classmethod

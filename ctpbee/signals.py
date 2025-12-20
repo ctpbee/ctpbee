@@ -13,13 +13,24 @@ class CommonSignal:
 
 
 class AppSignal:
-    """ Here """
+    """Here"""
 
     def __init__(self, app_name, ids=uuid4()):
-        """ 账户级别的相关信号 """
+        """账户级别的相关信号"""
         self.app_name = app_name
         self.id = ids
-        self.event = ['order', "trade", "contract", "warning", "position", "init", "account", "last", "log", "error"]
+        self.event = [
+            "order",
+            "trade",
+            "contract",
+            "warning",
+            "position",
+            "init",
+            "account",
+            "last",
+            "log",
+            "error",
+        ]
         self.order_signal = NamedSignal(f"{ids}+order")
         self.trade_signal = NamedSignal(f"{ids}+trade")
         self.position_signal = NamedSignal(f"{ids}+position")

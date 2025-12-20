@@ -4,10 +4,18 @@ ctpbee里面的核心数据访问模块
 此模块描述了ctpbee里面默认的数据访问中心,同时它也可以被回测模块所调用
 
 """
+
 from abc import ABC
 from typing import Text, List
 
-from ctpbee.constant import Direction, TickData, ContractData, OrderData, TradeData, AccountData
+from ctpbee.constant import (
+    Direction,
+    TickData,
+    ContractData,
+    OrderData,
+    TradeData,
+    AccountData,
+)
 
 
 class Missing:
@@ -27,10 +35,11 @@ class PositionModel(dict):
     """
     单个合约的标准持仓对象
     """
+
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
-    v_ext = ['exchange', 'symbol', "local_symbol"]
-    u_ext = ['direction', 'local_position_id']
+    v_ext = ["exchange", "symbol", "local_symbol"]
+    u_ext = ["direction", "local_position_id"]
 
     def __init__(self, long, short):
         dict.__init__(self)
@@ -61,13 +70,13 @@ class BasicCenterModel(ABC):
     __dict__ = {}
 
     def __getattr__(self, item):
-        """ 返回"""
+        """返回"""
         if item not in self.__dict__.keys():
             return Missing.create_obj(item)
         return self.__dict__[item]
 
     def __setattr__(self, key, value):
-        """ 拦截任何设置属性的操作 它应该不运行任何关于set的操作 """
+        """拦截任何设置属性的操作 它应该不运行任何关于set的操作"""
         self.__dict__[key] = value
 
 
@@ -91,6 +100,7 @@ class Center(BasicCenterModel, dict):
 
     def __delitem__(self, key):
         import warnings
+
         warnings.warn("警告,操作危险！你现在不具备这种操作权限,请调用账户级别的API")
         return
 
@@ -99,7 +109,7 @@ class Center(BasicCenterModel, dict):
 
     @property
     def orders(self) -> List[OrderData]:
-        """ 返回所有的报单 """
+        """返回所有的报单"""
         return self.app.recorder.get_all_orders()
 
     @property
@@ -107,6 +117,8 @@ class Center(BasicCenterModel, dict):
         """
         返回最新的一个orderid
         """
+        if not self.orders:
+            return None
         return self.orders[-1].order_id
 
     @property
@@ -114,6 +126,8 @@ class Center(BasicCenterModel, dict):
         """
         返回最新的一个报单
         """
+        if not self.orders:
+            return None
         return self.orders[-1]
 
     @property
@@ -142,7 +156,7 @@ class Center(BasicCenterModel, dict):
         """
         返回所有的仓位信息
         """
-        return self.app.recorder.position_manager.get_all_positions(obj=True)
+        return self.app.recorder.position_manager.get_all_positions()
 
     @property
     def snapshot(self):
@@ -153,7 +167,7 @@ class Center(BasicCenterModel, dict):
 
     def get_tick(self, local_symbol) -> List[TickData] or None:
         """
-        获取指定合约的tick数列信息 
+        获取指定合约的tick数列信息
         在合约不存在的情况返回为空
 
         Args:
@@ -198,12 +212,7 @@ class Center(BasicCenterModel, dict):
 
         Examples:
           ag_model = self.get_position("ag1912.SHFE")
-          打印长头持仓数目
+          打印持仓信息
           print(ag_model.long_volume)
         """
-        position_long = self.app.recorder.position_manager.get_position_by_ld(local_symbol, Direction.LONG)
-        position_short = self.app.recorder.position_manager.get_position_by_ld(local_symbol, Direction.SHORT)
-        if position_short is None and position_long is None:
-            return None
-        else:
-            return PositionModel(position_long, position_short)
+        return self.app.recorder.position_manager.get_position(local_symbol)

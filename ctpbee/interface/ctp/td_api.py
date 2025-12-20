@@ -1,6 +1,6 @@
 """
 Notice : 神兽保佑 ，测试一次通过
-//      
+//
 //      ┏┛ ┻━━━━━┛ ┻┓
 //      ┃　　　　　　 ┃
 //      ┃　　　━　　　┃
@@ -19,12 +19,12 @@ Notice : 神兽保佑 ，测试一次通过
 //          ┗━┻━┛   ┗━┻━┛
 //
 """
+
 from collections import defaultdict
 
 from ctpbee.constant import *
 from ctpbee.interface.ctp.lib import *
 from ctpbee.interface.func import *
-from time import sleep
 
 
 class BeeTdApi(TdApi, LoginRequired):
@@ -61,6 +61,7 @@ class BeeTdApi(TdApi, LoginRequired):
         self.init_status = False
         self.contact_data = {}
         self.local_order_id = []
+        self.subscribe_type = "future"
 
     @property
     def td_status(self):
@@ -89,12 +90,12 @@ class BeeTdApi(TdApi, LoginRequired):
 
     def onRspAuthenticate(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
-        if not error['ErrorID']:
+        if not error["ErrorID"]:
             self.connect_required = True
             self.on_event(type=EVENT_LOG, data="交易服务器验证成功")
             self.login()
         else:
-            error['detail'] = "交易服务器验证失败"
+            error["detail"] = "交易服务器验证失败"
             self.on_event(type=EVENT_ERROR, data=error)
 
     def onRspUserLogin(self, data: dict, error: dict, reqid: int, last: bool):
@@ -106,15 +107,12 @@ class BeeTdApi(TdApi, LoginRequired):
             self.on_event(type=EVENT_LOG, data="交易登录成功")
 
             # Confirm settlement
-            req = {
-                "BrokerID": self.brokerid,
-                "InvestorID": self.userid
-            }
+            req = {"BrokerID": self.brokerid, "InvestorID": self.userid}
             self.reqid += 1
 
             self.reqSettlementInfoConfirm(req, self.reqid)
         else:
-            error['detail'] = "交易登录失败"
+            error["detail"] = "交易登录失败"
             self.on_event(type=EVENT_ERROR, data=error)
 
     def onRspOrderInsert(self, data: dict, error: dict, reqid: int, last: bool):
@@ -132,27 +130,30 @@ class BeeTdApi(TdApi, LoginRequired):
             price=data["LimitPrice"],
             volume=data["VolumeTotalOriginal"],
             status=Status.REJECTED,
-            gateway_name=self.gateway_name
+            gateway_name=self.gateway_name,
         )
         self.on_event(type=EVENT_ORDER, data=order)
-        error['detail'] = "交易委托失败"
+        error["detail"] = "交易委托失败"
         self.on_event(type=EVENT_ERROR, data=error)
 
     def onRspOrderAction(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
-        error['detail'] = "交易撤单失败"
+        error["detail"] = "交易撤单失败"
         self.on_event(type=EVENT_ERROR, data=error)
 
     def onRspQueryMaxOrderVolume(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
         pass
 
-    def onRspSettlementInfoConfirm(self, data: dict, error: dict, reqid: int, last: bool):
+    def onRspSettlementInfoConfirm(
+        self, data: dict, error: dict, reqid: int, last: bool
+    ):
         """
         Callback of settlment info confimation.
         """
         self.on_event(type=EVENT_LOG, data="结算信息确认成功")
         self.reqid += 1
+        # 需要实现按需订阅 按照瓶中
         self.reqQryInstrument({}, self.reqid)
 
     def onRspQryInvestorPosition(self, data: dict, error: dict, reqid: int, last: bool):
@@ -171,7 +172,7 @@ class BeeTdApi(TdApi, LoginRequired):
                     symbol=data["InstrumentID"],
                     exchange=symbol_exchange_map[data["InstrumentID"]],
                     direction=DIRECTION_CTP2VT[data["PosiDirection"]],
-                    gateway_name=self.gateway_name
+                    gateway_name=self.gateway_name,
                 )
                 self.positions[key] = position
             # For SHFE position data update
@@ -182,7 +183,9 @@ class BeeTdApi(TdApi, LoginRequired):
             # For other exchange position data update
             else:
                 # position.yd_volume = data["Position"] - data["TodayPosition"]
-                position.__set_hole__("yd_volume", data["Position"] - data["TodayPosition"])
+                position.__set_hole__(
+                    "yd_volume", data["Position"] - data["TodayPosition"]
+                )
 
             # Get contract size (spread contract has no size value)
             size = symbol_size_map.get(position.symbol, 0)
@@ -212,17 +215,24 @@ class BeeTdApi(TdApi, LoginRequired):
                     if not self.open_cost_dict[position.symbol].get("long"):
                         self.open_cost_dict[position.symbol]["long"] = 0
 
-                    self.open_cost_dict[position.symbol]["long"] += data['OpenCost']
+                    self.open_cost_dict[position.symbol]["long"] += data["OpenCost"]
                     # position.open_price = self.open_cost_dict[position.symbol]["long"] / (
                     #         position.volume * size)
-                    position.__set_hole__("open_price", self.open_cost_dict[position.symbol]["long"] / (
-                            position.volume * size))
+                    position.__set_hole__(
+                        "open_price",
+                        self.open_cost_dict[position.symbol]["long"]
+                        / (position.volume * size),
+                    )
                     # 先算出当前的最新价格
-                    current_price = position.pnl / \
-                                    (size * position.volume) + position.price
+                    current_price = (
+                        position.pnl / (size * position.volume) + position.price
+                    )
 
                     # position.float_pnl = (current_price - position.open_price) * size * position.volume
-                    position.__set_hole__("float_pnl", (current_price - position.open_price) * size * position.volume)
+                    position.__set_hole__(
+                        "float_pnl",
+                        (current_price - position.open_price) * size * position.volume,
+                    )
 
             else:
                 # position.frozen += data["LongFrozen"]
@@ -232,15 +242,22 @@ class BeeTdApi(TdApi, LoginRequired):
                     if not self.open_cost_dict[position.symbol].get("short"):
                         self.open_cost_dict[position.symbol]["short"] = 0
 
-                    self.open_cost_dict[position.symbol]["short"] += data['OpenCost']
+                    self.open_cost_dict[position.symbol]["short"] += data["OpenCost"]
                     # position.open_price = self.open_cost_dict[position.symbol]["short"] / (
                     #         position.volume * size)
-                    position.__set_hole__("open_price", self.open_cost_dict[position.symbol]["short"] / (
-                            position.volume * size))
-                    current_price = position.price - \
-                                    position.pnl / (size * position.volume)
+                    position.__set_hole__(
+                        "open_price",
+                        self.open_cost_dict[position.symbol]["short"]
+                        / (position.volume * size),
+                    )
+                    current_price = position.price - position.pnl / (
+                        size * position.volume
+                    )
                     # position.float_pnl = (position.open_price - current_price) * size * position.volume
-                    position.__set_hole__("float_pnl", (position.open_price - current_price) * size * position.volume)
+                    position.__set_hole__(
+                        "float_pnl",
+                        (position.open_price - current_price) * size * position.volume,
+                    )
 
         except KeyError:
             print(data)
@@ -249,6 +266,8 @@ class BeeTdApi(TdApi, LoginRequired):
             for position in self.positions.values():
                 self.on_event(type=EVENT_POSITION, data=position)
                 self.position_instrument_mapping[position.local_symbol] = False
+            if not self.position_required:
+                self.on_event(type=EVENT_LOG, data="持仓初始化成功")
             self.positions.clear()
             self.open_cost_dict.clear()
             self.position_required = True
@@ -258,17 +277,16 @@ class BeeTdApi(TdApi, LoginRequired):
         account = AccountData(
             accountid=data["AccountID"],
             balance=data["Balance"],
-            frozen=data["FrozenMargin"] +
-                   data["FrozenCash"] + data["FrozenCommission"],
+            frozen=data["FrozenMargin"] + data["FrozenCash"] + data["FrozenCommission"],
             gateway_name=self.gateway_name,
-            available=data["Available"]
+            available=data["Available"],
         )
         self.on_event(type=EVENT_ACCOUNT, data=account)
         if not self.account_required:
             """当前合约查询完毕 且账户未查询 那么请求查询深度行情和持仓数据"""
+            self.on_event(type=EVENT_LOG, data="账户查询成功")
             self.reqid += 1
             self.account_required = True
-            sleep(1)
             self.query_position()
 
     def onRspQryInstrument(self, data: dict, error: dict, reqid: int, last: bool):
@@ -277,13 +295,11 @@ class BeeTdApi(TdApi, LoginRequired):
         """
         product = PRODUCT_CTP2VT.get(data["ProductClass"], None)
         try:
-            end_delivery_date = datetime.strptime(
-                data["EndDelivDate"], "%Y%m%d"),
-            start_delivery_date = datetime.strptime(
-                data["StartDelivDate"], "%Y%m%d"),
-            open_date = datetime.strptime(data['OpenDate'], "%Y%m%d"),
-            is_trading = bool(data["IsTrading"]),
-            create_date = datetime.strptime(data['CreateDate'], "%Y%m%d")
+            end_delivery_date = (datetime.strptime(data["EndDelivDate"], "%Y%m%d"),)
+            start_delivery_date = (datetime.strptime(data["StartDelivDate"], "%Y%m%d"),)
+            open_date = (datetime.strptime(data["OpenDate"], "%Y%m%d"),)
+            is_trading = (bool(data["IsTrading"]),)
+            create_date = datetime.strptime(data["CreateDate"], "%Y%m%d")
         except ValueError:
             end_delivery_date = None
             start_delivery_date = None
@@ -296,12 +312,10 @@ class BeeTdApi(TdApi, LoginRequired):
         try:
             # For option only
             if product == Product.OPTION:
-                option_underlying = data["UnderlyingInstrID"],
-                option_type = OPTIONTYPE_CTP2VT.get(
-                    data["OptionsType"], None),
-                option_strike = data["StrikePrice"],
-                option_expiry = datetime.strptime(
-                    data["ExpireDate"], "%Y%m%d"),
+                option_underlying = (data["UnderlyingInstrID"],)
+                option_type = (OPTIONTYPE_CTP2VT.get(data["OptionsType"], None),)
+                option_strike = (data["StrikePrice"],)
+                option_expiry = (datetime.strptime(data["ExpireDate"], "%Y%m%d"),)
             else:
                 option_strike: float = 0
                 option_underlying: str = ""
@@ -312,17 +326,17 @@ class BeeTdApi(TdApi, LoginRequired):
                 exchange=EXCHANGE_CTP2VT[data["ExchangeID"]],
                 name=data["InstrumentName"],
                 product=product,
-                max_market_order_volume=data['MaxMarketOrderVolume'],
-                min_market_order_volume=data['MinMarketOrderVolume'],
-                max_limit_order_volume=data['MaxLimitOrderVolume'],
-                min_limit_order_volume=data['MaxLimitOrderVolume'],
+                max_market_order_volume=data["MaxMarketOrderVolume"],
+                min_market_order_volume=data["MinMarketOrderVolume"],
+                max_limit_order_volume=data["MaxLimitOrderVolume"],
+                min_limit_order_volume=data["MaxLimitOrderVolume"],
                 size=data["VolumeMultiple"],
                 pricetick=data["PriceTick"],
-                delivery_month=data['DeliveryMonth'],
-                delivery_year=data['DeliveryYear'],
-                long_margin_ratio=data['LongMarginRatio'],
-                short_margin_ratio=data['ShortMarginRatio'],
-                combination_type=data['CombinationType'],
+                delivery_month=data["DeliveryMonth"],
+                delivery_year=data["DeliveryYear"],
+                long_margin_ratio=data["LongMarginRatio"],
+                short_margin_ratio=data["ShortMarginRatio"],
+                combination_type=data["CombinationType"],
                 gateway_name=self.gateway_name,
                 end_delivery_date=end_delivery_date,
                 start_delivery_date=start_delivery_date,
@@ -333,23 +347,32 @@ class BeeTdApi(TdApi, LoginRequired):
                 option_underlying=option_underlying,
                 option_type=option_type,
                 option_expiry=option_expiry,
-                if_last=last
+                if_last=last,
             )
         except KeyError as e:
             import warnings
+
             warnings.warn(f"未预料到的合约问题 错误信息: {e}")
             return
-        self.symbol_exchange_mapping[data["InstrumentID"]
-        ] = EXCHANGE_CTP2VT[data["ExchangeID"]]
-
-        self.on_event(type=EVENT_CONTRACT, data=contract)
+        self.symbol_exchange_mapping[data["InstrumentID"]] = EXCHANGE_CTP2VT[
+            data["ExchangeID"]
+        ]
 
         symbol_exchange_map[contract.symbol] = contract.exchange
         symbol_name_map[contract.symbol] = contract.name
         symbol_size_map[contract.symbol] = contract.size
 
-        if last:
-            self.on_event(EVENT_LOG, data="合约信息查询成功")
+        if self.subscribe_type == "future" and contract.product == Product.FUTURES:
+            self.on_event(type=EVENT_CONTRACT, data=contract)
+
+        elif self.subscribe_type != "future":
+            self.on_event(type=EVENT_CONTRACT, data=contract)
+        if (
+            self.subscribe_type == "future"
+            and contract.product != Product.FUTURES
+            and not self.contract_required
+        ):
+            self.on_event(EVENT_LOG, data="期货合约信息查询成功")
             self.contract_required = True
             for data in self.order_data:
                 self.onRtnOrder(data)
@@ -357,8 +380,18 @@ class BeeTdApi(TdApi, LoginRequired):
             for data in self.trade_data:
                 self.onRtnTrade(data)
             self.trade_data.clear()
-
             self.query_account()
+        else:
+            if last and not self.contract_required:
+                self.on_event(EVENT_LOG, data="所有合约信息查询成功")
+                self.contract_required = True
+                for data in self.order_data:
+                    self.onRtnOrder(data)
+                self.order_data.clear()
+                for data in self.trade_data:
+                    self.onRtnTrade(data)
+                self.trade_data.clear()
+                self.query_account()
 
     def onRtnOrder(self, data: dict):
         """
@@ -376,12 +409,16 @@ class BeeTdApi(TdApi, LoginRequired):
         if int(order_ref) > self.order_ref:
             self.order_ref = int(order_ref) + 1
         order_id = f"{frontid}_{sessionid}_{order_ref}"
-        if data['OrderPriceType'] in ORDERTYPE_VT2CTP.values():
+        if data["OrderPriceType"] in ORDERTYPE_VT2CTP.values():
             ordertype = ORDERTYPE_CTP2VT[data["OrderPriceType"]]
         else:
             ordertype = "non_support"
-        is_local = True if int(self.frontid) == int(frontid) and int(
-            self.sessionid) == int(sessionid) else False
+        is_local = (
+            True
+            if int(self.frontid) == int(frontid)
+            and int(self.sessionid) == int(sessionid)
+            else False
+        )
 
         if is_local:
             self.local_order_id.append(order_id)
@@ -399,7 +436,7 @@ class BeeTdApi(TdApi, LoginRequired):
             status=STATUS_CTP2VT[data["OrderStatus"]],
             time=data["InsertTime"],
             gateway_name=self.gateway_name,
-            is_local=is_local
+            is_local=is_local,
         )
         self.on_event(type=EVENT_ORDER, data=order)
         self.sysid_orderid_map[data["OrderSysID"]] = order_id
@@ -428,7 +465,7 @@ class BeeTdApi(TdApi, LoginRequired):
             volume=data["Volume"],
             time=data["TradeTime"],
             is_local=is_local,
-            gateway_name=self.gateway_name
+            gateway_name=self.gateway_name,
         )
         self.on_event(type=EVENT_TRADE, data=trade)
 
@@ -442,12 +479,13 @@ class BeeTdApi(TdApi, LoginRequired):
         self.auth_code = info.get("auth_code")
         self.appid = info.get("appid")
         self.product_info = info.get("product_info")
-
-        subscribe_info = info.get("subscribe_topic", (0, 0))  # 默认采用(0, 0)的方式进行订阅
+        self.subscribe_type = info.get("contract_type", "future")
+        subscribe_info = info.get(
+            "subscribe_topic", (0, 0)
+        )  # 默认采用(0, 0)的方式进行订阅
 
         if not self.connect_status:
-            path = get_folder_path(
-                self.gateway_name.lower() + f"/{self.userid}")
+            path = get_folder_path(self.gateway_name.lower() + f"/{self.userid}")
             self.createFtdcTraderApi(str(path) + "\\Td")
             self.subscribePrivateTopic(subscribe_info[0])
             self.subscribePublicTopic(subscribe_info[1])
@@ -464,7 +502,7 @@ class BeeTdApi(TdApi, LoginRequired):
             "UserID": self.userid,
             "BrokerID": self.brokerid,
             "AuthCode": self.auth_code,
-            "AppID": self.appid
+            "AppID": self.appid,
         }
         if self.product_info:
             req["UserProductInfo"] = self.product_info
@@ -480,7 +518,7 @@ class BeeTdApi(TdApi, LoginRequired):
             "UserID": self.userid,
             "Password": self.password,
             "BrokerID": self.brokerid,
-            "AppID": self.appid
+            "AppID": self.appid,
         }
         if self.product_info:
             req["UserProductInfo"] = self.product_info
@@ -489,22 +527,22 @@ class BeeTdApi(TdApi, LoginRequired):
 
     def onRspQryDepthMarketData(self, data, error, reqid, last):
         try:
-            exchange = self.symbol_exchange_mapping[data['InstrumentID']]
+            exchange = self.symbol_exchange_mapping[data["InstrumentID"]]
         except KeyError:
             return
         market = LastData(
-            symbol=data['InstrumentID'],
+            symbol=data["InstrumentID"],
             exchange=exchange,
-            pre_open_interest=data['PreOpenInterest'],
-            open_interest=data['OpenInterest'],
-            volume=data['Volume'],
-            last_price=data['LastPrice']
+            pre_open_interest=data["PreOpenInterest"],
+            open_interest=data["OpenInterest"],
+            volume=data["Volume"],
+            last_price=data["LastPrice"],
         )
         self.on_event(type=EVENT_LAST, data=market)
         self.position_instrument_mapping[market.symbol] = True
 
     def request_market_data(self, req: object):
-        """ 请求市场数据 """
+        """请求市场数据"""
 
         self.reqid += 1
         self.reqQryDepthMarketData({}, self.reqid)
@@ -532,7 +570,11 @@ class BeeTdApi(TdApi, LoginRequired):
             "TimeCondition": THOST_FTDC_TC_GFD,
             "VolumeCondition": THOST_FTDC_VC_AV,
             "MinVolume": 1,
-            "ExchangeID": req.exchange.value if isinstance(req.exchange, Exchange) else req.exchange
+            "ExchangeID": (
+                req.exchange.value
+                if isinstance(req.exchange, Exchange)
+                else req.exchange
+            ),
         }
 
         if req.type == OrderType.FAK:
@@ -564,7 +606,7 @@ class BeeTdApi(TdApi, LoginRequired):
             "ActionFlag": THOST_FTDC_AF_Delete,
             "BrokerID": self.brokerid,
             "InvestorID": self.userid,
-            "ExchangeID": req.exchange.value
+            "ExchangeID": req.exchange.value,
         }
 
         self.reqid += 1
@@ -577,11 +619,12 @@ class BeeTdApi(TdApi, LoginRequired):
         self.auth_code = info.get("auth_code")
         self.appid = info.get("appid")
         self.product_info = info.get("product_info")
-        subscribe_info = info.get("subscribe_topic", (0, 0))  # 默认采用(0, 0)的方式进行订阅
+        subscribe_info = info.get(
+            "subscribe_topic", (0, 0)
+        )  # 默认采用(0, 0)的方式进行订阅
 
         if not self.connect_required:
-            path = get_folder_path(
-                self.gateway_name.lower() + f"/{self.userid}")
+            path = get_folder_path(self.gateway_name.lower() + f"/{self.userid}")
             self.createFtdcTraderApi(str(path) + "\\Td")
             self.subscribePrivateTopic(subscribe_info[0])
             self.subscribePublicTopic(subscribe_info[1])
@@ -603,10 +646,7 @@ class BeeTdApi(TdApi, LoginRequired):
         """
         if not symbol_exchange_map:
             return
-        req = {
-            "BrokerID": self.brokerid,
-            "InvestorID": self.userid
-        }
+        req = {"BrokerID": self.brokerid, "InvestorID": self.userid}
 
         self.reqid += 1
         return self.reqQryInvestorPosition(req, self.reqid)

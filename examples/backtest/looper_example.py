@@ -8,7 +8,7 @@ data = [list(reversed(data.to_dict("index").values()))]
 
 from examples.strategy.double_ma import DoubleMa
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     code = "rb2401.SHFE"
     app = CtpBee("looper", __name__)
     info = {
@@ -24,14 +24,19 @@ if __name__ == '__main__':
                     "close_today": 0.00001,
                 },
             },
-            "size_map": {
-                code: 10
-            }
-        }
+            "size_map": {code: 10},
+        },
     }
     app.config.from_mapping(info)
-    app.add_local_contract(ContractData(local_symbol=code, exchange=Exchange.SHFE, symbol=code.split(".")[0],
-                                        size=10, pricetick=1))
+    app.add_local_contract(
+        ContractData(
+            local_symbol=code,
+            exchange=Exchange.SHFE,
+            symbol=code.split(".")[0],
+            size=10,
+            pricetick=1,
+        )
+    )
     strategy = DoubleMa("ma", code)
     app.add_extension(strategy)
     app.add_data(*data)

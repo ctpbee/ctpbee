@@ -2,6 +2,7 @@
 code are from [werkzeug](https://werkzeug.palletsprojects.com/en/2.0.x/) !!!
 In order to reduce the package volume, just copy code into here
 """
+
 import copy
 import math
 import operator
@@ -55,7 +56,7 @@ try:
                 raise _CannotUseContextVar()
             else:
                 if is_object_patched("threading", "local") and not is_object_patched(
-                        "contextvars", "ContextVar"
+                    "contextvars", "ContextVar"
                 ):
                     raise _CannotUseContextVar()
 
@@ -182,10 +183,10 @@ class _ProxyLookup:
     __slots__ = ("bind_f", "fallback", "class_value", "name")
 
     def __init__(
-            self,
-            f: t.Optional[t.Callable] = None,
-            fallback: t.Optional[t.Callable] = None,
-            class_value: t.Optional[t.Any] = None,
+        self,
+        f: t.Optional[t.Callable] = None,
+        fallback: t.Optional[t.Callable] = None,
+        class_value: t.Optional[t.Any] = None,
     ) -> None:
         bind_f: t.Optional[t.Callable[["LocalProxy", t.Any], t.Callable]]
 
@@ -252,7 +253,7 @@ class _ProxyIOp(_ProxyLookup):
     __slots__ = ()
 
     def __init__(
-            self, f: t.Optional[t.Callable] = None, fallback: t.Optional[t.Callable] = None
+        self, f: t.Optional[t.Callable] = None, fallback: t.Optional[t.Callable] = None
     ) -> None:
         super().__init__(f, fallback)
 
@@ -324,9 +325,9 @@ class LocalProxy:
     __slots__ = ("__local", "__name", "__wrapped__")
 
     def __init__(
-            self,
-            local: t.Union["Local", t.Callable[[], t.Any]],
-            name: t.Optional[str] = None,
+        self,
+        local: t.Union["Local", t.Callable[[], t.Any]],
+        name: t.Optional[str] = None,
     ) -> None:
         object.__setattr__(self, "_LocalProxy__local", local)
         object.__setattr__(self, "_LocalProxy__name", name)
@@ -487,7 +488,6 @@ class LocalStack(object):
             return self._simple.get(name, None)
 
     def push(self, name, obj):
-
         """Pushes a new item to the stack"""
         with self.lock:
             self._local.append(obj)
@@ -498,7 +498,10 @@ class LocalStack(object):
         with self.lock:
             if name in self._simple.keys():
                 index = self._local.index(self._simple.get(name))
-                self._local[index], self._local[-1] = self._local[-1], self._local[index]
+                self._local[index], self._local[-1] = (
+                    self._local[-1],
+                    self._local[index],
+                )
                 return True
             return False
 
@@ -547,7 +550,7 @@ def _find_app():
 
 
 def _get_app(name):
-    """ 根据CtpBee的名字找到CtpBee 对象 """
+    """根据CtpBee的名字找到CtpBee 对象"""
     return _app_context_ctx.get_app(name)
 
 

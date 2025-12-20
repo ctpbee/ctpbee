@@ -2,17 +2,17 @@ import re
 from datetime import datetime
 from enum import Enum
 
-TAG_ENUM = 'enum'
-TAG_DICT = 'dict'
-TAG_LIST = 'list'
-TAG_TUPLE = 'tuple'
-TAG_DATETIME = 'datetime'
-TAG_BYTES = 'bytes'
-TAG_STR = 'str'
-TAG_NUM = 'num'
-TAG_DATACLASS = 'dataclass'
-TAG_NONE = 'none'
-TAG_SET = 'set'
+TAG_ENUM = "enum"
+TAG_DICT = "dict"
+TAG_LIST = "list"
+TAG_TUPLE = "tuple"
+TAG_DATETIME = "datetime"
+TAG_BYTES = "bytes"
+TAG_STR = "str"
+TAG_NUM = "num"
+TAG_DATACLASS = "dataclass"
+TAG_NONE = "none"
+TAG_SET = "set"
 
 
 class PollenTag(object):
@@ -37,7 +37,9 @@ class TagDataClass(PollenTag):
 
     def check(self, data):
         try:
-            return isinstance(data, self.proxy.data_base_class) or isinstance(data, self.proxy.request_base_class)
+            return isinstance(data, self.proxy.data_base_class) or isinstance(
+                data, self.proxy.request_base_class
+            )
         except TypeError:
             return False
 
@@ -48,7 +50,8 @@ class TagDataClass(PollenTag):
         :return:
         """
         attrs = set(data.keys())
-        if len(attrs) < 1: return None
+        if len(attrs) < 1:
+            return None
         for cls_name, cls_attr in self.proxy.data_class_store.items():
             if attrs == cls_attr:
                 return cls_name
@@ -108,7 +111,8 @@ class TagDict(PollenTag):
         :param data:
         :return:
         """
-        if data is None: return
+        if data is None:
+            return
         for k in list(data.keys()):
             key_ok = value_ok = False
             for tag in self.proxy.default_tags.values():
@@ -127,7 +131,8 @@ class TagDict(PollenTag):
         :param data:
         :return:
         """
-        if data is None: return
+        if data is None:
+            return
         tag_dataclass = self.proxy.default_tags[TAG_DATACLASS]
         cls_name = tag_dataclass.match_data_class(data)
         for k in list(data.keys()):
@@ -156,7 +161,8 @@ class TagList(PollenTag):
         :param data:
         :return:
         """
-        if data is None: return
+        if data is None:
+            return
         size = len(data)
         i = 0
         while i < size:
@@ -169,7 +175,8 @@ class TagList(PollenTag):
         return data
 
     def to_pollen(self, data):
-        if data is None: return
+        if data is None:
+            return
         size = len(data)
         i = 0
         while i < size:
@@ -189,7 +196,8 @@ class TagTuple(PollenTag):
         return isinstance(data, tuple)
 
     def to_json(self, data):
-        if data is None: return
+        if data is None:
+            return
         temp = list(data)
         size = len(data)
         i = 0
@@ -221,25 +229,26 @@ class TagSet(PollenTag):
 
 class TagDatetime(PollenTag):
     tag = TAG_DATETIME
-    patternForTimef = r'\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}.\d+'
-    patternForTime = r'\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}'
+    patternForTimef = r"\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}.\d+"
+    patternForTime = r"\d{4}-\d{1,2}-\d{1,2}\s\d{1,2}:\d{1,2}:\d{1,2}"
 
     def check(self, data):
         return isinstance(data, datetime)
 
     def to_json(self, data):
-        if data is None: return
+        if data is None:
+            return
         if data.microsecond != 500000:
-            time_str = datetime.strftime(data, '%Y-%m-%d %H:%M:%S')
+            time_str = datetime.strftime(data, "%Y-%m-%d %H:%M:%S")
         else:
-            time_str = datetime.strftime(data, '%Y-%m-%d %H:%M:%S.%f')
+            time_str = datetime.strftime(data, "%Y-%m-%d %H:%M:%S.%f")
         return time_str
 
     def to_pollen(self, data):
         if re.match(self.patternForTimef, data):
-            return datetime.strptime(data, '%Y-%m-%d %H:%M:%S.%f')
+            return datetime.strptime(data, "%Y-%m-%d %H:%M:%S.%f")
         if re.match(self.patternForTime, data):
-            return datetime.strptime(data, '%Y-%m-%d %H:%M:%S')
+            return datetime.strptime(data, "%Y-%m-%d %H:%M:%S")
         return None
 
 
@@ -297,7 +306,8 @@ class TagStr(PollenTag):
         """
         for s in self.proxy.str_tags.values():
             res = s.to_pollen(data)
-            if res is not None: return res
+            if res is not None:
+                return res
         return data
 
 
@@ -312,5 +322,5 @@ tags = [
     TagNum,
     TagBytes,
     TagNone,
-    TagSet
+    TagSet,
 ]

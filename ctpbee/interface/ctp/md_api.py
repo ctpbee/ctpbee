@@ -73,14 +73,14 @@ class BeeMdApi(MdApi):
         """
         Callback when error occured.
         """
-        error['detail'] = "行情接口报错"
+        error["detail"] = "行情接口报错"
         self.on_event(type=EVENT_ERROR, data=error)
 
     def onRspSubMarketData(self, data: dict, error: dict, reqid: int, last: bool):
         """"""
         if not error or not error["ErrorID"]:
             return
-        error['detail'] = "行情订阅失败"
+        error["detail"] = "行情订阅失败"
         self.on_event(type=EVENT_ERROR, data=error)
 
     def onRtnDepthMarketData(self, data: dict):
@@ -94,15 +94,20 @@ class BeeMdApi(MdApi):
         # 针对大商所进行处理 see https://github.com/ctpbee/ctpbee/issues/165
         if exchange == Exchange.DCE:
             datetimed = datetime.strptime(
-                str(date.today()) + " " + f"{data['UpdateTime']}.{int(data['UpdateMillisec'] / 100)}",
-                "%Y-%m-%d %H:%M:%S.%f")
+                str(date.today())
+                + " "
+                + f"{data['UpdateTime']}.{int(data['UpdateMillisec'] / 100)}",
+                "%Y-%m-%d %H:%M:%S.%f",
+            )
         else:
             # 正常情况下tick的处理
             timestamp = f"{data['ActionDay']} {data['UpdateTime']}.{int(data['UpdateMillisec'] / 100)}"
             try:
                 datetimed = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S.%f")
             except ValueError as e:
-                datetimed = datetime.strptime(str(date.today()) + " " + timestamp, "%Y-%m-%d %H:%M:%S.%f")
+                datetimed = datetime.strptime(
+                    str(date.today()) + " " + timestamp, "%Y-%m-%d %H:%M:%S.%f"
+                )
 
         tick = TickData(
             symbol=symbol,
@@ -113,12 +118,12 @@ class BeeMdApi(MdApi):
             last_price=data["LastPrice"],
             limit_up=data["UpperLimitPrice"],
             limit_down=data["LowerLimitPrice"],
-            open_interest=data['OpenInterest'],
+            open_interest=data["OpenInterest"],
             open_price=data["OpenPrice"],
             high_price=data["HighestPrice"],
             low_price=data["LowestPrice"],
             pre_close=data["PreClosePrice"],
-            turnover=data['Turnover'],
+            turnover=data["Turnover"],
             bid_price_1=data.get("BidPrice1", 0),
             bid_price_2=data.get("BidPrice2", 0),
             bid_price_3=data.get("BidPrice3", 0),
@@ -139,11 +144,11 @@ class BeeMdApi(MdApi):
             ask_volume_3=data.get("AskVolume3", 0),
             ask_volume_4=data.get("AskVolume4", 0),
             ask_volume_5=data.get("AskVolume5", 0),
-            average_price=data['AveragePrice'],
-            pre_settlement_price=data['PreSettlementPrice'],
-            settlement_price=data['SettlementPrice'],
-            pre_open_interest=data['PreOpenInterest'],
-            gateway_name=self.gateway_name
+            average_price=data["AveragePrice"],
+            pre_settlement_price=data["PreSettlementPrice"],
+            settlement_price=data["SettlementPrice"],
+            pre_open_interest=data["PreOpenInterest"],
+            gateway_name=self.gateway_name,
         )
         self.on_event(type=EVENT_TICK, data=tick)
 
@@ -151,15 +156,15 @@ class BeeMdApi(MdApi):
         """
         Start connection to server.
         """
-        self.userid = info['userid']
-        self.password = info['password']
-        self.brokerid = info['brokerid']
+        self.userid = info["userid"]
+        self.password = info["password"]
+        self.brokerid = info["brokerid"]
 
         # If not connected, then start connection first.
         if not self.connect_status:
             path = get_folder_path(self.gateway_name.lower() + f"/{self.userid}")
             self.createFtdcMdApi(str(path) + "\\Md")
-            self.registerFront(info['md_address'])
+            self.registerFront(info["md_address"])
             self.init()
         # If already connected, then login immediately.
         elif not self.login_status:
@@ -172,7 +177,7 @@ class BeeMdApi(MdApi):
         req = {
             "UserID": self.userid,
             "Password": self.password,
-            "BrokerID": self.brokerid
+            "BrokerID": self.brokerid,
         }
 
         self.reqid += 1
