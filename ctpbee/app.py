@@ -7,18 +7,16 @@ from threading import Thread
 from time import sleep
 from typing import Text
 
-
 from ctpbee import __version__
 from ctpbee.center import Center
 from ctpbee.config import Config
-from ctpbee.constant import Event, Mode, ContractData
-from ctpbee.constant import Exchange
+from ctpbee.constant import ContractData, Event, Exchange, Mode
 from ctpbee.context import _app_context_ctx
 from ctpbee.exceptions import ConfigError
-from ctpbee.helpers import find_package, refresh_query, graphic_pattern
+from ctpbee.helpers import find_package, graphic_pattern, refresh_query
 from ctpbee.interface import Interface
 from ctpbee.jsond import dumps
-from ctpbee.level import CtpbeeApi, Action
+from ctpbee.level import Action, CtpbeeApi
 from ctpbee.log import VLogger
 from ctpbee.looper.data import VessData
 from ctpbee.looper.report import render_result
@@ -105,7 +103,7 @@ class CtpBee(object):
             raise TypeError("引擎参数错误,只支持 thread 和 async,请检查代码")
         """
         If no action is specified by default, use the default Action class
-        如果默认不指定action参数, 那么使用默认的Action类 
+        如果默认不指定action参数, 那么使用默认的Action类
         """
         if action_class is None:
             self.action: Action = Action(self)
@@ -233,6 +231,7 @@ class CtpBee(object):
         show_me = graphic_pattern(__version__, self.engine_method)
         if logout:
             print(show_me)
+
         self.init_interface()
         if self.config["PATTERN"] == "real" and self.r is None:
             self.r = Thread(
@@ -268,7 +267,6 @@ class CtpBee(object):
         elif (
             self.config.get("PATTERN", "real") == "looper" and not self._init_interface
         ):
-
             self.config["INTERFACE"] = "looper"
             Market, Trader = Interface.get_interface(app=self)
             self.trader = Trader(self.app_signal, self)
@@ -281,24 +279,6 @@ class CtpBee(object):
         """
         self._temp_contracts.append(contract)
 
-    def _signal_handler(self, signum, frame):
-        """
-        信号处理函数，用于捕获Ctrl+C信号，实现优雅退出
-
-        Args:
-            signum: 信号编号
-            frame: 当前堆栈帧
-        """
-        self.r_flag = False
-        from time import sleep
-
-        for i in range(5):
-            self.logger.info(f"捕获到退出信号，正在优雅退出... {5-i}s内退出")
-            sleep(1)
-        self.release()
-        self.logger.info("已成功退出")
-        sys.exit(0)
-
     def start(self, log_output=False, debug=False):
         """
         开启处理整个事件处理循环
@@ -308,9 +288,6 @@ class CtpBee(object):
 
           debug(bool): 是否开启调试模式 ----> 等待完成
         """
-        import signal
-
-        signal.signal(signal.SIGINT, self._signal_handler)
         if self.config.get("PATTERN") == "real":
             if self.work_mode == Mode.DISPATCHER:
                 dispatcher = Dispatcher(name="ctpbee_dispatcher", app=self)
