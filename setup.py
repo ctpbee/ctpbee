@@ -38,6 +38,7 @@ install_requires = [
     "ctpbee_api>=0.40",
     "numpy",
     "pandas",
+    "ctpbee_kline",
 ]
 
 if sys.version_info.major == 3 and sys.version_info.minor == 6:
