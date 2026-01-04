@@ -1,6 +1,6 @@
 """
 Notice : 神兽保佑 ，测试一次通过
-//      
+//
 //      ┏┛ ┻━━━━━┛ ┻┓
 //      ┃　　　　　　 ┃
 //      ┃　　　━　　　┃
@@ -19,247 +19,417 @@ Notice : 神兽保佑 ，测试一次通过
 //          ┗━┻━┛   ┗━┻━┛
 //
 """
+
+from ctpbee.constant import (
+    PositionData,
+    Offset,
+    Direction,
+    OrderRequest,
+    OrderData,
+    Exchange,
+    TickData,
+    EXCHANGE_MAPPING,
+    BarData,
+)
+from copy import copy
 import warnings
 from typing import Text
 
 """ 本地持仓对象 """
-from copy import copy
-
-from ctpbee.constant import PositionData, Offset, Direction, OrderRequest, OrderData, \
-    Exchange, TickData, EXCHANGE_MAPPING, BarData
 
 
-class LocalVariable:
-    def __init__(self, data):
-
-        if data.get("long") is not None:
-            self.long = float(data.get('long'))
-        else:
-            self.long = 0
-        if data.get("short") is not None:
-            self.short = float(data.get('short'))
-        else:
-            self.short = 0
-
-
-class PositionHolding:
-    """ 单个合约的持仓 """
+class PositionModel:
+    """单个合约的持仓模型"""
 
     def __init__(self, local_symbol, contract=None):
-        """"""
+        """初始化持仓对象"""
         self.local_symbol = local_symbol
         try:
             self.exchange = local_symbol.split(".")[1]
             self.symbol = local_symbol.split(".")[0]
         except Exception:
             raise ValueError("invalid local_symbol")
+        # 使用字典存储活跃订单，减少属性数量
         self.active_orders = {}
-        from ctpbee.looper.account import Account
+        # 合约大小
         if contract is None:
-            warnings.warn("no size passed please check your contract! contract will be fixed to 10")
+            warnings.warn(
+                "no size passed please check your contract! contract will be fixed to 10"
+            )
             self.size = 10
         else:
             self.size = contract.size
-        self.long_pos = 0
-        self.long_yd = 0
-        self.long_td = 0
-        self.long_pnl = 0
-        self.long_stare_pnl = 0
-        self.long_price = 0
-        self.long_open_price = 0
 
-        self.short_pos = 0
-        self.short_yd = 0
-        self.short_td = 0
-        self.short_pnl = 0
-        self.short_stare_pnl = 0
-        self.short_price = 0
-        self.short_open_price = 0
+        # 持仓数据存储 - 使用更紧凑的结构
+        self.long = {
+            "pos": 0,  # 总持仓
+            "yd": 0,  # 昨仓
+            "td": 0,  # 今仓
+            "price": 0,  # 持仓均价
+            "open_price": 0,  # 开仓均价
+            "pnl": 0,  # 盈亏
+            "float_pnl": 0,  # 浮动盈亏
+            "frozen": 0,  # 冻结数量
+            "yd_frozen": 0,  # 昨仓冻结
+            "td_frozen": 0,  # 今仓冻结
+        }
 
-        self.long_pos_frozen = 0
-        self.long_yd_frozen = 0
-        self.long_td_frozen = 0
+        self.short = {
+            "pos": 0,  # 总持仓
+            "yd": 0,  # 昨仓
+            "td": 0,  # 今仓
+            "price": 0,  # 持仓均价
+            "open_price": 0,  # 开仓均价
+            "pnl": 0,  # 盈亏
+            "float_pnl": 0,  # 浮动盈亏
+            "frozen": 0,  # 冻结数量
+            "yd_frozen": 0,  # 昨仓冻结
+            "td_frozen": 0,  # 今仓冻结
+        }
 
-        self.short_pos_frozen = 0
-        self.short_yd_frozen = 0
-        self.short_td_frozen = 0
-
-        self.pre_settlement_price = 0
+        # 行情数据
         self.last_price = 0
+        self.pre_settlement_price = 0
+
+        # 缓存计算结果
+        self._cached_long_available = 0
+        self._cached_short_available = 0
+        self._cache_valid = False
+
+    @property
+    def long_pos(self):
+        return self.long["pos"]
+
+    @property
+    def short_pos(self):
+        return self.short["pos"]
+
+    @property
+    def long_pos_frozen(self):
+        return self.long["frozen"]
+
+    @property
+    def short_pos_frozen(self):
+        return self.short["frozen"]
+
+    @property
+    def long_td(self):
+        return self.long["td"]
+
+    @property
+    def short_td(self):
+        return self.short["td"]
+
+    @property
+    def long_yd(self):
+        return self.long["yd"]
+
+    @property
+    def short_yd(self):
+        return self.short["yd"]
 
     @property
     def long_available(self):
-        return self.long_pos - self.long_pos_frozen
+        if not self._cache_valid:
+            self._update_cache()
+        return self._cached_long_available
 
     @property
     def short_available(self):
-        return self.short_pos - self.short_pos_frozen
+        if not self._cache_valid:
+            self._update_cache()
+        return self._cached_short_available
 
-    def update_trade(self, trade):
-        """成交更新"""
-        # 多头
-        if trade.direction == Direction.LONG:
-            # 开仓
-            if trade.offset == Offset.OPEN:
-                self.long_td += trade.volume
-            # 平今
-            elif trade.offset == Offset.CLOSETODAY:
-                self.short_td -= trade.volume
-            # 平昨
-            elif trade.offset == Offset.CLOSEYESTERDAY:
-                self.short_yd -= trade.volume
-            # 平仓
-            elif trade.offset == Offset.CLOSE:
-                # 上期所等同于平昨
-                if self.exchange == Exchange.SHFE:
-                    self.short_yd -= trade.volume
-                # 非上期所，优先平今
-                else:
-                    self.short_td -= trade.volume
-                    if self.short_td < 0:
-                        self.short_yd += self.short_td
-                        self.short_td = 0
+    @property
+    def long_open_price(self):
+        return self.long["open_price"]
 
-        elif trade.direction == Direction.SHORT:
-            # 开仓
+    @property
+    def long_hold_price(self):
+        return self.long["price"]
 
-            if trade.offset == Offset.OPEN:
-                self.short_td += trade.volume
-            # 平今
-            elif trade.offset == Offset.CLOSETODAY:
-                self.long_td -= trade.volume
-            # 平昨
-            elif trade.offset == Offset.CLOSEYESTERDAY:
-                self.long_yd -= trade.volume
-            # 平仓
-            elif trade.offset == Offset.CLOSE:
-                # 上期所等同于平昨
-                if self.exchange == Exchange.SHFE:
-                    self.long_yd -= trade.volume
-                # 非上期所，优先平今
-                else:
-                    self.long_td -= trade.volume
+    @property
+    def short_open_price(self):
+        return self.short["open_price"]
 
-                    if self.long_td < 0:
-                        self.long_yd += self.long_td
-                        self.long_td = 0
-        # self.long_pos = self.long_td + self.long_yd
-        # self.short_pos = self.short_yd + self.short_td
-        # 汇总
-        self.calculate_price(trade)
-        self.calculate_position()
-        self.calculate_pnl()
-        self.calculate_stare_pnl()
+    @property
+    def short_hold_price(self):
+        return self.short["price"]
 
-    def calculate_position(self):
-        """计算持仓情况"""
-        self.long_pos = self.long_td + self.long_yd
-        self.short_pos = self.short_td + self.short_yd
+    def __repr__(self) -> str:
+        return str(self.to_dict())
 
-    def update_position(self, position: PositionData):
-        """"""
-        if position.direction == Direction.LONG:
-            self.long_pos = position.volume
-            self.long_yd = position.yd_volume
-            self.long_td = self.long_pos - self.long_yd
-            self.long_pnl = position.pnl
-            self.long_price = position.price
-            self.long_open_price = position.open_price
+    def __str__(self) -> str:
+        return str(self.to_dict())
 
-        elif position.direction == Direction.SHORT:
-            self.short_pos = position.volume
-            self.short_yd = position.yd_volume
-            self.short_td = self.short_pos - self.short_yd
-            self.short_pnl = position.pnl
-            self.short_price = position.price
-            self.short_open_price = position.open_price
+    def to_dict(self) -> dict:
+        return {
+            "symbol": self.symbol,
+            "exchange": self.exchange,
+            "long_pos": self.long_pos,
+            "long_pos_frozen": self.long_pos_frozen,
+            "long_td": self.long_td,
+            "long_yd": self.long_yd,
+            "long_available": self.long_available,
+            "long_open_price": self.long_open_price,
+            "long_hold_price": self.long_hold_price,
+            "long_pnl": self.long_pnl,
+            "long_float_pnl": self.long_float_pnl,
+            "short_pos": self.short_pos,
+            "short_pos_frozen": self.short_pos_frozen,
+            "short_td": self.short_td,
+            "short_yd": self.short_yd,
+            "short_available": self.short_available,
+            "short_open_price": self.short_open_price,
+            "short_hold_price": self.short_hold_price,
+            "short_pnl": self.short_pnl,
+            "short_float_pnl": self.short_float_pnl,
+        }
 
-    def update_order(self, order: OrderData):
-        """"""
-        if order._is_active():
-            self.active_orders[order.local_order_id] = order
-        else:
-            if order.local_order_id in self.active_orders:
-                self.active_orders.pop(order.local_order_id)
+    def _update_cache(self):
+        """更新缓存"""
+        self._cached_long_available = self.long["pos"] - self.long["frozen"]
+        self._cached_short_available = self.short["pos"] - self.short["frozen"]
+        self._cache_valid = True
 
-        self.calculate_frozen()
+    def _calculate_position(self):
+        """计算总持仓，并在持仓量为0时重置均价"""
+        self.long["pos"] = self.long["td"] + self.long["yd"]
+        self.short["pos"] = self.short["td"] + self.short["yd"]
 
-    def update_order_request(self, req: OrderRequest, local_order_id: str):
-        """"""
-        gateway_name, orderid = local_order_id.split(".")
+        # 当持仓量为0时，重置均价
+        if self.long["pos"] == 0:
+            self.long["price"] = 0
+            self.long["open_price"] = 0
 
-        order = req._create_order_data(orderid, gateway_name)
-        self.update_order(order)
+        if self.short["pos"] == 0:
+            self.short["price"] = 0
+            self.short["open_price"] = 0
 
-    def update_tick(self, tick, pre_settlement_price):
-        """ 行情更新 """
-        self.pre_settlement_price = pre_settlement_price
-        self.last_price = tick.last_price
-        self.calculate_pnl()
-        self.calculate_stare_pnl()
+        self._cache_valid = False
 
-    def update_bar(self, bar, pre_close):
-        self.pre_settlement_price = pre_close
-        self.last_price = bar.close_price
-        self.calculate_pnl()
-        self.calculate_stare_pnl()
+    def _calculate_frozen(self):
+        """计算冻结数量"""
+        # 重置冻结数量
+        self.long["frozen"] = 0
+        self.long["yd_frozen"] = 0
+        self.long["td_frozen"] = 0
+        self.short["frozen"] = 0
+        self.short["yd_frozen"] = 0
+        self.short["td_frozen"] = 0
 
-    def calculate_frozen(self):
-        """"""
-        self.long_pos_frozen = 0
-        self.long_yd_frozen = 0
-        self.long_td_frozen = 0
-
-        self.short_pos_frozen = 0
-        self.short_yd_frozen = 0
-        self.short_td_frozen = 0
-
+        # 遍历活跃订单计算冻结数量
         for order in self.active_orders.values():
-            # Ignore position open orders
             if order.offset == Offset.OPEN:
                 continue
 
             frozen = order.volume - order.traded
 
             if order.direction == Direction.LONG:
+                # 多头平仓，冻结空头仓位
                 if order.offset == Offset.CLOSETODAY:
-                    self.short_td_frozen += frozen
+                    self.short["td_frozen"] += frozen
                 elif order.offset == Offset.CLOSEYESTERDAY:
-                    self.short_yd_frozen += frozen
+                    self.short["yd_frozen"] += frozen
                 elif order.offset == Offset.CLOSE:
-                    self.short_td_frozen += frozen
-
-                    if self.short_td_frozen > self.short_td:
-                        self.short_yd_frozen += (self.short_td_frozen
-                                                 - self.short_td)
-                        self.short_td_frozen = self.short_td
-            elif order.direction == Direction.SHORT:
+                    # 优先平今
+                    self.short["td_frozen"] += frozen
+                    if self.short["td_frozen"] > self.short["td"]:
+                        excess = self.short["td_frozen"] - self.short["td"]
+                        self.short["yd_frozen"] += excess
+                        self.short["td_frozen"] = self.short["td"]
+            else:
+                # 空头平仓，冻结多头仓位
                 if order.offset == Offset.CLOSETODAY:
-                    self.long_td_frozen += frozen
+                    self.long["td_frozen"] += frozen
                 elif order.offset == Offset.CLOSEYESTERDAY:
-                    self.long_yd_frozen += frozen
+                    self.long["yd_frozen"] += frozen
                 elif order.offset == Offset.CLOSE:
-                    self.long_td_frozen += frozen
+                    # 优先平今
+                    self.long["td_frozen"] += frozen
+                    if self.long["td_frozen"] > self.long["td"]:
+                        excess = self.long["td_frozen"] - self.long["td"]
+                        self.long["yd_frozen"] += excess
+                        self.long["td_frozen"] = self.long["td"]
 
-                    if self.long_td_frozen > self.long_td:
-                        self.long_yd_frozen += (self.long_td_frozen
-                                                - self.long_td)
-                        self.long_td_frozen = self.long_td
+        # 更新总冻结数量
+        self.long["frozen"] = self.long["td_frozen"] + self.long["yd_frozen"]
+        self.short["frozen"] = self.short["td_frozen"] + self.short["yd_frozen"]
+        self._cache_valid = False
 
-            self.long_pos_frozen = self.long_td_frozen + self.long_yd_frozen
-            self.short_pos_frozen = self.short_td_frozen + self.short_yd_frozen
+    @property
+    def long_pnl(self) -> float:
+        return (
+            round(self.long["pos"] * (self.last_price - self.long["price"]) * self.size)
+            if self.long["pos"] > 0
+            else 0
+        )
 
-    def convert_order_request_shfe(self, req: OrderRequest):
-        """"""
+    @property
+    def short_pnl(self) -> float:
+        return (
+            round(
+                self.short["pos"] * (self.short["price"] - self.last_price) * self.size
+            )
+            if self.short["pos"] > 0
+            else 0
+        )
+
+    @property
+    def long_float_pnl(self) -> float:
+        return (
+            (self.long["pos"] * (self.last_price - self.long["open_price"]) * self.size)
+            if self.long["pos"] > 0
+            else 0
+        )
+
+    @property
+    def short_float_pnl(self):
+        return (
+            (
+                self.short["pos"]
+                * (self.short["open_price"] - self.last_price)
+                * self.size
+            )
+            if self.short["pos"] > 0
+            else 0
+        )
+
+    def _update_trade(self, trade):
+        """成交更新"""
+        # 处理多头交易
+        if trade.direction == Direction.LONG:
+            if trade.offset == Offset.OPEN:
+                # 多头开仓
+                cost = (
+                    self.long["price"] * self.long["pos"] + trade.volume * trade.price
+                )
+                open_cost = (
+                    self.long["open_price"] * self.long["pos"]
+                    + trade.volume * trade.price
+                )
+                new_pos = self.long["pos"] + trade.volume
+                if new_pos:
+                    self.long["price"] = cost / new_pos
+                    self.long["open_price"] = open_cost / new_pos
+                self.long["td"] += trade.volume
+            else:
+                if trade.offset == Offset.CLOSETODAY:
+                    # 平今空头
+                    self.short["td"] -= trade.volume
+                elif trade.offset == Offset.CLOSEYESTERDAY:
+                    # 平昨空头
+                    self.short["yd"] -= trade.volume
+                elif trade.offset == Offset.CLOSE:
+                    # 平仓
+                    if self.exchange == Exchange.SHFE:
+                        # 上期所平昨
+                        self.short["yd"] -= trade.volume
+                    else:
+                        # 其他交易所优先平今
+                        self.short["td"] -= trade.volume
+                        if self.short["td"] < 0:
+                            excess = self.short["td"]
+                            self.short["yd"] += excess
+                            self.short["td"] = 0
+        # 处理空头交易
+        else:
+            if trade.offset == Offset.OPEN:
+                # 空头开仓
+                cost = (
+                    self.short["price"] * self.short["pos"] + trade.volume * trade.price
+                )
+                open_cost = (
+                    self.short["open_price"] * self.short["pos"]
+                    + trade.volume * trade.price
+                )
+                new_pos = self.short["pos"] + trade.volume
+                if new_pos:
+                    self.short["price"] = cost / new_pos
+                    self.short["open_price"] = open_cost / new_pos
+                self.short["td"] += trade.volume
+            else:
+                if trade.offset == Offset.CLOSETODAY:
+                    # 平今多头
+                    self.long["td"] -= trade.volume
+                elif trade.offset == Offset.CLOSEYESTERDAY:
+                    # 平昨多头
+                    self.long["yd"] -= trade.volume
+                elif trade.offset == Offset.CLOSE:
+                    # 平仓
+                    if self.exchange == Exchange.SHFE:
+                        # 上期所平昨
+                        self.long["yd"] -= trade.volume
+                    else:
+                        # 其他交易所优先平今
+                        self.long["td"] -= trade.volume
+                        if self.long["td"] < 0:
+                            excess = self.long["td"]
+                            self.long["yd"] += excess
+                            self.long["td"] = 0
+
+        # 计算总持仓
+        self._calculate_position()
+
+    def _update_position(self, position: PositionData):
+        """持仓更新"""
+        if position.direction == Direction.LONG:
+            self.long["pos"] = position.volume
+            self.long["yd"] = position.yd_volume
+            self.long["td"] = self.long["pos"] - self.long["yd"]
+            self.long["pnl"] = position.pnl
+            self.long["price"] = position.price
+            self.long["open_price"] = position.open_price
+        elif position.direction == Direction.SHORT:
+            self.short["pos"] = position.volume
+            self.short["yd"] = position.yd_volume
+            self.short["td"] = self.short["pos"] - self.short["yd"]
+            self.short["pnl"] = position.pnl
+            self.short["price"] = position.price
+            self.short["open_price"] = position.open_price
+        self._cache_valid = False
+
+    def _update_order(self, order: OrderData):
+        """订单更新"""
+        if order._is_active():
+            self.active_orders[order.local_order_id] = order
+        else:
+            self.active_orders.pop(order.local_order_id, None)
+
+        # 重新计算冻结数量
+        self._calculate_frozen()
+
+    def _update_order_request(self, req: OrderRequest, local_order_id: str):
+        """订单请求更新"""
+        gateway_name, orderid = local_order_id.split(".")
+        order = req._create_order_data(orderid, gateway_name)
+        self._update_order(order)
+
+    def _update_tick(self, tick, pre_settlement_price):
+        """行情更新"""
+        self.last_price = tick.last_price
+        self.pre_settlement_price = pre_settlement_price
+
+    def _update_bar(self, bar, pre_close):
+        """K线更新"""
+        self.last_price = bar.close_price
+        self.pre_settlement_price = pre_close
+
+        # 更新盈亏
+        self._calculate_pnl()
+        self._calculate_float_pnl()
+
+    def _convert_order_request_shfe(self, req: OrderRequest):
+        """上期所订单转换"""
         if req.offset == Offset.OPEN:
             return [req]
 
         if req.direction == Direction.LONG:
-            pos_available = self.short_pos - self.short_pos_frozen
-            td_available = self.short_td - self.short_td_frozen
+            pos_available = self.short_available
+            td_available = self.short["td"] - self.short["td_frozen"]
         else:
-            pos_available = self.long_pos - self.long_pos_frozen
-            td_available = self.long_td - self.long_td_frozen
+            pos_available = self.long_available
+            td_available = self.long["td"] - self.long["td_frozen"]
 
         if req.volume > pos_available:
             return []
@@ -282,22 +452,21 @@ class PositionHolding:
 
             return req_list
 
-    def convert_order_request_lock(self, req: OrderRequest):
-        """"""
+    def _convert_order_request_lock(self, req: OrderRequest):
+        """锁仓订单转换"""
         if req.direction == Direction.LONG:
-            td_volume = self.short_td
-            yd_available = self.short_yd - self.short_yd_frozen
+            td_volume = self.short["td"]
+            yd_available = self.short["yd"] - self.short["yd_frozen"]
         else:
-            td_volume = self.long_td
-            yd_available = self.long_yd - self.long_yd_frozen
+            td_volume = self.long["td"]
+            yd_available = self.long["yd"] - self.long["yd_frozen"]
 
-        # If there is td_volume, we can only lock position
+        # 如果有今仓，只能锁仓
         if td_volume:
             req_open = copy(req)
             req_open.offset = Offset.OPEN
             return [req_open]
-        # If no td_volume, we close opposite yd position first
-        # then open new position
+        # 否则先平昨仓，再开新仓
         else:
             open_volume = max(0, req.volume - yd_available)
             req_list = []
@@ -318,100 +487,47 @@ class PositionHolding:
 
             return req_list
 
-    def calculate_pnl(self):
-        """ 计算浮动盈亏 """
-        try:
-            self.long_pnl = round(self.long_pos * (self.last_price - self.long_price) * self.size)
-        except ZeroDivisionError:
-            self.long_pnl = 0
-        except AttributeError:
-            self.long_pnl = 0
-        try:
-            self.short_pnl = round(self.short_pos * (self.short_price - self.last_price) * self.size)
-        except ZeroDivisionError:
-            self.short_pnl = 0
-        except AttributeError:
-            self.short_pnl = 0
-
-    def calculate_stare_pnl(self):
-        """计算盯市盈亏"""
-        try:
-            self.long_stare_pnl = self.long_pos * (self.last_price - self.long_open_price) * self.size
-        except ZeroDivisionError:
-            self.long_stare_pnl = 0
-        except AttributeError:
-            self.long_stare_pnl = 0
-        except OverflowError:
-            self.long_stare_pnl = 0
-        try:
-            self.short_stare_pnl = self.short_pos * (self.short_open_price - self.last_price) * self.size
-        except ZeroDivisionError:
-            self.short_stare_pnl = 0
-        except AttributeError:
-            self.short_stare_pnl = 0
-        except OverflowError:
-            self.short_stare_pnl = 0
-
-    def calculate_price(self, trade):
-        """计算持仓均价（基于成交数据）"""
-        # 只有开仓会影响持仓均价
-        if trade.offset == Offset.OPEN:
-            if trade.direction == Direction.LONG:
-                cost = self.long_price * self.long_pos + trade.volume * trade.price
-                open_cost = self.long_open_price * self.long_pos + trade.volume * trade.price
-                new_pos = self.long_pos + trade.volume
-                if new_pos:
-                    self.long_price = cost / new_pos
-                    self.long_open_price = open_cost / new_pos
-                else:
-                    self.long_price = 0
-                    self.long_open_price = 0
-            else:
-                cost = self.short_price * self.short_pos + trade.volume * trade.price
-                open_cost = self.short_open_price * self.short_pos + trade.volume * trade.price
-                new_pos = self.short_pos + trade.volume
-                if new_pos:
-                    self.short_price = cost / new_pos
-                    self.short_open_price = open_cost / new_pos
-                else:
-                    self.short_price = 0
-                    self.short_open_price = 0
-
-    def get_position_by_direction(self, direction):
+    def _get_position_by_direction(self, direction):
+        """根据方向获取持仓数据"""
         if direction == Direction.LONG:
-            return PositionData(
-                symbol=self.symbol,
-                volume=self.long_pos,
-                exchange=EXCHANGE_MAPPING[self.exchange],
-                direction=direction,
-                pnl=self.long_pnl,
-                price=self.long_price,
-                frozen=self.long_pos_frozen,
-                open_price=self.long_open_price,
-                yd_volume=self.long_yd,
-                float_pnl=self.long_stare_pnl,
-            )
+            return self._to_position_data(self.long, direction)
         elif direction == Direction.SHORT:
-            return PositionData(
-                symbol=self.symbol,
-                volume=self.short_pos,
-                exchange=EXCHANGE_MAPPING[self.exchange],
-                direction=direction,
-                pnl=self.short_pnl,
-                price=self.short_price,
-                frozen=self.short_pos_frozen,
-                yd_volume=self.short_yd,
-                float_pnl=self.short_stare_pnl,
-                open_price=self.short_open_price,
-            )
+            return self._to_position_data(self.short, direction)
         return None
 
-    def __repr__(self):
-        return f"Pos<local_symbol:{self.local_symbol} long_direction: {self.long_pos}---{self.long_price} pnl: {self.long_pnl}    short_direction: {self.short_pos}---{self.short_price} pnl:{self.short_pnl}>"
+    def _to_position_data(self, pos_dict, direction):
+        """将持仓字典快速转换为PositionData对象"""
+        return PositionData(
+            symbol=self.symbol,
+            volume=pos_dict["pos"],
+            exchange=EXCHANGE_MAPPING[self.exchange],
+            direction=direction,
+            pnl=pos_dict["pnl"],
+            price=pos_dict["price"],
+            frozen=pos_dict["frozen"],
+            open_price=pos_dict["open_price"],
+            yd_volume=pos_dict["yd"],
+            float_pnl=pos_dict["float_pnl"],
+        )
+
+    def to_position_data(self, direction=None):
+        """
+        快速将持仓转换为PositionData对象
+        如果未指定direction，则返回包含多空方向的持仓列表
+        """
+        if direction is None:
+            result = []
+            if self.long["pos"] > 0:
+                result.append(self._to_position_data(self.long, Direction.LONG))
+            if self.short["pos"] > 0:
+                result.append(self._to_position_data(self.short, Direction.SHORT))
+            return result
+        else:
+            return self._get_position_by_direction(direction)
 
 
 class LocalPositionManager(dict):
-    """ 用于管理持仓信息 只提供向外的接口 """
+    """用于管理持仓信息 只提供向外的接口"""
 
     def __init__(self, app):
         super().__init__({})
@@ -423,17 +539,17 @@ class LocalPositionManager(dict):
         更新tick信息更新本地持仓盈亏等数据
         """
         """ 更新tick  """
-        if tick.local_symbol not in self:
-            return
-        self.get(tick.local_symbol).update_tick(tick, pre_close)
+        holding = self.get(tick.local_symbol)
+        if holding:
+            holding._update_tick(tick, pre_close)
 
     def update_bar(self, bar: BarData, pre_close):
         """
         根据k线信息更新本地持仓盈亏
         """
-        if bar.local_symbol not in self:
-            return
-        self.get(bar.local_symbol).update_bar(bar, pre_close)
+        holding = self.get(bar.local_symbol)
+        if holding:
+            holding._update_bar(bar, pre_close)
 
     def is_convert_required(self, local_symbol: str):
         """
@@ -444,190 +560,154 @@ class LocalPositionManager(dict):
         # Only contracts with long-short position mode requires convert
         if not contract:
             return False
-        elif contract.net_position:
-            return False
-        else:
-            return True
+        return not getattr(contract, "net_position", True)
 
     def update_order_request(self, req: OrderRequest, local_orderid: str):
         """"""
         if not self.is_convert_required(req.local_symbol):
             return
 
-        holding = self.get(req.local_symbol, None)
+        holding = self.get(req.local_symbol)
         if not holding:
-            self[req.local_symbol] = PositionHolding(req.local_symbol,
-                                                     self.get_contract(req.local_symbol))
-        self[req.local_symbol].update_order_request(req, local_orderid)
+            self[req.local_symbol] = PositionModel(
+                req.local_symbol, self.get_contract(req.local_symbol)
+            )
+            holding = self[req.local_symbol]
+        holding._update_order_request(req, local_orderid)
 
     def convert_order_request(self, req: OrderRequest, lock: bool):
         """"""
         if not self.is_convert_required(req.local_symbol):
             return [req]
 
-        holding = self.get(req.local_symbol, None)
+        holding = self.get(req.local_symbol)
         if not holding:
-            self[req.local_symbol] = PositionHolding(req.local_symbol,
-                                                     self.get_contract(req.local_symbol)
-                                                     )
+            self[req.local_symbol] = PositionModel(
+                req.local_symbol, self.get_contract(req.local_symbol)
+            )
+            holding = self[req.local_symbol]
+
         if lock:
-            return self[req.local_symbol].convert_order_request_lock(req)
+            return holding._convert_order_request_lock(req)
         elif req.exchange == Exchange.SHFE:
-            return self[req.local_symbol].convert_order_request_shfe(req)
+            return holding._convert_order_request_shfe(req)
         else:
             return [req]
 
-    def update_order(self, order):
-        """ 更新order """
-        if order.local_symbol not in self:
-
-            self[order.local_symbol] = PositionHolding(order.local_symbol,
-                                                       self.get_contract(order.local_symbol))
-        else:
-            self.get(order.local_symbol).update_order(order)
-
     def get_contract(self, local_symbol):
+        """获取合约信息"""
         from ctpbee.app import CtpBee
-        if type(self.app) == CtpBee:
+
+        if self.app is None:
+            return None
+        elif isinstance(self.app, CtpBee):
             return self.app.recorder.get_contract(local_symbol)
         else:
             return self.app.get_contract(local_symbol)
 
+    def update_order(self, order):
+        """更新order"""
+        local_symbol = order.local_symbol
+        self.setdefault(
+            local_symbol, PositionModel(local_symbol, self.get_contract(local_symbol))
+        )._update_order(order)
+
     def update_trade(self, trade):
-        """ 更新成交  """
-        if trade.local_symbol not in self:
-            self[trade.local_symbol] = PositionHolding(trade.local_symbol,
-                                                       self.get_contract(trade.local_symbol))
-            self[trade.local_symbol].update_trade(trade)
-        else:
-            self.get(trade.local_symbol).update_trade(trade)
+        """更新成交"""
+        local_symbol = trade.local_symbol
+        self.setdefault(
+            local_symbol, PositionModel(local_symbol, self.get_contract(local_symbol))
+        )._update_trade(trade)
 
     def update_position(self, position):
-        """ 更新持仓 """
-        if position.local_symbol not in self.keys():
-            self[position.local_symbol] = PositionHolding(position.local_symbol,
-                                                          self.get_contract(position.local_symbol))
-            self[position.local_symbol].update_position(position)
-        else:
-            self.get(position.local_symbol).update_position(position)
-
-    def get_position(self, local_symbol):
-        """ 根据local_symbol 获取持仓信息 """
-        return self.get(local_symbol, None)
+        """更新持仓"""
+        local_symbol = position.local_symbol
+        self.setdefault(
+            local_symbol, PositionModel(local_symbol, self.get_contract(local_symbol))
+        )._update_position(position)
 
     def update_size_map(self, params):
+        """更新size_map"""
         self.size_map = params.get("size_map")
 
-    def get_position_by_ld(self, local_symbol: Text, direction: Direction) -> PositionData:
+    def covert_to_yesterday_holding(self, **kwargs):
+        """将今日持仓转换为昨日持仓"""
+        for holding in self.values():
+            # 将今仓转为昨仓
+            if holding.long["td"] > 0:
+                holding.long["yd"] += holding.long["td"]
+                holding.long["td"] = 0
+
+            if holding.short["td"] > 0:
+                holding.short["yd"] += holding.short["td"]
+                holding.short["td"] = 0
+
+            # 重新计算总持仓
+            holding._calculate_position()
+
+        # 更新价格和盈亏
+        for key, value in kwargs.items():
+            holding = self.get(key)
+            if not holding:
+                continue
+
+            if holding.long["pos"] > 0:
+                holding.long["price"] = value
+                holding.long["pnl"] = 0
+            else:
+                holding.long["price"] = 0
+                holding.long["pnl"] = 0
+
+            if holding.short["pos"] > 0:
+                holding.short["price"] = value
+                holding.short["pnl"] = 0
+            else:
+                holding.short["price"] = 0
+                holding.short["pnl"] = 0
+
+    def clear_frozen(self):
+        """清空冻结数量"""
+        for holding in self.values():
+            holding.active_orders.clear()
+            holding._calculate_frozen()
+
+    def get_all_position_objects(self):
+        """返回PositionData格式的持仓数据"""
+        pos_list = []
+        for holding in self.values():
+            if not holding.local_symbol:
+                continue
+            # 使用to_position_data方法快速转换
+            pos_list.extend(holding.to_position_data())
+        return pos_list
+
+    def get_position_by_ld(
+        self, local_symbol: str, direction: Direction
+    ) -> PositionData:
         """
         ld means local_symbol and direction
         ld意味着local_symbol和direction
         """
-        if local_symbol not in self:
+        holding: PositionModel = self.get(local_symbol)
+        if not holding:
             return None
-        return self[local_symbol].get_position_by_direction(direction)
+        return holding._get_position_by_direction(direction)
 
-    def covert_to_yesterday_holding(self, **kwargs):
-        """ 将今日持仓转换为昨日持仓 """
-        for holding in self.values():
-            if holding.long_td != 0:
-                holding.long_yd += holding.long_td
-                holding.long_td = 0
+    def get_position(self, local_symbol):
+        """根据local_symbol 获取持仓信息"""
+        # holding = self.get(tick.local_symbol)
+        model = self.get(local_symbol, None)
+        return model
 
-            if holding.short_td != 0:
-                holding.short_yd += holding.short_td
-                holding.short_td = 0
-        for key, value in kwargs.items():
-            pos = self.get(key, None)
-            if pos is not None:
-                if pos.long_pos != 0:
-                    self[key].long_price = value
-                    self[key].long_pnl = 0
-                else:
-                    self[key].long_price = 0
-                    self[key].long_pnl = 0
-                if pos.short_pos != 0:
-                    self[key].short_price = value
-                    self[key].short_pnl = 0
-                else:
-                    self[key].short_price = 0
-                    self[key].short_pnl = 0
-
-    def clear_frozen(self):
-        for x in self.values():
-            x.active_orders.clear()
-            x.calculate_frozen()
-
-    def get_all_position_objects(self):
-        """ 返回PositionData格式的持仓数据 """
-        pos = []
-        for x in self.values():
-            if len(x.local_symbol) == 0:
-                continue
-            if x.long_pos != 0:
-                p = PositionData(
-                    symbol=x.symbol,
-                    exchange=x.exchange,
-                    direction=Direction.LONG,
-                    volume=x.long_pos,
-                    frozen=x.long_pos_frozen,
-                    price=x.long_price,
-                    pnl=x.long_pnl,
-                    yd_volume=x.long_yd,
-                    float_pnl=x.long_stare_pnl,
-                    open_price=x.long_open_price,
-                )
-                pos.append(p)
-            if x.short_pos != 0:
-                p = PositionData(
-                    symbol=x.symbol,
-                    exchange=x.exchange,
-                    direction=Direction.SHORT,
-                    volume=x.short_pos,
-                    frozen=x.short_pos_frozen,
-                    price=x.short_price,
-                    pnl=x.short_pnl,
-                    yd_volume=x.short_yd,
-                    open_price=x.short_open_price,
-                    float_pnl=x.short_stare_pnl,
-                )
-                pos.append(p)
-        return pos
-
-    def get_all_positions(self, obj=False):
-        """ 返回所有的持仓信息 """
-        if obj:
-            return self.get_all_position_objects()
-        else:
-            position_list = []
-            for x in self.values():
-                if x.local_symbol == "":
-                    continue
-                if x.long_pos != 0:
-                    temp = {'exchange': x.exchange, 'direction': "long", 'position_profit': x.long_pnl,
-                            'symbol': x.local_symbol, 'local_symbol': x.local_symbol, 'price': x.long_price,
-                            'volume': x.long_pos, 'yd_volume': x.long_yd, "frozen": x.long_pos_frozen,
-                            "available": x.long_pos - x.long_pos_frozen, 'float_pnl': x.long_stare_pnl}
-                    if x.long_pos == x.long_yd:
-                        temp['position_date'] = 2
-                    elif x.long_pos != x.long_yd:
-                        temp['position_date'] = 1
-                    position_list.append(temp)
-                if x.short_pos != 0:
-                    temp = {'exchange': x.exchange, 'direction': "short", 'position_profit': x.short_pnl,
-                            'symbol': x.local_symbol, 'local_symbol': x.local_symbol, 'price': x.short_price,
-                            'volume': x.short_pos, 'yd_volume': x.short_yd, "frozen": x.short_pos_frozen,
-                            "available": x.short_pos - x.short_pos_frozen, 'float_pnl': x.short_stare_pnl}
-                    if x.short_pos == x.short_yd:
-                        temp['position_date'] = 2
-                    elif x.short_pos != x.short_yd:
-                        temp['position_date'] = 1
-                    position_list.append(temp)
-            return position_list
+    def get_all_positions(self):
+        """返回所有的持仓信息"""
+        return [holding for holding in self.values() if holding.local_symbol]
 
     @property
     def length(self):
+        """返回持仓数量"""
         return len(self)
 
     def len(self):
+        """返回持仓数量"""
         return len(self)

@@ -1,4 +1,5 @@
-""" 工具函数 """
+"""工具函数"""
+
 import ctypes
 import inspect
 import os
@@ -13,9 +14,9 @@ from functools import wraps
 from io import TextIOWrapper
 from threading import RLock
 from time import sleep
-from typing import AnyStr, IO
+from typing import IO, AnyStr
 
-from ctpbee.constant import Event, EVENT_TIMER, EVENT_INIT_FINISHED, EVENT_LOG
+from ctpbee.constant import EVENT_INIT_FINISHED, EVENT_LOG, EVENT_TIMER, Event
 from ctpbee.date import trade_dates
 
 _missing = object()
@@ -41,33 +42,32 @@ class locked_cached_property(object):
 
 
 def find_package(import_name):
-    root_mod_name = import_name.split('.')[0]
+    root_mod_name = import_name.split(".")[0]
     loader = pkgutil.get_loader(root_mod_name)
-    if loader is None or import_name == '__main__':
+    if loader is None or import_name == "__main__":
         package_path = os.getcwd()
     else:
-        if hasattr(loader, 'get_filename'):
+        if hasattr(loader, "get_filename"):
             filename = loader.get_filename(root_mod_name)
-        elif hasattr(loader, 'archive'):
+        elif hasattr(loader, "archive"):
             filename = loader.archive
         else:
             __import__(import_name)
             filename = sys.modules[import_name].__file__
         package_path = os.path.abspath(os.path.dirname(filename))
-        if _matching_loader_thinks_module_is_package(
-                loader, root_mod_name):
+        if _matching_loader_thinks_module_is_package(loader, root_mod_name):
             package_path = os.path.dirname(package_path)
 
     site_parent, site_folder = os.path.split(package_path)
     py_prefix = os.path.abspath(sys.prefix)
     if package_path.startswith(py_prefix):
         return py_prefix, package_path
-    elif site_folder.lower() == 'site-packages':
+    elif site_folder.lower() == "site-packages":
         parent, folder = os.path.split(site_parent)
         # Windows like installations
-        if folder.lower() == 'lib':
+        if folder.lower() == "lib":
             base_dir = parent
-        elif os.path.basename(parent).lower() == 'lib':
+        elif os.path.basename(parent).lower() == "lib":
             base_dir = os.path.dirname(parent)
         else:
             base_dir = site_parent
@@ -76,21 +76,26 @@ def find_package(import_name):
 
 
 def _matching_loader_thinks_module_is_package(loader, mod_name):
-    if hasattr(loader, 'is_package'):
+    if hasattr(loader, "is_package"):
         return loader.is_package(mod_name)
     # importlib's namespace loaders do not have this functionality but
     # all the modules it loads are packages, so we can take advantage of
     # this information.
-    elif (loader.__class__.__module__ == '_frozen_importlib' and
-          loader.__class__.__name__ == 'NamespaceLoader'):
+    elif (
+        loader.__class__.__module__ == "_frozen_importlib"
+        and loader.__class__.__name__ == "NamespaceLoader"
+    ):
         return True
     # Otherwise we need to fail with an error that explains what went
     # wrong.
     raise AttributeError(
-        ('%s.is_package() method is missing but is required by CtpBee of '
-         'PEP 302 import hooks.  If you do not use import hooks and '
-         'you encounter this error please file a bug against Flask.') %
-        loader.__class__.__name__)
+        (
+            "%s.is_package() method is missing but is required by CtpBee of "
+            "PEP 302 import hooks.  If you do not use import hooks and "
+            "you encounter this error please file a bug against Flask."
+        )
+        % loader.__class__.__name__
+    )
 
 
 def check(type_: AnyStr):
@@ -109,10 +114,14 @@ def check(type_: AnyStr):
         def wrapper(*args, **kwargs):
             if type_ == "market":
                 if args[0].app.market is None:
-                    raise ValueError("当前账户行情api未连接,请检查你的代码中是否使用了行情接口API")
+                    raise ValueError(
+                        "当前账户行情api未连接,请检查你的代码中是否使用了行情接口API"
+                    )
             elif type_ == "trader":
                 if args[0].app.trader is None:
-                    raise ValueError("当前账户交易api未连接,请检查你的代码中是否使用了交易接口API")
+                    raise ValueError(
+                        "当前账户交易api未连接,请检查你的代码中是否使用了交易接口API"
+                    )
             else:
                 raise ValueError("非法字符串")
             return func(*args, **kwargs)
@@ -123,41 +132,41 @@ def check(type_: AnyStr):
 
 
 def graphic_pattern(version, engine_method):
-    first = f"""                                                            
-               @             @                           
-                )           (                                 
-            #####################                               
-          ##                     ##                            
-         ##                       ##                                                  
-        ##   ctpbee   :{version.ljust(12, ' ')}##                          
-        ##                         ##                          
-        ##   engine   :{engine_method.ljust(12, ' ')}##                          
-         ##                       ##                          
-          ++++++++    +    ++++++++                      
-       (|||||||||| + +++ + ||||||||||)                          
-          +++++++ +++++++++ +++++++                            
+    first = f"""
+               @             @
+                )           (
+            #####################
+          ##                     ##
+         ##                       ##
+        ##   ctpbee   :{version.ljust(12, " ")}##
+        ##                         ##
+        ##   engine   :{engine_method.ljust(12, " ")}##
+         ##                       ##
+          ++++++++    +    ++++++++
+       (|||||||||| + +++ + ||||||||||)
+          +++++++ +++++++++ +++++++
                    +++++++
-                      T                                        
+                      T
         """
 
-    second = f"""             
-         @@@                     @@@                             
-            @@                 @@                              
-              @               @                                 
-          +#######################+                            
-         ##                       ##                                                  
-         ##  ctpbee:    {version.ljust(10, ' ')}##                          
-         ##                       ##                          
-         ##  engine:    {engine_method.ljust(10, ' ')}##                          
-         ##                       ##                          
-          ++++++++    +    ++++++++                      
-       (|||||||||| + +++ + ||||||||||)                          
-          +++++++ +++++++++ +++++++                            
+    second = f"""
+         @@@                     @@@
+            @@                 @@
+              @               @
+          +#######################+
+         ##                       ##
+         ##  ctpbee:    {version.ljust(10, " ")}##
+         ##                       ##
+         ##  engine:    {engine_method.ljust(10, " ")}##
+         ##                       ##
+          ++++++++    +    ++++++++
+       (|||||||||| + +++ + ||||||||||)
+          +++++++ +++++++++ +++++++
                    +++++++
-                      T                                        
+                      T
         """
     three = f"""
-    {"*" * 60}                                                               
+    {"*" * 60}
     *                                                          *
     *          -------------------------------------           *
     *          |                                   |           *
@@ -167,7 +176,7 @@ def graphic_pattern(version, engine_method):
     *          |                                   |           *
     *          -------------------------------------           *
     *                                                          *
-    {"*" * 60}                       
+    {"*" * 60}
              """
 
     return random.choice([first, second, three])
@@ -188,7 +197,7 @@ def dynamic_loading_api(f):
         raise ValueError(f"请确保你传入的是文件流(IO),而不是{str(type(f))}")
     d = types.ModuleType("object")
     d.__file__ = f.name
-    exec(compile(f.read(), f.name, 'exec'), d.__dict__)
+    exec(compile(f.read(), f.name, "exec"), d.__dict__)
     if not hasattr(d, "ext"):
         raise AttributeError("请检查你的策略中是否包含ext变量")
     return d.ext
@@ -196,14 +205,14 @@ def dynamic_loading_api(f):
 
 def auth_time(timed: datetime):
     """
-     检查时间是否合法
-     todo: 添加市场以兼容股票或者其他的市场
+    检查时间是否合法
+    todo: 添加市场以兼容股票或者其他的市场
 
-      Args:
-         timed (datetime): 时间对象
+     Args:
+        timed (datetime): 时间对象
 
-      Returns:
-         bool: 验证结果
+     Returns:
+        bool: 验证结果
     """
 
     data_time = timed.time()
@@ -224,13 +233,13 @@ def auth_time(timed: datetime):
 
 def run_forever(app):
     """
-   永久运行一个APP
+    永久运行一个APP
 
-    Args:
-       app (CtpBee): app实例
+     Args:
+        app (CtpBee): app实例
 
-    Returns:
-       None
+     Returns:
+        None
     """
     running_status = True
     while True:
@@ -276,9 +285,9 @@ def run_forever(app):
 
 def refresh_query(app, signals, refresh):
     """
-    fixme: 或许此函数会消耗大量性能 能不能按照0.5s 作为一次判断 
+    fixme: 或许此函数会消耗大量性能 能不能按照0.5s 作为一次判断
     针对流控,实现循环查询,此函数应该在另外一个线程调用
-    
+
     同时给common_signal传递1s一个信号基准
 
     Args:
@@ -291,14 +300,16 @@ def refresh_query(app, signals, refresh):
 
     while True:
         now = datetime.now()
-        if refresh and (now - p).seconds >= app.config['REFRESH_INTERVAL']:
-            app.trader.query_account()
+        if refresh and (now - p).seconds >= app.config["REFRESH_INTERVAL"]:
             p = now
-            if app.trader.ready and not app.trader.init_local:
-                app.trader.on_event(type=EVENT_INIT_FINISHED, data={})
-                app.trader.on_event(type=EVENT_LOG, data="交易接口初始化完成")
-                app.trader.init_local = True
-        if signals is not None and (now - c).seconds >= app.config['TIMER_INTERVAL']:
+            if app.trader.ready:
+                if not app.trader.init_local:
+                    app.trader.on_event(type=EVENT_INIT_FINISHED, data={})
+                    app.trader.on_event(type=EVENT_LOG, data="交易接口初始化完成")
+                    app.trader.init_local = True
+                else:
+                    app.trader.query_account()
+        if signals is not None and (now - c).seconds >= app.config["TIMER_INTERVAL"]:
             event = Event(type=EVENT_TIMER)
             signals.timer_signal.send(event)
             c = now
@@ -319,10 +330,11 @@ def call(func):
         d = func(*args, **kwargs)
         self, event = args
         for ext in self.app._extensions.values():
-            if self.app.config.get('INSTRUMENT_INDEPEND'):
+            if self.app.config.get("INSTRUMENT_INDEPEND"):
                 if len(ext.instrument_set) == 0:
                     warnings.warn(
-                        "你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0,请确保你的订阅变量是否为instrument_set,以及订阅具体代码")
+                        "你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0,请确保你的订阅变量是否为instrument_set,以及订阅具体代码"
+                    )
                 if event.data.local_symbol in ext.instrument_set:
                     ext(event)
             else:
@@ -345,10 +357,11 @@ def async_call(func):
         d = await func(*args, **kwargs)
         self, event = args
         for value in self.app._extensions.values():
-            if self.app.config['INSTRUMENT_INDEPEND']:
+            if self.app.config["INSTRUMENT_INDEPEND"]:
                 if len(value.instrument_set) == 0:
                     warnings.warn(
-                        "你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0,请确保你的订阅变量是否为instrument_set,以及订阅具体代码")
+                        "你当前开启策略对应订阅行情功能, 当前策略的订阅行情数量为0,请确保你的订阅变量是否为instrument_set,以及订阅具体代码"
+                    )
                 if event.data.local_symbol in value.instrument_set:
                     await value(event)
             else:
@@ -362,8 +375,7 @@ def _async_raise(tid, exctype):
     tid = ctypes.c_long(tid)
     if not inspect.isclass(exctype):
         exctype = type(exctype)
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
-        tid, ctypes.py_object(exctype))
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, ctypes.py_object(exctype))
     if res == 0:
         raise ValueError("invalid thread id")
     elif res != 1:
@@ -375,7 +387,7 @@ def _async_raise(tid, exctype):
 
 def end_thread(thread):
     """
-     强行杀掉线程, 不应该被用户使用
+    强行杀掉线程, 不应该被用户使用
     """
     _async_raise(thread.ident, SystemExit)
 

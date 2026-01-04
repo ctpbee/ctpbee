@@ -3,17 +3,40 @@ import os
 import types
 from functools import wraps
 from types import MethodType
-from typing import Set, List, AnyStr, Text
+from typing import AnyStr, List, Set, Text
 from warnings import warn
 
 import ctpbee.constant
 from ctpbee.center import Center
-from ctpbee.constant import EVENT_INIT_FINISHED, EVENT_TICK, EVENT_BAR, EVENT_ORDER, EVENT_SHARED, EVENT_TRADE, \
-    EVENT_POSITION, EVENT_ACCOUNT, EVENT_CONTRACT, OrderData, BarData, TickData, TradeData, \
-    PositionData, AccountData, ContractData, Offset, Direction, OrderType, Exchange, OrderRequest, CancelRequest
-from ctpbee.constant import EVENT_TIMER, Event, ToolRegisterType
+from ctpbee.constant import (
+    EVENT_ACCOUNT,
+    EVENT_BAR,
+    EVENT_CONTRACT,
+    EVENT_INIT_FINISHED,
+    EVENT_ORDER,
+    EVENT_POSITION,
+    EVENT_SHARED,
+    EVENT_TICK,
+    EVENT_TIMER,
+    EVENT_TRADE,
+    AccountData,
+    BarData,
+    CancelRequest,
+    ContractData,
+    Direction,
+    Event,
+    Exchange,
+    Offset,
+    OrderData,
+    OrderRequest,
+    OrderType,
+    PositionData,
+    TickData,
+    ToolRegisterType,
+    TradeData,
+)
 from ctpbee.exceptions import ConfigError
-from ctpbee.func import helper, get_ctpbee_path, tool_register
+from ctpbee.func import get_ctpbee_path, helper, tool_register
 from ctpbee.helpers import check, exec_intercept
 from ctpbee.record import Recorder
 
@@ -79,8 +102,16 @@ class Action(object):
         for order in self.app.center.active_orders:
             self.cancel(order.order_id, order)
 
-    def buy(self, price: float, volume: float, origin: BarData or TickData or TradeData or OrderData or PositionData,
-            price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
+    def buy(
+        self,
+        price: float,
+        volume: float,
+        origin: BarData or TickData or TradeData or OrderData or PositionData,
+        price_type: OrderType = OrderType.LIMIT,
+        stop: bool = False,
+        lock: bool = False,
+        **kwargs,
+    ):
         """
         多头开仓
 
@@ -97,17 +128,33 @@ class Action(object):
           str: 单号
         """
 
-        if not isinstance(self.app.config['SLIPPAGE_BUY'], float) and not isinstance(
-                self.app.config['SLIPPAGE_BUY'], int):
+        if not isinstance(self.app.config["SLIPPAGE_BUY"], float) and not isinstance(
+            self.app.config["SLIPPAGE_BUY"], int
+        ):
             raise ConfigError(message="滑点配置应为浮点小数或者整数")
 
-        price = price + self.app.config['SLIPPAGE_BUY']
-        req = helper.generate_order_req_by_var(volume=volume, price=price, offset=Offset.OPEN, direction=Direction.LONG,
-                                               type=price_type, exchange=origin.exchange, symbol=origin.symbol)
+        price = price + self.app.config["SLIPPAGE_BUY"]
+        req = helper.generate_order_req_by_var(
+            volume=volume,
+            price=price,
+            offset=Offset.OPEN,
+            direction=Direction.LONG,
+            type=price_type,
+            exchange=origin.exchange,
+            symbol=origin.symbol,
+        )
         return self.send_order(req)
 
-    def short(self, price: float, volume: float, origin: BarData or TickData or TradeData or OrderData or PositionData,
-              price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
+    def short(
+        self,
+        price: float,
+        volume: float,
+        origin: BarData or TickData or TradeData or OrderData or PositionData,
+        price_type: OrderType = OrderType.LIMIT,
+        stop: bool = False,
+        lock: bool = False,
+        **kwargs,
+    ):
         """
         空头开仓
 
@@ -124,17 +171,32 @@ class Action(object):
           str: 单号
         """
 
-        if not isinstance(self.app.config['SLIPPAGE_SHORT'], float) and not isinstance(
-                self.app.config['SLIPPAGE_SHORT'], int):
+        if not isinstance(self.app.config["SLIPPAGE_SHORT"], float) and not isinstance(
+            self.app.config["SLIPPAGE_SHORT"], int
+        ):
             raise ConfigError(message="滑点配置应为浮点小数")
-        price = price - self.app.config['SLIPPAGE_SHORT']
-        req = helper.generate_order_req_by_var(volume=volume, price=price, offset=Offset.OPEN,
-                                               direction=Direction.SHORT,
-                                               type=price_type, exchange=origin.exchange, symbol=origin.symbol)
+        price = price - self.app.config["SLIPPAGE_SHORT"]
+        req = helper.generate_order_req_by_var(
+            volume=volume,
+            price=price,
+            offset=Offset.OPEN,
+            direction=Direction.SHORT,
+            type=price_type,
+            exchange=origin.exchange,
+            symbol=origin.symbol,
+        )
         return self.send_order(req)
 
-    def sell(self, price: float, volume: float, origin: BarData or TickData or TradeData or OrderData = None,
-             price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
+    def sell(
+        self,
+        price: float,
+        volume: float,
+        origin: BarData or TickData or TradeData or OrderData = None,
+        price_type: OrderType = OrderType.LIMIT,
+        stop: bool = False,
+        lock: bool = False,
+        **kwargs,
+    ):
         """
         平空头, 注意返回是一个list, 因为单号会涉及到平昨平今组合平仓
 
@@ -150,18 +212,37 @@ class Action(object):
         Returns:
           List[str]: 单号列表
         """
-        if not isinstance(self.app.config['SLIPPAGE_SELL'], float) and not isinstance(
-                self.app.config['SLIPPAGE_SELL'], int):
+        if not isinstance(self.app.config["SLIPPAGE_SELL"], float) and not isinstance(
+            self.app.config["SLIPPAGE_SELL"], int
+        ):
             raise ConfigError(message="滑点配置应为浮点小数")
-        price = price + self.app.config['SLIPPAGE_SELL']
-        req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.LONG,
-                                                     type=price_type, exchange=origin.exchange,
-                                                     symbol=origin.symbol) for x in
-                    self.get_req(origin.local_symbol, Direction.SHORT, volume, self.app)]
+        price = price + self.app.config["SLIPPAGE_SELL"]
+        req_list = [
+            helper.generate_order_req_by_var(
+                volume=x[1],
+                price=price,
+                offset=x[0],
+                direction=Direction.LONG,
+                type=price_type,
+                exchange=origin.exchange,
+                symbol=origin.symbol,
+            )
+            for x in self.get_req(
+                origin.local_symbol, Direction.SHORT, volume, self.app
+            )
+        ]
         return [self.send_order(req) for req in req_list if req.volume != 0]
 
-    def cover(self, price: float, volume: float, origin: BarData or TickData or TradeData or OrderData or PositionData,
-              price_type: OrderType = OrderType.LIMIT, stop: bool = False, lock: bool = False, **kwargs):
+    def cover(
+        self,
+        price: float,
+        volume: float,
+        origin: BarData or TickData or TradeData or OrderData or PositionData,
+        price_type: OrderType = OrderType.LIMIT,
+        stop: bool = False,
+        lock: bool = False,
+        **kwargs,
+    ):
         """
         平多头, 注意返回是一个list, 因为单号会涉及到平昨平今组合平仓
 
@@ -177,17 +258,31 @@ class Action(object):
         Returns:
           str: 单号
         """
-        if not isinstance(self.app.config['SLIPPAGE_COVER'], float) and not isinstance(
-                self.app.config['SLIPPAGE_COVER'], int):
+        if not isinstance(self.app.config["SLIPPAGE_COVER"], float) and not isinstance(
+            self.app.config["SLIPPAGE_COVER"], int
+        ):
             raise ConfigError(message="滑点配置应为浮点小数")
-        price = price - self.app.config['SLIPPAGE_COVER']
-        req_list = [helper.generate_order_req_by_var(volume=x[1], price=price, offset=x[0], direction=Direction.SHORT,
-                                                     type=price_type, exchange=origin.exchange,
-                                                     symbol=origin.symbol) for x in
-                    self.get_req(origin.local_symbol, Direction.LONG, volume, self.app)]
+        price = price - self.app.config["SLIPPAGE_COVER"]
+        req_list = [
+            helper.generate_order_req_by_var(
+                volume=x[1],
+                price=price,
+                offset=x[0],
+                direction=Direction.SHORT,
+                type=price_type,
+                exchange=origin.exchange,
+                symbol=origin.symbol,
+            )
+            for x in self.get_req(origin.local_symbol, Direction.LONG, volume, self.app)
+        ]
         return [self.send_order(req) for req in req_list if req.volume != 0]
 
-    def cancel(self, id: Text, origin: BarData or TickData or TradeData or OrderData or PositionData = None, **kwargs):
+    def cancel(
+        self,
+        id: Text,
+        origin: BarData or TickData or TradeData or OrderData or PositionData = None,
+        **kwargs,
+    ):
         """
         撤单, 在不涉传递origin的情况下请使用local_symbol和exchange字段传递值
 
@@ -234,7 +329,9 @@ class Action(object):
             if isinstance(exchange, Exchange):
                 exchange = exchange.value
             local_symbol = order.local_symbol
-        req = helper.generate_cancel_req_by_str(order_id=orderid, exchange=exchange, symbol=local_symbol)
+        req = helper.generate_cancel_req_by_str(
+            order_id=orderid, exchange=exchange, symbol=local_symbol
+        )
         return self.cancel_order(req)
 
     @staticmethod
@@ -265,9 +362,14 @@ class Action(object):
                 if td_volume >= volume:
                     return [[Offset.CLOSETODAY, volume]]
                 else:
-                    return [[Offset.CLOSETODAY, td_volume],
-                            [Offset.CLOSEYESTERDAY, volume - td_volume]] if td_volume != 0 else [
-                        [Offset.CLOSEYESTERDAY, volume]]
+                    return (
+                        [
+                            [Offset.CLOSETODAY, td_volume],
+                            [Offset.CLOSEYESTERDAY, volume - td_volume],
+                        ]
+                        if td_volume != 0
+                        else [[Offset.CLOSEYESTERDAY, volume]]
+                    )
 
             elif app.config["CLOSE_PATTERN"] == "yesterday":
                 if position.yd_volume >= volume:
@@ -275,13 +377,22 @@ class Action(object):
                     return [[Offset.CLOSEYESTERDAY, volume]]
                 else:
                     """如果昨仓数量要小于需要平仓数目 那么优先平昨再平今"""
-                    return [[Offset.CLOSEYESTERDAY, position.yd_volume],
-                            [Offset.CLOSETODAY, volume - position.yd_volume]] if position.yd_volume != 0 else [
-                        [Offset.CLOSETODAY, volume]]
+                    return (
+                        [
+                            [Offset.CLOSEYESTERDAY, position.yd_volume],
+                            [Offset.CLOSETODAY, volume - position.yd_volume],
+                        ]
+                        if position.yd_volume != 0
+                        else [[Offset.CLOSETODAY, volume]]
+                    )
             else:
-                raise ValueError("bad config, ctpbee just on support today and yesterday")
+                raise ValueError(
+                    "bad config, ctpbee just on support today and yesterday"
+                )
 
-        position: PositionData = app.recorder.position_manager.get_position_by_ld(local_symbol, direction)
+        position: PositionData = app.recorder.position_manager.get_position_by_ld(
+            local_symbol, direction
+        )
         if not position:
             msg = f"{local_symbol}在{direction.value}上无仓位"
             warn(msg)
@@ -397,34 +508,14 @@ class CtpbeeApi(BeeApi):
       data_processor.init_app(app)
       #           or
       app.add_extension(Process("data_processor"))
-     """
+    """
 
-    def __new__(cls, *args, **kwargs):
-        map = {
-            EVENT_TIMER: cls.on_realtime,
-            EVENT_TICK: cls.on_tick,
-            EVENT_ORDER: cls.on_order,
-            EVENT_TRADE: cls.on_trade,
-            EVENT_POSITION: cls.on_position,
-            EVENT_ACCOUNT: cls.on_account,
-            EVENT_CONTRACT: cls.on_contract,
-            EVENT_BAR: cls.on_bar,
-        }
-        parmeter = {
-            EVENT_TIMER: EVENT_TIMER,
-            EVENT_POSITION: EVENT_POSITION,
-            EVENT_TRADE: EVENT_TRADE,
-            EVENT_BAR: EVENT_BAR,
-            EVENT_TICK: EVENT_TICK,
-            EVENT_ORDER: EVENT_ORDER,
-            EVENT_SHARED: EVENT_SHARED,
-            EVENT_ACCOUNT: EVENT_ACCOUNT,
-            EVENT_CONTRACT: EVENT_CONTRACT,
-        }
-        setattr(cls, "map", map)
-        setattr(cls, "parmeter", parmeter)
+    # def __new__(cls, *args, **kwargs):
 
-        return super().__new__(cls)
+    #     setattr(cls, "map", map)
+    #     setattr(cls, "parmeter", parmeter)
+
+    #     return super().__new__(cls)
 
     def __call__(self, event: Event = None):
         # 特别处理两种情况
@@ -440,7 +531,7 @@ class CtpbeeApi(BeeApi):
                     self.on_init(True)
             else:
                 func = self.map[event.type]
-                func(self, event.data)
+                func(event.data)
 
     def __init__(self, extension_name, app=None, **kwargs):
         """
@@ -472,6 +563,26 @@ class CtpbeeApi(BeeApi):
         init = kwargs.get("init_position", False)
         if init and not isinstance(init, bool):
             raise TypeError(f"init参数应该设置为True或者False,而不是{type(init)}")
+
+        self.map = {
+            EVENT_TICK: self.on_tick,
+            EVENT_ORDER: self.on_order,
+            EVENT_TRADE: self.on_trade,
+            EVENT_POSITION: self.on_position,
+            EVENT_ACCOUNT: self.on_account,
+            EVENT_CONTRACT: self.on_contract,
+            EVENT_BAR: self.on_bar,
+        }
+        self.parmeter = {
+            EVENT_POSITION: EVENT_POSITION,
+            EVENT_TRADE: EVENT_TRADE,
+            EVENT_BAR: EVENT_BAR,
+            EVENT_TICK: EVENT_TICK,
+            EVENT_ORDER: EVENT_ORDER,
+            EVENT_SHARED: EVENT_SHARED,
+            EVENT_ACCOUNT: EVENT_ACCOUNT,
+            EVENT_CONTRACT: EVENT_CONTRACT,
+        }
 
         # 单号如
         self.order_id_mapping = {}
@@ -534,22 +645,22 @@ class CtpbeeApi(BeeApi):
 
     def warning(self, *msg, **kwargs):
         msg = " ".join(msg)
-        kwargs['owner'] = "API: " + self.extension_name
+        kwargs["owner"] = "API: " + self.extension_name
         self.logger.warning(msg, **kwargs)
 
     def info(self, *msg, **kwargs):
         msg = " ".join(msg)
-        kwargs['owner'] = "API: " + self.extension_name
+        kwargs["owner"] = "API: " + self.extension_name
         self.logger.info(msg, **kwargs)
 
     def error(self, *msg, **kwargs):
         msg = " ".join(msg)
-        kwargs['owner'] = "API: " + self.extension_name
+        kwargs["owner"] = "API: " + self.extension_name
         self.logger.error(msg, **kwargs)
 
     def debug(self, *msg, **kwargs):
         msg = " ".join(msg)
-        kwargs['owner'] = "API: " + self.extension_name
+        kwargs["owner"] = "API: " + self.extension_name
         self.logger.debug(msg, **kwargs)
 
     @property
@@ -709,7 +820,9 @@ class CtpbeeApi(BeeApi):
             print(tick)
         """
         if handler not in self.map:
-            raise TypeError(f"hey, ctpbee暂不支持此函数类型 {handler}, 当前仅支持 {self.map.keys()}")
+            raise TypeError(
+                f"hey, ctpbee暂不支持此函数类型 {handler}, 当前仅支持 {self.map.keys()}"
+            )
 
         def converter(func):
             self.map[handler] = func
@@ -736,7 +849,9 @@ class Tool:
     def __init__(self, name: str, app=None):
         self._name = name
         self._app = None
-        self._linked: dict[ToolRegisterType:set] = dict(map(lambda r_type: (r_type, set()), ToolRegisterType))
+        self._linked: dict[ToolRegisterType:set] = dict(
+            map(lambda r_type: (r_type, set()), ToolRegisterType)
+        )
         if app is not None:
             self.init_app(app)
 

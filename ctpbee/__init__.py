@@ -1,17 +1,27 @@
 """
-    for the future of  life
+for the future of  life
 """
-__version__ = '1.6.9'
+
+__version__ = "1.6.9"
 
 # Here are pre import
 from ctpbee.app import CtpBee
 from ctpbee.constant import Mode
-from ctpbee.context import current_app, switch_app, get_app, del_app
+from ctpbee.context import current_app, del_app, get_app, switch_app
 from ctpbee.data_handle import LocalPositionManager
 from ctpbee.date import get_day_from
-from ctpbee.func import cancel_order, send_order, subscribe, query_func, helper, hickey, get_ctpbee_path, \
-    get_current_trade_day, tool_register
-from ctpbee.helpers import dynamic_loading_api, auth_time
+from ctpbee.func import (
+    cancel_order,
+    get_ctpbee_path,
+    get_current_trade_day,
+    helper,
+    hickey,
+    query_func,
+    send_order,
+    subscribe,
+    tool_register,
+)
+from ctpbee.helpers import auth_time, dynamic_loading_api
 from ctpbee.jsond import dumps, loads
-from ctpbee.level import CtpbeeApi, Action, Tool
+from ctpbee.level import Action, CtpbeeApi, Tool
 from ctpbee.log import VLogger

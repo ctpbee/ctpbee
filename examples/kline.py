@@ -38,10 +38,16 @@ class Main(CtpbeeApi):
         self.init = True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     kline = Kline()
     app = CtpBee("market", __name__, refresh=True).with_tools(kline)
     example = Main("DailyCTA")
     app.config.from_json("config.json")
     app.add_extension(example)
     app.start(log_output=True)
+    try:
+        while True:
+            pass
+    except KeyboardInterrupt:
+        print("\n策略已停止")
+        app.release()
