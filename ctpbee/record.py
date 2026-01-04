@@ -69,8 +69,8 @@ class Recorder(object):
             )
         )
 
-    def process_timer_event(self, _event):
-        [x.on_realtime() for x in self.app._extensions.values()]
+    def process_timer_event(self, event):
+        [x(event) for x in self.app._extensions.values()]
 
     def process_init_event(self, event):
         """处理初始化完成事件"""
