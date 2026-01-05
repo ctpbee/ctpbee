@@ -565,6 +565,7 @@ class CtpbeeApi(BeeApi):
             raise TypeError(f"init参数应该设置为True或者False,而不是{type(init)}")
 
         self.map = {
+            EVENT_TIMER: self.on_realtime,
             EVENT_TICK: self.on_tick,
             EVENT_ORDER: self.on_order,
             EVENT_TRADE: self.on_trade,
@@ -574,6 +575,7 @@ class CtpbeeApi(BeeApi):
             EVENT_BAR: self.on_bar,
         }
         self.parmeter = {
+            EVENT_TIMER: EVENT_TIMER,
             EVENT_POSITION: EVENT_POSITION,
             EVENT_TRADE: EVENT_TRADE,
             EVENT_BAR: EVENT_BAR,
