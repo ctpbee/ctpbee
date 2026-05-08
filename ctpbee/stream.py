@@ -7,7 +7,7 @@
 import json
 from threading import Thread
 
-from ctpbee.constant import TickData, OrderData, OrderRequest, CancelRequest, ContractData, QueryContract, TradeData
+from ctpbee.constant import TickData, OrderData, OrderRequest, CancelRequest, ContractData, QueryContract, TradeData, PositionData, AccountData
 from ctpbee.level import CtpbeeApi
 
 from redis import Redis
@@ -118,8 +118,17 @@ class Dispatcher(CtpbeeApi):
                 self.action.cancel_order(uddr.obj)
                 self.order_key_map[uddr.obj.order_id] = uddr.index
             elif type(uddr.obj) == QueryContract:
+                """
+                第一次查询合约的时候需要直接读取全部订单
+                """
                 for i in self.app.recorder.get_all_contracts():
                     dr = DDDR(obj=i, index=uddr.obj.index, parse=False)
+                    self.rd_client.publish(self.order_down_kernel, dr.encode())
+                for i in self.app.recorder.get_all_orders():
+                    dr = DDDR(obj=i, index=uddr.obj.index)
+                    self.rd_client.publish(self.order_down_kernel, dr.encode())
+                for i in self.app.recorder.get_all_trades():
+                    dr = DDDR(obj=i, index=uddr.obj.index)
                     self.rd_client.publish(self.order_down_kernel, dr.encode())
             else:
                 continue
@@ -139,3 +148,15 @@ class Dispatcher(CtpbeeApi):
                 self.action.subscribe(i)
             self.info("行情订阅成功")
             self.init = True
+
+    def on_trade(self, trade: TradeData) -> None:
+        dr = DDDR(obj=trade, index=None)
+        self.rd_client.publish(self.order_down_kernel, dr.encode())
+
+    def on_position(self, position: PositionData) -> None:
+        dr = DDDR(obj=position, index=None)
+        self.rd_client.publish(self.order_down_kernel, dr.encode())
+
+    def on_account(self, account: AccountData) -> None:
+        dr = DDDR(obj=account, index=None)
+        self.rd_client.publish(self.order_down_kernel, dr.encode())

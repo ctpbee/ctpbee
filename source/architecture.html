@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ctpbee · Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #08080c;
+    --surface: #0e0e14;
+    --surface2: #14141c;
+    --border: #1e1e2a;
+    --text: #b0b0c0;
+    --text-dim: #5c5c70;
+    --accent: #00e676;
+    --accent-glow: rgba(0,230,118,0.25);
+    --cyan: #00bcd4;
+    --cyan-glow: rgba(0,188,212,0.2);
+    --amber: #f5a623;
+    --amber-glow: rgba(245,166,35,0.2);
+    --rose: #ff5252;
+    --rose-glow: rgba(255,82,82,0.2);
+    --violet: #b388ff;
+    --font-mono: 'Share Tech Mono', 'JetBrains Mono', 'Consolas', monospace;
+    --font-sans: 'Noto Sans SC', system-ui, sans-serif;
+    --layer-gap: 18px;
+    --transition: 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Scanline overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    top:0; left:0; width:100%; height:100%;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    top:0; left:0; width:100%; height:100%;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .header .logo {
+    font-family: var(--font-mono);
+    font-size: 52px;
+    color: var(--accent);
+    text-shadow: 0 0 60px var(--accent-glow), 0 0 120px var(--accent-glow);
+    letter-spacing: 6px;
+    margin-bottom: 8px;
+    animation: logoPulse 3s ease-in-out infinite;
+  }
+  @keyframes logoPulse {
+    0%, 100% { text-shadow: 0 0 60px var(--accent-glow), 0 0 120px var(--accent-glow); }
+    50% { text-shadow: 0 0 80px var(--accent-glow), 0 0 160px rgba(0,230,118,0.4); }
+  }
+  .header .subtitle {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .header .tagline {
+    font-size: 15px;
+    color: #6a6a80;
+    margin-top: 8px;
+    font-weight: 300;
+  }
+
+  /* ── Main Architecture ── */
+  .arch {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  /* ── Data flow arrows between layers ── */
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    position: relative;
+    width: 100%;
+  }
+  .flow-arrow svg {
+    width: 200px;
+    height: 30px;
+  }
+  .flow-arrow .line {
+    stroke: var(--text-dim);
+    stroke-width: 1;
+    stroke-dasharray: 6 4;
+    animation: dashFlow 1.5s linear infinite;
+  }
+  @keyframes dashFlow {
+    0% { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: -20; }
+  }
+  .flow-arrow .arrow-head {
+    fill: var(--accent);
+    opacity: 0.6;
+  }
+
+  /* ── Layer Block ── */
+  .layer {
+    width: 100%;
+    max-width: 900px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    position: relative;
+    transition: all var(--transition);
+    cursor: pointer;
+    overflow: hidden;
+  }
+  .layer:hover {
+    border-color: #2a2a3a;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  .layer.expanded {
+    border-color: var(--accent);
+    box-shadow: 0 0 32px var(--accent-glow), 0 8px 40px rgba(0,0,0,0.5);
+  }
+  .layer .layer-header {
+    display: flex;
+    align-items: center;
+    padding: 16px 24px;
+    gap: 14px;
+    user-select: none;
+  }
+  .layer .layer-icon {
+    width: 36px; height: 36px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .layer .layer-info { flex:1; }
+  .layer .layer-name {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #e0e0f0;
+  }
+  .layer .layer-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .layer .layer-badge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+  .layer .expand-icon {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    color: var(--text-dim);
+    transition: transform var(--transition);
+    flex-shrink: 0;
+  }
+  .layer.expanded .expand-icon {
+    transform: rotate(180deg);
+    color: var(--accent);
+  }
+
+  /* Layer detail */
+  .layer-detail {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height var(--transition), padding var(--transition);
+  }
+  .layer.expanded .layer-detail {
+    max-height: 800px;
+  }
+  .layer-detail-inner {
+    padding: 0 24px 20px;
+  }
+
+  /* ── Module Grid ── */
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 10px;
+  }
+  .module-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 12px 14px;
+    transition: all 0.25s;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+  .module-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0;
+    width: 2px; height: 100%;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .module-card:hover {
+    border-color: #333;
+    background: #1a1a26;
+    transform: translateY(-1px);
+  }
+  .module-card:hover::before { opacity: 1; }
+  .module-card .mod-name {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: #d0d0e0;
+    letter-spacing: 1px;
+    margin-bottom: 3px;
+  }
+  .module-card .mod-file {
+    font-size: 11px;
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+  .module-card .mod-desc {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  /* ── Layered accent colors ── */
+  .layer-core .layer-icon { background: rgba(255,82,82,0.15); color: var(--rose); }
+  .layer-core { border-left: 2px solid var(--rose); }
+  .layer-core .layer-badge { background: rgba(255,82,82,0.12); color: var(--rose); }
+
+  .layer-services .layer-icon { background: rgba(179,136,255,0.15); color: var(--violet); }
+  .layer-services { border-left: 2px solid var(--violet); }
+  .layer-services .layer-badge { background: rgba(179,136,255,0.12); color: var(--violet); }
+
+  .layer-tm .layer-icon { background: rgba(0,188,212,0.15); color: var(--cyan); }
+  .layer-tm { border-left: 2px solid var(--cyan); }
+  .layer-tm .layer-badge { background: rgba(0,188,212,0.12); color: var(--cyan); }
+
+  .layer-interface .layer-icon { background: rgba(245,166,35,0.15); color: var(--amber); }
+  .layer-interface { border-left: 2px solid var(--amber); }
+  .layer-interface .layer-badge { background: rgba(245,166,35,0.12); color: var(--amber); }
+
+  .layer-api .layer-icon { background: rgba(0,230,118,0.12); color: var(--accent); }
+  .layer-api { border-left: 2px solid var(--accent); }
+  .layer-api .layer-badge { background: rgba(0,230,118,0.1); color: var(--accent); }
+
+  .layer-exchange .layer-icon { background: rgba(255,255,255,0.06); color: #888; }
+  .layer-exchange { border-left: 2px solid #444; }
+  .layer-exchange .layer-badge { background: rgba(255,255,255,0.06); color: #888; }
+
+  /* ── Two-column layout for middle layers ── */
+  .dual-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .dual-panel .panel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 14px 16px;
+  }
+  .dual-panel .panel-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  /* ── Sidebar: Looper ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 30px;
+    align-items: start;
+  }
+  .sidebar {
+    position: sticky;
+    top: 40px;
+  }
+  .sidebar-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .sidebar-box .sb-header {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sidebar-box .sb-body {
+    padding: 14px 18px;
+  }
+  .sb-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: 12px;
+    font-family: var(--font-mono);
+  }
+  .sb-file .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .sb-file .name { color: #c0c0d0; }
+  .sb-file .cls { color: var(--text-dim); font-size: 10px; margin-left: auto; }
+
+  /* ── Strategy list ── */
+  .strategy-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .strategy-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 2px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    cursor: default;
+  }
+  .strategy-tag:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: rgba(0,230,118,0.06);
+  }
+
+  /* ── Legend ── */
+  .legend {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    z-index: 10;
+    display: flex;
+    gap: 16px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; }
+    .module-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+    .dual-panel { grid-template-columns: 1fr; }
+    .header .logo { font-size: 36px; letter-spacing: 4px; }
+    .legend { display: none; }
+  }
+
+  /* ── Glitch effect on layer expand ── */
+  @keyframes glitchIn {
+    0% { opacity: 0; transform: translateY(-8px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .layer.expanded .module-card {
+    animation: glitchIn 0.4s ease-out forwards;
+  }
+  .layer.expanded .module-card:nth-child(1) { animation-delay: 0.05s; }
+  .layer.expanded .module-card:nth-child(2) { animation-delay: 0.10s; }
+  .layer.expanded .module-card:nth-child(3) { animation-delay: 0.15s; }
+  .layer.expanded .module-card:nth-child(4) { animation-delay: 0.20s; }
+  .layer.expanded .module-card:nth-child(5) { animation-delay: 0.25s; }
+  .layer.expanded .module-card:nth-child(6) { animation-delay: 0.30s; }
+  .layer.expanded .module-card:nth-child(7) { animation-delay: 0.35s; }
+  .layer.expanded .module-card:nth-child(8) { animation-delay: 0.40s; }
+  .layer.expanded .module-card:nth-child(9) { animation-delay: 0.45s; }
+  .layer.expanded .module-card:nth-child(10) { animation-delay: 0.50s; }
+
+  /* ── Event flow indicator ── */
+  .event-flow-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    padding: 6px 12px;
+    border: 1px dashed rgba(0,230,118,0.3);
+    border-radius: 3px;
+    margin-top: 12px;
+  }
+  .event-flow-badge .pulse {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--accent); }
+    50% { opacity: 0.3; box-shadow: 0 0 12px var(--accent); }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- ── Header ── -->
+  <header class="header">
+    <div class="logo">ctpbee</div>
+    <div class="subtitle">Quantitative Trading Micro-Framework</div>
+    <div class="tagline">tiny but strong · 面向开发者的量化交易微内核</div>
+  </header>
+
+  <div class="layout">
+    <!-- ── Main Architecture ── -->
+    <main class="arch">
+
+      <!-- Layer 1: App Core -->
+      <div class="layer layer-core" onclick="toggleLayer(this)">
+        <div class="layer-header">
+          <div class="layer-icon">◈</div>
+          <div class="layer-info">
+            <div class="layer-name">APP 核心层</div>
+            <div class="layer-desc">主应用核心，管控整个交易系统生命周期</div>
+          </div>
+          <span class="layer-badge">L1</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="layer-detail">
+          <div class="layer-detail-inner">
+            <div class="module-grid">
+              <div class="module-card">
+                <div class="mod-name">CtpBee</div>
+                <div class="mod-file">app.py</div>
+                <div class="mod-desc">主应用类，管理策略加载、接口选择、事件循环</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">Center</div>
+                <div class="mod-file">center.py</div>
+                <div class="mod-desc">中心控制器，协调各模块通信</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">Config</div>
+                <div class="mod-file">config.py</div>
+                <div class="mod-desc">配置管理与默认参数</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">Dispatcher</div>
+                <div class="mod-file">stream.py</div>
+                <div class="mod-desc">数据流分发器</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Arrow -->
+      <div class="flow-arrow">
+        <svg viewBox="0 0 200 30">
+          <line x1="100" y1="0" x2="100" y2="18" class="line"/>
+          <polygon points="95,18 100,28 105,18" class="arrow-head"/>
+        </svg>
+        <span style="position:absolute; right:60px; font-family:var(--font-mono); font-size:9px; color:var(--accent); letter-spacing:2px; opacity:0.5;">事件引擎 ↓</span>
+      </div>
+
+      <!-- Layer 2: Micro Core Services -->
+      <div class="layer layer-services" onclick="toggleLayer(this)">
+        <div class="layer-header">
+          <div class="layer-icon">⬡</div>
+          <div class="layer-info">
+            <div class="layer-name">微核心服务层</div>
+            <div class="layer-desc">面向开发者的应用层 — 策略、风控、操作、记录、日志</div>
+          </div>
+          <span class="layer-badge">L2</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="layer-detail">
+          <div class="layer-detail-inner">
+            <div class="module-grid">
+              <div class="module-card">
+                <div class="mod-name">CtpbeeApi / Action</div>
+                <div class="mod-file">level.py</div>
+                <div class="mod-desc">策略基类 + 操作接口 (buy_open, sell_close等)</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">VLogger</div>
+                <div class="mod-file">log.py</div>
+                <div class="mod-desc">日志系统</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">Recorder</div>
+                <div class="mod-file">record.py</div>
+                <div class="mod-desc">数据记录器，记录交易数据</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">AppSignal</div>
+                <div class="mod-file">signals.py</div>
+                <div class="mod-desc">事件信号引擎（上层与底层通信核心）</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">Context</div>
+                <div class="mod-file">context/</div>
+                <div class="mod-desc">应用上下文管理</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">Indicator</div>
+                <div class="mod-file">indicator/</div>
+                <div class="mod-desc">技术指标计算 (回测用)</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">DataHandle</div>
+                <div class="mod-file">data_handle/</div>
+                <div class="mod-desc">本地持仓数据处理</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">Func / Helpers</div>
+                <div class="mod-file">func.py helpers.py</div>
+                <div class="mod-desc">工具函数与辅助方法</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">Constant / Date</div>
+                <div class="mod-file">constant.py date.py</div>
+                <div class="mod-desc">常量定义与日期工具</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">JSONd</div>
+                <div class="mod-file">jsond/</div>
+                <div class="mod-desc">JSON 序列化/反序列化</div>
+              </div>
+            </div>
+            <div class="event-flow-badge">
+              <span class="pulse"></span> 通过事件引擎与底层通信
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Arrow -->
+      <div class="flow-arrow">
+        <svg viewBox="0 0 200 30">
+          <line x1="100" y1="0" x2="100" y2="18" class="line"/>
+          <polygon points="95,18 100,28 105,18" class="arrow-head"/>
+        </svg>
+      </div>
+
+      <!-- Layer 3: Trade & Market Modules -->
+      <div class="layer layer-tm" onclick="toggleLayer(this)">
+        <div class="layer-header">
+          <div class="layer-icon">⧖</div>
+          <div class="layer-info">
+            <div class="layer-name">交易 & 行情模块</div>
+            <div class="layer-desc">每个 App 拥有独立的交易和行情模块</div>
+          </div>
+          <span class="layer-badge">L3</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="layer-detail">
+          <div class="layer-detail-inner">
+            <div class="dual-panel">
+              <div class="panel">
+                <div class="panel-title" style="color:var(--cyan);">Trade · 交易模块</div>
+                <div class="sb-file"><span class="dot" style="background:var(--cyan);"></span><span class="name">td_api</span><span class="cls">各接口实现</span></div>
+                <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">负责报单、撤单、持仓查询、资金查询等交易操作</div>
+              </div>
+              <div class="panel">
+                <div class="panel-title" style="color:var(--cyan);">Market · 行情模块</div>
+                <div class="sb-file"><span class="dot" style="background:var(--cyan);"></span><span class="name">md_api</span><span class="cls">各接口实现</span></div>
+                <div style="font-size:11px;color:var(--text-dim);margin-top:4px;">负责行情订阅、Tick 数据推送、K线数据获取</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Arrow -->
+      <div class="flow-arrow">
+        <svg viewBox="0 0 200 30">
+          <line x1="100" y1="0" x2="100" y2="18" class="line"/>
+          <polygon points="95,18 100,28 105,18" class="arrow-head"/>
+        </svg>
+      </div>
+
+      <!-- Layer 4: Interface Layer -->
+      <div class="layer layer-interface" onclick="toggleLayer(this)">
+        <div class="layer-header">
+          <div class="layer-icon">⊞</div>
+          <div class="layer-info">
+            <div class="layer-name">接口层 / 网关 Interface</div>
+            <div class="layer-desc">数据收发网关 — 提供交易网关 + 行情网关</div>
+          </div>
+          <span class="layer-badge">L4</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="layer-detail">
+          <div class="layer-detail-inner">
+            <div class="module-grid">
+              <div class="module-card">
+                <div class="mod-name">CTP</div>
+                <div class="mod-file">interface/ctp/</div>
+                <div class="mod-desc">国内期货标准CTP接口</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">CTP Mini</div>
+                <div class="mod-file">interface/ctp_mini/</div>
+                <div class="mod-desc">CTP迷你接口</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">CTP Rohon</div>
+                <div class="mod-file">interface/ctp_rohon/</div>
+                <div class="mod-desc">融航CTP接口</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">Local</div>
+                <div class="mod-file">interface/local/</div>
+                <div class="mod-desc">本地模拟交易/行情</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">Looper</div>
+                <div class="mod-file">interface/looper/</div>
+                <div class="mod-desc">回测专用接口</div>
+              </div>
+              <div class="module-card" style="opacity:0.5;">
+                <div class="mod-name">Stock</div>
+                <div class="mod-file">interface/stock/</div>
+                <div class="mod-desc">股票接口 (待完善)</div>
+              </div>
+            </div>
+            <div class="event-flow-badge">
+              <span class="pulse"></span> Interface 类统一管理网关注册与切换 (interface/__init__.py)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Arrow -->
+      <div class="flow-arrow">
+        <svg viewBox="0 0 200 30">
+          <line x1="100" y1="0" x2="100" y2="18" class="line"/>
+          <polygon points="95,18 100,28 105,18" class="arrow-head"/>
+        </svg>
+        <span style="position:absolute; right:40px; font-family:var(--font-mono); font-size:9px; color:var(--accent); letter-spacing:2px; opacity:0.5;">pybind11 ↓</span>
+      </div>
+
+      <!-- Layer 5: Low-level API -->
+      <div class="layer layer-api" onclick="toggleLayer(this)">
+        <div class="layer-header">
+          <div class="layer-icon">⚙</div>
+          <div class="layer-info">
+            <div class="layer-name">底层 API 层</div>
+            <div class="layer-desc">C++ CTP 原生库通过 pybind11 编译为 Python 可调用的 .so / .pyd</div>
+          </div>
+          <span class="layer-badge">L5</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="layer-detail">
+          <div class="layer-detail-inner">
+            <div class="module-grid">
+              <div class="module-card">
+                <div class="mod-name">ctpbee_api</div>
+                <div class="mod-file">pip install ctpbee_api</div>
+                <div class="mod-desc">Python 封装层，调用底层 C++ CTP 库</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">thostmduserapi</div>
+                <div class="mod-file">.so / .dll</div>
+                <div class="mod-desc">CTP 行情原生 C++ 库</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">thosttraderapi</div>
+                <div class="mod-file">.so / .dll</div>
+                <div class="mod-desc">CTP 交易原生 C++ 库</div>
+              </div>
+              <div class="module-card">
+                <div class="mod-name">pybind11</div>
+                <div class="mod-file">C++ ↔ Python</div>
+                <div class="mod-desc">C++/Python 互操作绑定框架</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Arrow -->
+      <div class="flow-arrow">
+        <svg viewBox="0 0 200 30">
+          <line x1="100" y1="0" x2="100" y2="18" class="line"/>
+          <polygon points="95,18 100,28 105,18" class="arrow-head"/>
+        </svg>
+        <span style="position:absolute; right:50px; font-family:var(--font-mono); font-size:9px; color:var(--text-dim); letter-spacing:2px;">TCP / FENS ↓</span>
+      </div>
+
+      <!-- Layer 6: Exchange -->
+      <div class="layer layer-exchange" onclick="toggleLayer(this)">
+        <div class="layer-header">
+          <div class="layer-icon">⟐</div>
+          <div class="layer-info">
+            <div class="layer-name">交易所</div>
+            <div class="layer-desc">SHFE · DCE · CZCE · CFFEX · INE · 上交所 · 深交所</div>
+          </div>
+          <span class="layer-badge">L6</span>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="layer-detail">
+          <div class="layer-detail-inner">
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              <span class="strategy-tag">SHFE 上海期货交易所</span>
+              <span class="strategy-tag">DCE 大连商品交易所</span>
+              <span class="strategy-tag">CZCE 郑州商品交易所</span>
+              <span class="strategy-tag">CFFEX 中国金融期货交易所</span>
+              <span class="strategy-tag">INE 上海国际能源交易中心</span>
+              <span class="strategy-tag" style="opacity:0.5;">上交所 (待支持)</span>
+              <span class="strategy-tag" style="opacity:0.5;">深交所 (待支持)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+
+      <!-- Looper System -->
+      <div class="sidebar-box">
+        <div class="sb-header">
+          <span style="color:var(--amber);">⟳</span> 回测系统 Looper
+        </div>
+        <div class="sb-body">
+          <div class="sb-file"><span class="dot" style="background:var(--accent);"></span><span class="name">VessData</span><span class="cls">data.py</span></div>
+          <div class="sb-file"><span class="dot" style="background:var(--cyan);"></span><span class="name">Account</span><span class="cls">account.py</span></div>
+          <div class="sb-file"><span class="dot" style="background:var(--violet);"></span><span class="name">Interface</span><span class="cls">interface.py</span></div>
+          <div class="sb-file"><span class="dot" style="background:var(--rose);"></span><span class="name">Report</span><span class="cls">report.py</span></div>
+          <div style="margin-top:8px; font-size:10px; color:var(--text-dim);">
+            HTML 模板: base.html · looper.html · trade_record.html
+          </div>
+        </div>
+      </div>
+
+      <!-- Strategy Examples -->
+      <div class="sidebar-box">
+        <div class="sb-header">
+          <span style="color:var(--violet);">⚡</span> 示例策略
+        </div>
+        <div class="sb-body">
+          <div class="strategy-tags">
+            <span class="strategy-tag">双均线 DoubleMA</span>
+            <span class="strategy-tag">MACD</span>
+            <span class="strategy-tag">RSI</span>
+            <span class="strategy-tag">布林带 Bollinger</span>
+            <span class="strategy-tag">ATR</span>
+            <span class="strategy-tag">跨期套利 Spread</span>
+          </div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:8px;">
+            examples/strategy/
+          </div>
+        </div>
+      </div>
+
+      <!-- Key Modules -->
+      <div class="sidebar-box">
+        <div class="sb-header">
+          <span style="color:var(--cyan);">📦</span> 其他模块
+        </div>
+        <div class="sb-body">
+          <div class="sb-file"><span class="dot" style="background:#888;"></span><span class="name">cmdline.py</span><span class="cls">命令行工具</span></div>
+          <div class="sb-file"><span class="dot" style="background:#888;"></span><span class="name">exceptions/</span><span class="cls">异常定义</span></div>
+          <div class="sb-file"><span class="dot" style="background:#888;"></span><span class="name">func.py</span><span class="cls">通用函数</span></div>
+        </div>
+      </div>
+
+      <!-- Project Info -->
+      <div class="sidebar-box">
+        <div class="sb-header">
+          <span style="color:var(--accent);">◉</span> 项目信息
+        </div>
+        <div class="sb-body" style="font-size:11px;line-height:1.8;color:var(--text-dim);">
+          <div>语言: <span style="color:#c0c0d0;">Python 3.6+</span></div>
+          <div>许可: <span style="color:#c0c0d0;">MIT</span></div>
+          <div>灵感: <span style="color:#c0c0d0;">vnpy</span></div>
+          <div>模式: <span style="color:#c0c0d0;">实盘 + 回测</span></div>
+          <div>核心: <span style="color:var(--accent);">事件驱动架构</span></div>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+</div>
+
+<!-- ── Legend ── -->
+<div class="legend">
+  <div class="legend-item"><span class="legend-dot" style="background:var(--rose);"></span> 核心层</div>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--violet);"></span> 服务层</div>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--cyan);"></span> 交易/行情</div>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--amber);"></span> 网关层</div>
+  <div class="legend-item"><span class="legend-dot" style="background:var(--accent);"></span> API层</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#444;"></span> 交易所</div>
+</div>
+
+<script>
+  function toggleLayer(el) {
+    el.classList.toggle('expanded');
+  }
+
+  // Auto-expand all layers on load with stagger
+  document.addEventListener('DOMContentLoaded', () => {
+    const layers = document.querySelectorAll('.layer');
+    layers.forEach((layer, i) => {
+      setTimeout(() => {
+        layer.classList.add('expanded');
+      }, 150 + i * 120);
+    });
+  });
+
+  // Interactive: click card stops propagation
+  document.querySelectorAll('.module-card, .strategy-tag, .sb-file').forEach(el => {
+    el.addEventListener('click', (e) => e.stopPropagation());
+  });
+</script>
+
+</body>
+</html>
