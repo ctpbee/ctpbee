@@ -121,6 +121,9 @@ class Dispatcher(CtpbeeApi):
                 """
                 第一次查询合约的时候需要直接读取全部订单
                 """
+                for i in self.app.recorder.positions.values():
+                    dr = DDDR(obj=i, index=uddr.obj.index)
+                    self.rd_client.publish(self.order_down_kernel, dr.encode())
                 for i in self.app.recorder.get_all_contracts():
                     dr = DDDR(obj=i, index=uddr.obj.index, parse=False)
                     self.rd_client.publish(self.order_down_kernel, dr.encode())
