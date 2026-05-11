@@ -51,6 +51,6 @@ class Main(ATRStrategy):
 if __name__ == "__main__":
     app = CtpBee("market", __name__,  work_mode=Mode.DISPATCHER, refresh=True)
     example = Main("ag2606", "ag2606")
-    app.config.from_json("config_24.json")
+    app.config.from_json("config.json")
     app.add_extension(example)
     app.start(log_output=True)
