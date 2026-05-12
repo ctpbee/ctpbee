@@ -178,12 +178,20 @@ if __name__ == '__main__':
 下面是提供的插件列表
 
 - [ctpbee_kline](https://github.com/ctpbee/ckline) k线支持插件
-- [ctpbee_frontend](https://github.com/ctpbee/ctpbee_frontend) 使用flask编写后端, 通过`work_mode=Mode.DISPATCHER`进行工作 (通过deepseek生成)
+
+## 还在苦恼ctpbee没有界面 
+- [ctpbee_frontend](https://github.com/ctpbee/ctpbee_frontend)  通过`work_mode=Mode.DISPATCHER`进行工作 (通过deepseek生成)
+
+--- 
+
+![avatar](source/client.png)
+
+
 
 ## 免责声明
 
 本项目维护时间不定期, 开源仅作爱好, 请谨慎使用. 本人不对代码产生的任何使用后果负责.
-推荐使用`vnpy | wondertrader`
+推荐使用`vnpy | wondertrader | quantaxis | openctp | tqsdk ` 
 
 ## License
 
