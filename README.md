@@ -179,7 +179,7 @@ if __name__ == '__main__':
 
 - [ctpbee_kline](https://github.com/ctpbee/ckline) k线支持插件
 
-## 还在苦恼ctpbee没有界面 
+## 还在苦恼ctpbee没有界面?
 - [ctpbee_frontend](https://github.com/ctpbee/ctpbee_frontend)  通过`work_mode=Mode.DISPATCHER`进行工作 (通过deepseek生成)
 
 --- 
