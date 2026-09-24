@@ -622,8 +622,9 @@ result = app.get_result(report=<span class="r">True</span>, auto_open=<span clas
         <div class="stat"><div class="to">3.1 µs</div><div class="lbl"><span class="zh">TickData 对象构造(批量初始化)</span><span class="en">TickData construction (bulk init)</span></div></div>
         <div class="stat"><div class="to">0.1 µs</div><div class="lbl"><span class="zh">同价 tick 持仓盈亏(纯函数跳过)</span><span class="en">pnl on unchanged price (pure-function skip)</span></div></div>
         <div class="stat"><div class="to">~3.4 µs</div><div class="lbl"><span class="zh">每 tick Python 固定成本合计</span><span class="en">total per-tick Python overhead</span></div></div>
+        <div class="stat"><div class="to">15 µs</div><div class="lbl"><span class="zh">回测每根 bar 框架成本(原 ~1.12 ms，72×)</span><span class="en">per-bar backtest framework cost (was ~1.12 ms, 72×)</span></div></div>
     </div>
-    <p style="font-family:var(--mono); font-size:12px; color:var(--text-faint)"><span class="zh">参考量级 · Windows / Python 3.13</span><span class="en">Indicative figures · Windows / Python 3.13</span></p>
+    <p style="font-family:var(--mono); font-size:12px; color:var(--text-faint)"><span class="zh">参考量级 · Windows / Python 3.11-3.13</span><span class="en">Indicative figures · Windows / Python 3.11-3.13</span></p>
 
     <h3><span class="zh">稳定性设计</span><span class="en">Stability design</span></h3>
     <ul class="clean">
@@ -632,6 +633,7 @@ result = app.get_result(report=<span class="r">True</span>, auto_open=<span clas
         <li><span class="zh"><b>盈亏纯函数</b>: 价格/持仓/均价/乘数输入未变即跳过重算；外部改动后同价 tick 也会重算，不留陈旧盈亏</span><span class="en"><b>Pure-function pnl</b>: recompute is skipped while price/position/avg-price/size inputs are unchanged; any external mutation re-triggers it, so pnl never goes stale</span></li>
         <li><span class="zh"><b>frozen 保护</b>: 数据对象属性仅允许下划线调用方写入，防策略层误改行情数据</span><span class="en"><b>frozen protection</b>: data-object attributes only accept writes from underscore callers, preventing accidental mutation of market data</span></li>
         <li><span class="zh"><b>序列化自洽</b>: DDDR encode→parse 往返可用，键嗅探兼容手搓 dict 载荷</span><span class="en"><b>Self-consistent serialization</b>: DDDR encode→parse round-trips; key sniffing still accepts hand-built dict payloads</span></li>
+        <li><span class="zh"><b>回测无每根 bar 固定开销</b>: 可选依赖 <code>data_api</code> 只探测一次(失败的 import 不进 <code>sys.modules</code>，否则每根 bar 都要重扫 <code>sys.path</code>)；交易日解析走 O(1) 日历索引并按(自然日, 夜盘)记忆化</span><span class="en"><b>No per-bar overhead in backtests</b>: the optional <code>data_api</code> dependency is probed once (a failed import is not cached in <code>sys.modules</code>, so every bar would otherwise re-walk <code>sys.path</code>); trade-day resolution uses an O(1) calendar index memoized per (calendar day, night session)</span></li>
     </ul>
 </section>
 
@@ -654,8 +656,8 @@ result = app.get_result(report=<span class="r">True</span>, auto_open=<span clas
     <div class="kicker">11 / TESTS</div>
     <h2><span class="idx">12</span><span class="zh">测试</span><span class="en">Tests</span></h2>
     <p class="lead">
-        <span class="zh">仓库自带独立脚本套件，共 129 项断言——不依赖 pytest、不连柜台、不需要真实 Redis。</span>
-        <span class="en">The repo ships standalone script suites totalling 129 assertions — no pytest, no broker, no real Redis.</span>
+        <span class="zh">仓库自带独立脚本套件，共 161 项断言——不依赖 pytest、不连柜台、不需要真实 Redis。</span>
+        <span class="en">The repo ships standalone script suites totalling 161 assertions — no pytest, no broker, no real Redis.</span>
     </p>
 
     <div class="term">
@@ -668,7 +670,8 @@ result = app.get_result(report=<span class="r">True</span>, auto_open=<span clas
 <span class="c"># test_config_env             8 · env-var config</span>
 <span class="c"># test_upper_layers          66 · FakeApp full event-flow simulation</span>
 <span class="c"># test_examples_strategies   15 · example strategies regression</span>
-<span class="r">== 129 checks ==</span></pre>
+<span class="c"># test_backtest_hotpath      32 · looper hot path vs pre-optimization oracles</span>
+<span class="r">== 161 checks ==</span></pre>
     </div>
     <p><span class="zh">每个脚本独立可运行(<code>python tests/&lt;name&gt;.py</code>)，失败时以非零码退出，可直接接入 CI。贡献代码请随改动附带测试。</span>
        <span class="en">Each script runs standalone (<code>python tests/&lt;name&gt;.py</code>) and exits non-zero on failure — CI-ready. Please land changes together with tests.</span></p>
