@@ -6,6 +6,7 @@ __version__ = "1.8.0"
 
 # Here are pre import
 from ctpbee.app import CtpBee
+from ctpbee.aio import AsyncFeed
 from ctpbee.constant import Mode
 from ctpbee.context import current_app, del_app, get_app, switch_app
 from ctpbee.data_handle import LocalPositionManager

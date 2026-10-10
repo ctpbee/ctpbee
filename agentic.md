@@ -156,6 +156,41 @@ predecessor is also non-trading raises `ValueError`, and sending an order on the
 **first** bar of a backtest raises `AttributeError` because `LocalLooper.datetime`
 is only assigned after the bar is dispatched.
 
+## Async roadmap (Phase 0 landed 2026-10-10)
+
+CTP callbacks arrive on C++ threads; an asyncio loop cannot be entered from
+there, so "make everything await" is not the design question — the bridge is.
+Measured on Python 3.13 / Windows Proactor (uvloop on Linux cuts the boundary
+cost ~5-10x):
+
+| design | per-event cost | verdict |
+|---|---|---|
+| sync blinker dispatch (status quo, 3 receivers) | ~2 µs | baseline |
+| naive bridge: `call_soon_threadsafe` per event | ~20 µs median single-call | hot-path regression ~10x, rejected |
+| **mailbox + batched wake** (`ctpbee/aio.py`) | producer delta ~1.1 µs, drain ~0.2 µs amortized | adopted |
+
+Phases:
+
+- **Phase 0 (landed)** — `ctpbee.aio.AsyncFeed`: a plain blinker receiver whose
+  producer side is `deque.append` + an atomic wake flag (one thread crossing
+  per batch), drained on the loop into a bounded `asyncio.Queue` with
+  drop-oldest (same policy as `Dispatcher._tick_queue`). Consumers write
+  `async for event in feed:`. Does not alter any existing dispatch path; the
+  `@frozen` / no-import-in-hot-loop rules apply unchanged.
+- Phase 1 (sketch) — `engine_method="async"` (the constructor parameter and
+  its error message already reserve it): `AsyncRecorder` with coroutine
+  `process_*`, `async def on_tick` strategies, `refresh_query` thread and
+  Dispatcher threads become loop tasks. **The order path
+  (`action.buy` → C++ send) stays a direct synchronous call** — no 20 µs loop
+  round-trip on the latency-critical leg.
+- Phase 2 (sketch) — looper replay as async iteration (`VessData.__aiter__`),
+  no threads at all in backtest; natural fit for concurrent fill models.
+
+Wake-flag pairing (do not reorder — a race strands events in the mailbox):
+producer does `[append; read flag]`, drain does `[flag=False; re-read
+mailbox]`. Under the GIL each statement is atomic, so in every interleaving
+either the drain sees the event or the producer sees the open flag.
+
 ## Conventions and known edges (read before touching)
 
 - **`@frozen` rule**: only callers whose function name starts with `_` may
@@ -203,8 +238,9 @@ real Redis): `python tests/<name>.py` exits non-zero on failure.
 | `test_backtest_hotpath.py` | 32 | looper hot path vs inlined pre-optimization oracles: O(1) calendar primitives + `trade_day_of` exhaustive over all 8800 calendar dates and all natural days 2025-2026 (values **and** exception type/message), cache observability (memo hits, single `data_api` probe), optional-dependency branch still converting `data_api` entities, end-to-end differential backtest (new vs old code path: identical daily settlements, trade blotter and balance) |
 | `test_upper_layers.py` | 66 | end-to-end upper-layer simulation with a FakeApp + isolated global signals: constant data objects & frozen protection, Recorder event flow (tick/order/trade/position/account/contract/last, INSTRUMENT_INDEPEND, active-order bookkeeping, init-once), local position deep cases (SHFE vs non-SHFE close priority, frozen spill, order splitting, yesterday conversion), DDDR/UDDR serialization round-trips, Hickey session windows / trade-day derivation, CtpbeeApi `__call__`/`route`/`register`/`subscribe`, Config loaders |
 | `test_review_fixes.py` | 16 | 2026-10-10 review fixes: suspend/enable actually freezing dispatch, `_reset_init` re-firing `on_init`, `route()` per-instance map isolation, looper `cancel_order`/`cancel_all` (frozen guard + margin/fee release), per-contract matching (no cross-month fills), `close_position_by_amount` end-to-end, `SIM_PRIMARY_CASH`, `clear_all` completeness, `_to_df` explicit columns, `result()` plot-free, `get_result` non-negative elapsed |
+| `test_async_feed.py` | 14 | `AsyncFeed` mailbox bridge (async Phase 0): cross-thread delivery on real tick signal, single-producer ordering, drop-oldest with slow consumer, loop-side filter, multi-signal merge, non-interference with sync blinker receivers, `close()` semantics (disconnect / drain / sentinel), stress conservation (`consumed+qsize+dropped+filtered == received`), loop-closed safety on producer, auto-start on first iteration; benchmark: producer delta vs bare signal |
 
-177 checks in total across the 9 suites.
+191 checks in total across the 10 suites.
 
 Behavioral quirks locked by characterization (see suite comments):
 `PositionData.local_position_id` uses `str(enum)` (`ag2612.SHFE.Direction.LONG`);
@@ -233,3 +269,4 @@ self-consistent — fixed (see changelog 2026-08-21g).
 | 2026-08-21l | Docs expanded per review: ① new "Tools usage" section (write a Tool subclass, with_tools/add_tool/get_tool, subscribe/remove_func via CtpbeeApi or the tool object, kline injection, plus the standalone primitive); ② full config.json demo; ③ examples showcase (login/ATR, run_arb spread, kline, looper backtest, openctp, strategy library); ④ bilingual zh/en with a sidebar toggle persisted in localStorage; ⑤ new "Data structures" section (TickData cumulative-volume semantics, OrderData/TradeData status machine and Δpos = direction × volume, PositionData yd/frozen/pn semantics, requests/enums). Section count 12; tag balance verified; suites still green. |
 | 2026-09-22a | Backtest (looper) hot path: ① `VessData.last_bar` no longer runs `from data_api import Tick, Kline` once per replayed bar — the optional `data_api` package is unpublished, so that import always failed, and failed imports are not cached in `sys.modules` (each attempt re-walks `sys.path` with a `stat` per entry: cProfile on origin/dev shows 9.1 `nt.stat` per replayed bar — 179,823 calls for a 19,800-bar run, 76% of profiled time in `nt.stat` and ~93% inside `_find_and_load`). Probe now happens at most once and the result is cached (`data_api_types()`, empty tuple when unavailable); the `data_api → to_bumblebee()` branch keeps its semantics (`isinstance(nx, Tick) or isinstance(nx, Kline)` → the equivalent single `isinstance(nx, (Tick, Kline))`), including non-ImportError propagation and "a raising data_api is not cached as unavailable". ② `LocalLooper.__call__`'s trailing trade-day block (1-2 linear scans of the 8800-entry `trade_dates` + a `strptime` per tick, 40-60 µs) extracted as `trade_day_of()` over new O(1) primitives `date.is_trade_date` / `date.trade_date_index` (lazily built `{date: index}` map, so live-only processes pay nothing at import) and memoized per `(calendar day, night session)`. `get_day_from` uses the same primitive. Net effect on synthetic minute bars: 90.7-93.0 s → **1.13-1.17 s** (≈80×, 1.28 ms → 16 µs per bar; 72× with a no-op strategy instead of a counting one — 80.8-81.9 s → 1.11-1.14 s) for 72,600 bars, 177 s → **3 s** (59×) for a 139,800-bar two-contract run. Re-measured on the same host under ~30 % concurrent CPU: 109.5-138.5 s → 1.36-1.47 s, paired ratio 77-101× (see the benchmark note on load dependence). Behavior-preserving: both pre-optimization implementations are inlined as oracles in `tests/test_backtest_hotpath.py` (32 checks: exhaustive value+exception equivalence, cache observability, end-to-end differential backtest); the 2026-08-21d/2026-08-21j first-bar `LocalLooper.datetime` `AttributeError`, the calendar-horizon `IndexError` and the holiday `ValueError` are locked as characterization, not changed. Review follow-up (Copilot): the extracted date conversion is now `date(*map(int, s.split("-")))` instead of 3.7+ `date.fromisoformat` — `setup.py` declares 3.6 support, and on 3.6 the night/holiday branch would have raised `AttributeError` for every night bar; check D4 now guards the hot path at source level (still 32 checks). Suites: 161 checks across 8, all green. |
 | 2026-10-10 | Functional-review fix sweep: 13 confirmed bugs, each reproduced with a failing script before fixing. New suite `tests/test_review_fixes.py` (16 checks); 177 checks across 9 suites, all green. ① `suspend_extension`/`enable_extension` were no-ops — `extension.__frozen` set inside class `CtpBee` name-mangles to `_CtpBee__frozen` while `CtpbeeApi.__call__` reads `_CtpbeeApi__frozen`; now routed through new `CtpbeeApi._set_frozen()`. ② `run_forever` reset a nonexistent `f_init` attribute — replaced by `CtpbeeApi._reset_init()` so `on_init` re-fires after weekend recovery. ③ `CtpbeeApi.route()` mutated the class-level `map` shared by every instance — `__init__` now copies it per instance. ④ Looper cancel path: `cancel_order` wrote `order.status` directly (rejected by the `@frozen` guard — backtest cancel always raised `AttributeError`) and `cancel_all` iterated dict *keys* setting `.status` on strings; both now use `__set_hole__`, release frozen margin/fee and update the local position. ⑤ `match_deal` matched orders at product-letter level (`ag2412`/`ag2501` both → `agSHFE`) so a pending order could fill at another month's price — now exact `local_symbol` comparison (differential backtest unaffected: it trades different products). ⑥ `Account.close_position_by_amount` iterated dict positions with attribute access and called `self.interface.action` which `LocalLooper` never provided (despite its own comment claiming so) — now `obj=True` PositionData plus new `LocalLooper.action`/`logger` properties forwarding to the app. ⑦ `Account.result` no longer `plt.show()`s on every call (blocked on matplotlib installs) nor swallows exceptions via `finally: return`. ⑧ `LooperYou.connect` called the float attribute `initial_capital` — now `update_params({"initial_capital": ...})`, `SIM_PRIMARY_CASH` works. ⑨ `Recorder.clear_all` also clears `main_contract_mapping` (unbounded append per EVENT_LAST), `local_contract_price_mapping`, `bar`, `logs`. ⑩ `Entity._to_df` passes explicit columns (`list.remove()` returned `None`; old behavior worked only by pandas accident). ⑪ `min_limit_order_volume` was mapped from `MaxLimitOrderVolume` in both ctp and ctp_rohon `td_api.py`; duplicate dead first `connect()` removed from ctp `td_api.py` (the second definition silently won). ⑫ `CtpBee.get_result` elapsed via `total_seconds()` (field-wise subtraction went negative across midnight). |
+| 2026-10-10b | Async Phase 0: new `ctpbee/aio.py` `AsyncFeed` — a blinker-to-asyncio mailbox bridge that lets async consumers `async for event in feed` over any ctpbee signal without touching the sync hot path. Producer side (CTP callback thread) is `deque.append` + an atomically throttled wake (`call_soon_threadsafe` once per batch — measured median single-crossing ~21 µs on Windows Proactor, which is why naive per-event bridging was rejected: ~10x over the ~2 µs sync dispatch); drain runs on the loop into a bounded `asyncio.Queue` with drop-oldest. Measured producer delta vs bare signal ~1.1 µs/event, drain ~0.2 µs amortized. Wake-flag pairing documented in-module (producer `[append; read flag]`, drain `[flag=False; re-read mailbox]`) — reordering strands events. Suite `tests/test_async_feed.py` (14 checks incl. stress conservation `consumed+qsize+dropped+filtered == received` and a producer-cost benchmark); 191 checks across 10 suites. Exported as `ctpbee.AsyncFeed`. Phase 1 (`engine_method=async`, order path stays sync) and Phase 2 (async looper replay) sketched in the roadmap section. |
