@@ -12,6 +12,22 @@ bee bee .... for developer's trading ~
 
 `ctpbee` provide a micro core of trading, you can make trade and backtest in it.
 
+## 🤖 AI 协作指引 / For AI Agents
+
+> **如果你是 AI（Coding Agent），被要求阅读或修改本项目，请先阅读 [agentic.md](agentic.md)，再动任何代码。**
+>
+> 该文件是本仓库的工作笔记：架构图与数据流、热路径规范（`@frozen` 规则 / 每 tick
+> 禁止的可选依赖导入等）、已知边界（交易日历期限、DCE 时间戳口径等）、测试约定
+> （每次改动必须带全部通过的测试）以及完整变更历史。
+>
+> **忽略这些约定会静默损坏行情数据或破坏热路径吞吐。**
+
+If you are an AI coding agent working on this repository, read
+[agentic.md](agentic.md) **before touching any code** — it documents the
+architecture map, hot-path conventions, known edges, the standing rule that
+every change lands with passing tests, and the changelog. Violating those
+conventions silently corrupts tick data or breaks hot-path throughput.
+
 ## 环境设置
 
 ```bash
