@@ -368,27 +368,33 @@ class Account:
             self.fee[x] = 0
 
     def close_position_by_amount(self, amount, price_mapping):
-        """ 通过指定金额来金额来平仓直到available为正 """
+        """ 通过指定金额来金额来平仓直到available为正
+
+        旧实现迭代 get_all_positions() 的 dict 结果却又按属性访问
+        position.local_symbol, 且经 self.interface.action 下单——而
+        LocalLooper 从未提供 action。现在用 obj=True 的 PositionData,
+        action 由 LocalLooper.action 属性转发到 app.action。 """
         self.logger.info(f"{self.date} 正在按照指定金额进行平仓: {amount}")
-        for position in self.position_manager.get_all_positions():
-            margin = position["price"] * position["volume"] * self.get_size_from_map(
-                position["local_symbol"]) * self.get_margin_ration(position["local_symbol"])
+        for position in self.position_manager.get_all_positions(obj=True):
+            margin = position.price * position.volume * self.get_size_from_map(
+                position.local_symbol) * self.get_margin_ration(
+                position.local_symbol)
             if margin > amount:
-                volume = amount / (position["price"] * self.get_size_from_map(
-                    position["local_symbol"]) * self.get_margin_ration(position["local_symbol"]))
+                volume = amount / (position.price * self.get_size_from_map(
+                    position.local_symbol) * self.get_margin_ration(position.local_symbol))
                 if volume % 1 != 0:
                     volume = int(volume) + 1
                 else:
                     volume = int(volume)
                 amount = 0
             else:
-                volume = position["volume"]
+                volume = position.volume
                 amount -= margin
 
-            if position["direction"] == "long":
-                self.interface.action.cover(price_mapping[position["local_symbol"]], volume, position)
+            if position.direction == Direction.LONG:
+                self.interface.action.cover(price_mapping[position.local_symbol], volume, position)
             else:
-                self.interface.action.sell(price_mapping[position["local_symbol"]], volume, position)
+                self.interface.action.sell(price_mapping[position.local_symbol], volume, position)
             if amount <= 0:
                 self.logger.info("已经发完足够包含指定保证金的平仓单")
                 break
@@ -523,14 +529,10 @@ class Account:
             print("|          好像没有结算数据哦!                    |")
             print("-------------------------------------------------")
             return {}
-        try:
-            import matplotlib.pyplot as plt
-            df['balance'].plot()
-            plt.show()
-        except ImportError as e:
-            pass
-        finally:
-            return self._cal_result(df)
+        # 旧实现在这里 import matplotlib 并 plt.show(): 装有 matplotlib 的
+        # 机器上每次计算回测结果都弹窗阻塞, 且 finally: return 会吞掉
+        # try 块内的所有异常。result 应为纯计算, 看图走回测报告
+        return self._cal_result(df)
 
     def get_mapping(self, d):
         mapping = {}

@@ -114,6 +114,18 @@ class LocalLooper:
         self.ask_price_mapping = dict()
         self.bid_price_mapping = dict()
 
+    @property
+    def action(self):
+        """ 交易执行器。__init__ 的注释声称覆盖 action/logger, 但从未赋值——
+        Account 的强平路径(close_position_by_amount)经 self.interface.action
+        下单时会 AttributeError。转发到 app 上真正的实例。 """
+        return self.app.action
+
+    @property
+    def logger(self):
+        """ Account.logger 经 self.interface.logger 取日志器, 同上转发 """
+        return self.app.logger
+
     def get_trades(self):
         return list(self.traded_order_mapping.values())
 
@@ -168,7 +180,10 @@ class LocalLooper:
     def cancel_order(self, cancel_req: CancelRequest, **kwargs):
         if cancel_req.order_id in self.pending.keys():
             order = self.pending[cancel_req.order_id]
-            order.status = Status.CANCELLED
+            # OrderData 受 @frozen 保护: 直接 order.status = 会被
+            # __set_attr__ 拒绝('cancel_order' 不以下划线开头),
+            # 旧实现在这里抛 AttributeError, 回测撤单不可用
+            order.__set_hole__("status", Status.CANCELLED)
             # 移除掉冻结 使得成为可能
             self.account.pop_order(order)
             self.account.position_manager.update_order(order)
@@ -176,9 +191,16 @@ class LocalLooper:
             self.pending.pop(cancel_req.order_id)
 
     def cancel_all(self):
-        for x in self.pending:
-            x.status = Status.CANCELLED
-            self.on_event(EVENT_ORDER, x)
+        """ 撤掉所有报单。
+
+        旧实现 `for x in self.pending` 迭代的是 key(字符串单号),
+        `x.status = ...` 对 str 赋属性直接 AttributeError; 且未归还
+        冻结保证金/手续费。现与 cancel_order 逐单对称处理。 """
+        for order in list(self.pending.values()):
+            order.__set_hole__("status", Status.CANCELLED)
+            self.account.pop_order(order)
+            self.account.position_manager.update_order(order)
+            self.on_event(EVENT_ORDER, order)
         self.pending.clear()
         return 1
 
@@ -215,9 +237,10 @@ class LocalLooper:
         """
         ARC = []
         for active_order in self.pending.values():
-            px = "".join(filter(str.isalpha, active_order.local_symbol))
-            nx = "".join(filter(str.isalpha, self.data_entity.local_symbol))
-            if nx != px:  # 针对多品种，实现拆分。 更新当前的价格，确保多个
+            # 撮合必须逐合约判断: 旧实现只比较品种字母(ag2412.SHFE 与
+            # ag2501.SHFE 同为 "agSHFE"), 同品种跨月的挂单会被另一份
+            # 合约的行情价格成交, 跨月/套利回测结果错误
+            if active_order.local_symbol != self.data_entity.local_symbol:
                 continue
             code = active_order.local_symbol
             if self.params.get("deal_pattern") == "match":

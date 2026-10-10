@@ -315,7 +315,7 @@ class BeeTdApi(TdApi, LoginRequired):
                 max_market_order_volume=data['MaxMarketOrderVolume'],
                 min_market_order_volume=data['MinMarketOrderVolume'],
                 max_limit_order_volume=data['MaxLimitOrderVolume'],
-                min_limit_order_volume=data['MaxLimitOrderVolume'],
+                min_limit_order_volume=data['MinLimitOrderVolume'],
                 size=data["VolumeMultiple"],
                 pricetick=data["PriceTick"],
                 delivery_month=data['DeliveryMonth'],
@@ -431,30 +431,6 @@ class BeeTdApi(TdApi, LoginRequired):
             gateway_name=self.gateway_name
         )
         self.on_event(type=EVENT_TRADE, data=trade)
-
-    def connect(self, info: dict):
-        """
-        Start connection to server.
-        """
-        self.userid = info.get("userid")
-        self.password = info.get("password")
-        self.brokerid = info.get("brokerid")
-        self.auth_code = info.get("auth_code")
-        self.appid = info.get("appid")
-        self.product_info = info.get("product_info")
-
-        subscribe_info = info.get("subscribe_topic", (0, 0))  # 默认采用(0, 0)的方式进行订阅
-
-        if not self.connect_status:
-            path = get_folder_path(
-                self.gateway_name.lower() + f"/{self.userid}")
-            self.createFtdcTraderApi(str(path) + "\\Td")
-            self.subscribePrivateTopic(subscribe_info[0])
-            self.subscribePublicTopic(subscribe_info[1])
-            self.registerFront(info.get("td_address"))
-            self.init()
-        else:
-            self.authenticate()
 
     def authenticate(self):
         """

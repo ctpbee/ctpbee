@@ -248,8 +248,13 @@ class Entity:
                     temp[x] = getattr(self, x).value
                     continue
                 temp[x] = getattr(self, x)
-            return DataFrame([temp], columns=list(temp.keys()).remove("datetime")).set_index(['datetime']) if temp.get(
-                "datetime", None) is not None else DataFrame([temp], columns=list(temp.keys()))
+            # 旧代码 columns=list(temp.keys()).remove("datetime") ——
+            # list.remove() 返回 None, columns=None 只是被 pandas 当作
+            # "用字典全部键"而碰巧等价; 显式传入全部键, 再把 datetime
+            # 置为索引(显式列选择会丢掉 datetime, 不能提前剔除)
+            if temp.get("datetime", None) is not None:
+                return DataFrame([temp], columns=list(temp.keys())).set_index(['datetime'])
+            return DataFrame([temp], columns=list(temp.keys()))
         except ImportError:
             raise ImportError("请使用pip install pandas 以获取此特性")
 

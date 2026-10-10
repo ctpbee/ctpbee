@@ -34,4 +34,8 @@ class LooperYou(LocalLooper):
     def connect(self, info: dict):
         print("模拟器已经载入， 正在初始化历史资金数据")
         if info.get("SIM_PRIMARY_CASH"):
-            self.account.initial_capital(info.get("SIM_PRIMARY_CASH"))
+            # initial_capital 是数值属性而非方法——旧实现直接调用会
+            # TypeError: 'int' object is not callable; update_params
+            # 是设置初始资金的既有路径(仅在未初始化时生效)
+            self.account.update_params(
+                {"initial_capital": info.get("SIM_PRIMARY_CASH")})

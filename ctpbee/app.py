@@ -326,11 +326,12 @@ class CtpBee(object):
         """
         耗费时间
         """
-        cost_time = (
-            f"{str(end_time.hour - self.start_datetime.hour)}"
-            f"h {str(end_time.minute - self.start_datetime.minute)}m "
-            f"{str(end_time.second - self.start_datetime.second)}s"
-        )
+        # 旧实现逐字段相减(hour-hour), 回测跨零点后出现负数;
+        # total_seconds 一次性换算
+        elapsed = max(0.0, (end_time - self.start_datetime).total_seconds())
+        _h, _rem = divmod(int(elapsed), 3600)
+        _m, _s = divmod(_rem, 60)
+        cost_time = f"{_h}h {_m}m {_s}s"
         """
         每日盈利
         """
@@ -441,7 +442,10 @@ class CtpBee(object):
         extension = self._extensions.get(extension_name, None)
         if not extension:
             return False
-        extension.__frozen = True
+        # 不能直接写 extension.__frozen: 名字改写会写到 _CtpBee__frozen,
+        # 而 CtpbeeApi.__call__ 检查的是 _CtpbeeApi__frozen, 冻结会失效
+        if hasattr(extension, "_set_frozen"):
+            extension._set_frozen(True)
         return True
 
     def get_extension(self, extension_name) -> None or CtpbeeApi:
@@ -474,7 +478,9 @@ class CtpBee(object):
         extension = self._extensions.get(extension_name, None)
         if not extension:
             return False
-        extension.__frozen = False
+        # 同 suspend_extension: 经类内方法设置, 绕开名字改写
+        if hasattr(extension, "_set_frozen"):
+            extension._set_frozen(False)
         return True
 
     def del_extension(self, extension_name: Text):

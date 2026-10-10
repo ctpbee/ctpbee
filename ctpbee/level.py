@@ -458,6 +458,9 @@ class CtpbeeApi(BeeApi):
         self.extension_name = extension_name
         self.app = app
         self._count = 0
+        # 每实例一份回调表: __new__ 装到类上的 map 被同类所有实例共享,
+        # route() 直接改写它会把兄弟实例的回调一起换掉
+        self.map = dict(self.map)
         self.__init_ready = False
         if self.app is not None:
             self.init_app(self.app)
@@ -679,6 +682,35 @@ class CtpbeeApi(BeeApi):
             None
         """
         pass
+
+    def _set_frozen(self, flag: bool) -> None:
+        """
+        冻结/解冻该策略实例(供 CtpBee.suspend_extension / enable_extension 调用)。
+
+        `__frozen` 在类内会被名字改写为 `_CtpbeeApi__frozen`——外部类(如
+        CtpBee)直接 `extension.__frozen = True` 实际写到 `_CtpBee__frozen`,
+        `__call__` 永远读不到, 冻结形同虚设。必须在定义该属性的类内部设置。
+
+        Args:
+          flag(bool): True 冻结(不再分发事件), False 解冻
+
+        Return:
+            None
+        """
+        self.__frozen = flag
+
+    def _reset_init(self) -> None:
+        """
+        重置 on_init 的已触发标记, 使下一个 init 事件重新触发 on_init。
+
+        供 run_forever 在非交易日冻结策略、交易日恢复运行时调用——旧实现
+        重置的 `f_init` 属性并不存在(真实标记是名字改写后的
+        `_CtpbeeApi__init_ready`), 恢复运行后 on_init 从未再次触发。
+
+        Return:
+            None
+        """
+        self.__init_ready = False
 
     def init_app(self, app) -> None:
         """

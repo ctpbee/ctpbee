@@ -263,8 +263,10 @@ def run_forever(app):
             """ 非交易日 并且在运行 """
             for x in app._extensions.keys():
                 app.suspend_extension(x)
-                if hasattr(app._extensions[x], "f_init"):
-                    app._extensions[x].f_init = False
+                # 旧代码重置的 f_init 属性并不存在(真实标记是名字改写后的
+                # _CtpbeeApi__init_ready), 恢复运行后 on_init 从未再次触发
+                if hasattr(app._extensions[x], "_reset_init"):
+                    app._extensions[x]._reset_init()
             print(f"当前时间不允许, 时间: {str(current_time)}, 即将阻断运行")
             running_status = False
 
