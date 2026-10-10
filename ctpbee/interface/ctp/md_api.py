@@ -1,6 +1,7 @@
 import ctpbee.signals
 from blinker import NamedSignal
 from ctpbee.constant import *
+from ctpbee.helpers import build_tick_datetime
 from ctpbee.interface.func import *
 
 from .lib import *
@@ -93,22 +94,22 @@ class BeeMdApi(MdApi):
             exchange = Exchange.CTP
         # 针对大商所进行处理 see https://github.com/ctpbee/ctpbee/issues/165
         if exchange == Exchange.DCE:
-            datetimed = datetime.strptime(
-                str(date.today()) + " " + f"{data['UpdateTime']}.{int(data['UpdateMillisec'] / 100)}",
-                "%Y-%m-%d %H:%M:%S.%f")
+            # ActionDay 为交易日而非自然日, 用本机今天拼时间戳
+            datetimed = build_tick_datetime(
+                None, data["UpdateTime"], data["UpdateMillisec"], use_today=True)
         else:
-            # 正常情况下tick的处理
-            timestamp = f"{data['ActionDay']} {data['UpdateTime']}.{int(data['UpdateMillisec'] / 100)}"
-            try:
-                datetimed = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S.%f")
-            except ValueError as e:
-                datetimed = datetime.strptime(str(date.today()) + " " + timestamp, "%Y-%m-%d %H:%M:%S.%f")
+            # 正常情况下tick的处理(毫秒按历史行为量化到 100ms)
+            datetimed = build_tick_datetime(
+                data["ActionDay"], data["UpdateTime"], data["UpdateMillisec"])
 
         tick = TickData(
             symbol=symbol,
             exchange=exchange,
             datetime=datetimed,
             name=symbol_name_map.get(symbol, "None"),
+            # 交易所口径的交易日(夜盘属次一交易日): K线按交易日聚合的
+            # 工具(如 ctpbee_kline)以此为准, 缺失时才退回本地推断。
+            trading_day=str(data.get("TradingDay", "") or ""),
             volume=data["Volume"],
             last_price=data["LastPrice"],
             limit_up=data["UpperLimitPrice"],

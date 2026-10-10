@@ -8,6 +8,36 @@ from datetime import datetime
 from itertools import chain
 from typing import Iterable, Tuple, Sized, Generator
 
+# data_api 是未随 ctpbee 开源的可选数据包(见 app.add_basic_info 的 todo),
+# 来自它的实体需要在回放时转成内部的 Bumblebee。
+#
+# 为什么要缓存探测结果: 【失败】的 import 不会写入 sys.modules, 每次尝试都要把
+# PathFinder 的 sys.path 逐条拼接 + stat 走满一遍。last_bar 是每根 bar/tick 都
+# 执行一次的回测主循环, 旧实现把这个 import 放在循环体里: cProfile 在 origin/dev
+# 上量到每根 bar 9.1 次 nt.stat(19800 根 bar 共 179823 次), 一次 import 探测
+# 1.2~1.8ms, 即回测总耗时的 ~8 成。此处改为至多探测一次。
+#
+# 取值: None 尚未探测 / () data_api 不可用 / (Tick, Kline) 可用类型。
+# 空元组让 isinstance 恒为 False, 调用点因此不需要分支。
+_DATA_API_TYPES = None
+
+
+def data_api_types() -> tuple:
+    """探测可选依赖 data_api 的 (Tick, Kline); 结果缓存, 至多 import 一次。
+
+    Returns:
+      tuple: data_api 可用时为 (Tick, Kline), 否则为空元组
+    """
+    global _DATA_API_TYPES
+    if _DATA_API_TYPES is None:
+        try:
+            from data_api import Tick, Kline
+        except ImportError:
+            _DATA_API_TYPES = ()
+        else:
+            _DATA_API_TYPES = (Tick, Kline)
+    return _DATA_API_TYPES
+
 
 class Bumblebee(dict):
     """  """
@@ -111,14 +141,10 @@ class VessData:
                 """ 如果找到了值相等  那么更新里面的值 """
                 nx = value
                 self.the_buffer[key] = next(self.inner_data[key])
-                try:
-                    from data_api import Tick, Kline
-                    if isinstance(nx, Tick) or isinstance(nx, Kline):
-                        return nx.to_bumblebee()
-                    else:
-                        return nx
-                except ImportError:
-                    return nx
+                if isinstance(nx, data_api_types()):
+                    """ data_api 的实体需要转换成内部的 Bumblebee 表示 """
+                    return nx.to_bumblebee()
+                return nx
 
     def __next__(self):
         """

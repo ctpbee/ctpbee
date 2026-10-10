@@ -1,8 +1,8 @@
 """
 """
 
-import inspect
 import os
+import sys
 from dataclasses import dataclass, asdict
 from datetime import datetime, date
 from enum import Enum
@@ -11,8 +11,11 @@ from typing import Any
 
 
 def __set_attr__(self, key, value):
-    # todo: is there a faster to get the last caller function name?
-    father = inspect.getframeinfo(inspect.currentframe().f_back)[2]
+    # 热路径说明: 本函数在每个 Entity 属性写入时都会执行, 行情 tick 的
+    # TickData 构造一次就要走 ~40 回。原先用 inspect.getframeinfo 取调用方
+    # 函数名, 单次 ~14µs(内部构造 traceback 并读源码行); sys._getframe(1)
+    # .f_code.co_name 与其完全等价(同为栈上一帧的函数名), 单次 <1µs。
+    father = sys._getframe(1).f_code.co_name
     if father.startswith("_"):
         self.__dict__[key] = value
     else:
@@ -22,6 +25,16 @@ def __set_attr__(self, key, value):
 def frozen(cls):
     cls.__setattr__ = __set_attr__
     return cls
+
+
+def _exchange_code(exchange) -> str:
+    """Exchange 枚举与字符串统一为交易所代码字符串(如 "SHFE")。
+
+    getattr 默认值惯用法替代原先的 try/except 兜底: 枚举取 .value,
+    字符串没有 .value 回落到自身。语义与各 Entity __post_init__ 里的
+    旧 try/except 完全一致, 无异常机制、单行。
+    """
+    return getattr(exchange, "value", exchange)
 
 
 class Missing:
@@ -177,8 +190,11 @@ class Entity:
         return args
 
     def __init__(self, **mapping):
-        for key, value in mapping.items():
-            setattr(self, key, value)
+        # 批量并入实例字典, 与原先逐键 setattr 等价——frozen 的 __set_attr__
+        # 对来自 "__init__"(下划线开头调用方)的写入本就直接写 __dict__,
+        # 这里只是把 ~40 次单写合并成一次字典更新。保护语义不受影响:
+        # 构造之后再从公开函数 setattr 仍会被 __set_attr__ 拒绝。
+        self.__dict__.update(mapping)
         if hasattr(self, "__post_init__"):
             self.__post_init__()
 
@@ -232,8 +248,13 @@ class Entity:
                     temp[x] = getattr(self, x).value
                     continue
                 temp[x] = getattr(self, x)
-            return DataFrame([temp], columns=list(temp.keys()).remove("datetime")).set_index(['datetime']) if temp.get(
-                "datetime", None) is not None else DataFrame([temp], columns=list(temp.keys()))
+            # 旧代码 columns=list(temp.keys()).remove("datetime") ——
+            # list.remove() 返回 None, columns=None 只是被 pandas 当作
+            # "用字典全部键"而碰巧等价; 显式传入全部键, 再把 datetime
+            # 置为索引(显式列选择会丢掉 datetime, 不能提前剔除)
+            if temp.get("datetime", None) is not None:
+                return DataFrame([temp], columns=list(temp.keys())).set_index(['datetime'])
+            return DataFrame([temp], columns=list(temp.keys()))
         except ImportError:
             raise ImportError("请使用pip install pandas 以获取此特性")
 
@@ -305,6 +326,11 @@ class TickData(Entity):
     symbol: str
     exchange: Any
     name: str = ""
+    # CTP 原始交易日("YYYYMMDD" 字符串, 深度行情的 TradingDay 字段)。
+    # 与 datetime(行情时间, ActionDay 口径)不同: 夜盘 >=20:00 的 tick 其
+    # trading_day 是次一交易日, 节假日跨度也由交易所口径给出。保持原始
+    # 字符串——由使用方(如 ctpbee_kline)按需解析, 避免序列化歧义。
+    trading_day: str = ""
     volume: float = 0
     last_price: float = 0
     last_volume: float = 0
@@ -380,10 +406,7 @@ class BarData(Entity):
             setattr(self, "symbol", l.split(".")[0])
             setattr(self, "exchange", l.split(".")[1])
         else:
-            try:
-                self.local_symbol = f"{self.symbol}.{self.exchange.value}"
-            except AttributeError:
-                self.local_symbol = f"{self.symbol}.{self.exchange}"
+            self.local_symbol = f"{self.symbol}.{_exchange_code(self.exchange)}"
 
 
 class OrderData(Entity):
@@ -408,10 +431,7 @@ class OrderData(Entity):
 
     def __post_init__(self):
         """"""
-        try:
-            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
-        except AttributeError as e:
-            self.local_symbol = f"{self.symbol}.{self.exchange}"
+        self.local_symbol = f"{self.symbol}.{_exchange_code(self.exchange)}"
         self.local_order_id = f"{self.gateway_name}.{self.order_id}"
 
     def _is_active(self):
@@ -455,10 +475,7 @@ class TradeData(Entity):
 
     def __post_init__(self):
         """"""
-        try:
-            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
-        except AttributeError:
-            self.local_symbol = f"{self.symbol}.{self.exchange}"
+        self.local_symbol = f"{self.symbol}.{_exchange_code(self.exchange)}"
         self.local_order_id = f"{self.gateway_name}.{self.order_id}"
         self.local_trade_id = f"{self.gateway_name}.{self.tradeid}"
 
@@ -482,10 +499,7 @@ class PositionData(Entity):
 
     def __post_init__(self):
         """"""
-        try:
-            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
-        except AttributeError:
-            self.local_symbol = f"{self.symbol}.{self.exchange}"
+        self.local_symbol = f"{self.symbol}.{_exchange_code(self.exchange)}"
         self.local_position_id = f"{self.local_symbol}.{self.direction}"
 
 
@@ -612,10 +626,7 @@ class OrderRequest(BaseRequest):
 
     def __post_init__(self):
         """"""
-        try:
-            self.local_symbol = f"{self.symbol}.{self.exchange.value}"
-        except AttributeError:
-            self.local_symbol = f"{self.symbol}.{self.exchange}"
+        self.local_symbol = f"{self.symbol}.{_exchange_code(self.exchange)}"
 
     def _create_order_data(self, order_id: str, gateway_name: str, time=None):
         """
@@ -647,7 +658,9 @@ class CancelRequest(BaseRequest):
 
     def __post_init__(self):
         """"""
-        self.local_symbol = f"{self.symbol}.{self.exchange.value}"
+        # _exchange_code: 枚举/字符串都接受——字符串 exchange 的 OrderData
+        # 经 create_cancel_request() 透传时原本在这里 AttributeError
+        self.local_symbol = f"{self.symbol}.{_exchange_code(self.exchange)}"
 
 
 class SharedData(Entity):

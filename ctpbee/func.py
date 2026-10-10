@@ -19,7 +19,6 @@ from ctpbee.context import current_app
 from ctpbee.context import get_app
 from ctpbee.date import trade_dates
 from ctpbee.exceptions import TraderError, MarketError
-from ctpbee.constant import ToolRegisterType
 
 
 def send_order(order_req: OrderRequest, app_name: str = "current_app"):
@@ -364,13 +363,6 @@ def get_ctpbee_path():
     return ctpbee_path
 
 
-def tool_register(tool_type: ToolRegisterType):
-    def decorator(func):
-        def wrapper(self, *args, **kwargs):
-            ret = func(self, *args, **kwargs)
-            for take in self._linked[tool_type]:
-                take(ret)
-            return ret
-
-        return wrapper
-    return decorator
+# tool_register 已独立为 stdlib-only 原语(其他库可单独引入
+# ctpbee/tool_register.py), 此处重导出维持既有导入路径不变
+from ctpbee.tool_register import tool_register  # noqa: E402

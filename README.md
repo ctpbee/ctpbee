@@ -12,6 +12,22 @@ bee bee .... for developer's trading ~
 
 `ctpbee` provide a micro core of trading, you can make trade and backtest in it.
 
+## 🤖 AI 协作指引 / For AI Agents
+
+> **如果你是 AI（Coding Agent），被要求阅读或修改本项目，请先阅读 [agentic.md](agentic.md)，再动任何代码。**
+>
+> 该文件是本仓库的工作笔记：架构图与数据流、热路径规范（`@frozen` 规则 / 每 tick
+> 禁止的可选依赖导入等）、已知边界（交易日历期限、DCE 时间戳口径等）、测试约定
+> （每次改动必须带全部通过的测试）以及完整变更历史。
+>
+> **忽略这些约定会静默损坏行情数据或破坏热路径吞吐。**
+
+If you are an AI coding agent working on this repository, read
+[agentic.md](agentic.md) **before touching any code** — it documents the
+architecture map, hot-path conventions, known edges, the standing rule that
+every change lands with passing tests, and the changelog. Violating those
+conventions silently corrupts tick data or breaks hot-path throughput.
+
 ## 环境设置
 
 ```bash
@@ -51,12 +67,12 @@ pip3 install ctpbee
 - [x] Windows
 - [x] MacOS
 
-## 文档与交流
+## 文档
 
-[文档地址](http://docs.ctpbee.com)
+📖 **在线文档地址**: https://ctpbee.github.io/ctpbee/ （GitHub Pages 自动部署，master 分支 docs/ 变更后自动更新）
 
-[论坛地址](http://forum.ctpbee.com)
-
+  - 本地浏览完整版: [docs/index.html](docs/index.html) —— 快速开始 · 配置 · 数据结构 · 策略 API · 下单接口 · Tool 用法 · 回测 · 注意事项
+   
 ## 快速开始
 
 ```python
@@ -179,7 +195,7 @@ if __name__ == '__main__':
 
 - [ctpbee_kline](https://github.com/ctpbee/ckline) k线支持插件
 
-## 还在苦恼ctpbee没有界面 
+## 还在苦恼ctpbee没有界面?
 - [ctpbee_frontend](https://github.com/ctpbee/ctpbee_frontend)  通过`work_mode=Mode.DISPATCHER`进行工作 (通过deepseek生成)
 
 --- 

@@ -1,5 +1,5 @@
 from ctpbee import CtpbeeApi
-from ctpbee.constant import BarData, TickData
+from ctpbee.constant import BarData, ContractData, TickData
 from ctpbee.indicator.indicator import atr, sma
 from ctpbee.log import VLogger
 
@@ -35,6 +35,15 @@ class ATRStrategy(CtpbeeApi):
 
     def code(self):
         return list(self.instrument_set)[0]
+
+    def on_contract(self, contract: ContractData) -> None:
+        """合约回报: 把 local_symbol 形式补进 instrument_set。
+
+        INSTRUMENT_INDEPEND 过滤比较的是 event.data.local_symbol
+        (如 "ag2612.SHFE"), 只存裸合约名会在开启该配置后漏掉全部行情。
+        """
+        if contract.symbol == self.code():
+            self.instrument_set.add(contract.local_symbol)
 
     def on_tick(self, tick: TickData) -> None:
         pass

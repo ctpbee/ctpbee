@@ -1,13 +1,49 @@
 import random
 import uuid
 from copy import deepcopy
-from datetime import timedelta, datetime
+from datetime import date, datetime, timedelta
 
 from ctpbee.constant import OrderRequest, Direction, OrderData, CancelRequest, TradeData, BarData, \
     TickData, Status, Event, EVENT_ORDER, EVENT_TRADE, EVENT_LOG, EVENT_ERROR, \
     EVENT_INIT_FINISHED, EVENT_BAR, EVENT_TICK
-from ctpbee.date import trade_dates
+from ctpbee.date import is_trade_date, trade_date_index, trade_dates
 from ctpbee.looper.account import Account
+
+# 交易日解析记忆表 {(自然日, 是否夜盘): 交易日}
+_TRADE_DAY_MEMO = {}
+
+
+def trade_day_of(timing: datetime) -> date:
+    """回测中该 bar/tick 归属的交易日。
+
+    与 ``LocalLooper.__call__`` 里的旧实现逐值等价(包括 ValueError / IndexError
+    的触发条件), 只改性能: 旧实现在【每一个】tick 上对 8800 元素的 trade_dates
+    做 1~2 次线性扫描再加一次 strptime, 实测日盘 40~46us、夜盘 49~60us 每条。
+    交易日只由 (自然日, hour >= 21) 两个输入决定, 且日历在进程内不变, 因此
+    O(1) 定位 + 记忆化后, 整条回测曲线只需解析 "覆盖天数 x 2" 次。
+
+    日期转换用 ``date(*map(int, s.split("-")))``: 不用 3.7+ 才有的
+    date.fromisoformat —— setup.py 声明支持 3.6, 并为它补装 dataclasses,
+    而在 3.6 上调用前者会让每一根夜盘 bar 抛 AttributeError。这行本来也只是
+    纯算术, 不比 strptime 慢。
+    """
+    day = timing.date()
+    night = timing.hour >= 21
+    key = (day, night)
+    memo = _TRADE_DAY_MEMO.get(key)
+    if memo is not None:
+        return memo
+    date_str = str(day)
+    if night:
+        """if hour > 21, switch to next trade day"""
+        result = date(*map(int, trade_dates[trade_date_index(date_str) + 1].split("-")))
+    elif not is_trade_date(date_str):
+        last_day = timing + timedelta(days=-1)
+        result = date(*map(int, trade_dates[trade_date_index(str(last_day.date())) + 1].split("-")))
+    else:
+        result = day
+    _TRADE_DAY_MEMO[key] = result
+    return result
 
 
 class LocalLooper:
@@ -78,6 +114,18 @@ class LocalLooper:
         self.ask_price_mapping = dict()
         self.bid_price_mapping = dict()
 
+    @property
+    def action(self):
+        """ 交易执行器。__init__ 的注释声称覆盖 action/logger, 但从未赋值——
+        Account 的强平路径(close_position_by_amount)经 self.interface.action
+        下单时会 AttributeError。转发到 app 上真正的实例。 """
+        return self.app.action
+
+    @property
+    def logger(self):
+        """ Account.logger 经 self.interface.logger 取日志器, 同上转发 """
+        return self.app.logger
+
     def get_trades(self):
         return list(self.traded_order_mapping.values())
 
@@ -132,7 +180,10 @@ class LocalLooper:
     def cancel_order(self, cancel_req: CancelRequest, **kwargs):
         if cancel_req.order_id in self.pending.keys():
             order = self.pending[cancel_req.order_id]
-            order.status = Status.CANCELLED
+            # OrderData 受 @frozen 保护: 直接 order.status = 会被
+            # __set_attr__ 拒绝('cancel_order' 不以下划线开头),
+            # 旧实现在这里抛 AttributeError, 回测撤单不可用
+            order.__set_hole__("status", Status.CANCELLED)
             # 移除掉冻结 使得成为可能
             self.account.pop_order(order)
             self.account.position_manager.update_order(order)
@@ -140,9 +191,16 @@ class LocalLooper:
             self.pending.pop(cancel_req.order_id)
 
     def cancel_all(self):
-        for x in self.pending:
-            x.status = Status.CANCELLED
-            self.on_event(EVENT_ORDER, x)
+        """ 撤掉所有报单。
+
+        旧实现 `for x in self.pending` 迭代的是 key(字符串单号),
+        `x.status = ...` 对 str 赋属性直接 AttributeError; 且未归还
+        冻结保证金/手续费。现与 cancel_order 逐单对称处理。 """
+        for order in list(self.pending.values()):
+            order.__set_hole__("status", Status.CANCELLED)
+            self.account.pop_order(order)
+            self.account.position_manager.update_order(order)
+            self.on_event(EVENT_ORDER, order)
         self.pending.clear()
         return 1
 
@@ -179,9 +237,10 @@ class LocalLooper:
         """
         ARC = []
         for active_order in self.pending.values():
-            px = "".join(filter(str.isalpha, active_order.local_symbol))
-            nx = "".join(filter(str.isalpha, self.data_entity.local_symbol))
-            if nx != px:  # 针对多品种，实现拆分。 更新当前的价格，确保多个
+            # 撮合必须逐合约判断: 旧实现只比较品种字母(ag2412.SHFE 与
+            # ag2501.SHFE 同为 "agSHFE"), 同品种跨月的挂单会被另一份
+            # 合约的行情价格成交, 跨月/套利回测结果错误
+            if active_order.local_symbol != self.data_entity.local_symbol:
                 continue
             code = active_order.local_symbol
             if self.params.get("deal_pattern") == "match":
@@ -380,17 +439,7 @@ class LocalLooper:
                                                           self.pre_close_price[self.data_entity.local_symbol])
             self.on_event(EVENT_BAR, BarData(**entity))
 
-        if entity.datetime.hour >= 21:
-            """if hour > 21, switch to next trade day"""
-            index = trade_dates.index(str(entity.datetime.date()))
-            self.date = datetime.strptime(trade_dates[index + 1], "%Y-%m-%d").date()
-        else:
-            if str(entity.datetime.date()) not in trade_dates:
-                last_day = entity.datetime + timedelta(days=-1)
-                self.date = datetime.strptime(trade_dates[trade_dates.index(str(last_day.date())) + 1],
-                                              "%Y-%m-%d").date()
-            else:
-                self.date = entity.datetime.date()
+        self.date = trade_day_of(entity.datetime)
         # 穿过接口日期检查
         self.account.via_aisle()
         self.datetime = entity.datetime

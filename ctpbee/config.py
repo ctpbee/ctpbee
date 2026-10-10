@@ -131,5 +131,45 @@ class Config(dict):
                     self[key] = value
         return True
 
+    def from_envvars(self, prefix: Text = "CTPBEE_", silent: bool = True):
+        """
+        从环境变量导入配置: 所有以 prefix 开头的环境变量, 去掉前缀后
+        作为配置键(要求全大写, 与 from_mapping 一致), 值优先按 JSON 解析
+        ——bool/int/float/list/dict 均可表达(如 CONNECT_INFO 传 JSON 字符串),
+        解析失败时保留原始字符串。
+
+        Args:
+          prefix(Text): 环境变量前缀, 默认 "CTPBEE_"
+          silent(bool): True 时忽略不规范项(非大写键/非 JSON 值回退字符串);
+                        False 时对它们显式抛 ValueError
+
+        Examples:
+          export CTPBEE_TD_FUNC=false          → config["TD_FUNC"] is False
+          export CTPBEE_RD_CLIENT_PORT=6379    → config["RD_CLIENT_PORT"] == 6379
+          export CTPBEE_CONNECT_INFO='{"userid": "001", ...}'  → dict
+
+          # 推荐优先级: 文件值 < 环境变量
+          app.config.from_json("config.json")
+          app.config.from_envvars()
+        """
+        loaded = {}
+        for key, value in os.environ.items():
+            if not key.startswith(prefix):
+                continue
+            config_key = key[len(prefix):]
+            if not config_key or not config_key.isupper():
+                if not silent:
+                    raise ValueError(
+                        f"环境变量 {key} 去前缀后的键 {config_key!r} 非法(须为非空全大写)")
+                continue
+            try:
+                parsed = json.loads(value)
+            except ValueError:
+                if not silent:
+                    raise
+                parsed = value
+            loaded[config_key] = parsed
+        return self.from_mapping(loaded)
+
     def __repr__(self):
         return '<%s %s>' % (self.__class__.__name__, dict.__repr__(self))

@@ -8801,6 +8801,49 @@ trade_dates = [
     "2026-12-31",
 ]
 
+# trade_dates 定位索引 {"YYYY-MM-DD": 下标}, 惰性构建。
+#
+# 列表本身保证升序且元素唯一(8800 项, 1990-12-19 ~ 2026-12-31), 因此字典定位与
+# list.index / in 完全等价。回测循环(LocalLooper.__call__)过去在每个 tick 上做
+# 1~2 次线性扫描, 实测日盘 40~46us、夜盘 49~60us 每条 —— 在 looper/data.py 的每根 bar
+# import 探测被缓存之后, 它占了剩下每根 bar 固定开销(59us)的大头。
+# 惰性构建的意义: 不做回测的实盘进程不必为这张表付出导入期成本。
+_TRADE_DATE_POSITION = None
+
+
+def _trade_date_position() -> dict:
+    global _TRADE_DATE_POSITION
+    if _TRADE_DATE_POSITION is None:
+        _TRADE_DATE_POSITION = {value: index for index, value in enumerate(trade_dates)}
+    return _TRADE_DATE_POSITION
+
+
+def is_trade_date(date: str) -> bool:
+    """``date in trade_dates`` 的 O(1) 等价写法。
+
+    Args:
+      date (str): 日期字符串 "YYYY-MM-DD"
+    """
+    return date in _trade_date_position()
+
+
+def trade_date_index(date: str) -> int:
+    """``trade_dates.index(date)`` 的 O(1) 等价写法。
+
+    Args:
+      date (str): 交易日字符串 "YYYY-MM-DD"
+
+    Returns:
+      int: 该交易日在 trade_dates 中的下标
+
+    Raises:
+      ValueError: 与 list.index 一致(同为 ``'xxx' is not in list``)
+    """
+    try:
+        return _trade_date_position()[date]
+    except KeyError:
+        raise ValueError(f"{date!r} is not in list") from None
+
 
 def get_day_from(date: str, ne: int = 1) -> str:
     """
@@ -8815,6 +8858,6 @@ def get_day_from(date: str, ne: int = 1) -> str:
      str: 交易日期
     """
     try:
-        return trade_dates[trade_dates.index(date) + ne]
+        return trade_dates[trade_date_index(date) + ne]
     except IndexError:
         raise IndexError("参数date不为交易日")

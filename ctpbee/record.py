@@ -266,13 +266,20 @@ class Recorder(object):
     def clear_all(self):
         """
         为了避免数据越来越大,需要清空数据
+        旧实现漏掉了 main_contract_mapping(每次 EVENT_LAST 查询都 append,
+        无界增长)、local_contract_price_mapping、bar、logs——run_forever
+        每日调用此函数做"清空", 这几项却在持续累积
         :return:
         """
 
         self.ticks.clear()
+        self.bar.clear()
         self.orders.clear()
         self.trades.clear()
         self.positions.clear()
         self.contracts.clear()
         self.errors.clear()
         self.active_orders.clear()
+        self.main_contract_mapping.clear()
+        self.local_contract_price_mapping.clear()
+        self.logs.clear()

@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ctpbee · 中国期货交易与行情引擎 · 文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+    --ink: #0B0E11;
+    --panel: #10151B;
+    --panel-2: #151C24;
+    --line: #232D38;
+    --amber: #FFB000;
+    --amber-dim: #B87A00;
+    --up: #E5484D;
+    --down: #2FBF71;
+    --text: #C9D3DC;
+    --text-dim: #7A8894;
+    --text-faint: #4A5661;
+    --mono: "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
+    --cjk: "Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+    background: var(--ink);
+    color: var(--text);
+    font-family: var(--cjk);
+    font-size: 16px;
+    line-height: 1.85;
+    background-image: repeating-linear-gradient(0deg, transparent 0 2px, rgba(255,255,255,.006) 2px 4px);
+}
+/* 中英切换: 默认中文, body.en 时只显示英文 */
+body.en .zh { display: none; }
+body:not(.en) .en { display: none; }
+::selection { background: var(--amber); color: var(--ink); }
+a { color: var(--amber); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
+code, pre, .mono { font-family: var(--mono); }
+
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+.layout { display: grid; grid-template-columns: 218px minmax(0, 1fr); gap: 56px; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } nav.toc { position: static !important; height: auto; } }
+
+nav.toc {
+    position: sticky; top: 0; height: 100vh; padding: 40px 0;
+    font-family: var(--mono); font-size: 12.5px;
+}
+nav.toc .brand { font-weight: 800; font-size: 17px; color: var(--amber); letter-spacing: .5px; margin-bottom: 4px; }
+nav.toc .ver { color: var(--text-faint); font-size: 11px; margin-bottom: 20px; }
+nav.toc a {
+    display: block; color: var(--text-dim); padding: 5px 0 5px 14px;
+    border-left: 2px solid transparent; transition: all .18s;
+}
+nav.toc a:hover { color: var(--amber); text-decoration: none; border-left-color: var(--line); }
+nav.toc a.on { color: var(--amber); border-left-color: var(--amber); }
+nav.toc .no { color: var(--text-faint); margin-right: 8px; }
+.lang {
+    margin: 18px 0 14px; display: flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden;
+    width: 128px; font-size: 11.5px;
+}
+.lang button {
+    flex: 1; background: transparent; border: 0; color: var(--text-dim); padding: 6px 0;
+    font-family: var(--mono); cursor: pointer; transition: all .15s;
+}
+.lang button.on { background: var(--amber); color: var(--ink); font-weight: 600; }
+
+header.hero { padding: 88px 0 48px; border-bottom: 1px solid var(--line); position: relative; overflow: hidden; }
+header.hero::before {
+    content: ""; position: absolute; right: -140px; top: -140px; width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(255,176,0,.07), transparent 65%); pointer-events: none;
+}
+h1.title { font-family: var(--mono); font-weight: 800; font-size: clamp(52px, 7vw, 84px); letter-spacing: -2px; color: #E8EDF2; line-height: 1; }
+h1.title .cursor { color: var(--amber); animation: blink 1.1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.tagline { margin-top: 18px; font-size: 19px; color: var(--text-dim); max-width: 600px; }
+.tagline b { color: var(--amber); font-weight: 600; }
+
+.ticker {
+    margin-top: 44px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    overflow: hidden; white-space: nowrap; font-family: var(--mono); font-size: 12.5px;
+    padding: 9px 0; user-select: none;
+}
+.ticker .track { display: inline-block; animation: marquee 38s linear infinite; }
+.ticker:hover .track { animation-play-state: paused; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+.tk { margin-right: 44px; }
+.tk .s { color: var(--text-dim); } .tk .p { color: var(--text); margin: 0 6px; }
+.tk .u { color: var(--up); } .tk .d { color: var(--down); }
+
+section { padding: 64px 0 8px; }
+.kicker { font-family: var(--mono); font-size: 12px; color: var(--amber); letter-spacing: 2.5px; margin-bottom: 10px; }
+h2 { font-family: var(--mono); font-size: 30px; font-weight: 800; color: #E8EDF2; letter-spacing: -0.5px; margin-bottom: 26px; scroll-margin-top: 24px; }
+h2 .idx { color: var(--text-faint); font-weight: 400; margin-right: 14px; }
+h3 { font-family: var(--mono); font-size: 16px; color: var(--amber); margin: 34px 0 12px; }
+p.lead { color: var(--text); font-size: 17px; max-width: 740px; }
+p { color: var(--text-dim); margin: 12px 0; max-width: 800px; }
+p b, li b { color: var(--text); font-weight: 600; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.cell { background: var(--panel); padding: 26px 24px 22px; transition: background .2s; }
+.cell:hover { background: var(--panel-2); }
+.cell .ico { font-family: var(--mono); font-size: 20px; color: var(--amber); margin-bottom: 12px; }
+.cell h4 { font-family: var(--mono); font-size: 14.5px; color: #E8EDF2; margin-bottom: 8px; letter-spacing: .3px; }
+.cell p { font-size: 13.5px; line-height: 1.75; margin: 0; }
+
+.term { background: #0A0D10; border: 1px solid var(--line); border-radius: 8px; margin: 22px 0; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,.45); }
+.term .bar { display: flex; align-items: center; gap: 7px; padding: 10px 14px; background: var(--panel-2); border-bottom: 1px solid var(--line); }
+.term .dot { width: 11px; height: 11px; border-radius: 50%; }
+.term .dot:nth-child(1) { background: #E5484D; } .term .dot:nth-child(2) { background: #D8A132; } .term .dot:nth-child(3) { background: #2FBF71; }
+.term .name { font-family: var(--mono); font-size: 11.5px; color: var(--text-faint); margin-left: 8px; }
+.term pre { padding: 20px 22px; overflow-x: auto; font-size: 13px; line-height: 1.75; color: #B7C2CC; }
+.term pre .c { color: #586572; font-style: italic; }
+.term pre .k { color: var(--amber); }
+.term pre .s { color: #7FB685; }
+.term pre .n { color: #D8A132; }
+.term pre .r { color: #6FB3D2; }
+
+table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13.5px; }
+th { font-family: var(--mono); font-size: 11.5px; letter-spacing: 1.5px; text-align: left; color: var(--amber); padding: 10px 14px; border-bottom: 1px solid var(--amber-dim); background: rgba(255,176,0,.03); font-weight: 600; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--line); color: var(--text-dim); vertical-align: top; }
+td:first-child { font-family: var(--mono); color: var(--text); }
+td code { color: var(--amber); font-size: 12.5px; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; margin: 26px 0; }
+.stat { border: 1px solid var(--line); background: var(--panel); padding: 22px; position: relative; overflow: hidden; }
+.stat::after { content: ""; position: absolute; left: 0; top: 0; width: 3px; height: 100%; background: var(--amber); opacity: .55; }
+.stat .to { font-family: var(--mono); font-size: 34px; font-weight: 800; color: var(--amber); letter-spacing: -1px; margin-bottom: 4px; }
+.stat .lbl { font-size: 13px; color: var(--text-dim); }
+
+.flow { display: flex; flex-direction: column; margin: 26px 0; }
+.frow { display: flex; align-items: stretch; gap: 14px; }
+.fnode { border: 1px solid var(--line); background: var(--panel); padding: 13px 18px; font-family: var(--mono); font-size: 12.5px; line-height: 1.55; color: var(--text); position: relative; flex: 1; }
+.fnode .t { color: var(--amber); font-weight: 600; display: block; }
+.fnode .d { color: var(--text-faint); font-size: 11.5px; }
+.farrow { text-align: center; color: var(--text-faint); font-family: var(--mono); font-size: 14px; padding: 3px 0; }
+.farrow::before { content: "▼"; color: var(--amber-dim); }
+.fbranch { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+@media (max-width: 760px) { .fbranch { grid-template-columns: 1fr; } }
+
+.badge { display: inline-block; font-family: var(--mono); font-size: 10.5px; letter-spacing: 1px; border: 1px solid var(--amber-dim); color: var(--amber); padding: 2px 9px; border-radius: 3px; margin-left: 10px; vertical-align: 3px; }
+ul.clean { list-style: none; margin: 14px 0; }
+ul.clean li { padding: 7px 0 7px 26px; position: relative; color: var(--text-dim); border-bottom: 1px dashed var(--line); }
+ul.clean li::before { content: "▸"; position: absolute; left: 6px; color: var(--amber); font-family: var(--mono); }
+ul.clean.warn li::before { content: "!"; color: var(--up); font-weight: 800; }
+ul.clean li b { color: var(--text); }
+
+/* 示例卡片 */
+.exgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin: 26px 0; }
+.excard { border: 1px solid var(--line); background: var(--panel); padding: 22px; transition: border-color .2s; }
+.excard:hover { border-color: var(--amber-dim); }
+.excard .file { font-family: var(--mono); font-size: 13px; color: var(--amber); margin-bottom: 6px; }
+.excard .file::before { content: "❯ "; color: var(--text-faint); }
+.excard h4 { font-size: 15.5px; color: #E8EDF2; margin-bottom: 8px; font-weight: 600; }
+.excard p { font-size: 13.5px; margin: 0; line-height: 1.75; }
+.excard .tags { margin-top: 12px; }
+.excard .tag { display: inline-block; font-family: var(--mono); font-size: 10.5px; color: var(--text-dim); border: 1px solid var(--line); padding: 1px 8px; border-radius: 3px; margin-right: 6px; }
+
+.reveal { opacity: 0; transform: translateY(16px); animation: rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
+.d1 { animation-delay: .05s; } .d2 { animation-delay: .15s; } .d3 { animation-delay: .25s; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .reveal { animation: none; opacity: 1; transform: none; } .ticker .track { animation: none; } }
+
+footer { margin-top: 90px; border-top: 1px solid var(--line); padding: 34px 0 46px; font-family: var(--mono); font-size: 12px; color: var(--text-faint); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+footer a { color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<div class="layout">
+<nav class="toc">
+    <div class="brand">ctpbee<span style="color:var(--text-faint)">_</span></div>
+    <div class="ver">v1.8.0 · futures engine</div>
+    <div class="lang" role="group" aria-label="language">
+        <button id="btn-zh" class="on" type="button">中文</button>
+        <button id="btn-en" type="button">EN</button>
+    </div>
+    <a href="#start"><span class="no">01</span><span class="zh">快速开始</span><span class="en">Quickstart</span></a>
+    <a href="#config"><span class="no">02</span><span class="zh">配置</span><span class="en">Config</span></a>
+    <a href="#examples"><span class="no">03</span><span class="zh">示例集</span><span class="en">Examples</span></a>
+    <a href="#arch"><span class="no">04</span><span class="zh">架构</span><span class="en">Architecture</span></a>
+    <a href="#api"><span class="no">05</span><span class="zh">策略回调</span><span class="en">Callbacks</span></a>
+    <a href="#data"><span class="no">06</span><span class="zh">数据结构</span><span class="en">Data structures</span></a>
+    <a href="#order"><span class="no">07</span><span class="zh">下单接口</span><span class="en">Orders</span></a>
+    <a href="#tool"><span class="no">08</span><span class="zh">Tool 用法</span><span class="en">Tools</span></a>
+    <a href="#backtest"><span class="no">09</span><span class="zh">回测</span><span class="en">Backtest</span></a>
+    <a href="#perf"><span class="no">10</span><span class="zh">性能与稳定性</span><span class="en">Performance</span></a>
+    <a href="#caveat"><span class="no">11</span><span class="zh">注意事项</span><span class="en">Caveats</span></a>
+    <a href="#test"><span class="no">12</span><span class="zh">测试</span><span class="en">Tests</span></a>
+</nav>
+
+<main>
+
+<!-- ================= Hero ================= -->
+<header class="hero">
+    <h1 class="title reveal d1">ctpbee<span class="cursor">_</span></h1>
+    <p class="tagline reveal d2">
+        <span class="zh">面向中国期货市场的<b>交易与行情引擎</b> —— CTP 回调之上的一层干净抽象：事件驱动的策略开发、本地持仓管理、Redis 订单中继、内置回测、独立工具注册原语。</span>
+        <span class="en">A <b>trading &amp; market-data engine</b> for the Chinese futures markets — a clean abstraction over CTP callbacks: event-driven strategies, local position management, a Redis order relay, built-in backtesting, and a standalone tool-register primitive.</span>
+    </p>
+    <div class="ticker reveal d3" aria-hidden="true"><div class="track" id="tk"></div></div>
+</header>
+
+<!-- ================= 01 快速开始 ================= -->
+<section id="start" class="reveal">
+    <div class="kicker">01 / QUICKSTART</div>
+    <h2><span class="idx">01</span><span class="zh">快速开始</span><span class="en">Quickstart</span></h2>
+    <p class="lead">
+        <span class="zh">pip 安装后写一个最小策略：在合约回报时订阅目标合约，逐笔接收行情。</span>
+        <span class="en">After installing, write a minimal strategy: subscribe to the target contract on the contract callback and receive every tick.</span>
+    </p>
+
+    <div class="term">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="name">hello_ctpbee.py</span></div>
+<pre><span class="k">from</span> ctpbee <span class="k">import</span> CtpBee, CtpbeeApi
+<span class="k">from</span> ctpbee.constant <span class="k">import</span> TickData, ContractData
+
+<span class="k">class</span> <span class="k">Main</span>(CtpbeeApi):
+    <span class="k">def</span> on_tick(self, tick: TickData):          <span class="c"># 每笔行情 / every tick</span>
+        <span class="r">print</span>(tick.local_symbol, tick.last_price)
+
+    <span class="k">def</span> on_contract(self, contract: ContractData):
+        <span class="c"># 登录后合约信息全量推送, 适合在此订阅</span>
+        <span class="c"># contracts are pushed after login: subscribe here</span>
+        <span class="k">if</span> contract.symbol == <span class="s">"ag2612"</span>:
+            self.action.subscribe(contract.local_symbol)
+
+app = CtpBee(<span class="s">"market"</span>, __name__, refresh=<span class="r">True</span>)
+app.config.from_json(<span class="s">"config.json"</span>)
+app.add_extension(Main(<span class="s">"hello"</span>))
+app.start(log_output=<span class="r">True</span>)</pre>
+    </div>
+
+    <div class="grid" style="margin-top:26px">
+        <div class="cell"><div class="ico">⇄</div><h4><span class="zh">事件驱动</span><span class="en">Event-driven</span></h4><p><span class="zh">tick / K 线 / 报单 / 成交 / 持仓 / 账户 / 合约回调，按需重写。</span><span class="en">Override only the callbacks you care about: tick / bar / order / trade / position / account / contract.</span></p></div>
+        <div class="cell"><div class="ico">◎</div><h4><span class="zh">本地持仓</span><span class="en">Local positions</span></h4><p><span class="zh">今昨仓拆分、冻结计算、逐 tick 盯市盈亏，平今平昨自动拆单。</span><span class="en">Today/yesterday split, frozen calculation, per-tick mark-to-market, automatic close-today/yesterday splitting.</span></p></div>
+        <div class="cell"><div class="ico">⇋</div><h4><span class="zh">双模式</span><span class="en">Dual mode</span></h4><p><span class="zh">API 直连模式与 DISPATCHER Redis 中继模式，进程间解耦。</span><span class="en">Direct API mode and DISPATCHER Redis relay mode for process decoupling.</span></p></div>
+        <div class="cell"><div class="ico">⟲</div><h4><span class="zh">内置回测</span><span class="en">Built-in backtest</span></h4><p><span class="zh">looper 模式灌入历史 K 线，同一套策略代码跑实盘与回测。</span><span class="en">Feed historical bars in looper mode — the same strategy code runs live and backtested.</span></p></div>
+        <div class="cell"><div class="ico">⊞</div><h4><span class="zh">环境变量配置</span><span class="en">Env-var config</span></h4><p><span class="zh">JSON 文件 + CTPBEE_ 前缀环境变量覆盖，凭据不进代码库。</span><span class="en">JSON file plus CTPBEE_-prefixed env overrides — credentials stay out of the repo.</span></p></div>
+        <div class="cell"><div class="ico">⌘</div><h4><span class="zh">可嵌入原语</span><span class="en">Embeddable primitive</span></h4><p><span class="zh">tool_register 仅依赖标准库，其他项目可单独引入。</span><span class="en">tool_register is stdlib-only and can be imported by any project.</span></p></div>
+    </div>
+</section>
+
+<!-- ================= 02 配置 ================= -->
+<section id="config" class="reveal">
+    <div class="kicker">02 / CONFIG</div>
+    <h2><span class="idx">02</span><span class="zh">配置</span><span class="en">Configuration</span></h2>
+    <p class="lead">
+        <span class="zh">JSON 文件为基础，环境变量可覆盖——部署时凭据与参数不必进代码库。</span>
+        <span class="en">A JSON file as the base with environment-variable overrides — credentials and parameters stay out of the codebase at deploy time.</span>
+    </p>
+
+    <h3>config.json <span class="zh">完整示例</span><span class="en">full example</span></h3>
+    <div class="term">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="name">config.json</span></div>
+<pre>{
+  <span class="s">"CONNECT_INFO"</span>: {
+    <span class="s">"userid"</span>:     <span class="s">"your_userid"</span>,
+    <span class="s">"password"</span>:   <span class="s">"your_password"</span>,
+    <span class="s">"brokerid"</span>:   <span class="s">"9999"</span>,
+    <span class="s">"md_address"</span>: <span class="s">"tcp://127.0.0.1:30013"</span>,
+    <span class="s">"td_address"</span>: <span class="s">"tcp://127.0.0.1:30003"</span>,
+    <span class="s">"appid"</span>:      <span class="s">"simnow_client_test"</span>,
+    <span class="s">"auth_code"</span>:  <span class="s">"0000000000000000"</span>
+  },
+  <span class="s">"INTERFACE"</span>: <span class="s">"ctp"</span>,
+  <span class="s">"MD_FUNC"</span>: <span class="r">true</span>,
+  <span class="s">"TD_FUNC"</span>: <span class="r">true</span>,
+  <span class="s">"SUBSCRIBE_CONTRACT"</span>: [<span class="s">"ag2612.SHFE"</span>],
+  <span class="s">"SLIPPAGE_BUY"</span>: <span class="n">0</span>,  <span class="s">"SLIPPAGE_SELL"</span>: <span class="n">0</span>,
+  <span class="s">"SLIPPAGE_SHORT"</span>: <span class="n">0</span>, <span class="s">"SLIPPAGE_COVER"</span>: <span class="n">0</span>
+}</pre>
+    </div>
+
+    <table>
+        <tr><th><span class="zh">键</span><span class="en">Key</span></th><th><span class="zh">说明</span><span class="en">Description</span></th></tr>
+        <tr><td>CONNECT_INFO</td><td><span class="zh">柜台连接(userid / password / brokerid / md_address / td_address / appid / auth_code)</span><span class="en">Broker connection (userid / password / brokerid / md_address / td_address / appid / auth_code)</span></td></tr>
+        <tr><td>INTERFACE</td><td><span class="zh">接口:<code>ctp</code> / <code>local</code> 等，默认 ctp</span><span class="en">Interface: <code>ctp</code> / <code>local</code> etc., defaults to ctp</span></td></tr>
+        <tr><td>MD_FUNC / TD_FUNC</td><td><span class="zh">是否启用行情 / 交易功能</span><span class="en">Enable market data / trading functions</span></td></tr>
+        <tr><td>SUBSCRIBE_CONTRACT</td><td><span class="zh">合约列表，初始订阅</span><span class="en">Contract list for the initial subscription</span></td></tr>
+        <tr><td>INSTRUMENT_INDEPEND</td><td><span class="zh">按策略 <code>instrument_set</code> 过滤行情(集合需含 local_symbol 形式)</span><span class="en">Filter ticks per-strategy via <code>instrument_set</code> (use local_symbol form)</span></td></tr>
+        <tr><td>SLIPPAGE_*</td><td><span class="zh">BUY / SELL / SHORT / COVER 四向滑点，默认 0</span><span class="en">Four-way slippage: BUY / SELL / SHORT / COVER, default 0</span></td></tr>
+        <tr><td>PATTERN</td><td><span class="zh"><code>real</code>(实盘) / <code>looper</code>(回测)</span><span class="en"><code>real</code> (live) / <code>looper</code> (backtest)</span></td></tr>
+        <tr><td>RD_CLIENT_*</td><td><span class="zh">DISPATCHER 模式 Redis 地址/端口/库</span><span class="en">Redis host/port/db for DISPATCHER mode</span></td></tr>
+    </table>
+
+    <h3><span class="zh">环境变量</span><span class="en">Environment variables</span></h3>
+    <p><span class="zh"><code>from_envvars</code> 读取 <code>CTPBEE_</code> 前缀的环境变量，值按 JSON 解析(布尔/数字/列表/字典均可，<code>CONNECT_INFO</code> 可整体传 JSON 字符串)，解析失败保留原始字符串：</span>
+       <span class="en"><code>from_envvars</code> reads <code>CTPBEE_</code>-prefixed variables; values are JSON-parsed (bool/number/list/dict — <code>CONNECT_INFO</code> may be passed as one JSON string), falling back to the raw string when unparseable:</span></p>
+
+    <div class="term">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="name">env.sh</span></div>
+<pre><span class="k">export</span> CTPBEE_TD_FUNC=false
+<span class="k">export</span> CTPBEE_RD_CLIENT_PORT=6379
+<span class="k">export</span> CTPBEE_CONNECT_INFO=<span class="s">'{"userid": "001", "password": "***", ...}'</span>
+
+<span class="c"># 推荐优先级: 文件值 &lt; 环境变量 / precedence: file &lt; env</span>
+app.config.from_json(<span class="s">"config.json"</span>)
+app.config.from_envvars()          <span class="c"># prefix="CTPBEE_", silent=True</span></pre>
+    </div>
+
+    <p><span class="zh">其他导入方式：<code>from_mapping(dict)</code>、<code>from_object(obj)</code>(取全大写属性)、<code>from_pyfile(file)</code>；统一过滤非大写键。</span>
+       <span class="en">Other loaders: <code>from_mapping(dict)</code>, <code>from_object(obj)</code> (uppercase attributes), <code>from_pyfile(file)</code> — non-uppercase keys are always filtered out.</span></p>
+</section>
+
+<!-- ================= 03 示例集 ================= -->
+<section id="examples" class="reveal">
+    <div class="kicker">03 / EXAMPLES</div>
+    <h2><span class="idx">03</span><span class="zh">示例集</span><span class="en">Examples</span></h2>
+    <p class="lead">
+        <span class="zh">仓库 <code>examples/</code> 内全部可运行——合约代码与账号配置请按自己的环境更新。</span>
+        <span class="en">Everything under <code>examples/</code> is runnable — update contract codes and account config to your own environment.</span>
+    </p>
+
+    <div class="exgrid">
+        <div class="excard">
+            <div class="file">examples/login.py</div>
+            <h4><span class="zh">ATR 策略实盘入口</span><span class="en">ATR strategy, live</span></h4>
+            <p><span class="zh">ATR + SMA 趋势过滤开仓，按 ATR 倍数动态止损止盈；DISPATCHER 模式经 Redis 中继下单，合约回报时批量订阅。</span>
+               <span class="en">ATR + SMA trend-filtered entries with dynamic ATR-multiple stops; runs in DISPATCHER mode and subscribes on contract callbacks.</span></p>
+            <div class="tags"><span class="tag">Mode.DISPATCHER</span><span class="tag">strategy/atr_strategy</span></div>
+        </div>
+        <div class="excard">
+            <div class="file">examples/run_arb.py</div>
+            <h4><span class="zh">跨期套利</span><span class="en">Calendar-spread arbitrage</span></h4>
+            <p><span class="zh">双腿价差 5/20 均线 + 阈值偏离入场，主子合约成对开平；价差按分钟时间戳对齐，同分钟去重。</span>
+               <span class="en">5/20 MA on the two-leg spread with deviation-threshold entries; spreads are minute-aligned and deduped.</span></p>
+            <div class="tags"><span class="tag">strategy/spread_arbitrage</span><span class="tag">paired legs</span></div>
+        </div>
+        <div class="excard">
+            <div class="file">examples/kline.py</div>
+            <h4><span class="zh">K 线注入</span><span class="en">Kline injection</span></h4>
+            <p><span class="zh">注入 <code>ctpbee_kline</code> 的 K 线工具后，策略的 <code>on_bar</code> 逐根收到合成 K 线。</span>
+               <span class="en">With the <code>ctpbee_kline</code> tool injected, strategies receive synthesized bars in <code>on_bar</code>.</span></p>
+            <div class="tags"><span class="tag">with_tools</span><span class="tag">on_bar</span><span class="tag">ctpbee_kline</span></div>
+        </div>
+        <div class="excard">
+            <div class="file">examples/backtest/looper_example.py</div>
+            <h4><span class="zh">looper 回测</span><span class="en">Looper backtest</span></h4>
+            <p><span class="zh">灌入 <code>kline.csv</code> 历史数据，逐项配置保证金/手续费/乘数，跑双均线策略并输出报告。</span>
+               <span class="en">Feeds <code>kline.csv</code>, configures margin/commission/size per contract, runs a double-MA strategy and reports.</span></p>
+            <div class="tags"><span class="tag">PATTERN=looper</span><span class="tag">get_result</span><span class="tag">double_ma</span></div>
+        </div>
+        <div class="excard">
+            <div class="file">examples/openctp/</div>
+            <h4><span class="zh">openctp 子账户分发</span><span class="en">openctp sub-account relay</span></h4>
+            <p><span class="zh">local 接口客户端 + 服务端：客户端限频发单并跟踪本地净持仓，经 Redis 通道与 openctp 服务端交互。</span>
+               <span class="en">local-interface client and server: the client rate-limits its orders and tracks a local net position over Redis channels.</span></p>
+            <div class="tags"><span class="tag">INTERFACE=local</span><span class="tag">FOK</span></div>
+        </div>
+        <div class="excard">
+            <div class="file">examples/strategy/</div>
+            <h4><span class="zh">策略库</span><span class="en">Strategy library</span></h4>
+            <p><span class="zh">ATR、布林、双均线、MACD、RSI、跨期套利六个策略实现，全部基于 <code>CtpbeeApi</code>，可直接继承改造。</span>
+               <span class="en">Six strategies — ATR, Bollinger, double MA, MACD, RSI, spread arbitrage — all <code>CtpbeeApi</code> subclasses ready to extend.</span></p>
+            <div class="tags"><span class="tag">atr</span><span class="tag">bollinger</span><span class="tag">double_ma</span><span class="tag">macd</span><span class="tag">rsi</span><span class="tag">spread</span></div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= 04 架构 ================= -->
+<section id="arch" class="reveal">
+    <div class="kicker">04 / ARCHITECTURE</div>
+    <h2><span class="idx">04</span><span class="zh">架构</span><span class="en">Architecture</span></h2>
+    <p class="lead">
+        <span class="zh">CTP 的 C++ 回调在最底层，向上只经一次信号分发——每个环节都可替换、可模拟、可测试。</span>
+        <span class="en">C++ CTP callbacks sit at the bottom with a single signal fan-out above — every stage is replaceable, mockable and testable.</span>
+    </p>
+
+    <div class="flow">
+        <div class="frow"><div class="fnode"><span class="t">C++ CTP <span class="zh">回调</span><span class="en">callbacks</span></span><span class="d">md_api / td_api · interface/{ctp, ctp_rohon, ctp_mini}</span></div></div>
+        <div class="farrow"></div>
+        <div class="frow"><div class="fnode"><span class="t"><span class="zh">数据对象构造</span><span class="en">Data objects</span></span><span class="d">TickData / OrderData / TradeData … · <span class="zh">时间戳快速构造</span><span class="en">fast timestamp build</span></span></div></div>
+        <div class="farrow"></div>
+        <div class="frow"><div class="fnode"><span class="t">blinker <span class="zh">信号</span><span class="en">signals</span></span><span class="d">common_signals(tick/bar/timer) + <span class="zh">每应用信号</span><span class="en">per-app signals</span>(order/trade/…)</span></div></div>
+        <div class="farrow"></div>
+        <div class="frow"><div class="fnode"><span class="t">Recorder <span class="zh">数据中心</span><span class="en">data center</span></span><span class="d">@call <span class="zh">装饰分发 · 最新行情/报单/成交簿记 · 查询接口</span><span class="en">dispatch · latest tick/order/trade bookkeeping · queries</span></span></div></div>
+        <div class="farrow"></div>
+        <div class="fbranch">
+            <div class="fnode"><span class="t"><span class="zh">本地持仓</span><span class="en">Local positions</span></span><span class="d"><span class="zh">盈亏纯函数 · 输入未变跳过重算</span><span class="en">pure-function pnl · skip when unchanged</span></span></div>
+            <div class="fnode"><span class="t">Tools</span><span class="d">tool_register <span class="zh">钩子 · K 线聚合等</span><span class="en">hooks · kline aggregation …</span></span></div>
+            <div class="fnode"><span class="t"><span class="zh">你的策略</span><span class="en">Your strategy</span></span><span class="d">CtpbeeApi <span class="zh">子类</span><span class="en">subclass</span> · on_tick / on_trade …</span></div>
+        </div>
+    </div>
+
+    <h3><span class="zh">工作模式</span><span class="en">Working modes</span></h3>
+    <ul class="clean">
+        <li><b>Mode.API</b> —— <span class="zh">常规模式，策略在本进程内直接收到行情与交易回报</span><span class="en">regular mode; the strategy receives market data and trade reports in-process</span></li>
+        <li><b>Mode.DISPATCHER</b> —— <span class="zh">Redis 中继模式：行情/订单经 <code>TICK_KERNEL</code> / <code>ORDER_UP_KERNEL</code> / <code>ORDER_DOWN_KERNEL</code> 通道与外部进程交互(键名可配)；断线自动重连、行情异步入队、发布失败不阻断回调链</span><span class="en">Redis relay mode: ticks/orders flow through configurable <code>TICK_KERNEL</code> / <code>ORDER_UP_KERNEL</code> / <code>ORDER_DOWN_KERNEL</code> channels; auto-reconnect, async tick queue, publish failures never break the callback chain</span></li>
+    </ul>
+
+    <h3><span class="zh">数据查询</span><span class="en">Data queries</span></h3>
+    <p><span class="zh">策略内经 <code>self.recorder</code> 取最新状态：<code>get_tick / get_last_price / get_order / get_trade / get_contract</code> 等；账户初始化完成后 <code>on_init</code> 触发一次。</span>
+       <span class="en">Inside a strategy, query latest state via <code>self.recorder</code>: <code>get_tick / get_last_price / get_order / get_trade / get_contract</code> etc.; <code>on_init</code> fires once after the account initializes.</span></p>
+</section>
+
+<!-- ================= 05 策略回调 ================= -->
+<section id="api" class="reveal">
+    <div class="kicker">05 / STRATEGY API</div>
+    <h2><span class="idx">05</span><span class="zh">策略回调</span><span class="en">Strategy callbacks</span></h2>
+    <p class="lead">
+        <span class="zh">继承 <code>CtpbeeApi</code>，重写你关心的回调。</span>
+        <span class="en">Subclass <code>CtpbeeApi</code> and override the callbacks you care about.</span>
+    </p>
+
+    <table>
+        <tr><th><span class="zh">回调</span><span class="en">Callback</span></th><th><span class="zh">触发</span><span class="en">Fires when</span></th></tr>
+        <tr><td>on_tick(tick)</td><td><span class="zh">每笔行情(须重写，基类为 NotImplemented)</span><span class="en">every tick (must override; base raises NotImplemented)</span></td></tr>
+        <tr><td>on_bar(bar)</td><td><span class="zh">K 线(需注入 K 线 Tool，如 ctpbee_kline)</span><span class="en">a bar is formed (requires a kline tool such as ctpbee_kline)</span></td></tr>
+        <tr><td>on_order(order) / on_trade(trade)</td><td><span class="zh">报单状态 / 成交回报</span><span class="en">order status updates / fills</span></td></tr>
+        <tr><td>on_position / on_account</td><td><span class="zh">持仓与账户回报</span><span class="en">position / account updates</span></td></tr>
+        <tr><td>on_contract(contract)</td><td><span class="zh">合约信息(登录后全量推送，适合在此订阅)</span><span class="en">contract info (full push after login — a good place to subscribe)</span></td></tr>
+        <tr><td>on_init(init)</td><td><span class="zh">账户初始化完成(仅一次)</span><span class="en">account initialization completes (once)</span></td></tr>
+        <tr><td>on_realtime()</td><td><span class="zh">定时器触发</span><span class="en">the timer fires</span></td></tr>
+    </table>
+
+    <p><span class="zh">不想写完整类骨架时可用路由装饰器:</span><span class="en">Prefer not to write a full class skeleton? Use the route decorator:</span></p>
+    <div class="term">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="name">route.py</span></div>
+<pre>strategy = Main(<span class="s">"hello"</span>)
+
+<span class="k">@strategy.route</span>(handler=<span class="s">"tick"</span>)      <span class="c"># "tick" / "order" / "trade" / ...</span>
+<span class="k">def</span> handle_tick(self, tick):
+    <span class="r">print</span>(tick.last_price)</pre>
+    </div>
+    <p><span class="zh"><code>instrument_set</code> 配合 <code>INSTRUMENT_INDEPEND</code> 按合约过滤行情，集合内请放 <code>local_symbol</code> 形式(如 <code>"ag2612.SHFE"</code>)。</span>
+       <span class="en"><code>instrument_set</code> plus <code>INSTRUMENT_INDEPEND</code> filters ticks per strategy; keep local_symbol forms (e.g. <code>"ag2612.SHFE"</code>) in the set.</span></p>
+</section>
+
+
+<!-- ================= 06 数据结构 ================= -->
+<section id="data" class="reveal">
+    <div class="kicker">06 / DATA STRUCTURES</div>
+    <h2><span class="idx">06</span><span class="zh">数据结构</span><span class="en">Data structures</span></h2>
+    <p class="lead">
+        <span class="zh">所有行情/交易对象都继承 <code>Entity</code>：构造后受 frozen 保护(仅下划线调用方可写)，并自动派生 <code>local_symbol</code>(如 <code>ag2612.SHFE</code>)。<code>_to_dict()</code> 可导出枚举已转换的字典。</span>
+        <span class="en">Every market/trade object derives from <code>Entity</code>: frozen after construction (only underscore callers may write) and auto-derives <code>local_symbol</code> (e.g. <code>ag2612.SHFE</code>). <code>_to_dict()</code> exports a dict with enums converted.</span>
+    </p>
+
+    <h3>TickData <span class="zh">· 行情</span><span class="en">· market data</span></h3>
+    <table>
+        <tr><th><span class="zh">字段</span><span class="en">Field</span></th><th><span class="zh">含义</span><span class="en">Meaning</span></th></tr>
+        <tr><td>symbol / exchange</td><td><span class="zh">合约与交易所(派生 local_symbol)</span><span class="en">contract and exchange (local_symbol derived)</span></td></tr>
+        <tr><td>datetime</td><td><span class="zh">交易所本地时间(100ms 量化)</span><span class="en">exchange-local time (100 ms quantized)</span></td></tr>
+        <tr><td>last_price / volume</td><td><span class="zh">最新价与<b>当日累计成交量</b>——增量需自行差分</span><span class="en">last price and the <b>cumulative day volume</b> — diff it yourself for increments</span></td></tr>
+        <tr><td>turnover / open_interest</td><td><span class="zh">累计成交额 / 持仓量</span><span class="en">cumulative turnover / open interest</span></td></tr>
+        <tr><td>bid/ask_price_1..5 + volume</td><td><span class="zh">五档买卖价量</span><span class="en">5-level order book</span></td></tr>
+        <tr><td>upper_limit / lower_limit</td><td><span class="zh">涨跌停价(limit_up/limit_down)</span><span class="en">price limits (limit_up/limit_down)</span></td></tr>
+        <tr><td>pre_settlement_price</td><td><span class="zh">昨结算价(盯市基准)</span><span class="en">previous settlement (mark basis)</span></td></tr>
+    </table>
+
+    <h3>OrderData <span class="zh">· 报单</span><span class="en">· order</span> / TradeData <span class="zh">· 成交</span><span class="en">· trade</span></h3>
+    <table>
+        <tr><th><span class="zh">字段</span><span class="en">Field</span></th><th><span class="zh">含义</span><span class="en">Meaning</span></th></tr>
+        <tr><td>direction</td><td><span class="zh">LONG=买 / SHORT=卖；<b>无论开平，Δ持仓 = 方向 × 手数</b></span><span class="en">LONG=buy / SHORT=sell; <b>Δpos = direction × volume regardless of offset</b></span></td></tr>
+        <tr><td>offset</td><td><span class="zh">OPEN 开 / CLOSETODAY 平今 / CLOSEYESTERDAY 平昨 / CLOSE 平(自动)</span><span class="en">OPEN / CLOSETODAY / CLOSEYESTERDAY / CLOSE (auto)</span></td></tr>
+        <tr><td>status</td><td><span class="zh">SUBMITTING→NOTTRADED→PARTTRADED→ALLTRADED / CANCELLED / REJECTED；活动态 = NOTTRADED|PARTTRADED</span><span class="en">SUBMITTING→NOTTRADED→PARTTRADED→ALLTRADED / CANCELLED / REJECTED; active = NOTTRADED|PARTTRADED</span></td></tr>
+        <tr><td>price / volume / traded</td><td><span class="zh">报单价、委托量、已成交量(多笔成交=多个 TradeData)</span><span class="en">order price, requested volume, filled volume (multiple fills = multiple TradeData)</span></td></tr>
+        <tr><td>order_id / tradeid</td><td><span class="zh">柜台号；派生 local_order_id / local_trade_id(带网关前缀)</span><span class="en">exchange ids; local_order_id / local_trade_id derived with gateway prefix</span></td></tr>
+    </table>
+
+    <h3>PositionData <span class="zh">· 持仓</span><span class="en">· position</span></h3>
+    <table>
+        <tr><th><span class="zh">字段</span><span class="en">Field</span></th><th><span class="zh">含义</span><span class="en">Meaning</span></th></tr>
+        <tr><td>direction / volume</td><td><span class="zh">多空方向与总手数</span><span class="en">direction and total volume</span></td></tr>
+        <tr><td>yd_volume</td><td><span class="zh">昨仓手数(今仓 = volume − yd_volume)</span><span class="en">yesterday volume (today = volume − yd_volume)</span></td></tr>
+        <tr><td>price / open_price</td><td><span class="zh">持仓均价 / 开仓均价</span><span class="en">position average / opening average price</span></td></tr>
+        <tr><td>frozen</td><td><span class="zh">冻结手数(挂平仓单占用)</span><span class="en">frozen volume (locked by pending close orders)</span></td></tr>
+        <tr><td>pnl / float_pnl</td><td><span class="zh">浮动盈亏(对均价) / 盯市盈亏(对开仓价)</span><span class="en">floating pnl (vs avg price) / mark pnl (vs open price)</span></td></tr>
+    </table>
+
+    <h3><span class="zh">其他常用结构</span><span class="en">Other common structures</span></h3>
+    <table>
+        <tr><th><span class="zh">结构</span><span class="en">Struct</span></th><th><span class="zh">关键字段</span><span class="en">Key fields</span></th></tr>
+        <tr><td>BarData</td><td><span class="zh">open/high/low/close_price、volume、datetime——K 线 Tool 合成</span><span class="en">open/high/low/close_price, volume, datetime — synthesized by a kline tool</span></td></tr>
+        <tr><td>ContractData</td><td><span class="zh">size(合约乘数)、pricetick(最小变动)、net_position(是否净持仓模式)</span><span class="en">size (multiplier), pricetick, net_position (net-position mode)</span></td></tr>
+        <tr><td>AccountData</td><td><span class="zh">balance、available、frozen</span><span class="en">balance, available, frozen</span></td></tr>
+        <tr><td>OrderRequest / CancelRequest</td><td><span class="zh">下单/撤单请求，exchange <b>枚举或字符串均可</b></span><span class="en">order/cancel requests; exchange accepts <b>enum or string</b></span></td></tr>
+    </table>
+    <p><span class="zh">注意：direction/offset/status 枚举值为中文(如 <code>"多"</code>/<code>"开"</code>)，比较请用枚举成员而非字符串。</span>
+       <span class="en">Note: direction/offset/status enum values are Chinese (e.g. <code>"多"</code>/<code>"开"</code>) — compare with enum members, not strings.</span></p>
+</section>
+
+<!-- ================= 07 下单 ================= -->
+<section id="order" class="reveal">
+    <div class="kicker">06 / ACTION</div>
+    <h2><span class="idx">07</span><span class="zh">下单接口</span><span class="en">Order actions</span></h2>
+    <p class="lead">
+        <span class="zh">四个语义化入口，平仓自动按今昨持仓拆分——<b>命名按「方向_开平」理解</b>，别被 buy_close 字面意思带偏。</span>
+        <span class="en">Four semantic entry points with automatic close-today/yesterday splitting — read the names as <b>direction_offset</b>; don't be misled by the literal "buy_close".</span>
+    </p>
+
+    <table>
+        <tr><th><span class="zh">接口</span><span class="en">Call</span></th><th><span class="zh">语义</span><span class="en">Meaning</span></th><th><span class="zh">底层</span><span class="en">Alias</span></th></tr>
+        <tr><td>action.buy_open(price, volume, origin)</td><td><span class="zh">多头开仓</span><span class="en">open long</span></td><td>buy</td></tr>
+        <tr><td>action.buy_close(...)</td><td><span class="zh"><b>平多头</b>(卖出平仓，自动拆平今/平昨)</span><span class="en"><b>close a long</b> (sell to close, auto split today/yesterday)</span></td><td>cover</td></tr>
+        <tr><td>action.sell_open(...)</td><td><span class="zh">空头开仓</span><span class="en">open short</span></td><td>short</td></tr>
+        <tr><td>action.sell_close(...)</td><td><span class="zh"><b>平空头</b>(买入平仓)</span><span class="en"><b>close a short</b> (buy to close)</span></td><td>sell</td></tr>
+        <tr><td>action.cancel(order_id, origin)</td><td><span class="zh">撤单</span><span class="en">cancel an order</span></td><td>—</td></tr>
+    </table>
+    <p><span class="zh"><code>origin</code> 传触发行的行情/K 线对象，用于提取合约与交易所；可加 <code>price_type=OrderType.FOK</code> 等参数；价格会叠加对应方向的 <code>SLIPPAGE_*</code> 配置。上期所平仓会按持仓自动拆分平今/平昨报单。</span>
+       <span class="en"><code>origin</code> is the triggering tick/bar used to extract symbol and exchange; pass <code>price_type=OrderType.FOK</code> etc. as needed; prices include the configured <code>SLIPPAGE_*</code>. SHFE closes are auto-split into close-today / close-yesterday orders.</span></p>
+</section>
+
+<!-- ================= 08 Tool 用法 ================= -->
+<section id="tool" class="reveal">
+    <div class="kicker">07 / TOOLS</div>
+    <h2><span class="idx">08</span>Tool <span class="zh">用法</span><span class="en">usage</span></h2>
+    <p class="lead">
+        <span class="zh">Tool 是挂在 Recorder 分发链上的旁路处理器：策略收到行情之前/之外，按数据流做聚合、推送等加工。K 线就是这样实现的。</span>
+        <span class="en">A Tool is a side-processor on the Recorder fan-out: it aggregates or relays the data stream alongside strategies. Kline synthesis is implemented exactly this way.</span>
+    </p>
+
+    <h3>1. <span class="zh">写一个 Tool 并挂到应用</span><span class="en">Write a Tool and attach it</span></h3>
+    <div class="term">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="name">my_tool.py</span></div>
+<pre><span class="k">from</span> ctpbee <span class="k">import</span> CtpBee
+<span class="k">from</span> ctpbee.level <span class="k">import</span> Tool
+<span class="k">from</span> ctpbee.constant <span class="k">import</span> TickData
+
+<span class="k">class</span> <span class="k">MyTool</span>(Tool):
+    <span class="c"># 基类五个回调(on_tick/on_order/on_trade/on_position/on_account)</span>
+    <span class="c"># 已默认挂接 tool_register —— 重写即可被订阅</span>
+    <span class="k">def</span> on_tick(self, tick: TickData):
+        <span class="r">return</span> tick.last_price      <span class="c"># 返回值会喂给订阅者</span>
+
+app = CtpBee(<span class="s">"market"</span>, __name__)
+app.with_tools(MyTool(<span class="s">"my_tool"</span>))    <span class="c"># 或 app.add_tool(tool)</span>
+app.get_tool(<span class="s">"my_tool"</span>)               <span class="c"># 按名取回; delete_tool 移除</span></pre>
+    </div>
+
+    <h3>2. <span class="zh">订阅 / 退订工具的输出</span><span class="en">Subscribe to a tool's output</span></h3>
+    <div class="term">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="name">subscribe.py</span></div>
+<pre><span class="k">from</span> ctpbee.constant <span class="k">import</span> ToolRegisterType
+
+<span class="c"># 策略侧: 订阅名为 my_tool 的工具在 TICK 通道的输出</span>
+strategy.subscribe(<span class="s">"my_tool"</span>, <span class="k">lambda</span> price: <span class="r">print</span>(price),
+                   ToolRegisterType.TICK)
+
+<span class="c"># 也可直接在工具对象上增删 (按注册序执行 + 去重)</span>
+tool.add_func(my_func, ToolRegisterType.TICK)
+tool.remove_func(my_func, ToolRegisterType.TICK)
+
+<span class="c"># 注册类型: TICK / ORDER / TRADE / POSITION / ACCOUNT / BAR / WHATEVER</span></pre>
+    </div>
+
+    <h3>3. <span class="zh">注入现成工具：K 线</span><span class="en">Inject a ready-made tool: kline</span></h3>
+    <div class="term">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="name">kline.py</span></div>
+<pre><span class="k">from</span> ctpbee_kline <span class="k">import</span> Kline        <span class="c"># pip install ctpbee_kline</span>
+
+app = CtpBee(<span class="s">"market"</span>, __name__, refresh=<span class="r">True</span>).with_tools(Kline())
+<span class="c"># 策略重写 on_bar 即可逐根收到合成 K 线</span></pre>
+    </div>
+    <p><span class="zh">要点：回调返回值即订阅者收到的载荷；单个订阅者异常被隔离(不影响其余订阅者与行情链)；订阅按注册顺序执行、同一函数去重。</span>
+       <span class="en">Notes: a callback's return value is the payload subscribers receive; a failing subscriber is isolated (other subscribers and the tick chain are unaffected); subscriptions run in registration order and dedupe by function identity.</span></p>
+
+    <h3><span class="zh">独立原语（其他项目可直接用）</span><span class="en">Standalone primitive (usable from any project)</span><span class="badge">STDLIB-ONLY</span></h3>
+    <div class="term">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="name">standalone.py</span></div>
+<pre><span class="k">from</span> ctpbee.tool_register <span class="k">import</span> tool_register, register_tool_hook
+
+<span class="k">class</span> <span class="k">Calc</span>:                          <span class="c"># 任意类, 无需继承任何基类</span>
+    <span class="k">@tool_register</span>(<span class="s">"tick"</span>)            <span class="c"># 键任意可哈希: 字符串/枚举/None</span>
+    <span class="k">def</span> on_tick(self, tick):
+        <span class="r">return</span> tick.last_price          <span class="c"># 返回值喂给订阅者</span>
+
+c = Calc()
+register_tool_hook(c, <span class="s">"tick"</span>, print)   <span class="c"># 订阅</span>
+<span class="c"># unregister_tool_hook(c, "tick", print)  退订</span></pre>
+    </div>
+</section>
+
+<!-- ================= 09 回测 ================= -->
+<section id="backtest" class="reveal">
+    <div class="kicker">08 / BACKTEST</div>
+    <h2><span class="idx">09</span><span class="zh">回测</span><span class="en">Backtesting</span></h2>
+    <p class="lead">
+        <span class="zh"><code>PATTERN="looper"</code> 模式下，同一套策略代码可以直接灌历史数据回测。</span>
+        <span class="en">With <code>PATTERN="looper"</code>, the same strategy code runs directly over historical data.</span>
+    </p>
+
+    <div class="term">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="name">backtest.py</span></div>
+<pre>app = CtpBee(<span class="s">"looper"</span>, __name__)
+info = {
+    <span class="s">"PATTERN"</span>: <span class="s">"looper"</span>,
+    <span class="s">"LOOPER"</span>: {
+        <span class="s">"initial_capital"</span>: <span class="n">100000</span>,
+        <span class="s">"margin_ratio"</span>:    {code: <span class="n">0.00003</span>},
+        <span class="s">"commission_ratio"</span>: {code: {<span class="s">"close"</span>: <span class="n">0.00001</span>, <span class="s">"close_today"</span>: <span class="n">0.00001</span>}},
+        <span class="s">"size_map"</span>:         {code: <span class="n">10</span>},
+    },
+}
+app.config.from_mapping(info)
+app.add_local_contract(ContractData(local_symbol=code, ...))
+app.add_extension(DoubleMa(<span class="s">"ma"</span>, code))
+app.add_data(*data)                    <span class="c"># 历史 K 线序列</span>
+app.start()
+result = app.get_result(report=<span class="r">True</span>, auto_open=<span class="r">True</span>)</pre>
+    </div>
+    <p><span class="zh">保证金、手续费率、合约乘数按合约逐项配置；完整示例见 <code>examples/backtest/looper_example.py</code>(配套 <code>kline.csv</code>)。策略开发建议：因子研究在 notebook 完成，ctpbee 负责交易执行。</span>
+       <span class="en">Margin, commission and contract size are configured per contract; see <code>examples/backtest/looper_example.py</code> (with <code>kline.csv</code>). Suggested workflow: do factor research in notebooks, let ctpbee handle execution.</span></p>
+</section>
+
+<!-- ================= 09 性能 ================= -->
+<section id="perf" class="reveal">
+    <div class="kicker">09 / PERFORMANCE</div>
+    <h2><span class="idx">10</span><span class="zh">性能与稳定性</span><span class="en">Performance &amp; stability</span></h2>
+    <p class="lead">
+        <span class="zh">为全市场订阅设计——数千合约并发时，Python 侧每 tick 的固定开销在微秒级。</span>
+        <span class="en">Built for full-market subscription — with thousands of contracts flowing, the per-tick Python overhead stays in the microsecond range.</span>
+    </p>
+
+    <div class="stats">
+        <div class="stat"><div class="to">0.3 µs</div><div class="lbl"><span class="zh">行情时间戳构造(ActionDay 缓存)</span><span class="en">tick timestamp build (ActionDay cache)</span></div></div>
+        <div class="stat"><div class="to">3.1 µs</div><div class="lbl"><span class="zh">TickData 对象构造(批量初始化)</span><span class="en">TickData construction (bulk init)</span></div></div>
+        <div class="stat"><div class="to">0.1 µs</div><div class="lbl"><span class="zh">同价 tick 持仓盈亏(纯函数跳过)</span><span class="en">pnl on unchanged price (pure-function skip)</span></div></div>
+        <div class="stat"><div class="to">~3.4 µs</div><div class="lbl"><span class="zh">每 tick Python 固定成本合计</span><span class="en">total per-tick Python overhead</span></div></div>
+        <div class="stat"><div class="to">15 µs</div><div class="lbl"><span class="zh">回测每根 bar 框架成本(原 ~1.12 ms，72×)</span><span class="en">per-bar backtest framework cost (was ~1.12 ms, 72×)</span></div></div>
+    </div>
+    <p style="font-family:var(--mono); font-size:12px; color:var(--text-faint)"><span class="zh">参考量级 · Windows / Python 3.11-3.13</span><span class="en">Indicative figures · Windows / Python 3.11-3.13</span></p>
+
+    <h3><span class="zh">稳定性设计</span><span class="en">Stability design</span></h3>
+    <ul class="clean">
+        <li><span class="zh"><b>回调隔离</b>: tool_register 钩子、DISPATCHER 发布的单点异常被捕获并节流告警，不沿 CTP 回调链向上传播</span><span class="en"><b>Callback isolation</b>: exceptions in tool hooks or DISPATCHER publishes are caught and throttled — they never propagate up the CTP callback chain</span></li>
+        <li><span class="zh"><b>中继自愈</b>: DISPATCHER 断线 5s 退避重连；行情异步入队(有界，满丢最旧)</span><span class="en"><b>Self-healing relay</b>: DISPATCHER reconnects on a 5 s backoff; ticks are queued asynchronously (bounded, drop-oldest)</span></li>
+        <li><span class="zh"><b>盈亏纯函数</b>: 价格/持仓/均价/乘数输入未变即跳过重算；外部改动后同价 tick 也会重算，不留陈旧盈亏</span><span class="en"><b>Pure-function pnl</b>: recompute is skipped while price/position/avg-price/size inputs are unchanged; any external mutation re-triggers it, so pnl never goes stale</span></li>
+        <li><span class="zh"><b>frozen 保护</b>: 数据对象属性仅允许下划线调用方写入，防策略层误改行情数据</span><span class="en"><b>frozen protection</b>: data-object attributes only accept writes from underscore callers, preventing accidental mutation of market data</span></li>
+        <li><span class="zh"><b>序列化自洽</b>: DDDR encode→parse 往返可用，键嗅探兼容手搓 dict 载荷</span><span class="en"><b>Self-consistent serialization</b>: DDDR encode→parse round-trips; key sniffing still accepts hand-built dict payloads</span></li>
+        <li><span class="zh"><b>回测无每根 bar 固定开销</b>: 可选依赖 <code>data_api</code> 只探测一次(失败的 import 不进 <code>sys.modules</code>，否则每根 bar 都要重扫 <code>sys.path</code>)；交易日解析走 O(1) 日历索引并按(自然日, 夜盘)记忆化</span><span class="en"><b>No per-bar overhead in backtests</b>: the optional <code>data_api</code> dependency is probed once (a failed import is not cached in <code>sys.modules</code>, so every bar would otherwise re-walk <code>sys.path</code>); trade-day resolution uses an O(1) calendar index memoized per (calendar day, night session)</span></li>
+    </ul>
+</section>
+
+<!-- ================= 11 注意事项 ================= -->
+<section id="caveat" class="reveal">
+    <div class="kicker">10 / CAVEATS</div>
+    <h2><span class="idx">11</span><span class="zh">注意事项</span><span class="en">Caveats</span></h2>
+    <ul class="clean warn">
+        <li><span class="zh"><b>交易日历有边界</b>: 内置日历目前覆盖至 <b>2026-12-31</b>，跨年前后请更新 <code>ctpbee/date.py</code>，否则时段判断与交易日推导将失效</span><span class="en"><b>Calendar horizon</b>: the built-in calendar currently covers up to <b>2026-12-31</b> — update <code>ctpbee/date.py</code> around year-end or session gating and trade-day derivation silently stop working</span></li>
+        <li><span class="zh"><b>行情时间戳为 100ms 量化</b>: 历史契约，依赖毫秒精度的策略需知悉</span><span class="en"><b>100 ms timestamp quantization</b>: a historical contract — millisecond-sensitive strategies should be aware</span></li>
+        <li><span class="zh"><b>大商所时间戳用本机日期</b>: DCE 的 ActionDay 是交易日，引擎用 <code>date.today()</code> 拼接——请在北京时区主机上运行</span><span class="en"><b>DCE uses the local date</b>: DCE's ActionDay is the trading day, so the engine stitches <code>date.today()</code> — run on a Beijing-time host</span></li>
+        <li><span class="zh"><b>涨跌停单边行情</b>: CTP 无价档位的哨兵值(极大浮点数)会原样进入 tick 字段，消费端自行过滤</span><span class="en"><b>Limit-locked markets</b>: CTP no-price sentinels (huge floats) pass through into tick fields — filter them downstream</span></li>
+        <li><span class="zh"><b>exchange 类型兼容</b>: 数据对象同时接受字符串与枚举；自定义构造时建议统一用 <code>Exchange</code> 枚举</span><span class="en"><b>Exchange types</b>: data objects accept both strings and enums; prefer the <code>Exchange</code> enum in your own code</span></li>
+        <li><span class="zh"><b>INSTRUMENT_INDEPEND</b>: 过滤比较 <code>local_symbol</code>(如 <code>ag2612.SHFE</code>)，策略的 <code>instrument_set</code> 需放同形式(或在 on_contract 中补全)</span><span class="en"><b>INSTRUMENT_INDEPEND</b>: filtering compares <code>local_symbol</code> (e.g. <code>ag2612.SHFE</code>) — keep the same form in <code>instrument_set</code> (or enrich it in on_contract)</span></li>
+    </ul>
+</section>
+
+<!-- ================= 12 测试 ================= -->
+<section id="test" class="reveal">
+    <div class="kicker">11 / TESTS</div>
+    <h2><span class="idx">12</span><span class="zh">测试</span><span class="en">Tests</span></h2>
+    <p class="lead">
+        <span class="zh">仓库自带独立脚本套件，共 161 项断言——不依赖 pytest、不连柜台、不需要真实 Redis。</span>
+        <span class="en">The repo ships standalone script suites totalling 161 assertions — no pytest, no broker, no real Redis.</span>
+    </p>
+
+    <div class="term">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="name">run_tests.sh</span></div>
+<pre><span class="k">for</span> t <span class="k">in</span> tests/test_*.py; <span class="k">do</span> python <span class="s">"$t"</span> <span class="k">|| exit 1</span>; <span class="k">done</span>
+<span class="c"># test_hotpath_optimization  10 · timestamp build / frozen / bulk init</span>
+<span class="c"># test_position_hotpath       4 · pnl randomized-sequence oracle</span>
+<span class="c"># test_dispatcher            11 · Redis relay (FakeRedis injection)</span>
+<span class="c"># test_tool_register         15 · register primitive matrix</span>
+<span class="c"># test_config_env             8 · env-var config</span>
+<span class="c"># test_upper_layers          66 · FakeApp full event-flow simulation</span>
+<span class="c"># test_examples_strategies   15 · example strategies regression</span>
+<span class="c"># test_backtest_hotpath      32 · looper hot path vs pre-optimization oracles</span>
+<span class="r">== 161 checks ==</span></pre>
+    </div>
+    <p><span class="zh">每个脚本独立可运行(<code>python tests/&lt;name&gt;.py</code>)，失败时以非零码退出，可直接接入 CI。贡献代码请随改动附带测试。</span>
+       <span class="en">Each script runs standalone (<code>python tests/&lt;name&gt;.py</code>) and exits non-zero on failure — CI-ready. Please land changes together with tests.</span></p>
+</section>
+
+<footer>
+    <div>ctpbee · <a href="https://github.com/ctpbee/ctpbee">github.com/ctpbee/ctpbee</a></div>
+    <div>docs/index.html</div>
+</footer>
+
+</main>
+</div>
+</div>
+
+<script>
+// 行情跑马灯: 静态数据双份拼接实现无缝滚动 (纯装饰)
+const quotes = [
+    ["AG2612", 7431, +0.56], ["SN2609", 268450, +0.31], ["RB2601", 3412, -0.22],
+    ["CU2609", 78540, +0.48], ["AU2606", 554.2, +1.02], ["MA601", 2498, -0.65],
+    ["TA501", 4920, +0.12], ["SC2606", 621.8, -0.35], ["IF2609", 3872.4, +0.28],
+];
+const fmt = q => {
+    const cls = q[2] >= 0 ? "u" : "d", sign = q[2] >= 0 ? "+" : "";
+    return `<span class="tk"><span class="s">${q[0]}</span><span class="p">${q[1]}</span><span class="${cls}">${sign}${q[2].toFixed(2)}%</span></span>`;
+};
+document.getElementById("tk").innerHTML = quotes.map(fmt).join("") + quotes.map(fmt).join("");
+
+// 中英切换 (localStorage 记忆)
+const btnZh = document.getElementById("btn-zh"), btnEn = document.getElementById("btn-en");
+function setLang(en) {
+    document.body.classList.toggle("en", en);
+    btnZh.classList.toggle("on", !en);
+    btnEn.classList.toggle("on", en);
+    try { localStorage.setItem("ctpbee-docs-lang", en ? "en" : "zh"); } catch (e) {}
+    document.documentElement.lang = en ? "en" : "zh-CN";
+}
+btnZh.addEventListener("click", () => setLang(false));
+btnEn.addEventListener("click", () => setLang(true));
+try { if (localStorage.getItem("ctpbee-docs-lang") === "en") setLang(true); } catch (e) {}
+
+// 侧栏高亮当前章节
+const links = [...document.querySelectorAll("nav.toc a")];
+const secs = links.map(a => document.querySelector(a.getAttribute("href")));
+const io = new IntersectionObserver(es => {
+    es.forEach(e => {
+        if (e.isIntersecting) {
+            links.forEach(l => l.classList.remove("on"));
+            const i = secs.indexOf(e.target);
+            if (i >= 0) links[i].classList.add("on");
+        }
+    });
+}, { rootMargin: "-20% 0px -70% 0px" });
+secs.forEach(s => s && io.observe(s));
+</script>
+</body>
+</html>

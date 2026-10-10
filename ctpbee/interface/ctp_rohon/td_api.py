@@ -313,7 +313,7 @@ class RHTdApi(RohonTdApi, LoginRequired):
                 max_market_order_volume=data['MaxMarketOrderVolume'],
                 min_market_order_volume=data['MinMarketOrderVolume'],
                 max_limit_order_volume=data['MaxLimitOrderVolume'],
-                min_limit_order_volume=data['MaxLimitOrderVolume'],
+                min_limit_order_volume=data['MinLimitOrderVolume'],
                 size=data["VolumeMultiple"],
                 pricetick=data["PriceTick"],
                 delivery_month=data['DeliveryMonth'],

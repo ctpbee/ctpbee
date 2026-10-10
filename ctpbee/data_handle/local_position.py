@@ -86,6 +86,8 @@ class PositionHolding:
 
         self.pre_settlement_price = 0
         self.last_price = 0
+        # 盈亏输入签名(见 update_tick): None 表示尚未算过, 首个行情必重算
+        self._pnl_sig = None
 
     @property
     def long_available(self):
@@ -192,15 +194,35 @@ class PositionHolding:
         self.update_order(order)
 
     def update_tick(self, tick, pre_settlement_price):
-        """ 行情更新 """
+        """ 行情更新(热路径: 每个 tick 调用一次)。
+
+        盈亏是 (last_price, pre_settlement_price, 持仓, 均价, size) 的纯
+        函数——输入全部未变时重算必然得到相同结果, 直接跳过。其他会改变
+        盈亏输入的路径(成交回报/持仓回报/昨仓转换)都会体现在下面的持仓
+        签名里: 签名始终拿【当前属性值】比对, 外部改动之后即使价格没动,
+        下一个 tick 也会重算, 不会留下陈旧盈亏。
+        """
+        sig = (self.long_pos, self.long_price, self.short_pos, self.short_price, self.size)
+        if (tick.last_price == self.last_price
+                and pre_settlement_price == self.pre_settlement_price
+                and sig == self._pnl_sig):
+            return
         self.pre_settlement_price = pre_settlement_price
         self.last_price = tick.last_price
+        self._pnl_sig = sig
         self.calculate_pnl()
         self.calculate_stare_pnl()
 
     def update_bar(self, bar, pre_close):
+        """ K 线更新, 跳过逻辑与 update_tick 相同 """
+        sig = (self.long_pos, self.long_price, self.short_pos, self.short_price, self.size)
+        if (bar.close_price == self.last_price
+                and pre_close == self.pre_settlement_price
+                and sig == self._pnl_sig):
+            return
         self.pre_settlement_price = pre_close
         self.last_price = bar.close_price
+        self._pnl_sig = sig
         self.calculate_pnl()
         self.calculate_stare_pnl()
 
@@ -420,20 +442,19 @@ class LocalPositionManager(dict):
 
     def update_tick(self, tick: TickData, pre_close):
         """
-        更新tick信息更新本地持仓盈亏等数据
+        更新tick信息更新本地持仓盈亏等数据(热路径: 单次字典查找)
         """
-        """ 更新tick  """
-        if tick.local_symbol not in self:
-            return
-        self.get(tick.local_symbol).update_tick(tick, pre_close)
+        holding = self.get(tick.local_symbol)
+        if holding is not None:
+            holding.update_tick(tick, pre_close)
 
     def update_bar(self, bar: BarData, pre_close):
         """
         根据k线信息更新本地持仓盈亏
         """
-        if bar.local_symbol not in self:
-            return
-        self.get(bar.local_symbol).update_bar(bar, pre_close)
+        holding = self.get(bar.local_symbol)
+        if holding is not None:
+            holding.update_bar(bar, pre_close)
 
     def is_convert_required(self, local_symbol: str):
         """

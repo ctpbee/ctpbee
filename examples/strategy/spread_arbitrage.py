@@ -43,6 +43,8 @@ class SpreadArbitrage(CtpbeeApi):
 
         # 其他配置
         self.length = max(self.fast_period, self.slow_period)
+        # 最近一次配对的 bar 时间——同一分钟两腿各自触发一次 on_bar, 只配对一次
+        self._last_pair_dt = None
 
     def on_contract(self, contract: ContractData) -> None:
         if contract.local_symbol == self.main_contract:
@@ -91,17 +93,21 @@ class SpreadArbitrage(CtpbeeApi):
         self.execute_arbitrage()
 
     def calculate_spread(self):
-        """计算主合约和子合约之间的价差"""
-        # 确保使用最新的相同数量的K线
-        min_length = min(len(self.main_bars), len(self.sub_bars))
-        recent_main = self.main_bars[-min_length:]
-        recent_sub = self.sub_bars[-min_length:]
+        """增量计算价差: 两腿时间戳对齐的每个分钟恰好一条。
 
-        # 计算价差
-        for main_bar, sub_bar in zip(recent_main, recent_sub):
-            spread = main_bar.close_price - sub_bar.close_price
-            self.spreads.append(spread)
-
+        旧实现每根 K 线把两腿整个窗口 zip 一遍再 append(裁剪后数值恰好
+        正确, 但做了 O(窗口) 的重复工作, 且按位置而非时间配对);
+        现在只处理最新一对: 时间戳对齐 + 同分钟去重。
+        """
+        if not self.main_bars or not self.sub_bars:
+            return
+        main_bar, sub_bar = self.main_bars[-1], self.sub_bars[-1]
+        if main_bar.datetime != sub_bar.datetime:
+            return  # 两腿时间戳未对齐, 等另一条腿
+        if main_bar.datetime == self._last_pair_dt:
+            return  # 该分钟已配对过(两腿各自触发一次 on_bar)
+        self._last_pair_dt = main_bar.datetime
+        self.spreads.append(main_bar.close_price - sub_bar.close_price)
         # 只保留最近的价差数据
         self.spreads = self.spreads[-self.length * 2 :]
 

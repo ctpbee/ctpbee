@@ -10,16 +10,32 @@ class Main(CtpbeeApi):
         super().__init__(name)
         self.init = False
         self.count = 0
+        self.pos = 0  # 本地净持仓: 多开 +1 / 平多 -1, 空开 -1 / 平空 +1
+
+    def _tick_action(self):
+        """发单门控: 每 20 个 tick 至多一次; 无持仓开仓, 有持仓平仓。
+
+        旧实现几乎每根 tick 都发 FOK 单且不跟踪持仓, 会灌爆柜台。
+        """
+        self.count += 1
+        if self.count % 20 != 0:
+            return None
+        return "close" if self.pos else "open"
 
     def on_tick(self, tick: TickData) -> None:
-        if self.count % 2 == 0:
+        act = self._tick_action()
+        if act == "open":
             self.action.buy_open(tick.ask_price_5, 1, tick, price_type=OrderType.FOK)
-        elif self.count % 5 != 0:
+        elif act == "close":
             self.action.buy_close(tick.bid_price_5, 1, tick, price_type=OrderType.FOK)
-        self.count += 1
         print("tick回报", tick)
 
     def on_trade(self, trade: TradeData) -> None:
+        # 按成交方向/开平维护本地净持仓(示例级: 忽略部分成交与拒单细节)
+        if trade.offset == Offset.OPEN:
+            self.pos += 1 if trade.direction == Direction.LONG else -1
+        else:
+            self.pos -= 1 if trade.direction == Direction.LONG else -1
         print("成交回报", trade)
 
     def on_account(self, account: AccountData) -> None:
