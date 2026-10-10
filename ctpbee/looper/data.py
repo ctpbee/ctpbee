@@ -79,6 +79,17 @@ class Bumblebee(dict):
                 day, tim = datetime_data.split(" ")
                 y, mo, d = day.split("-")
                 h, mi, s = tim.split(":")
+                # 门卫(与 strptime 的接受集合精确重合): %Y 恰好 4 位数字
+                # (\d\d\d\d 接受全角数字, int() 同样接受); 其余字段为
+                # 1-2 位【ASCII】数字 —— strptime 的 %m/%d/%H/%M/%S 用
+                # [0-9] 字符类, 全角数字会被拒绝, 而 int()/isdigit() 都
+                # 放过它们。int() 还接受 '20_6'/' 1' 等, isdigit 放过
+                # 上标; 数值范围(月13/分61/日0)由 datetime() 构造器校验,
+                # 越界落回旧链。任何不符原样落回下面的双 strptime。
+                if not (len(y) == 4 and y.isdigit()
+                        and all(f.isascii() and len(f) in (1, 2) and f.isdigit()
+                                for f in (mo, d, h, mi, s))):
+                    raise ValueError("non-strptime-shaped datetime field")
                 return datetime(int(y), int(mo), int(d), int(h), int(mi), int(s))
             except Exception:
                 try:

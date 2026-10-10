@@ -65,6 +65,35 @@ cases += ["2026-1-5 9:3:1", "2026-1-5 9:3:1 ",
           "2026-01-05 09:31:07.", "2026-01-05T09:31:07", "2026-01-05",
           "", " ", "2026-01-05  09:31:07", "2026-13-05 09:31:07",
           "abc", "2026-01-05 25:61:61"]
+# 对抗样本: int() 比 strptime 宽松的形态(下划线/字段内空白/正负号),
+# 快路径的 isdigit 门卫必须把它们全部推回旧逻辑
+cases += ["20_6-01-05 09:31:07", "2026-0_-05 09:31:07",
+          "2026-01-05 09:3_:07", "2026- 1-05 09:31:07",
+          "2026-01-05 09:31: 7", "2026-01-05 09:3 1:07",
+          "+026-01-05 09:31:07"[:19], "2026-01-0+ 09:31:07",
+          "２026-01-05 09:31:07", "2026-01-05 09:31:０7",
+          "99999999999999-1-5 9:3:1"]
+# 确定性变异模糊: 固定种子, 对规范串做 1-3 处 随机替换/插入/删除
+import random
+
+rng = random.Random(20261010)
+base = "2026-01-05 09:31:07"
+alphabet = "0123456789-: ._+ab２０⁵"
+for _ in range(3000):
+    chars = list(base)
+    for _ in range(rng.randint(1, 3)):
+        if not chars:
+            break
+        i = rng.randrange(len(chars))
+        op = rng.random()
+        if op < 0.5:
+            chars[i] = rng.choice(alphabet)
+        elif op < 0.8:
+            chars.insert(i, rng.choice(alphabet))
+        else:
+            del chars[i]
+    cases.append("".join(chars))
+
 ok = True
 for c in cases:
     a, b = outcome(old_covert_datetime, c), outcome(Bumblebee.covert_datetime, c)
@@ -72,7 +101,7 @@ for c in cases:
         ok = False
         print(f"    差异: {c!r} 旧={a} 新={b}")
 check("E1a covert_datetime 字符串输入逐例等价(值+异常类型)",
-      ok, f"{len(cases)} 例")
+      ok, f"{len(cases)} 例(含 3000 变异模糊)")
 
 ok = True
 for ts in (0, 1, 1700000000, 1767225600):
