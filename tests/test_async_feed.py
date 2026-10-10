@@ -9,9 +9,12 @@
   T5  多信号桥接到一条流
   T6  不干扰 blinker 既有同步接收者(Recorder 语义)
   T7  close(): 停止接收、排空余量、async for 正常终止
-  T8  压力守恒: delivered + dropped + filtered == received == 发送数
+  T8  压力守恒: consumed+qsize+dropped+filtered+filter_errors == 发送数
   T9  loop 已关闭时生产侧不抛异常(CTP 回调链安全)
   T10 首次迭代自动 start
+  T11 审查回归: 队列满时 close() 毒丸挤出腾位, 消费者必定终止
+  T12 审查回归: filter 抛异常不杀死排水(flag 不卡死, 后续批次照常)
+  T13 审查回归: 未 start 即 close 的 feed 上 async for 干净终止
   基准: 生产侧每事件成本(挂 feed vs 裸信号)
 
 直接运行: python tests/test_async_feed.py
@@ -295,7 +298,7 @@ async def main():
     th8 = threading.Thread(target=stress)
     th8.start()
     th8.join()
-    await wait_until(lambda: feed8.delivered == N8 - feed8.filtered)
+    await wait_until(lambda: feed8.delivered == N8 - feed8.filtered - feed8.filter_errors)
     await feed8.close()
     await asyncio.wait_for(c8, timeout=5)
     expect = [i for i in range(N8) if i % 3 != 0]
@@ -303,7 +306,7 @@ async def main():
     check("T8 压力守恒: consumed+qsize+dropped+filtered == 发送数, 无事件滞留",
           feed8.received == N8
           and len(out8) + feed8.qsize + feed8.dropped + feed8.filtered
-          + len(feed8._mailbox) == N8,
+          + feed8.filter_errors + len(feed8._mailbox) == N8,
           f"recv={feed8.received} consumed={len(out8)} qsize={feed8.qsize} "
           f"drop={feed8.dropped} filt={feed8.filtered}")
     # 丢最旧保最新: 存活者应是 expect 的【尾部】, 且不重复
@@ -355,6 +358,99 @@ async def main():
     await feed10.close()
     await asyncio.wait_for(c10, timeout=5)
     check("T10 首次迭代自动 start", out10 == [0, 1, 2, 3, 4])
+
+    # ------------------------------------------------------------------ T11
+    # 审查回归(Bug A): 队列满时 close(), 毒丸须挤出一条腾位, 消费者必须终止
+    sig11 = NamedSignal("t11")
+    feed11 = AsyncFeed(sig11, maxsize=5)
+    await feed11.start()
+    gate11 = asyncio.Event()
+    out11 = []
+
+    async def gated_consumer():
+        await gate11.wait()  # 先不消费, 让排水把队列填满
+        async for ev in feed11:  # 无 break, 依赖毒丸终止
+            out11.append(ev)
+
+    c11 = asyncio.create_task(gated_consumer())
+    await asyncio.sleep(0.05)
+
+    def flood11():
+        for i in range(100):
+            sig11.send(i)
+
+    th11 = threading.Thread(target=flood11)
+    th11.start()
+    th11.join()
+    await wait_until(lambda: feed11.delivered == 100)
+    full_ok = feed11.qsize == 5
+    await feed11.close()
+    gate11.set()
+    try:
+        await asyncio.wait_for(c11, timeout=3)
+        term_ok = True
+    except TimeoutError:
+        c11.cancel()
+        term_ok = False
+    check("T11 队列满时 close(): 毒丸挤出腾位, async for 必定终止",
+          full_ok and term_ok and len(out11) == 4
+          and feed11.dropped == 96,
+          f"qsize_at_close={5 if full_ok else feed11.qsize} consumed={len(out11)} "
+          f"dropped={feed11.dropped}")
+
+    # ------------------------------------------------------------------ T12
+    # 审查回归(Bug B): filter 抛异常不得杀死排水(flag 卡死/事件滞留)
+    sig12 = NamedSignal("t12")
+
+    def bad_filter(ev):
+        if ev == 3:
+            raise ValueError("user filter bug")
+        return True
+
+    feed12 = AsyncFeed(sig12, filter=bad_filter)
+    await feed12.start()
+    out12 = []
+
+    async def consume12():
+        async for ev in feed12:
+            out12.append(ev)
+            if len(out12) >= 10:
+                break
+
+    c12 = asyncio.create_task(consume12())
+    await asyncio.sleep(0.05)
+
+    def produce12():
+        for i in range(5):
+            sig12.send(i)
+        time.sleep(0.2)  # 分两个批次, 异常发生在第一批
+        for i in range(5, 20):
+            sig12.send(i)
+
+    th12 = threading.Thread(target=produce12)
+    th12.start()
+    th12.join()
+    await wait_until(lambda: feed12.delivered == 19)
+    await feed12.close()
+    await asyncio.wait_for(c12, timeout=5)
+    check("T12 filter 抛异常不杀死流: 后续批次照常交付",
+          len(out12) == 10 and 3 not in out12
+          and feed12.filter_errors == 1 and feed12.delivered == 19
+          and not feed12._mailbox and feed12._wake_pending is False,
+          f"filter_errors={feed12.filter_errors} delivered={feed12.delivered}")
+
+    # ------------------------------------------------------------------ T13
+    # 审查回归(Edge C): 未 start 就 close 的 feed 上 async for 干净终止
+    feed13 = AsyncFeed(NamedSignal("t13"))
+    await feed13.close()
+    out13 = []
+    try:
+        async for ev in feed13:
+            out13.append(ev)
+        ok13 = out13 == []
+    except RuntimeError:
+        ok13 = False
+    check("T13 未 start 即 close: async for 干净终止(StopAsyncIteration)", ok13)
 
     # ------------------------------------------------------------------ 基准
     N_BENCH = 100_000

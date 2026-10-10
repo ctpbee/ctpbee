@@ -31,9 +31,24 @@ CTP 行情来自 C++ 回调线程, 事件循环无法被直接进入, 必须跨�
     # 自行包一层: async for event in feed: await on_event(event)
 """
 import asyncio
+import logging
 from collections import deque
 
 __all__ = ["AsyncFeed"]
+
+logger = logging.getLogger("ctpbee.aio")
+
+# 节流告警: 同类告警第 1 次与此后每 N 次输出一行, 不在故障期间刷爆日志
+# (与 stream.py / tool_register.py 同一模式)
+_LOG_STATE = {}
+
+
+def _warn_throttled(key: str, msg: str, every: int = 100) -> None:
+    n = _LOG_STATE.get(key, 0) + 1
+    _LOG_STATE[key] = n
+    if n == 1 or n % every == 0:
+        logger.warning("%s (x%d)", msg, n)
+
 
 # 关闭时投递的毒丸: 解除等待中的 __anext__
 _SENTINEL = object()
@@ -54,13 +69,18 @@ class AsyncFeed:
     计数器(诊断用, GIL 下读写安全):
         received: 生产侧收到的事件数(过滤前)
         delivered: 进入交付队列的事件数(含后来被挤出队列的)
-        dropped: 队列满时被丢弃的最旧事件数
+        dropped: 队列满时被丢弃的最旧事件数(含 close 时为毒丸腾位
+            而挤出的那条)
         filtered: 被 filter 谓词拒绝的事件数
+        filter_errors: filter 谓词抛异常的事件数(按拒绝处理)
         qsize: 交付队列当前积压(消费侧)
 
-    守恒律(任意静息时刻): 已消费 + qsize + dropped + filtered + 邮箱残留
-    == received。dropped 的事件曾入队(delivered 已计), 故 delivered 不
-    出现在等式右侧。
+    守恒律(任意静息时刻): 已消费 + qsize + dropped + filtered
+    + filter_errors + 邮箱残留 == received。dropped 的事件曾入队
+    (delivered 已计), 故 delivered 不出现在等式右侧。
+
+    注意: 本流面向【单消费者】; 多个并发的 `async for` 会互相争抢
+    事件且共享同一个毒丸, 不是受支持的用法。
     """
 
     def __init__(self, *signals, maxsize: int = 100_000, filter=None, loop=None):
@@ -89,6 +109,7 @@ class AsyncFeed:
         self.delivered = 0
         self.dropped = 0
         self.filtered = 0
+        self.filter_errors = 0
 
     # ------------------------------------------------------------------ #
     # 生产侧: CTP 回调线程
@@ -112,37 +133,55 @@ class AsyncFeed:
     # 消费侧: loop 线程
     # ------------------------------------------------------------------ #
     def _drain(self):
-        """排空邮箱并转入交付队列(每次唤醒只执行一次循环)"""
-        mailbox = self._mailbox
-        queue = self._queue
-        filter_ = self._filter
-        while True:
-            try:
-                event = mailbox.popleft()
-            except IndexError:
-                break
-            if filter_ is not None and not filter_(event):
-                self.filtered += 1
-                continue
-            try:
-                queue.put_nowait(event)
-                self.delivered += 1
-            except asyncio.QueueFull:
-                # 丢最旧保最新, 与 Dispatcher._tick_queue 同策略
+        """排空邮箱并转入交付队列(每次唤醒只执行一次循环)。
+
+        审查修复(2026-10-10): ① 用户 filter 抛异常原先会沿回调炸掉整个
+        排水, 且 `_wake_pending` 永远停在 True —— 之后所有事件只进邮箱
+        不再唤醒, feed 静默失效; 现按"该事件被拒绝"处理并节流告警。
+        ② 排水体包 try/finally 保证 flag 无论如何都被放行, 任何未预见
+        的异常最多损失当前批次, 不会杀死流。
+        """
+        try:
+            mailbox = self._mailbox
+            queue = self._queue
+            filter_ = self._filter
+            while True:
                 try:
-                    queue.get_nowait()
-                except asyncio.QueueEmpty:
-                    pass
-                self.dropped += 1
+                    event = mailbox.popleft()
+                except IndexError:
+                    break
+                if filter_ is not None:
+                    try:
+                        keep = filter_(event)
+                    except Exception as e:  # noqa: BLE001 —— 用户谓词的锅不能杀死流
+                        self.filter_errors += 1
+                        _warn_throttled("filter_error",
+                                        f"AsyncFeed filter 抛异常, 事件被拒: {e!r}")
+                        continue
+                    if not keep:
+                        self.filtered += 1
+                        continue
                 try:
                     queue.put_nowait(event)
                     self.delivered += 1
                 except asyncio.QueueFull:
-                    pass
-        # 先放行 flag 再复查邮箱 —— 见 _wake_pending 处的配对约定
-        self._wake_pending = False
-        if mailbox:
-            self._schedule_wake_in_loop()
+                    # 丢最旧保最新, 与 Dispatcher._tick_queue 同策略
+                    try:
+                        queue.get_nowait()
+                    except asyncio.QueueEmpty:
+                        pass
+                    self.dropped += 1
+                    try:
+                        queue.put_nowait(event)
+                        self.delivered += 1
+                    except asyncio.QueueFull:
+                        pass
+        finally:
+            # 先放行 flag 再复查邮箱 —— 见 _wake_pending 处的配对约定;
+            # 放在 finally 里, 排水途中的异常也不会让 flag 卡死
+            self._wake_pending = False
+            if self._mailbox:
+                self._schedule_wake_in_loop()
 
     def _schedule_wake_in_loop(self):
         """loop 线程内部补一次唤醒(竞争窗口兜底)"""
@@ -190,7 +229,19 @@ class AsyncFeed:
             try:
                 self._queue.put_nowait(_SENTINEL)
             except asyncio.QueueFull:
-                pass  # 满则等待中的消费者自会取到数据后再次 get
+                # 审查修复(2026-10-10): 队列满时直接放弃毒丸会让消费者
+                # 取完缓冲后永久阻塞在 get() 上(async for 永不终止)。
+                # 挤出最旧的一条真实事件为毒丸腾位 —— 与丢最旧策略一致,
+                # 损失一条旧数据换取确定的终止信号。
+                try:
+                    self._queue.get_nowait()
+                except asyncio.QueueEmpty:
+                    pass
+                self.dropped += 1
+                try:
+                    self._queue.put_nowait(_SENTINEL)
+                except asyncio.QueueFull:
+                    pass  # 理论不可达: _send 与 _drain 同在 loop 线程串行
 
         if loop.is_closed():
             return
@@ -220,6 +271,9 @@ class AsyncFeed:
         return self
 
     async def __anext__(self):
+        # 未 start 就 close: 干净终止而不是让 start() 抛 RuntimeError
+        if self._closed and not self._started:
+            raise StopAsyncIteration
         if not self._started:
             await self.start()
         while True:
@@ -234,4 +288,5 @@ class AsyncFeed:
         state = "closed" if self._closed else ("started" if self._started else "idle")
         return (f"<AsyncFeed {state} signals={len(self._signals)} "
                 f"received={self.received} delivered={self.delivered} "
-                f"dropped={self.dropped} filtered={self.filtered}>")
+                f"dropped={self.dropped} filtered={self.filtered} "
+                f"filter_errors={self.filter_errors}>")
