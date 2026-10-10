@@ -5,6 +5,10 @@ from ctpbee.helpers import build_tick_datetime
 from .lib import *
 from ..func import get_folder_path
 
+# 性能(2026-10-10): 与 ctp/md_api.py 同步 —— tick 信号为模块级单例,
+# 预绑定省去每个 tick 的 f-string + 两层属性查找
+_TICK_SIGNAL = ctpbee.signals.common_signals.tick_signal
+
 
 class MMdApi(MiniMdApi):
 
@@ -29,9 +33,7 @@ class MMdApi(MiniMdApi):
 
     def on_event(self, type, data):
         if type == EVENT_TICK:
-            event = Event(type=type, data=data)
-            signal = getattr(ctpbee.signals.common_signals, f"{type}_signal")
-            signal.send(event)
+            _TICK_SIGNAL.send(Event(type=type, data=data))
         else:
             event = Event(type=type, data=data)
             signal: NamedSignal = getattr(self.app_signal, f"{type}_signal")

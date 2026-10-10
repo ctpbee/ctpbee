@@ -375,8 +375,10 @@ class TickData(Entity):
         """"""
         l = getattr(self, "local_symbol", None)
         if l is not None:
-            setattr(self, "symbol", l.split(".")[0])
-            setattr(self, "exchange", l.split(".")[1])
+            # 单次 split(旧实现 split 了两遍, 结果相同)
+            parts = l.split(".")
+            self.__dict__["symbol"] = parts[0]
+            self.__dict__["exchange"] = parts[1]
         else:
 
             self.local_symbol = f"{self.symbol}.{self.exchange.value}"
@@ -403,8 +405,10 @@ class BarData(Entity):
         """"""
         l = getattr(self, "local_symbol", None)
         if l is not None:
-            setattr(self, "symbol", l.split(".")[0])
-            setattr(self, "exchange", l.split(".")[1])
+            # 单次 split(旧实现 split 了两遍, 结果相同)
+            parts = l.split(".")
+            self.__dict__["symbol"] = parts[0]
+            self.__dict__["exchange"] = parts[1]
         else:
             self.local_symbol = f"{self.symbol}.{_exchange_code(self.exchange)}"
 

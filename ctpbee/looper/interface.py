@@ -8,6 +8,12 @@ from ctpbee.constant import OrderRequest, Direction, OrderData, CancelRequest, T
     EVENT_INIT_FINISHED, EVENT_BAR, EVENT_TICK
 from ctpbee.date import is_trade_date, trade_date_index, trade_dates
 from ctpbee.looper.account import Account
+from ctpbee.signals import common_signals
+
+# bar/tick 走全局信号(模块级单例, 进程内不变), 预先解析避免每根 bar 的
+# import 语句与 f-string 属性查找; 见 LocalLooper.on_event
+_COMMON_SIGNALS = {EVENT_BAR: common_signals.bar_signal,
+                   EVENT_TICK: common_signals.tick_signal}
 
 # 交易日解析记忆表 {(自然日, 是否夜盘): 交易日}
 _TRADE_DAY_MEMO = {}
@@ -113,6 +119,10 @@ class LocalLooper:
 
         self.ask_price_mapping = dict()
         self.bid_price_mapping = dict()
+        # local_symbol -> 品种字母键 的记忆表(有限个合约, 有界):
+        # 旧实现在【每根 bar】上 split+filter+join 重算(~0.2µs), 此处
+        # 换一次 dict 查找(~0.05µs), 结果逐值相同
+        self._alpha_of = dict()
 
     @property
     def action(self):
@@ -130,13 +140,11 @@ class LocalLooper:
         return list(self.traded_order_mapping.values())
 
     def on_event(self, type, data):
-        event = Event(type=type, data=data)
-        if type == EVENT_BAR or type == EVENT_TICK:
-            import ctpbee.signals as signals
-            signal = getattr(signals.common_signals, f"{type}_signal")
-        else:
-            signal = getattr(self.app_signal, f"{type}_signal")
-        signal.send(event)
+        # 性能: 旧实现在【每根 bar/tick】上执行一次 import 语句 + f-string
+        # + 两层属性查找(~0.1µs); bar/tick 信号对象在进程内不变, 预先在
+        # 模块级解析成 dict。app_signal 分支保持原样的动态查找。
+        signal = _COMMON_SIGNALS.get(type) or getattr(self.app_signal, f"{type}_signal")
+        signal.send(Event(type=type, data=data))
 
     def enable_extension(self, name):
         if name in self.strategy_mapping.keys():
@@ -235,6 +243,10 @@ class LocalLooper:
             p : 成交回报
 
         """
+        # 空 pending 时旧循环体执行零次、无任何副作用, 早退省去
+        # 视图迭代与逐单比较的固定成本(回测多数 bar 无挂单)
+        if not self.pending:
+            return
         ARC = []
         for active_order in self.pending.values():
             # 撮合必须逐合约判断: 旧实现只比较品种字母(ag2412.SHFE 与
@@ -415,7 +427,13 @@ class LocalLooper:
         except AttributeError:
             pass
         self.data_entity = entity
-        self.change_month_record["".join(filter(str.isalpha, entity.local_symbol.split(".")[0]))] = entity
+        # 品种字母键经记忆表(见 _alpha_of 注释), 逐值与旧的
+        # "".join(filter(str.isalpha, sym.split(".")[0])) 相同
+        sym = entity.local_symbol
+        alpha = self._alpha_of.get(sym)
+        if alpha is None:
+            alpha = self._alpha_of[sym] = "".join(filter(str.isalpha, sym.split(".")[0]))
+        self.change_month_record[alpha] = entity
         # 维护一个最新的价格
         self.price_mapping[self.data_entity.local_symbol] = self.data_entity.close_price if entity.type == "bar" \
             else self.data_entity.last_price

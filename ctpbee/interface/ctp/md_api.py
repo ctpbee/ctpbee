@@ -6,6 +6,11 @@ from ctpbee.interface.func import *
 
 from .lib import *
 
+# 性能(2026-10-10): tick 是每行情一次的热路径, 旧 on_event 在每个 tick 上
+# f-string + 两层属性查找解析信号对象; 该对象是模块级单例、进程内不变,
+# 预先绑定。connect/disconnect 语义不受影响(绑定的是同一个信号对象)。
+_TICK_SIGNAL = ctpbee.signals.common_signals.tick_signal
+
 
 class BeeMdApi(MdApi):
     """"""
@@ -32,9 +37,7 @@ class BeeMdApi(MdApi):
 
     def on_event(self, type, data):
         if type == EVENT_TICK:
-            event = Event(type=type, data=data)
-            signal = getattr(ctpbee.signals.common_signals, f"{type}_signal")
-            signal.send(event)
+            _TICK_SIGNAL.send(Event(type=type, data=data))
         else:
             event = Event(type=type, data=data)
             signal: NamedSignal = getattr(self.app_signal, f"{type}_signal")
